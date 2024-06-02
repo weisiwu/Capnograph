@@ -1,0 +1,18 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "fic-cV-hEI.title" : {
+      "comment" : "Class = \"UIViewController\"; title = \"initView\"; ObjectID = \"fic-cV-hEI\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "initView"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
