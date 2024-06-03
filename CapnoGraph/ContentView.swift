@@ -1,11 +1,39 @@
 import SwiftUI
 
+struct LoadingView: View {
+    let loadingText: String?
+    
+    var body: some View {
+        if loadingText != nil {
+            ZStack {
+                Color.black.opacity(0.4)
+                    .edgesIgnoringSafeArea(.all)
+                
+                ProgressView(value: 70.1, total: 100.0)
+                    .scaleEffect(1.5, anchor: .center) // 放大进度指示器
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+
+                Text(loadingText!)
+                    .padding(.top, 60)
+                    .font(.system(size: 16))
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+            }
+
+        } else {
+            EmptyView()
+        }
+    }
+}
+
+
 struct ActionsTabView: View {
     @Binding var selectedTab: Int
+    var toggleLoading: (Bool, String) -> Bool
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            SearchDeviceListView()
+            SearchDeviceListView(toggleLoading: toggleLoading)
                 .tabItem {
                     Image(selectedTab == 0 ? "tabs_search_active" : "tabs_search")
                     Text("搜索设备")
@@ -19,8 +47,8 @@ struct ActionsTabView: View {
                 }
                 .tag(1)
             
-            SystemConfigView()
-                .tabItem {
+            SystemConfigView(toggleLoading: toggleLoading)
+            .tabItem {
                     Image(selectedTab >= 2 ? "tabs_settings_active" : "tabs_settings")
                     Text("设置")
                 }
@@ -31,12 +59,20 @@ struct ActionsTabView: View {
 
 struct BasePageView<Content: View>: View {
     let content: Content
-    @State private var selectionIndex = 0
+    @State private var selectionIndex = 1
+    @State private var isLoading = false
+    @State private var loadingText = ""
+    
+    func toggleLoading(show: Bool, text: String) -> Bool  {
+        isLoading = show
+        loadingText = text
+        return show
+    }
 
     var title: String {
         get {
             switch selectionIndex {
-            case 0:#imageLiteral(resourceName: "simulator_screenshot_C2770F8E-F81B-4191-8F65-39EACD9FA5A9.png")
+            case 0:
                 return "CapnoGraph - 附近设备";
             case 1:
                 return "CapnoGraph";
@@ -67,11 +103,14 @@ struct BasePageView<Content: View>: View {
         NavigationView() {
             VStack {
                 content
-                ActionsTabView(selectedTab: $selectionIndex)
+                ActionsTabView(selectedTab: $selectionIndex, toggleLoading: toggleLoading)
             }
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
         }
+        .overlay(
+            isLoading ? LoadingView(loadingText: loadingText) : nil
+        )
     }
 }
 

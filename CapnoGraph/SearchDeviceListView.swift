@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SearchDeviceListView: View {
     let systemHeight:CGFloat = UIScreen.main.bounds.height - 200
+    var toggleLoading: ((Bool, String) -> Bool)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,6 +29,16 @@ struct SearchDeviceListView: View {
                                 .background(Color(red: 232/255, green: 243/255, blue: 1))
                                 .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                                 .cornerRadius(16)
+                                .onTapGesture {
+                                    if let toggleLoading {
+                                        let isConnecting = toggleLoading(true, "链接中")
+                                        if isConnecting {
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                                toggleLoading(false, "")
+                                            }
+                                        }
+                                    }
+                                }
                         }
                     }
                     .frame(maxHeight: .infinity)
@@ -44,6 +55,15 @@ struct SearchDeviceListView: View {
                 .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                 .cornerRadius(16)
                 .padding(.bottom, 32)
+                .onTapGesture {
+                    if let toggleLoading {
+                        let isSearch = toggleLoading(true, "搜索设备中")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            toggleLoading(false, "")
+                        }
+                    }
+                }
+        
         }
     }
 }

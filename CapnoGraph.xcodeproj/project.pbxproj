@@ -20,7 +20,6 @@
 		16E9F2602C0C7402004B977E /* SearchDeviceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F25F2C0C7402004B977E /* SearchDeviceListView.swift */; };
 		16E9F2622C0C7450004B977E /* SystemConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2612C0C7450004B977E /* SystemConfigView.swift */; };
 		16E9F2642C0C7491004B977E /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2632C0C7491004B977E /* ResultView.swift */; };
-		16E9F26C2C0C89D7004B977E /* DGCharts in Frameworks */ = {isa = PBXBuildFile; productRef = 16E9F26B2C0C89D7004B977E /* DGCharts */; };
 		16E9F26E2C0CC1CB004B977E /* AlertConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F26D2C0CC1CB004B977E /* AlertConfigView.swift */; };
 /* End PBXBuildFile section */
 
@@ -67,7 +66,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16E9F26C2C0C89D7004B977E /* DGCharts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -176,7 +174,6 @@
 			);
 			name = CapnoGraph;
 			packageProductDependencies = (
-				16E9F26B2C0C89D7004B977E /* DGCharts */,
 			);
 			productName = CapnoGraph;
 			productReference = 1649F3A52C0B3CDE009DCE65 /* CapnoGraph.app */;
@@ -480,6 +477,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"CapnoGraph/Preview Content\"";
+				DEVELOPMENT_TEAM = WMK2N92G85;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -510,6 +508,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"CapnoGraph/Preview Content\"";
+				DEVELOPMENT_TEAM = WMK2N92G85;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -654,14 +653,6 @@
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		16E9F26B2C0C89D7004B977E /* DGCharts */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 16E9F2692C0C857B004B977E /* XCRemoteSwiftPackageReference "Charts" */;
-			productName = DGCharts;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1649F39D2C0B3CDD009DCE65 /* Project object */;
 }
