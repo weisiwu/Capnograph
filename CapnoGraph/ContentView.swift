@@ -1,5 +1,24 @@
 import SwiftUI
 
+struct Toast: View {
+    var message: String
+    var body: some View {
+        HStack {
+            Image("toast_success")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 16, height: 16)
+            Text(message)
+                .foregroundColor(.white)
+                .padding()
+                .font(.system(size: 18))
+                .background(Color.black.opacity(0.8))
+                .cornerRadius(5)
+        }
+        .frame(width: 120, height: 38)
+    }
+}
+
 struct LoadingView: View {
     let loadingText: String?
     
@@ -29,11 +48,12 @@ struct LoadingView: View {
 
 struct ActionsTabView: View {
     @Binding var selectedTab: Int
+    @Binding var showToast: Bool
     var toggleLoading: (Bool, String) -> Bool
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            SearchDeviceListView(toggleLoading: toggleLoading)
+            SearchDeviceListView(showToast: $showToast, toggleLoading: toggleLoading)
                 .tabItem {
                     Image(selectedTab == 0 ? "tabs_search_active" : "tabs_search")
                     Text("搜索设备")
@@ -62,6 +82,7 @@ struct BasePageView<Content: View>: View {
     @State private var selectionIndex = 1
     @State private var isLoading = false
     @State private var loadingText = ""
+    @State private var showToast = false
     
     func toggleLoading(show: Bool, text: String) -> Bool  {
         isLoading = show
@@ -100,17 +121,28 @@ struct BasePageView<Content: View>: View {
     }
     
     var body: some View {
-        NavigationView() {
-            VStack {
-                content
-                ActionsTabView(selectedTab: $selectionIndex, toggleLoading: toggleLoading)
+        ZStack {
+            NavigationView() {
+                VStack {
+                    content
+                    ActionsTabView(selectedTab: $selectionIndex, showToast: $showToast, toggleLoading: toggleLoading)
+                }
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.inline)
             }
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
+            .overlay(
+                isLoading ? LoadingView(loadingText: loadingText) : nil
+            )
+            if showToast {
+                VStack {
+                    Spacer()
+                    Toast(message: "This is a toast message")
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .zIndex(1)
+                }
+                .animation(.easeInOut, value: showToast)
+            }
         }
-        .overlay(
-            isLoading ? LoadingView(loadingText: loadingText) : nil
-        )
     }
 }
 
