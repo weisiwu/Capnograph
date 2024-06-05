@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,9 +14,6 @@
 		1649F3BA2C0B3CE0009DCE65 /* CapnoGraphTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1649F3B92C0B3CE0009DCE65 /* CapnoGraphTests.swift */; };
 		1649F3C42C0B3CE0009DCE65 /* CapnoGraphUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1649F3C32C0B3CE0009DCE65 /* CapnoGraphUITests.swift */; };
 		1649F3C62C0B3CE0009DCE65 /* CapnoGraphUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1649F3C52C0B3CE0009DCE65 /* CapnoGraphUITestsLaunchTests.swift */; };
-		165F234F2C0C322400097F0D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 165F234E2C0C322400097F0D /* LaunchScreen.storyboard */; };
-		16E9F24E2C0C67B5004B977E /* InitialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F24D2C0C67B5004B977E /* InitialViewController.swift */; };
-		16E9F2502C0C6842004B977E /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F24F2C0C6842004B977E /* MainViewController.swift */; };
 		16E9F2602C0C7402004B977E /* SearchDeviceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F25F2C0C7402004B977E /* SearchDeviceListView.swift */; };
 		16E9F2622C0C7450004B977E /* SystemConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2612C0C7450004B977E /* SystemConfigView.swift */; };
 		16E9F2642C0C7491004B977E /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2632C0C7491004B977E /* ResultView.swift */; };
@@ -52,10 +49,6 @@
 		1649F3BF2C0B3CE0009DCE65 /* CapnoGraphUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CapnoGraphUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1649F3C32C0B3CE0009DCE65 /* CapnoGraphUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapnoGraphUITests.swift; sourceTree = "<group>"; };
 		1649F3C52C0B3CE0009DCE65 /* CapnoGraphUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapnoGraphUITestsLaunchTests.swift; sourceTree = "<group>"; };
-		165F234D2C0C322400097F0D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		165F23502C0C322400097F0D /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/LaunchScreen.xcstrings; sourceTree = "<group>"; };
-		16E9F24D2C0C67B5004B977E /* InitialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialViewController.swift; sourceTree = "<group>"; };
-		16E9F24F2C0C6842004B977E /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		16E9F25F2C0C7402004B977E /* SearchDeviceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchDeviceListView.swift; sourceTree = "<group>"; };
 		16E9F2612C0C7450004B977E /* SystemConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemConfigView.swift; sourceTree = "<group>"; };
 		16E9F2632C0C7491004B977E /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
@@ -113,8 +106,6 @@
 			isa = PBXGroup;
 			children = (
 				41C565A22C10384D00302E64 /* SplashView.swift */,
-				16E9F24F2C0C6842004B977E /* MainViewController.swift */,
-				16E9F24D2C0C67B5004B977E /* InitialViewController.swift */,
 				1649F3A82C0B3CDE009DCE65 /* CapnoGraphApp.swift */,
 				1649F3AA2C0B3CDE009DCE65 /* ContentView.swift */,
 				16E9F2632C0C7491004B977E /* ResultView.swift */,
@@ -123,7 +114,6 @@
 				16E9F25F2C0C7402004B977E /* SearchDeviceListView.swift */,
 				1649F3AC2C0B3CE0009DCE65 /* Assets.xcassets */,
 				1649F3AE2C0B3CE0009DCE65 /* Preview Content */,
-				165F234E2C0C322400097F0D /* LaunchScreen.storyboard */,
 			);
 			path = CapnoGraph;
 			sourceTree = "<group>";
@@ -269,7 +259,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				165F234F2C0C322400097F0D /* LaunchScreen.storyboard in Resources */,
 				1649F3B02C0B3CE0009DCE65 /* Preview Assets.xcassets in Resources */,
 				1649F3AD2C0B3CE0009DCE65 /* Assets.xcassets in Resources */,
 			);
@@ -296,14 +285,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16E9F24E2C0C67B5004B977E /* InitialViewController.swift in Sources */,
 				16E9F26E2C0CC1CB004B977E /* AlertConfigView.swift in Sources */,
 				16E9F2622C0C7450004B977E /* SystemConfigView.swift in Sources */,
 				16E9F2602C0C7402004B977E /* SearchDeviceListView.swift in Sources */,
 				1649F3AB2C0B3CDE009DCE65 /* ContentView.swift in Sources */,
 				1649F3A92C0B3CDE009DCE65 /* CapnoGraphApp.swift in Sources */,
 				16E9F2642C0C7491004B977E /* ResultView.swift in Sources */,
-				16E9F2502C0C6842004B977E /* MainViewController.swift in Sources */,
 				41C565A32C10384D00302E64 /* SplashView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -339,18 +326,6 @@
 			targetProxy = 1649F3C02C0B3CE0009DCE65 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin PBXVariantGroup section */
-		165F234E2C0C322400097F0D /* LaunchScreen.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				165F234D2C0C322400097F0D /* Base */,
-				165F23502C0C322400097F0D /* mul */,
-			);
-			name = LaunchScreen.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		1649F3C72C0B3CE0009DCE65 /* Debug */ = {
@@ -489,7 +464,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
+				INFOPLIST_KEY_UILaunchStoryboardName = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -522,7 +497,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
+				INFOPLIST_KEY_UILaunchStoryboardName = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (

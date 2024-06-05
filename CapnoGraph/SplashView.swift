@@ -10,7 +10,7 @@ struct SplashView: View {
                 .scaledToFit()
                 .frame(width: 277, height: 153)
                 .padding(.bottom, 1)
-                .opacity(fadeInOut ? 1 : 0.3)
+                .opacity(fadeInOut ? 1 : 0)
                 .onAppear {
                     withAnimation(.easeIn(duration: 1)) {
                         self.fadeInOut = true
@@ -20,7 +20,7 @@ struct SplashView: View {
                 .font(.system(size: 24))
                 .fontWeight(.bold)
                 .padding(.bottom, 4)
-                .opacity(fadeInOut ? 1 : 0.3)
+                .opacity(fadeInOut ? 1 : 0)
                 .onAppear {
                     withAnimation(.easeIn(duration: 1)) {
                         self.fadeInOut = true
@@ -29,7 +29,7 @@ struct SplashView: View {
             Text("WLD Instruments Co., Ltd")
                 .font(.system(size: 16))
                 .fontWeight(.thin)
-                .opacity(fadeInOut ? 1 : 0.3)
+                .opacity(fadeInOut ? 1 : 0)
                 .onAppear {
                     withAnimation(.easeIn(duration: 1)) {
                         self.fadeInOut = true
