@@ -21,6 +21,7 @@
 		16E9F2622C0C7450004B977E /* SystemConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2612C0C7450004B977E /* SystemConfigView.swift */; };
 		16E9F2642C0C7491004B977E /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2632C0C7491004B977E /* ResultView.swift */; };
 		16E9F26E2C0CC1CB004B977E /* AlertConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F26D2C0CC1CB004B977E /* AlertConfigView.swift */; };
+		41C565A32C10384D00302E64 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C565A22C10384D00302E64 /* SplashView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +60,7 @@
 		16E9F2612C0C7450004B977E /* SystemConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemConfigView.swift; sourceTree = "<group>"; };
 		16E9F2632C0C7491004B977E /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		16E9F26D2C0CC1CB004B977E /* AlertConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertConfigView.swift; sourceTree = "<group>"; };
+		41C565A22C10384D00302E64 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +112,7 @@
 		1649F3A72C0B3CDE009DCE65 /* CapnoGraph */ = {
 			isa = PBXGroup;
 			children = (
+				41C565A22C10384D00302E64 /* SplashView.swift */,
 				16E9F24F2C0C6842004B977E /* MainViewController.swift */,
 				16E9F24D2C0C67B5004B977E /* InitialViewController.swift */,
 				1649F3A82C0B3CDE009DCE65 /* CapnoGraphApp.swift */,
@@ -301,6 +304,7 @@
 				1649F3A92C0B3CDE009DCE65 /* CapnoGraphApp.swift in Sources */,
 				16E9F2642C0C7491004B977E /* ResultView.swift in Sources */,
 				16E9F2502C0C6842004B977E /* MainViewController.swift in Sources */,
+				41C565A32C10384D00302E64 /* SplashView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -480,6 +484,8 @@
 				DEVELOPMENT_TEAM = WMK2N92G85;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = CapnoGraph;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -511,6 +517,8 @@
 				DEVELOPMENT_TEAM = WMK2N92G85;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = CapnoGraph;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
