@@ -5,7 +5,7 @@ struct SplashView: View {
 
     var body: some View {
         VStack {
-            Image("wldicon")
+            Image("WLDIcon")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 277, height: 153)
