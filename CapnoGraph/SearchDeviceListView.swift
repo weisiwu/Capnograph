@@ -102,6 +102,15 @@ struct SearchDeviceListView: View {
     }
 }
 
+
+//#Preview {
+//    VStack {
+//        Text("测试")
+//            .frame(height: 500)
+//        // TODO: 测试成功效果
+//        Toast(message: "成功")
+//    }
+//}
 //#Preview {
 //    SearchDeviceListView()
 //}

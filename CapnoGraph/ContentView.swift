@@ -1,21 +1,40 @@
 import SwiftUI
 
+enum ToastType {
+    case SUCCESS
+    case FAIL
+}
+
 struct Toast: View {
     var message: String
+    var type: ToastType = ToastType.SUCCESS
+    
     var body: some View {
-        HStack {
-            Image("toast_success")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 16, height: 16)
-            Text(message)
-                .foregroundColor(.white)
-                .padding()
-                .font(.system(size: 18))
-                .background(Color.black.opacity(0.8))
-                .cornerRadius(5)
+        VStack {
+            Spacer()
+            HStack {
+                Image(type == ToastType.SUCCESS ? "toast_success" : "toast_fail")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 16, height: 16)
+                    .padding(.leading, 12)
+                Text(message)
+                    .foregroundColor(.white)
+                    .font(.system(size: 16))
+                    .frame(height: 30)
+                    .padding(.trailing, 12)
+            }
+            .background(Color.black.opacity(0.8))
+            .frame(height: 30)
+            .cornerRadius(4)
+            Spacer()
         }
-        .frame(width: 120, height: 38)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.clear)
+        .edgesIgnoringSafeArea(.all)
+        .transition(.opacity)
+        .animation(.easeInOut, value: true)
+    
     }
 }
 
@@ -136,9 +155,7 @@ struct BasePageView<Content: View>: View {
             if showToast {
                 VStack {
                     Spacer()
-                    Toast(message: "This is a toast message")
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                        .zIndex(1)
+                    Toast(message: "链接成功")
                 }
                 .animation(.easeInOut, value: showToast)
             }
@@ -155,3 +172,6 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+//#Preview {
+//    Toast(message: "链接失败了", type: ToastType.FAIL)
+//}
