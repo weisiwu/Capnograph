@@ -18,6 +18,7 @@
 		16E9F2622C0C7450004B977E /* SystemConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2612C0C7450004B977E /* SystemConfigView.swift */; };
 		16E9F2642C0C7491004B977E /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2632C0C7491004B977E /* ResultView.swift */; };
 		16E9F26E2C0CC1CB004B977E /* AlertConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F26D2C0CC1CB004B977E /* AlertConfigView.swift */; };
+		41C305352C1306E60063E295 /* BluetoothManage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C305342C1306E60063E295 /* BluetoothManage.swift */; };
 		41C565A32C10384D00302E64 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C565A22C10384D00302E64 /* SplashView.swift */; };
 /* End PBXBuildFile section */
 
@@ -53,6 +54,7 @@
 		16E9F2612C0C7450004B977E /* SystemConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemConfigView.swift; sourceTree = "<group>"; };
 		16E9F2632C0C7491004B977E /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		16E9F26D2C0CC1CB004B977E /* AlertConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertConfigView.swift; sourceTree = "<group>"; };
+		41C305342C1306E60063E295 /* BluetoothManage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManage.swift; sourceTree = "<group>"; };
 		41C565A22C10384D00302E64 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -112,6 +114,7 @@
 				16E9F2612C0C7450004B977E /* SystemConfigView.swift */,
 				16E9F26D2C0CC1CB004B977E /* AlertConfigView.swift */,
 				16E9F25F2C0C7402004B977E /* SearchDeviceListView.swift */,
+				41C305342C1306E60063E295 /* BluetoothManage.swift */,
 				1649F3AC2C0B3CE0009DCE65 /* Assets.xcassets */,
 				1649F3AE2C0B3CE0009DCE65 /* Preview Content */,
 			);
@@ -292,6 +295,7 @@
 				1649F3A92C0B3CDE009DCE65 /* CapnoGraphApp.swift in Sources */,
 				16E9F2642C0C7491004B977E /* ResultView.swift in Sources */,
 				41C565A32C10384D00302E64 /* SplashView.swift in Sources */,
+				41C305352C1306E60063E295 /* BluetoothManage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -463,8 +467,10 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = WMK2N92G85;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
 				INFOPLIST_KEY_CFBundleDisplayName = CapnoGraph;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "我们的应用需要使用蓝牙来发现和连接到附近的设备。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -475,7 +481,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = WLD.CapnoGraph;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -502,8 +508,10 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_TESTABILITY = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
 				INFOPLIST_KEY_CFBundleDisplayName = CapnoGraph;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "我们的应用需要使用蓝牙来发现和连接到附近的设备。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -514,7 +522,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = WLD.CapnoGraph;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

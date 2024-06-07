@@ -10,6 +10,7 @@ struct SearchDeviceListView: View {
     @State private var devicesListData: [DeviceInfo]? = nil
     @State private var showAlert = false
     @Binding var showToast: Bool
+    @StateObject var bluetoothManager = BluetoothManager()
     let systemHeight:CGFloat = UIScreen.main.bounds.height - 200
     var toggleLoading: ((Bool, String) -> Bool)?
     
@@ -88,6 +89,8 @@ struct SearchDeviceListView: View {
                 .onTapGesture {
                     if let toggleLoading {
                         let isSearch = toggleLoading(true, "搜索设备中")
+                        bluetoothManager.startScanning()
+//                        bluetoothManager.discoveredPeripherals
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             toggleLoading(false, "")
                             // TDOO: 这是demo数据，后续要移除
