@@ -1,13 +1,12 @@
 import SwiftUI
 
-struct DeviceInfo: Identifiable {
-    let id = UUID()
-    let title: String
-    let macAddress: String
-}
+//struct DeviceInfo: Identifiable {
+//    let id = UUID()
+//    let title: String
+//    let macAddress: String
+//}
 
 struct SearchDeviceListView: View {
-    @State private var devicesListData: [DeviceInfo]? = nil
     @State private var showAlert = false
     @Binding var showToast: Bool
     @StateObject var bluetoothManager = BluetoothManager()
@@ -16,14 +15,14 @@ struct SearchDeviceListView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            if let devicesListData {
-                List(devicesListData) { item in
+            if !bluetoothManager.discoveredPeripherals.isEmpty {
+                List(bluetoothManager.discoveredPeripherals, id: \.identifier) { peripheral in
                     HStack {
                         VStack(alignment: .leading) {
-                            Text(item.title)
+                            Text(peripheral.name ?? "未知设备")
                                 .font(.system(size: 17))
                                 .padding(.bottom, 2)
-                            Text(item.macAddress)
+                            Text(peripheral.identifier.uuidString)
                                 .font(.system(size: 15))
                                 .fontWeight(.thin)
                                 .foregroundColor(Color(red: 136/255, green: 136/255, blue: 136/255))
@@ -42,7 +41,7 @@ struct SearchDeviceListView: View {
                                 .alert(isPresented: $showAlert) {
                                     Alert(
                                         title: Text("确认要链接此设备？"),
-                                        message: Text("设备名: \(item.title)"),
+                                        message: Text("设备名: \(peripheral.name ?? "未知设备")"),
                                         primaryButton: .default(Text("链接"), action: {
                                             if let toggleLoading {
                                                 let isConnecting = toggleLoading(true, "链接中")
@@ -89,16 +88,17 @@ struct SearchDeviceListView: View {
                 .onTapGesture {
                     if let toggleLoading {
                         let isSearch = toggleLoading(true, "搜索设备中")
+                        // TODO: 这里要等返回值后，才展示列表。
+//                        bluetoothManager.centralManager.scanForPeripherals(withServices: nil, options: nil)
                         bluetoothManager.startScanning()
-//                        bluetoothManager.discoveredPeripherals
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            toggleLoading(false, "")
-                            // TDOO: 这是demo数据，后续要移除
-                            devicesListData =  (0..<31).map { DeviceInfo(
-                                title: "SM-MI \($0)",
-                                macAddress: "D4:F0:EA:C0:93:9B"
-                            )}
-                        }
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+//                            toggleLoading(false, "")
+//                            // TDOO: 这是demo数据，后续要移除
+//                            devicesListData =  (0..<31).map { DeviceInfo(
+//                                title: "SM-MI \($0)",
+//                                macAddress: "D4:F0:EA:C0:93:9B"
+//                            )}
+//                        }
                     }
                 }
         }
