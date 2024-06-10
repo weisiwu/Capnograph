@@ -7,37 +7,13 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     @Published var connectedPeripheral: CBPeripheral? // 以链接设备
     @Published var toastMessage: String? = nil // 通知消息
     var isScanning: Bool = false
+    var startScanningCallback: (() -> Void)?
+    var connectedCallback: (() -> Void)?
     
     override init() {
         super.init()
         // 中央设备管理器
         centralManager = CBCentralManager(delegate: self, queue: .main)
-    }
-    
-    // CBCentralManagerDelegate 的方法， 在蓝牙状态发生变化的时候，开始扫描外围设备
-    func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        // 判断蓝牙状态
-        // unknown：正在初始化
-        // resetting：蓝牙硬件暂时不可用
-        // unsupported：设备不支持蓝牙功能
-        // unauthorized：应用未被授权使用蓝牙功能
-        // poweredOff：蓝牙已关闭
-        // poweredOn：蓝牙已打开并可用
-        switch central.state {
-//        case .unknown:
-//        case .resetting:
-//        case .unsupported:
-//        case .unauthorized:
-//        case .poweredOff:
-        case .poweredOn:
-            // 正在扫描中，先停止扫描
-            if isScanning {
-                stopScanning()
-            }
-            startScanning()
-        @unknown default:
-            print("未知情况")
-        }
     }
     
     /**------  中央设备事件回调 ------*/
@@ -47,13 +23,12 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         if !discoveredPeripherals.contains(where: { $0.identifier == peripheral.identifier }) {
             discoveredPeripherals.append(peripheral)
         }
+        startScanningCallback?()
     }
     
     // 连接成功后显示 Toast
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        DispatchQueue.main.async {
-            self.toastMessage = "链接成功"
-        }
+        connectedCallback?()
         // 给外设添加事件管理函数
         peripheral.delegate = self
         peripheral.discoverServices(nil)
@@ -61,9 +36,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     
     // 链接失败
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        DispatchQueue.main.async {
-            self.toastMessage = "链接成功"
-        }
+        print("链接失败")
     }
 
     // 设备断开链接后
@@ -101,16 +74,30 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     // 特征值更新
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if let value = characteristic.value {
-            print("Value for \(characteristic.uuid): \(value)")
+            print("Value for \(characteristic.uuid): \(String(data: value, encoding: .utf8))")
         }
+    }
+    
+    /**------  监听蓝牙状态 ------*/
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        print("监听蓝牙状态")
     }
 
     /**------  工具方法 ------*/
-    func startScanning() {
-        guard centralManager.state == .poweredOn else { return }
-        discoveredPeripherals.removeAll()
-        centralManager.scanForPeripherals(withServices: nil, options: nil)
-        isScanning = true
+    func startScanning(callback: (() -> Void)?) -> Bool {
+        guard centralManager.state == .poweredOn else { return false }
+        if isScanning {
+            return false
+        }
+        // 检查状态
+        guard let isPass = checkBluetoothStatus(centralManager), !isPass else {
+            discoveredPeripherals.removeAll()
+            centralManager.scanForPeripherals(withServices: nil, options: nil)
+            isScanning = true
+            startScanningCallback = callback
+            return true
+        }
+        return false
     }
     
     func stopScanning() {
@@ -119,17 +106,31 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
     
     // 链接蓝牙外设
-    func connect(to peripheral: CBPeripheral) {
-        centralManager.stopScan()
-        connectedPeripheral = peripheral
-        connectedPeripheral?.delegate = self
-        centralManager.connect(peripheral, options: nil)
+    func connect(to peripheral: CBPeripheral?, callback: (() -> Void)?) {
+        if let peripheral {
+            centralManager.stopScan()
+            connectedPeripheral = peripheral
+            connectedPeripheral?.delegate = self
+            centralManager.connect(peripheral, options: nil)
+            connectedCallback = callback
+        }
     }
     
-    func toast() {
-        // 连接成功后显示 Toast
-        DispatchQueue.main.async {
-            self.toastMessage = "链接成功"
+    // 判断蓝牙状态
+    // unknown：正在初始化
+    // resetting：蓝牙硬件暂时不可用
+    // unsupported：设备不支持蓝牙功能
+    // unauthorized：应用未被授权使用蓝牙功能
+    // poweredOff：蓝牙已关闭
+    // poweredOn：蓝牙已打开并可用
+    func checkBluetoothStatus(_ central: CBCentralManager) -> Bool? {
+        switch central.state {
+        case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
+            return false
+        case .poweredOn:
+            return true
+        @unknown default:
+            return nil
         }
     }
 }

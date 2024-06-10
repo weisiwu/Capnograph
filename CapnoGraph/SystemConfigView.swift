@@ -71,7 +71,9 @@ struct ConfigItem: View {
 }
 
 struct SystemConfigView: View {
+    @EnvironmentObject var bluetoothManager: BluetoothManager
     var toggleLoading: ((Bool, String) -> Bool)?
+
     func handleTapGesture(show: Bool, text: String?) -> Bool {
         var loadingText = ""
 

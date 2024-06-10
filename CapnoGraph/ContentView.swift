@@ -34,7 +34,6 @@ struct Toast: View {
         .edgesIgnoringSafeArea(.all)
         .transition(.opacity)
         .animation(.easeInOut, value: true)
-    
     }
 }
 
@@ -64,15 +63,15 @@ struct LoadingView: View {
     }
 }
 
-
 struct ActionsTabView: View {
     @Binding var selectedTab: Int
     @Binding var showToast: Bool
+    @EnvironmentObject var bluetoothManager: BluetoothManager
     var toggleLoading: (Bool, String) -> Bool
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            SearchDeviceListView(showToast: $showToast, toggleLoading: toggleLoading)
+            SearchDeviceListView(selectedPeripheral: nil, showToast: $showToast, selectedTab: $selectedTab, toggleLoading: toggleLoading)
                 .tabItem {
                     Image(selectedTab == 0 ? "tabs_search_active" : "tabs_search")
                     Text("搜索设备")
@@ -102,6 +101,8 @@ struct BasePageView<Content: View>: View {
     @State private var isLoading = false
     @State private var loadingText = ""
     @State private var showToast = false
+    @State private var toastText = ""
+    @StateObject var bluetoothManager = BluetoothManager()
     
     func toggleLoading(show: Bool, text: String) -> Bool  {
         isLoading = show
@@ -143,6 +144,8 @@ struct BasePageView<Content: View>: View {
         ZStack {
             NavigationView() {
                 VStack {
+                    Color.white.edgesIgnoringSafeArea(.all)
+                        .frame(height: 0)
                     content
                     ActionsTabView(selectedTab: $selectionIndex, showToast: $showToast, toggleLoading: toggleLoading)
                 }
@@ -153,11 +156,13 @@ struct BasePageView<Content: View>: View {
                 isLoading ? LoadingView(loadingText: loadingText) : nil
             )
             if showToast {
-                VStack {
-                    Spacer()
-                    Toast(message: "链接成功")
+                if let toastMsg = bluetoothManager.toastMessage {
+                    VStack {
+                        Spacer()
+                        Toast(message: toastMsg)
+                    }
+                    .animation(.easeInOut, value: showToast)
                 }
-                .animation(.easeInOut, value: showToast)
             }
         }
     }

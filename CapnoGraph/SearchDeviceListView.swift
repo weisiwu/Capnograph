@@ -1,18 +1,15 @@
 import SwiftUI
-
-//struct DeviceInfo: Identifiable {
-//    let id = UUID()
-//    let title: String
-//    let macAddress: String
-//}
+import CoreBluetooth
 
 struct SearchDeviceListView: View {
     @State private var showAlert = false
+    @State public var selectedPeripheral: CBPeripheral? = nil
     @Binding var showToast: Bool
-    @StateObject var bluetoothManager = BluetoothManager()
+    @Binding var selectedTab: Int
+    @EnvironmentObject var bluetoothManager: BluetoothManager
     let systemHeight:CGFloat = UIScreen.main.bounds.height - 200
     var toggleLoading: ((Bool, String) -> Bool)?
-    
+
     var body: some View {
         VStack(spacing: 0) {
             if !bluetoothManager.discoveredPeripherals.isEmpty {
@@ -29,6 +26,7 @@ struct SearchDeviceListView: View {
                         }
                         Spacer()
                         Button(action: {
+                            selectedPeripheral = peripheral
                             showAlert = true
                         }) {
                             Text("链接")
@@ -41,20 +39,19 @@ struct SearchDeviceListView: View {
                                 .alert(isPresented: $showAlert) {
                                     Alert(
                                         title: Text("确认要链接此设备？"),
-                                        message: Text("设备名: \(peripheral.name ?? "未知设备")"),
+                                        // TODO: 这里的值文案不对
+                                        message: Text("设备名: \(selectedPeripheral?.name ?? "未知设备")"),
                                         primaryButton: .default(Text("链接"), action: {
                                             if let toggleLoading {
-                                                let isConnecting = toggleLoading(true, "链接中")
-                                                if isConnecting {
-                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                                toggleLoading(true, "链接中")
+                                                bluetoothManager.connect(to: selectedPeripheral) {
+                                                    withAnimation {
                                                         toggleLoading(false, "")
-                                                        withAnimation {
-                                                            showToast = true
-                                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                                                                withAnimation {
-                                                                    showToast = false
-                                                                }
-                                                            }
+                                                        showToast = true
+                                                        bluetoothManager.toastMessage = "链接成功"
+                                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                                            showToast = false
+                                                            selectedTab = 1
                                                         }
                                                     }
                                                 }
@@ -88,17 +85,12 @@ struct SearchDeviceListView: View {
                 .onTapGesture {
                     if let toggleLoading {
                         let isSearch = toggleLoading(true, "搜索设备中")
-                        // TODO: 这里要等返回值后，才展示列表。
-//                        bluetoothManager.centralManager.scanForPeripherals(withServices: nil, options: nil)
-                        bluetoothManager.startScanning()
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-//                            toggleLoading(false, "")
-//                            // TDOO: 这是demo数据，后续要移除
-//                            devicesListData =  (0..<31).map { DeviceInfo(
-//                                title: "SM-MI \($0)",
-//                                macAddress: "D4:F0:EA:C0:93:9B"
-//                            )}
-//                        }
+                        // 开启搜索后，会不停的搜搜外设
+                        bluetoothManager.startScanning() {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                toggleLoading(false, "")
+                            }
+                        }
                     }
                 }
         }

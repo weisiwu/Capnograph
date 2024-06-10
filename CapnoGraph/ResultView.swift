@@ -8,35 +8,39 @@ struct DataPoint: Identifiable {
 }
 
 struct LineChartView: View {
+//    let data: [DataPoint] = [
+//        DataPoint(
+//            date: 1,
+//            value: 12.1
+//        ),
+//        DataPoint(
+//            date: 2,
+//            value: 4.56
+//        ),
+//        DataPoint(
+//            date: 3,
+//            value: 47.8
+//        ),
+//        DataPoint(
+//            date: 4,
+//            value: 41.7
+//        ),
+//        DataPoint(
+//            date: 5,
+//            value: 37.1
+//        ),
+//        DataPoint(
+//            date: 6,
+//            value: 31.1
+//        ),
+//        DataPoint(
+//            date: 7,
+//            value: 25.8
+//        )
+//    ]
+    @EnvironmentObject var bluetoothManager: BluetoothManager
     let data: [DataPoint] = [
-        DataPoint(
-            date: 1,
-            value: 12.1
-        ),
-        DataPoint(
-            date: 2,
-            value: 4.56
-        ),
-        DataPoint(
-            date: 3,
-            value: 47.8
-        ),
-        DataPoint(
-            date: 4,
-            value: 41.7
-        ),
-        DataPoint(
-            date: 5,
-            value: 37.1
-        ),
-        DataPoint(
-            date: 6,
-            value: 31.1
-        ),
-        DataPoint(
-            date: 7,
-            value: 25.8
-        )
+        DataPoint(date: 1, value: 0)
     ]
 
     var body: some View {
@@ -59,13 +63,44 @@ struct LineChartView: View {
 }
 
 struct TableView: View {
+    @EnvironmentObject var bluetoothManager: BluetoothManager
+
     var body: some View {
+        HStack(spacing:0) {
+            Text("设备名称")
+                .font(.system(size: 16))
+                .fontWeight(.bold)
+            Spacer()
+            Text(bluetoothManager.connectedPeripheral?.name ?? "未知设备")
+                .font(.system(size: 16))
+                .fontWeight(.thin)
+                .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))
+        }
+        .frame(height: 30)
+        .padding(.leading, 28)
+        .padding(.trailing, 28)
+        
+        HStack(spacing:0) {
+            Text("设备ID")
+                .font(.system(size: 16))
+                .fontWeight(.bold)
+            Spacer()
+            Text(bluetoothManager.connectedPeripheral?.identifier.uuidString ?? "--")
+                .font(.system(size: 16))
+                .fontWeight(.thin)
+                .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))
+        }
+        .frame(height: 30)
+        .padding(.leading, 28)
+        .padding(.trailing, 28)
+        
         HStack(spacing:0) {
             Text("PR")
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-            Text("76/min")
+            // Text("76/min")
+            Text("--/min")
                 .font(.system(size: 16))
                 .fontWeight(.thin)
                 .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))
@@ -79,7 +114,8 @@ struct TableView: View {
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-            Text("0mmHg")
+            // Text("0mmHg")
+            Text("--mmHg")
                 .font(.system(size: 16))
                 .fontWeight(.thin)
                 .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))
@@ -102,6 +138,6 @@ struct ResultView: View {
 }
 
 
-#Preview {
-    ResultView()
-}
+//#Preview {
+//    ResultView()
+//}
