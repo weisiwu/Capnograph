@@ -1,5 +1,78 @@
 import CoreBluetooth
 import Combine
+import Foundation
+
+// 对uuid做扩展
+extension CBUUID {
+    var hexString: String {
+        let uuidString = self.uuidString.replacingOccurrences(of: "-", with: "")
+        return uuidString
+    }
+    
+    var hexIntValue: UInt16? {
+        return UInt16(self.hexString, radix: 16)
+    }
+}
+
+//指令集合
+enum SensorCommand: UInt16 {
+    case CO2Waveform = 0x80 // 接受数据
+    case Zero = 0x82 // 校零
+    case Expand = 0xF2 // TODO: 后续待确认具体作用
+    case Settings = 0x84 // 更改读取设置
+    case StopContinuous = 0xC9 // 停止连读模式
+    case NACKError = 0xC8 // 非应答错误
+    case ResetNoBreaths = 0xCC // 清除窒息状态
+    case Reset = 0xF8 // 复位指令
+}
+
+//蓝牙服务UUID
+enum BLEServerUUID: UInt16 {
+    case BLESendDataSer = 0xFFE5 // 65509
+    case BLEReceiveDataSer = 0xFFE0 // 65504
+    case BLEModuleParamsSer = 0xFF90 // 65424
+    case BLEAntihijackSer = 0xFFC0 // 65472 反蓝牙劫持
+}
+
+//蓝牙特征UUID
+enum BLECharacteristicUUID: UInt16 {
+    case BLESendDataCha = 0xFFE9
+    case BLEReceiveDataCha = 0xFFE4
+    case BLERenameCha = 0xFF91
+    case BLEBaudCha = 0xFF93
+    case BLEAntihijackChaNofi = 0xFFC2
+    case BLEAntihijackCha = 0xFFC1
+};
+
+//判断是否为App中可订阅的服务
+func isAvalidServer(sUuid: UInt16?) -> Bool {
+    switch sUuid {
+    case BLEServerUUID.BLESendDataSer.rawValue,
+        BLEServerUUID.BLEReceiveDataSer.rawValue,
+        BLEServerUUID.BLEModuleParamsSer.rawValue,
+        BLEServerUUID.BLEAntihijackSer.rawValue:
+        return true
+    default:
+        return false
+    }
+    return false
+}
+
+//判断服务特征值是否为App中可订阅
+func isAvalidCharacteristic(cUuid: UInt16?) -> Bool {
+    switch cUuid {
+    case BLECharacteristicUUID.BLESendDataCha.rawValue,
+        BLECharacteristicUUID.BLEReceiveDataCha.rawValue,
+        BLECharacteristicUUID.BLERenameCha.rawValue,
+        BLECharacteristicUUID.BLEBaudCha.rawValue,
+        BLECharacteristicUUID.BLEAntihijackChaNofi.rawValue,
+        BLECharacteristicUUID.BLEAntihijackCha.rawValue:
+        return true
+    default:
+        return false
+    }
+    return false
+}
 
 class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private var centralManager: CBCentralManager!
@@ -9,11 +82,56 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var isScanning: Bool = false
     var startScanningCallback: (() -> Void)?
     var connectedCallback: (() -> Void)?
+    var sendArray: [UInt16] = []
+    var sendDataServer: CBService?
+    var sendDataCharacteristic: CBCharacteristic?
+    var isConnectToDevice: Bool = false
     
     override init() {
         super.init()
         // 中央设备管理器
         centralManager = CBCentralManager(delegate: self, queue: .main)
+    }
+    
+    /**------  发送指令，相关函数 ------*/
+
+    func appendCKS() {
+        var cks: UInt16 = 0;
+        for i in 0..<sendArray.count {
+            cks += sendArray[i];
+        }
+        cks=((~cks+1) & 0x7f);
+        sendArray.append(cks);
+    }
+
+//    func convertToData(from array: [UInt16]) -> Data {
+//        return array.withUnsafeBytes { Data($0) }
+//    }
+
+    func convertToData(from: [UInt16]) -> Data {
+        // 将UInt16数组转换为Data
+        var byteArray: [UInt8] = []
+        for uint16Value in from {
+            byteArray.append(UInt8(uint16Value & 0xFF))
+            byteArray.append(UInt8((uint16Value >> 8) & 0xFF))
+        }
+        return Data(byteArray)
+    }
+    
+    // 发送链接请求
+    func sendStopContinuous() {
+        sendArray.append(SensorCommand.StopContinuous.rawValue)
+        sendArray.append(0x01)
+        appendCKS()
+        if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            let data = convertToData(from: sendArray)
+            peripheral.writeValue(data, for: characteristic, type: .withResponse)
+            print("[sendStopContinuous]发起链接请求")
+        }
+    }
+    
+    func resetSendData() {
+        sendArray = []
     }
     
     /**------  中央设备事件回调 ------*/
@@ -45,18 +163,18 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             connectedPeripheral = nil
         }
     }
-    
-    // TODO: 如何手动触发链接设备？
-    // centralManager.stopScan()
-    // centralManager.connect(peripheral, options: nil)
 
     /**------  外围设备事件回调 ------*/
     // 读取服务
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        // TODO: 这里需要细化，肯定不是所有的service我们都需要
         if let services = peripheral.services {
             for service in services {
-                peripheral.discoverCharacteristics(nil, for: service)
+                if isAvalidServer(sUuid: service.uuid.hexIntValue) {
+                    peripheral.discoverCharacteristics(nil, for: service)
+                    if service.uuid.hexIntValue == BLEServerUUID.BLESendDataSer.rawValue {
+                        sendDataServer = service
+                    }
+                }
             }
         }
     }
@@ -65,8 +183,14 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if let characteristics = service.characteristics {
             for characteristic in characteristics {
-                peripheral.readValue(for: characteristic)
-                    // peripheral.setNotifyValue(true, for: characteristic)
+                if isAvalidCharacteristic(cUuid: characteristic.uuid.hexIntValue) {
+//                    peripheral.readValue(for: characteristic)
+                    if characteristic.uuid.hexIntValue == BLECharacteristicUUID.BLESendDataCha.rawValue {
+                        sendDataCharacteristic = characteristic
+                        // 读取到特征值后，开始发送命令
+                        sendStopContinuous()
+                    }
+                }
             }
         }
     }
@@ -74,7 +198,18 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     // 特征值更新
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if let value = characteristic.value {
-            print("Value for \(characteristic.uuid): \(String(data: value, encoding: .utf8))")
+            print("特征值更新Value for \(characteristic.uuid): \(String(data: value, encoding: .utf8))")
+        }
+    }
+    
+    // 外设返回响应（针对写特征值并等待返回的情况）
+    func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        if error != nil {
+            print("[sendStopContinuous]发起链接请求失败 => \(error)")
+            return
+        }
+        if let value = characteristic.value {
+            print("返回响应 \(characteristic.uuid): \(String(data: value, encoding: .utf8))")
         }
     }
     

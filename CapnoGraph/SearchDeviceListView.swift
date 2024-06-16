@@ -31,7 +31,7 @@ struct SearchDeviceListView: View {
                         }) {
                             Text("链接")
                                 .frame(width: 68, height: 32)
-                                .font(.system(size: 18))
+                                .font(.system(size: 16))
                                 .fontWeight(.thin)
                                 .background(Color(red: 232/255, green: 243/255, blue: 1))
                                 .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
