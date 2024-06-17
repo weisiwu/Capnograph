@@ -2,8 +2,8 @@ import SwiftUI
 
 struct AlertConfigView: View {
     var body: some View {
-        BasePageView(systemConfig: 3) {
-            Text("测试")
+        BasePageView(systemConfig: PageTypes.Alert) {
+            Text("警告参数")
         }
     }
 }
