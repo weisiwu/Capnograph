@@ -2,7 +2,7 @@ import SwiftUI
 
 struct DisplayConfigView: View {
     var body: some View {
-        BasePageView(systemConfig: PageTypes.Display) {
+        BasePageView(configPageType: ConfigItemTypes.Display) {
             Text("展示参数")
         }
     }

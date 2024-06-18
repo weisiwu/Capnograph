@@ -64,16 +64,15 @@ struct LoadingView: View {
 }
 
 struct ActionsTabView: View {
-    @State var selectedTabIndex: Int = PageTypes.Result.rawValue
+    @Binding var selectedTabIndex: Int
     @State var isCorrectTabIndex: Bool = false // 是否为点击了大于2的tab，正在校正tabIndex
-    @Binding var selectedPage: Int // 当前选中page
     @Binding var showToast: Bool
     @EnvironmentObject var bluetoothManager: BluetoothManager
     var toggleLoading: (Bool, String) -> Bool
     
     var body: some View {
         TabView(selection: $selectedTabIndex) {
-            SearchDeviceListView(selectedPeripheral: nil, showToast: $showToast, selectedPage: $selectedPage, toggleLoading: toggleLoading)
+            SearchDeviceListView(selectedPeripheral: nil, showToast: $showToast, selectedTabIndex: $selectedTabIndex, toggleLoading: toggleLoading)
                 .tabItem {
                     Image(selectedTabIndex == PageTypes.SearchDeviceList.rawValue ? "tabs_search_active" : "tabs_search")
                     Text("搜索设备")
@@ -87,44 +86,28 @@ struct ActionsTabView: View {
                 }
                 .tag(PageTypes.Result.rawValue)
             
-            ConfigView(selectedPage: $selectedPage, toggleLoading: toggleLoading)
+            ConfigView(toggleLoading: toggleLoading)
                 .tabItem {
                     Image(![PageTypes.SearchDeviceList.rawValue, PageTypes.Result.rawValue].contains(selectedTabIndex) ? "tabs_settings_active" : "tabs_settings")
                     Text("设置")
                 }
                 .tag(PageTypes.Config.rawValue)
         }
-        .onChange(of: selectedTabIndex) { newValue in
-            if [PageTypes.SearchDeviceList.rawValue, PageTypes.Result.rawValue, PageTypes.Config.rawValue].contains(newValue) && !isCorrectTabIndex {
-                selectedPage = newValue
-            }
-            isCorrectTabIndex = false
-            print("当前页面是selectedPage=> \(selectedPage)")
-        }
-        .onAppear {
-            if selectedPage >= PageTypes.Config.rawValue {
-                selectedTabIndex = PageTypes.Config.rawValue
-                isCorrectTabIndex = true
-            }
-            print("当前页面是123selectedPage=> \(selectedPage)")
-        }
     }
 }
 
 // 页面类型
 enum PageTypes: Int {
+    case NilPage = -1 // 非页面，主要用于处理配置一级页中蓝牙连接、校零等按钮。
     case SearchDeviceList = 0 // 附近设备
     case Result = 1 // 主页
     case Config = 2 // 设置一级页
-    case Alert = 3 // 告警设置二级页
-    case System = 4 // 系统设置二级页
-    case Module = 5 // 模块设置二级页
-    case Display = 6 // 展示设置二级页
 }
 
 struct BasePageView<Content: View>: View {
     let content: Content
-    @State private var selectedPage = PageTypes.Result.rawValue
+    @State private var selectedTabIndex: Int = PageTypes.Result.rawValue
+    @State private var selectedConfigPage: Int?
     @State private var isLoading = false
     @State private var loadingText = ""
     @State private var showToast = false
@@ -139,7 +122,7 @@ struct BasePageView<Content: View>: View {
 
     var title: String {
         get {
-            switch selectedPage {
+            switch selectedTabIndex {
             case PageTypes.SearchDeviceList.rawValue:
                 return "CapnoGraph - 附近设备";
             case PageTypes.Result.rawValue:
@@ -147,8 +130,8 @@ struct BasePageView<Content: View>: View {
             case PageTypes.Config.rawValue:
                 return "CapnoGraph - 设置";
             // 以下为设置的二级页面
-            case PageTypes.System.rawValue, PageTypes.Alert.rawValue, PageTypes.Display.rawValue, PageTypes.Module.rawValue:
-                return "";
+//            case PageTypes.System.rawValue, PageTypes.Alert.rawValue, PageTypes.Display.rawValue, PageTypes.Module.rawValue:
+//                return "";
             default:
                 return "CapnoGraph";
             }
@@ -159,11 +142,22 @@ struct BasePageView<Content: View>: View {
         self.content = content()
     }
 
+    // 一级页构造函数
     init(systemConfig: PageTypes?, @ViewBuilder content: () -> Content) {
         if let systemConfig {
-            self.selectedPage = systemConfig.rawValue
+            self.selectedTabIndex = systemConfig.rawValue
         }
         self.content = content()
+    }
+    
+    // 二级页构造函数
+    init(configPageType: ConfigItemTypes?, @ViewBuilder content: () -> Content) {
+        self.selectedTabIndex = PageTypes.Config.rawValue // tab保持在设置tab上
+        if let configPageType {
+            self.selectedConfigPage = configPageType.rawValue // 保存当前选中配置二级页类型
+        }
+        self.content = content()
+        print(self.selectedTabIndex)
     }
     
     var body: some View {
@@ -173,7 +167,7 @@ struct BasePageView<Content: View>: View {
                     Color.white.edgesIgnoringSafeArea(.all)
                         .frame(height: 0)
                     content
-                    ActionsTabView(selectedPage: $selectedPage, showToast: $showToast, toggleLoading: toggleLoading)
+                    ActionsTabView(selectedTabIndex: $selectedTabIndex, showToast: $showToast, toggleLoading: toggleLoading)
                 }
                 .navigationTitle(title)
                 .navigationBarTitleDisplayMode(.inline)

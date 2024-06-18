@@ -5,7 +5,7 @@ struct SearchDeviceListView: View {
     @State private var showAlert = false
     @State public var selectedPeripheral: CBPeripheral? = nil
     @Binding var showToast: Bool
-    @Binding var selectedPage: Int
+    @Binding var selectedTabIndex: Int
     @EnvironmentObject var bluetoothManager: BluetoothManager
     let systemHeight:CGFloat = UIScreen.main.bounds.height - 200
     var toggleLoading: ((Bool, String) -> Bool)?
@@ -51,7 +51,7 @@ struct SearchDeviceListView: View {
                                                         bluetoothManager.toastMessage = "链接成功"
                                                         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                                             showToast = false
-                                                            selectedPage = PageTypes.Result.rawValue
+                                                            selectedTabIndex = PageTypes.Result.rawValue
                                                         }
                                                     }
                                                 }
