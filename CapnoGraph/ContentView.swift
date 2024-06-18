@@ -65,7 +65,6 @@ struct LoadingView: View {
 
 struct ActionsTabView: View {
     @Binding var selectedTabIndex: Int
-    @State var isCorrectTabIndex: Bool = false // 是否为点击了大于2的tab，正在校正tabIndex
     @Binding var showToast: Bool
     @EnvironmentObject var bluetoothManager: BluetoothManager
     var toggleLoading: (Bool, String) -> Bool
@@ -129,9 +128,6 @@ struct BasePageView<Content: View>: View {
                 return "CapnoGraph";
             case PageTypes.Config.rawValue:
                 return "CapnoGraph - 设置";
-            // 以下为设置的二级页面
-//            case PageTypes.System.rawValue, PageTypes.Alert.rawValue, PageTypes.Display.rawValue, PageTypes.Module.rawValue:
-//                return "";
             default:
                 return "CapnoGraph";
             }
@@ -150,16 +146,6 @@ struct BasePageView<Content: View>: View {
         self.content = content()
     }
     
-    // 二级页构造函数
-    init(configPageType: ConfigItemTypes?, @ViewBuilder content: () -> Content) {
-        self.selectedTabIndex = PageTypes.Config.rawValue // tab保持在设置tab上
-        if let configPageType {
-            self.selectedConfigPage = configPageType.rawValue // 保存当前选中配置二级页类型
-        }
-        self.content = content()
-        print(self.selectedTabIndex)
-    }
-    
     var body: some View {
         ZStack {
             NavigationView() {
@@ -171,6 +157,7 @@ struct BasePageView<Content: View>: View {
                 }
                 .navigationTitle(title)
                 .navigationBarTitleDisplayMode(.inline)
+                .navigationBarBackButtonHidden(false)
             }
             .overlay(
                 isLoading ? LoadingView(loadingText: loadingText) : nil

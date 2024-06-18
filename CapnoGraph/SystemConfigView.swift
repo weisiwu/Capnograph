@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SystemConfigView: View {
     var body: some View {
-        BasePageView(configPageType: ConfigItemTypes.System) {
+        BaseConfigContainerView(configType: ConfigItemTypes.Alert) {
             Text("系统参数")
         }
     }
