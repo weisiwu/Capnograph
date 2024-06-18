@@ -70,6 +70,6 @@ struct DisplayConfigView: View {
         .background(Color.white)
         .listStyle(PlainListStyle())
         .padding()
-        .navigationTitle("CapnoGraph - 显示 设置")
+        .navigationTitle("CapnoGraph - 显示设置")
     }
 }
