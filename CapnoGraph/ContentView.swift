@@ -148,16 +148,11 @@ struct BasePageView<Content: View>: View {
     
     var body: some View {
         ZStack {
-            NavigationView() {
-                VStack {
-                    Color.white.edgesIgnoringSafeArea(.all)
-                        .frame(height: 0)
-                    content
-                    ActionsTabView(selectedTabIndex: $selectedTabIndex, showToast: $showToast, toggleLoading: toggleLoading)
-                }
-                .navigationTitle(title)
-                .navigationBarTitleDisplayMode(.inline)
-                .navigationBarBackButtonHidden(false)
+            VStack {
+                Color.white.edgesIgnoringSafeArea(.all)
+                    .frame(height: 0)
+                content
+                ActionsTabView(selectedTabIndex: $selectedTabIndex, showToast: $showToast, toggleLoading: toggleLoading)
             }
             .overlay(
                 isLoading ? LoadingView(loadingText: loadingText) : nil

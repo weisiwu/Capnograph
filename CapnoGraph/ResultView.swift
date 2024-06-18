@@ -126,13 +126,17 @@ struct TableView: View {
     }
 }
 
-
 struct ResultView: View {
     var body: some View {
-        VStack(spacing: 0){
-            LineChartView()
-            TableView()
-            Spacer()
+        NavigationView() {
+            VStack(spacing: 0){
+                LineChartView()
+                TableView()
+                Spacer()
+            }
+            .navigationTitle("CapnoGraph")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(false)
         }
     }
 }

@@ -87,7 +87,8 @@ struct ConfigItem: View {
             return [ConfigItemTypes.Alert, ConfigItemTypes.Display, ConfigItemTypes.Module, ConfigItemTypes.System].contains(configType)
         }
     }
-    
+    @State var isActive: Bool = false
+
     // 处理点击
     func _handleTapGesture(show: Bool, text: String? = nil) -> Bool? {
         if let result = handleTapGesture?(true, text) {
@@ -103,6 +104,21 @@ struct ConfigItem: View {
     var body: some View {
         if isLink {
             ZStack(alignment: .leading) {
+                NavigationLink(destination: AlertConfigView()) {
+                    HStack(spacing: 0) {
+                        Text(text)
+                            .font(.system(size: 20))
+                            .fontWeight(.light)
+                            .padding(.bottom, 2)
+                        Spacer()
+                        Image(icon)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 24, height: 24)
+                    }
+                    .frame(height: 40)
+                }
+                .opacity(0)
                 HStack(spacing: 0) {
                     Text(text)
                         .font(.system(size: 20))
@@ -113,11 +129,12 @@ struct ConfigItem: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 24, height: 24)
+                        .padding(.leading, 8)
                 }
                 .frame(height: 40)
                 .contentShape(Rectangle())
-                .onTapGesture {
-                    currentConfigType = configType.rawValue
+                .onAppear {
+                    isActive = currentConfigType == configType.rawValue
                 }
             }
         } else {
@@ -167,42 +184,42 @@ struct ConfigView: View {
         }
         return false
     }
-
+    
     @ViewBuilder
     var body: some View {
-        VStack(spacing: 0) {
-            switch currentConfigType {
-            case ConfigItemTypes.Alert.rawValue:
-                AlertConfigView()
-            case ConfigItemTypes.Display.rawValue:
-                DisplayConfigView()
-            case ConfigItemTypes.System.rawValue:
-                SystemConfigView()
-            case ConfigItemTypes.Module.rawValue:
-                ModuleConfigView()
-            default:
-                List {
-                    ConfigItem(text: "蓝牙连接", icon: "setting_icon_bluetooth", configType: ConfigItemTypes.ConnectBlueTooth, currentConfigType: $currentConfigType)
-                    ConfigItem(text: "校零", icon: "setting_icon_reset", configType: ConfigItemTypes.CorrectZero, currentConfigType: $currentConfigType, handleTapGesture: handleTapGesture)
-                    ConfigItem(text: "报警参数", icon: "setting_icon_back", configType: ConfigItemTypes.Alert, currentConfigType: $currentConfigType)
-                    ConfigItem(text: "显示参数", icon: "setting_icon_back", configType: ConfigItemTypes.Display, currentConfigType: $currentConfigType)
-                    ConfigItem(text: "模块参数", icon: "setting_icon_back", configType: ConfigItemTypes.Module, currentConfigType: $currentConfigType)
-                    ConfigItem(text: "系统设置", icon: "setting_icon_back", configType: ConfigItemTypes.System, currentConfigType: $currentConfigType)
-                    ConfigItem(text: "关机", icon: "setting_icon_shutdown", configType: ConfigItemTypes.Showdown, currentConfigType: $currentConfigType, handleTapGesture: handleTapGesture)
-                    ConfigItem(text: "屏幕常亮", icon: "setting_icon_lighter", configType: ConfigItemTypes.Lighter, currentConfigType: $currentConfigType)
+        NavigationView() {
+            VStack(spacing: 0) {
+                switch currentConfigType {
+                case ConfigItemTypes.Alert.rawValue:
+                    AlertConfigView()
+                case ConfigItemTypes.Display.rawValue:
+                    DisplayConfigView()
+                case ConfigItemTypes.System.rawValue:
+                    SystemConfigView()
+                case ConfigItemTypes.Module.rawValue:
+                    ModuleConfigView()
+                default:
+                    List {
+                        ConfigItem(text: "蓝牙连接", icon: "setting_icon_bluetooth", configType: ConfigItemTypes.ConnectBlueTooth, currentConfigType: $currentConfigType)
+                        ConfigItem(text: "校零", icon: "setting_icon_reset", configType: ConfigItemTypes.CorrectZero, currentConfigType: $currentConfigType, handleTapGesture: handleTapGesture)
+                        ConfigItem(text: "报警参数", icon: "setting_icon_back", configType: ConfigItemTypes.Alert, currentConfigType: $currentConfigType)
+                        ConfigItem(text: "显示参数", icon: "setting_icon_back", configType: ConfigItemTypes.Display, currentConfigType: $currentConfigType)
+                        ConfigItem(text: "模块参数", icon: "setting_icon_back", configType: ConfigItemTypes.Module, currentConfigType: $currentConfigType)
+                        ConfigItem(text: "系统设置", icon: "setting_icon_back", configType: ConfigItemTypes.System, currentConfigType: $currentConfigType)
+                        ConfigItem(text: "关机", icon: "setting_icon_shutdown", configType: ConfigItemTypes.Showdown, currentConfigType: $currentConfigType, handleTapGesture: handleTapGesture)
+                        ConfigItem(text: "屏幕常亮", icon: "setting_icon_lighter", configType: ConfigItemTypes.Lighter, currentConfigType: $currentConfigType)
+                    }
+                    .background(Color.white)
+                    .listStyle(PlainListStyle())
+                    .padding(.bottom, 48)
                 }
-                .background(Color.white)
-                .listStyle(PlainListStyle())
-                .padding(.bottom, 48)
             }
-        }
-        .onDisappear {
-            currentConfigType = nil
+            .navigationTitle("CapnoGraph - 设置")
+            .navigationBarTitleDisplayMode(.inline)
+            .onDisappear {
+                currentConfigType = nil
+            }
         }
     }
 
 }
-
-//#Preview {
-//    SystemConfigView()
-//}
