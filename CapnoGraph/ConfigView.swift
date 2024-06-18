@@ -29,23 +29,6 @@ struct BaseConfigContainerView<Content: View>: View {
         return show
     }
 
-    var title: String {
-        get {
-            switch selectedConfigPage {
-            case ConfigItemTypes.Alert.rawValue:
-                return "告警";
-            case ConfigItemTypes.Display.rawValue:
-                return "展示";
-            case ConfigItemTypes.Module.rawValue:
-                return "模块";
-            case ConfigItemTypes.System.rawValue:
-                return "系统";
-            default:
-                return "";
-            }
-        }
-    }
-
     init(configType: ConfigItemTypes, @ViewBuilder content: () -> Content) {
         self.selectedConfigPage = configType.rawValue
         self.content = content()
@@ -73,7 +56,6 @@ struct BaseConfigContainerView<Content: View>: View {
         }
     }
 }
-
 
 //一级配置View中的配置项目View
 struct ConfigItem: View {
@@ -104,7 +86,7 @@ struct ConfigItem: View {
     var body: some View {
         if isLink {
             ZStack(alignment: .leading) {
-                NavigationLink(destination: AlertConfigView()) {
+                NavigationLink(destination: SubConfigContainerView(configType: configType.rawValue)) {
                     HStack(spacing: 0) {
                         Text(text)
                             .font(.system(size: 20))
@@ -221,5 +203,23 @@ struct ConfigView: View {
             }
         }
     }
+}
 
+struct SubConfigContainerView: View {
+    var configType: Int?
+    
+    var body: some View {
+        switch configType {
+        case ConfigItemTypes.Alert.rawValue:
+            AlertConfigView()
+        case ConfigItemTypes.System.rawValue:
+            SystemConfigView()
+        case ConfigItemTypes.Module.rawValue:
+            ModuleConfigView()
+        case ConfigItemTypes.Display.rawValue:
+            DisplayConfigView()
+        default:
+            EmptyView()
+        }
+    }
 }
