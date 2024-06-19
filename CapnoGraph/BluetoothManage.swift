@@ -2,6 +2,7 @@ import CoreBluetooth
 import Combine
 import Foundation
 
+
 // 对uuid做扩展
 extension CBUUID {
     var hexString: String {
@@ -15,6 +16,8 @@ extension CBUUID {
 }
 
 // TODO: 需要先加上AntiHijack才能发送命令
+// TODO: 加完反劫持后需要先调试看效果，再决定是否将 updateCO2Value 也嫁过来
+// TODO: confirmedDescriptorWrite 同上
 //指令集合
 enum SensorCommand: UInt8 {
     case CO2Waveform = 0x80 // 接受数据
@@ -44,6 +47,11 @@ enum BLECharacteristicUUID: UInt16 {
     case BLEAntihijackChaNofi = 0xFFC2
     case BLEAntihijackCha = 0xFFC1
 };
+
+//蓝牙描述符UUID
+enum BLEDescriptorUUID: UInt16 {
+    case CCCDDescriptor = 0x2902
+}
 
 //判断是否为App中可订阅的服务
 func isAvalidServer(sUuid: UInt16?) -> Bool {
@@ -84,8 +92,19 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var startScanningCallback: (() -> Void)?
     var connectedCallback: (() -> Void)?
     var sendArray: [UInt8] = []
-    var sendDataServer: CBService?
-    var sendDataCharacteristic: CBCharacteristic?
+    var sendDataService: CBService
+    var sendDataCharacteristic: CBCharacteristic
+    var receiveDataService: CBService
+    var receiveDataCharacteristic: CBCharacteristic
+    var moduleParamsService: CBService
+    var moduleParamsCharacteristic: CBCharacteristic
+    var antiHijackService: CBService
+    var antiHijackCharacteristic: CBCharacteristic
+    // 这三个特征值没有明确属于哪个服务，所以可能为空
+    var baudCharacteristic: CBCharacteristic?
+    var renameCharacteristic: CBCharacteristic?
+    var antiHijackNotifyCharacteristic: CBCharacteristic?
+    var CCCDDescriptor: CBDescriptor?
     var isConnectToDevice: Bool = false
     
     override init() {
@@ -95,7 +114,111 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
     
     /**------  发送指令，相关函数 ------*/
-
+    
+    // 对指定UUID的服务进行注册
+    func registerService(peripheral: CBPeripheral?, service: CBService?) {
+        guard let _peripheral = peripheral else {
+            return
+        }
+        guard let _service = service else {
+            return
+        }
+        // 如果不在扫描的服务列表中，不扫描
+        if !isAvalidServer(sUuid: _service.uuid.hexIntValue) {
+            return
+        }
+        
+        switch _service.uuid.hexIntValue {
+        case BLEServerUUID.BLESendDataSer.rawValue:
+            sendDataService = _service
+            _peripheral.discoverCharacteristics(nil, for: sendDataService)
+        case BLEServerUUID.BLEReceiveDataSer.rawValue:
+            receiveDataService = _service
+            _peripheral.discoverCharacteristics(nil, for: receiveDataService)
+        case BLEServerUUID.BLEModuleParamsSer.rawValue:
+            moduleParamsService = _service
+            _peripheral.discoverCharacteristics(nil, for: moduleParamsService)
+        case BLEServerUUID.BLEAntihijackSer.rawValue:
+            antiHijackService = _service
+            _peripheral.discoverCharacteristics(nil, for: antiHijackService)
+        default:
+            print("not match service \(_service.uuid.hexIntValue)")
+        }
+    }
+    
+    // 对指定UUID的特征值进行注册
+    func registerCharacteristic(peripheral: CBPeripheral?, characteristic: CBCharacteristic?) {
+        guard let _peripheral = peripheral else {
+            return
+        }
+        guard let _characteristic = characteristic else {
+            return
+        }
+        if !isAvalidCharacteristic(cUuid: _characteristic.uuid.hexIntValue) {
+            return
+        }
+        
+        switch _characteristic.uuid.hexIntValue {
+        case BLECharacteristicUUID.BLEReceiveDataCha.rawValue:
+            receiveDataCharacteristic = _characteristic
+            print("查看属性==> \(receiveDataCharacteristic.properties)")
+//            connect(m_service, &QLowEnergyService::stateChanged, this, &DeviceHandler::serviceStateChanged);
+//            connect(m_service, &QLowEnergyService::characteristicChanged, this, &DeviceHandler::updateCO2Value);
+//            connect(m_service, &QLowEnergyService::descriptorWritten, this, &DeviceHandler::confirmedDescriptorWrite);
+        case BLECharacteristicUUID.BLESendDataCha.rawValue:
+            sendDataCharacteristic = _characteristic
+            sendStopContinuous()
+        case BLECharacteristicUUID.BLERenameCha.rawValue:
+            renameCharacteristic = _characteristic
+        case BLECharacteristicUUID.BLEBaudCha.rawValue:
+            baudCharacteristic = _characteristic
+        case BLECharacteristicUUID.BLEAntihijackChaNofi.rawValue:
+            antiHijackNotifyCharacteristic = _characteristic
+        case BLECharacteristicUUID.BLEAntihijackCha.rawValue:
+            antiHijackCharacteristic = _characteristic
+        default:
+            print("not match characteristic \(_characteristic.uuid.hexIntValue)")
+        }
+    }
+    
+    // 对指定UUID的描述符进行注册
+    func registerDescriptor(peripheral: CBPeripheral?, descriptor: CBDescriptor?) {
+        guard let _peripheral = peripheral else {
+            return
+        }
+        guard let _descriptor = descriptor else {
+            return
+        }
+//        if !isAvalidCharacteristic(cUuid: _characteristic.uuid.hexIntValue) {
+//            return
+//        }
+        
+        switch _descriptor.uuid.hexIntValue {
+        case BLEDescriptorUUID.CCCDDescriptor.rawValue:
+            // 客户端如何处理服务器特征值更新(0x2902)
+            // 启用通知: QByteArray::fromHex("0100")
+            // 禁用通知: QByteArray::fromHex("0000")
+            // 这里主要是接受数据、反蓝牙劫持服务(service)开启了接受通知
+            CCCDDescriptor = _descriptor;
+            // TODO: 写入0100，启用通知
+            // 这个是接受数据的启动代码
+//                m_service->writeDescriptor(m_notificationDesc, QByteArray::fromHex("0100"));
+            // 这个是反蓝牙劫持的启用代码 BLEAntihijackChaNofi
+//                m_antiHijackServer->writeDescriptor(m_Desc, QByteArray::fromHex("0100"));
+            // 这个是写入反劫持串
+//            writeAntihijackValue("301001301001");;
+//            if (hijack.isValid()) {
+//                m_antiHijackServer->writeCharacteristic(hijack,QByteArray::fromStdString("301001301001"));
+//            }
+        default:
+            print("not specify descriptor => \(_descriptor.uuid.hexIntValue) handled")
+        }
+    }
+    
+    // 处理反劫持
+    func antiHijack() {
+    }
+    
     func appendCKS() {
         var cks: UInt8 = 0;
         for i in 0..<sendArray.count {
@@ -114,9 +237,10 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         sendArray.append(SensorCommand.StopContinuous.rawValue)
         sendArray.append(0x01)
         appendCKS()
-        if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
-            let data = convertToData(from: sendArray)
-            peripheral.writeValue(data, for: characteristic, type: .withResponse)
+
+        let data = convertToData(from: sendArray)
+        if let peripheral = connectedPeripheral {
+            peripheral.writeValue(data, for: sendDataCharacteristic, type: .withResponse)
             print("[sendStopContinuous]发起链接请求")
         }
     }
@@ -160,12 +284,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let services = peripheral.services {
             for service in services {
-                if isAvalidServer(sUuid: service.uuid.hexIntValue) {
-                    peripheral.discoverCharacteristics(nil, for: service)
-                    if service.uuid.hexIntValue == BLEServerUUID.BLESendDataSer.rawValue {
-                        sendDataServer = service
-                    }
-                }
+                registerService(peripheral: peripheral, service: service)
             }
         }
     }
@@ -174,14 +293,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if let characteristics = service.characteristics {
             for characteristic in characteristics {
-                if isAvalidCharacteristic(cUuid: characteristic.uuid.hexIntValue) {
-//                    peripheral.readValue(for: characteristic)
-                    if characteristic.uuid.hexIntValue == BLECharacteristicUUID.BLESendDataCha.rawValue {
-                        sendDataCharacteristic = characteristic
-                        // 读取到特征值后，开始发送命令
-                        sendStopContinuous()
-                    }
-                }
+                registerCharacteristic(peripheral: peripheral, characteristic: characteristic)
             }
         }
     }
@@ -196,7 +308,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     // 外设返回响应（针对写特征值并等待返回的情况）
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
         if error != nil {
-            print("[sendStopContinuous]发起链接请求失败 => \(error)")
+            print("[sendStopContinuous]发起链接请求失败 => \(error) 尝试写入的特征是=>\(characteristic) 此时的设备是 \(connectedPeripheral)")
             return
         }
         if let value = characteristic.value {
@@ -206,7 +318,25 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     
     /**------  监听蓝牙状态 ------*/
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        print("监听蓝牙状态")
+        switch central.state {
+        case .poweredOn:
+            print("Bluetooth is powered on and ready to use.")
+            // 在此处启动扫描或恢复连接
+            centralManager.scanForPeripherals(withServices: nil, options: nil)
+        case .poweredOff:
+            print("Bluetooth is currently powered off.")
+        case .resetting:
+            print("Bluetooth is resetting.")
+        case .unauthorized:
+            print("Bluetooth is not authorized for this app.")
+        case .unsupported:
+            print("Bluetooth is not supported on this device.")
+        case .unknown:
+            print("Bluetooth state is unknown.")
+        @unknown default:
+            print("A previously unknown Bluetooth state occurred.")
+        }
+
     }
 
     /**------  工具方法 ------*/
