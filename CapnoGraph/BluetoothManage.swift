@@ -14,6 +14,7 @@ extension CBUUID {
     }
 }
 
+// TODO: 需要先加上AntiHijack才能发送命令
 //指令集合
 enum SensorCommand: UInt8 {
     case CO2Waveform = 0x80 // 接受数据
