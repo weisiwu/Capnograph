@@ -1,0 +1,25 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>qml/CapnometerSettings.qml</file>
+        <file>qml/MonitorPage.qml</file>
+        <file>qml/qmldir</file>
+        <file>qml/CapButton.qml</file>
+        <file>qml/SettingsPage.qml</file>
+        <file>qml/SearchPage.qml</file>
+        <file>qml/BottomLine.qml</file>
+        <file>qml/InfoPage.qml</file>
+        <file>qml/ValueComponent.qml</file>
+        <file>qml/SettingsLable.qml</file>
+        <file>qml/ModuleParams.qml</file>
+        <file>qml/DisplayParams.qml</file>
+        <file>qml/AlarmParams.qml</file>
+        <file>qml/CapSpinBox.qml</file>
+        <file>qml/App.qml</file>
+        <file>qml/SplashScreen.qml</file>
+        <file>qml/Debug.qml</file>
+        <file>qml/PasswordInput.qml</file>
+        <file>qml/DebugPage.qml</file>
+        <file>qml/SystemSettings.qml</file>
+    </qresource>
+</RCC>
