@@ -15,7 +15,7 @@ extension CBUUID {
 }
 
 //指令集合
-enum SensorCommand: UInt16 {
+enum SensorCommand: UInt8 {
     case CO2Waveform = 0x80 // 接受数据
     case Zero = 0x82 // 校零
     case Expand = 0xF2 // TODO: 后续待确认具体作用
@@ -82,7 +82,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var isScanning: Bool = false
     var startScanningCallback: (() -> Void)?
     var connectedCallback: (() -> Void)?
-    var sendArray: [UInt16] = []
+    var sendArray: [UInt8] = []
     var sendDataServer: CBService?
     var sendDataCharacteristic: CBCharacteristic?
     var isConnectToDevice: Bool = false
@@ -96,7 +96,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     /**------  发送指令，相关函数 ------*/
 
     func appendCKS() {
-        var cks: UInt16 = 0;
+        var cks: UInt8 = 0;
         for i in 0..<sendArray.count {
             cks += sendArray[i];
         }
@@ -104,18 +104,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         sendArray.append(cks);
     }
 
-//    func convertToData(from array: [UInt16]) -> Data {
-//        return array.withUnsafeBytes { Data($0) }
-//    }
-
-    func convertToData(from: [UInt16]) -> Data {
-        // 将UInt16数组转换为Data
-        var byteArray: [UInt8] = []
-        for uint16Value in from {
-            byteArray.append(UInt8(uint16Value & 0xFF))
-            byteArray.append(UInt8((uint16Value >> 8) & 0xFF))
-        }
-        return Data(byteArray)
+    func convertToData(from: [UInt8]) -> Data {
+        return Data(from)
     }
     
     // 发送链接请求
