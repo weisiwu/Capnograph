@@ -73,3 +73,7 @@ struct DisplayConfigView: View {
         .navigationTitle("CapnoGraph - 显示设置")
     }
 }
+
+#Preview {
+    DisplayConfigView()
+}

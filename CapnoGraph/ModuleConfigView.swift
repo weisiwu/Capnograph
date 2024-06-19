@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct SingleSlider: UIViewRepresentable {
+struct SingleSliderInner: UIViewRepresentable {
     @Binding var value: Double
     var minimumValue: Float
     var maximumValue: Float
@@ -38,7 +38,7 @@ struct SingleSlider: UIViewRepresentable {
     }
 }
 
-struct SingleSliderItem: View {
+struct SingleSlider: View {
     var title: String
     var minimumValue: Float
     var maximumValue: Float
@@ -79,7 +79,7 @@ struct SingleSliderItem: View {
                         .font(.system(size: 16))
                         .fontWeight(.thin)
                         .foregroundColor(.black)
-                    SingleSlider(value: $value, minimumValue: minimumValue, maximumValue: maximumValue)
+                    SingleSliderInner(value: $value, minimumValue: minimumValue, maximumValue: maximumValue)
                         .accentColor(Color(red: 0, green: 206/255, blue: 201/255))
                 }
             }
@@ -99,7 +99,7 @@ struct ModuleConfigView: View {
         BaseConfigContainerView(configType: ConfigItemTypes.Alert) {
             VStack(alignment: .leading) {
 
-                SingleSliderItem(
+                SingleSlider(
                     title: "大气压(mmHg)",
                     minimumValue: 94.6,
                     maximumValue: 104.9,
@@ -107,14 +107,14 @@ struct ModuleConfigView: View {
                     value: $airPressure
                 )
 
-                SingleSliderItem(
+                SingleSlider(
                     title: "窒息时间(S)",
                     minimumValue: 10,
                     maximumValue: 60,
                     value: $asphyxiationTime
                 )
                 
-                SingleSliderItem(
+                SingleSlider(
                     title: "氧气补偿(%)",
                     minimumValue: 0,
                     maximumValue: 100,
@@ -148,6 +148,6 @@ struct ModuleConfigView: View {
     }
 }
 
-#Preview {
-    ModuleConfigView()
-}
+//#Preview {
+//    ModuleConfigView()
+//}
