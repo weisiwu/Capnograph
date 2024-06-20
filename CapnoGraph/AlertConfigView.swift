@@ -1,12 +1,14 @@
 import SwiftUI
 
-//TODO: 到零就变成黑色的
+// TODO: 两个滑块的字太近，会导致互相遮盖
+//TODO: 右滑块能滑动到左滑块左边，需要限制位置
 struct RangeSlider: View {
     var title: String
     @Binding var lowerValue: CGFloat // 最小值
     @Binding var upperValue: CGFloat // 最大值
     var range: ClosedRange<CGFloat> // 可选值范围
     var unit: String = "S"
+    var btnSize: CGFloat = 30
     // 当前选中范围
     var currentRange: CGFloat {
         CGFloat(range.upperBound - range.lowerBound)
@@ -64,13 +66,14 @@ struct RangeSlider: View {
                     x: calculateOffsetX(for: CGFloat(lowerValue), in: geometry, with: currentRange, minV: Float(range.lowerBound)),
                     y: -30
                 )
-                .animation(.linear, value: lowerValue)
+                .animation(.easeInOut, value: lowerValue)
                 .frame(alignment: .leading)
                 .font(.system(size: 16))
                 .fontWeight(.regular)
                 .foregroundColor(.black)
             Circle()
-                .frame(width: knobRadius * 3, height: knobRadius * 3)
+                .opacity(0)
+                .frame(width: btnSize, height: btnSize)
                 .shadow(radius: 2)
                 .offset(x: lowerKnobPosition)
                 .background(
@@ -93,14 +96,15 @@ struct RangeSlider: View {
                     x: calculateOffsetX(for: CGFloat(upperValue), in: geometry, with: currentRange, minV: Float(range.lowerBound)),
                     y: -30
                 )
-                .animation(.linear, value: upperValue)
+                .animation(.easeInOut, value: upperValue)
                 .frame(alignment: .leading)
                 .font(.system(size: 16))
                 .fontWeight(.regular)
                 .foregroundColor(.black)
 
             Circle()
-                .frame(width: knobRadius * 3, height: knobRadius * 3)
+                .opacity(0)
+                .frame(width: btnSize, height: btnSize)
                 .shadow(radius: 2)
                 .offset(x: upperKnobPosition - knobRadius * 2)
                 .background(
@@ -172,6 +176,6 @@ struct AlertConfigView: View {
     }
 }
 
-#Preview {
-    AlertConfigView()
-}
+//#Preview {
+//    AlertConfigView()
+//}

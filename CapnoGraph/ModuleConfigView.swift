@@ -1,16 +1,25 @@
 import SwiftUI
 
+func resizeImage(_ image: UIImage, targetSize: CGSize) -> UIImage? {
+    UIGraphicsBeginImageContextWithOptions(targetSize, false, 0.0)
+    image.draw(in: CGRect(origin: .zero, size: targetSize))
+    let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+    
+    return resizedImage
+}
+
 struct SingleSliderInner: UIViewRepresentable {
     @Binding var value: Double
     var minimumValue: Float
     var maximumValue: Float
+    var btnSize: CGFloat = 30
     
     func makeUIView(context: Context) -> UISlider {
         let slider = UISlider(frame: .zero)
         slider.minimumValue = minimumValue // 设置最小值
         slider.maximumValue = maximumValue // 设置最大值
-        //TODO: 需要调节图片大小
-        slider.setThumbImage(UIImage(named: "slider_icon"), for: .normal)
+        slider.setThumbImage(resizeImage(UIImage(named: "slider_right")!, targetSize: CGSize(width: btnSize, height: btnSize)), for: .normal)
         slider.addTarget(context.coordinator, action: #selector(Coordinator.valueChanged(_:)), for: .valueChanged)
         return slider
     }
