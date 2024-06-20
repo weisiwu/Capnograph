@@ -2,6 +2,8 @@ import CoreBluetooth
 import Combine
 import Foundation
 
+let antiHijackStr = "301001301001"
+let antiHijackData = antiHijackStr.data(using: .utf8)!
 
 // 对uuid做扩展
 extension CBUUID {
@@ -18,6 +20,7 @@ extension CBUUID {
 // TODO: 需要先加上AntiHijack才能发送命令
 // TODO: 加完反劫持后需要先调试看效果，再决定是否将 updateCO2Value 也嫁过来
 // TODO: confirmedDescriptorWrite 同上
+// TODO: QT中的getFirstArray逻辑不了解
 //指令集合
 enum SensorCommand: UInt8 {
     case CO2Waveform = 0x80 // 接受数据
@@ -92,14 +95,14 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var startScanningCallback: (() -> Void)?
     var connectedCallback: (() -> Void)?
     var sendArray: [UInt8] = []
-    var sendDataService: CBService
-    var sendDataCharacteristic: CBCharacteristic
-    var receiveDataService: CBService
-    var receiveDataCharacteristic: CBCharacteristic
-    var moduleParamsService: CBService
-    var moduleParamsCharacteristic: CBCharacteristic
-    var antiHijackService: CBService
-    var antiHijackCharacteristic: CBCharacteristic
+    var sendDataService: CBService?
+    var sendDataCharacteristic: CBCharacteristic?
+    var receiveDataService: CBService?
+    var receiveDataCharacteristic: CBCharacteristic?
+    var moduleParamsService: CBService?
+    var moduleParamsCharacteristic: CBCharacteristic?
+    var antiHijackService: CBService?
+    var antiHijackCharacteristic: CBCharacteristic?
     // 这三个特征值没有明确属于哪个服务，所以可能为空
     var baudCharacteristic: CBCharacteristic?
     var renameCharacteristic: CBCharacteristic?
@@ -131,16 +134,20 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         switch _service.uuid.hexIntValue {
         case BLEServerUUID.BLESendDataSer.rawValue:
             sendDataService = _service
-            _peripheral.discoverCharacteristics(nil, for: sendDataService)
+            _peripheral.discoverCharacteristics(nil, for: _service)
         case BLEServerUUID.BLEReceiveDataSer.rawValue:
+            // TODO: 存疑，目前和QT代码逻辑相反，QT是先注册后触发，我是触发discoverChar后再其中执行anti等逻辑
+            // connect(m_service, &QLowEnergyService::stateChanged, this, &DeviceHandler::serviceStateChanged);
+            // connect(m_service, &QLowEnergyService::characteristicChanged, this, &DeviceHandler::updateCO2Value);
+            // connect(m_service, &QLowEnergyService::descriptorWritten, this, &DeviceHandler::confirmedDescriptorWrite);
             receiveDataService = _service
-            _peripheral.discoverCharacteristics(nil, for: receiveDataService)
+            _peripheral.discoverCharacteristics(nil, for: _service)
         case BLEServerUUID.BLEModuleParamsSer.rawValue:
             moduleParamsService = _service
-            _peripheral.discoverCharacteristics(nil, for: moduleParamsService)
+            _peripheral.discoverCharacteristics(nil, for: _service)
         case BLEServerUUID.BLEAntihijackSer.rawValue:
             antiHijackService = _service
-            _peripheral.discoverCharacteristics(nil, for: antiHijackService)
+            _peripheral.discoverCharacteristics(nil, for: _service)
         default:
             print("not match service \(_service.uuid.hexIntValue)")
         }
@@ -158,13 +165,17 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             return
         }
         
+        // 客户端如何处理服务器特征值更新(0x2902)
+        // 启用通知: QByteArray::fromHex("0100")
+        // 禁用通知: QByteArray::fromHex("0000")
+        // 这里主要是接受数据、反蓝牙劫持服务(service)开启了接受通知
+        // 在swift的CB中，和QT的QLowEnergyService设计不同，有独立的方法setNotifyValue来完成对描述符的订阅
         switch _characteristic.uuid.hexIntValue {
         case BLECharacteristicUUID.BLEReceiveDataCha.rawValue:
             receiveDataCharacteristic = _characteristic
-            print("查看属性==> \(receiveDataCharacteristic.properties)")
-//            connect(m_service, &QLowEnergyService::stateChanged, this, &DeviceHandler::serviceStateChanged);
-//            connect(m_service, &QLowEnergyService::characteristicChanged, this, &DeviceHandler::updateCO2Value);
-//            connect(m_service, &QLowEnergyService::descriptorWritten, this, &DeviceHandler::confirmedDescriptorWrite);
+            // 监听接受数据广播
+            peripheral?.setNotifyValue(true, for: _characteristic)
+            print("接受数据广播==> \(_characteristic.properties)")
         case BLECharacteristicUUID.BLESendDataCha.rawValue:
             sendDataCharacteristic = _characteristic
             sendStopContinuous()
@@ -174,47 +185,19 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             baudCharacteristic = _characteristic
         case BLECharacteristicUUID.BLEAntihijackChaNofi.rawValue:
             antiHijackNotifyCharacteristic = _characteristic
+            // 监听反劫持广播
+            peripheral?.setNotifyValue(true, for: _characteristic)
+            print("反劫持数据广播==> \(_characteristic.properties)")
+            // 写入反劫持串
+            peripheral?.writeValue(antiHijackData, for: _characteristic, type: .withResponse)
+            print("写入反劫持串成功")
         case BLECharacteristicUUID.BLEAntihijackCha.rawValue:
             antiHijackCharacteristic = _characteristic
         default:
             print("not match characteristic \(_characteristic.uuid.hexIntValue)")
         }
     }
-    
-    // 对指定UUID的描述符进行注册
-    func registerDescriptor(peripheral: CBPeripheral?, descriptor: CBDescriptor?) {
-        guard let _peripheral = peripheral else {
-            return
-        }
-        guard let _descriptor = descriptor else {
-            return
-        }
-//        if !isAvalidCharacteristic(cUuid: _characteristic.uuid.hexIntValue) {
-//            return
-//        }
         
-        switch _descriptor.uuid.hexIntValue {
-        case BLEDescriptorUUID.CCCDDescriptor.rawValue:
-            // 客户端如何处理服务器特征值更新(0x2902)
-            // 启用通知: QByteArray::fromHex("0100")
-            // 禁用通知: QByteArray::fromHex("0000")
-            // 这里主要是接受数据、反蓝牙劫持服务(service)开启了接受通知
-            CCCDDescriptor = _descriptor;
-            // TODO: 写入0100，启用通知
-            // 这个是接受数据的启动代码
-//                m_service->writeDescriptor(m_notificationDesc, QByteArray::fromHex("0100"));
-            // 这个是反蓝牙劫持的启用代码 BLEAntihijackChaNofi
-//                m_antiHijackServer->writeDescriptor(m_Desc, QByteArray::fromHex("0100"));
-            // 这个是写入反劫持串
-//            writeAntihijackValue("301001301001");;
-//            if (hijack.isValid()) {
-//                m_antiHijackServer->writeCharacteristic(hijack,QByteArray::fromStdString("301001301001"));
-//            }
-        default:
-            print("not specify descriptor => \(_descriptor.uuid.hexIntValue) handled")
-        }
-    }
-    
     // 处理反劫持
     func antiHijack() {
     }
@@ -239,8 +222,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         appendCKS()
 
         let data = convertToData(from: sendArray)
-        if let peripheral = connectedPeripheral {
-            peripheral.writeValue(data, for: sendDataCharacteristic, type: .withResponse)
+        if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            peripheral.writeValue(data, for: characteristic, type: .withResponse)
             print("[sendStopContinuous]发起链接请求")
         }
     }
@@ -280,7 +263,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
 
     /**------  外围设备事件回调 ------*/
-    // 读取服务
+    // 扫描设备服务
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let services = peripheral.services {
             for service in services {
@@ -289,7 +272,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
     
-    // 读取特征值
+    // 扫描服务特征值
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if let characteristics = service.characteristics {
             for characteristic in characteristics {
