@@ -17,9 +17,6 @@ extension CBUUID {
     }
 }
 
-// TODO: 需要先加上AntiHijack才能发送命令
-// TODO: 加完反劫持后需要先调试看效果，再决定是否将 updateCO2Value 也嫁过来
-// TODO: confirmedDescriptorWrite 同上
 // TODO: QT中的getFirstArray逻辑不了解
 //指令集合
 enum SensorCommand: UInt8 {
@@ -41,6 +38,14 @@ enum BLEServerUUID: UInt16 {
     case BLEAntihijackSer = 0xFFC0 // 65472 反蓝牙劫持
 }
 
+//蓝牙服务顺序排列
+let BLEServerOrderedUUID: [UInt16] = [
+    BLEServerUUID.BLEAntihijackSer.rawValue,
+    BLEServerUUID.BLEReceiveDataSer.rawValue,
+    BLEServerUUID.BLESendDataSer.rawValue,
+    BLEServerUUID.BLEModuleParamsSer.rawValue,
+]
+
 //蓝牙特征UUID
 enum BLECharacteristicUUID: UInt16 {
     case BLESendDataCha = 0xFFE9
@@ -51,7 +56,17 @@ enum BLECharacteristicUUID: UInt16 {
     case BLEAntihijackCha = 0xFFC1
 };
 
-//蓝牙描述符UUIDåå
+//顺序排列蓝牙特征值UUID
+let BLECharacteristicOrderedUUID: [UInt16] = [
+    BLECharacteristicUUID.BLEAntihijackCha.rawValue,
+    BLECharacteristicUUID.BLEAntihijackChaNofi.rawValue,
+    BLECharacteristicUUID.BLEReceiveDataCha.rawValue,
+    BLECharacteristicUUID.BLESendDataCha.rawValue,
+    BLECharacteristicUUID.BLERenameCha.rawValue,
+    BLECharacteristicUUID.BLEBaudCha.rawValue
+]
+
+//蓝牙描述符UUID
 enum BLEDescriptorUUID: UInt16 {
     case CCCDDescriptor = 0x2902
 }
@@ -120,89 +135,125 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     /**------  发送指令，相关函数 ------*/
     
     // 对指定UUID的服务进行注册
-    func registerService(peripheral: CBPeripheral?, service: CBService?) {
+    func registerService(peripheral: CBPeripheral?, services: [CBService]?) {
         guard let _peripheral = peripheral else {
             return
         }
-        guard let _service = service else {
-            return
-        }
-        // 如果不在扫描的服务列表中，不扫描
-        if !isAvalidServer(sUuid: _service.uuid.hexIntValue) {
+        guard var _services = services else {
             return
         }
         
-        switch _service.uuid.hexIntValue {
-        case BLEServerUUID.BLESendDataSer.rawValue:
-            sendDataService = _service
-            _peripheral.discoverCharacteristics(nil, for: _service)
-        case BLEServerUUID.BLEReceiveDataSer.rawValue:
-            // TODO: 存疑，目前和QT代码逻辑相反，QT是先注册后触发，我是触发discoverChar后再其中执行anti等逻辑
-            // connect(m_service, &QLowEnergyService::stateChanged, this, &DeviceHandler::serviceStateChanged);
-            // connect(m_service, &QLowEnergyService::characteristicChanged, this, &DeviceHandler::updateCO2Value);
-            // connect(m_service, &QLowEnergyService::descriptorWritten, this, &DeviceHandler::confirmedDescriptorWrite);
-            receiveDataService = _service
-            _peripheral.discoverCharacteristics(nil, for: _service)
-        case BLEServerUUID.BLEModuleParamsSer.rawValue:
-            moduleParamsService = _service
-            _peripheral.discoverCharacteristics(nil, for: _service)
-        case BLEServerUUID.BLEAntihijackSer.rawValue:
-            antiHijackService = _service
-            _peripheral.discoverCharacteristics(nil, for: _service)
-        default:
-            print("not match service \(_service.uuid.hexIntValue)")
+        // 将所有特征值按照指定顺序进行排列
+        _services = _services
+            .filter { ser -> Bool in
+                guard let serHex = ser.uuid.hexIntValue else {
+                    return false
+                }
+                return BLEServerOrderedUUID.contains(serHex)
+            }
+            .sorted { (ser1, ser2) -> Bool in
+                guard let ser1Hex = ser1.uuid.hexIntValue,
+                      let ser2Hex = ser2.uuid.hexIntValue  else {
+                    return false
+                }
+                guard let index1 = BLEServerOrderedUUID.firstIndex(of: ser1Hex),
+                      let index2 = BLEServerOrderedUUID.firstIndex(of: ser2Hex) else {
+                    return false
+                }
+                return index1 < index2
+            }
+        
+        for _service in _services {
+            switch _service.uuid.hexIntValue {
+            case BLEServerUUID.BLESendDataSer.rawValue:
+                sendDataService = _service
+                _peripheral.discoverCharacteristics(nil, for: _service)
+            case BLEServerUUID.BLEReceiveDataSer.rawValue:
+                // TODO: 临时注释代码
+                // connect(m_service, &QLowEnergyService::stateChanged, this, &DeviceHandler::serviceStateChanged);
+                // connect(m_service, &QLowEnergyService::characteristicChanged, this, &DeviceHandler::updateCO2Value);
+                // connect(m_service, &QLowEnergyService::descriptorWritten, this, &DeviceHandler::confirmedDescriptorWrite);
+                receiveDataService = _service
+                _peripheral.discoverCharacteristics(nil, for: _service)
+            case BLEServerUUID.BLEModuleParamsSer.rawValue:
+                moduleParamsService = _service
+                _peripheral.discoverCharacteristics(nil, for: _service)
+            case BLEServerUUID.BLEAntihijackSer.rawValue:
+                antiHijackService = _service
+                _peripheral.discoverCharacteristics(nil, for: _service)
+            default:
+                print("not match service \(_service.uuid.hexIntValue)")
+            }
         }
     }
     
     // 对指定UUID的特征值进行注册
-    func registerCharacteristic(peripheral: CBPeripheral?, characteristic: CBCharacteristic?) {
+    func registerCharacteristic(peripheral: CBPeripheral?, characteristics: [CBCharacteristic]?) {
         guard let _peripheral = peripheral else {
             return
         }
-        guard let _characteristic = characteristic else {
-            return
-        }
-        if !isAvalidCharacteristic(cUuid: _characteristic.uuid.hexIntValue) {
+        guard var _characteristics = characteristics else {
             return
         }
         
-        // 客户端如何处理服务器特征值更新(0x2902)
-        // 启用通知: QByteArray::fromHex("0100")
-        // 禁用通知: QByteArray::fromHex("0000")
-        // 这里主要是接受数据、反蓝牙劫持服务(service)开启了接受通知
-        // 在swift的CB中，和QT的QLowEnergyService设计不同，有独立的方法setNotifyValue来完成对描述符的订阅
-        switch _characteristic.uuid.hexIntValue {
-        case BLECharacteristicUUID.BLEReceiveDataCha.rawValue:
-            receiveDataCharacteristic = _characteristic
-        case BLECharacteristicUUID.BLESendDataCha.rawValue:
-            sendDataCharacteristic = _characteristic
-        case BLECharacteristicUUID.BLERenameCha.rawValue:
-            renameCharacteristic = _characteristic
-        case BLECharacteristicUUID.BLEBaudCha.rawValue:
-            baudCharacteristic = _characteristic
-        case BLECharacteristicUUID.BLEAntihijackChaNofi.rawValue:
-            antiHijackNotifyCharacteristic = _characteristic
-            // 监听反劫持广播
-            peripheral?.setNotifyValue(true, for: _characteristic)
-            print("反劫持数据广播==> \(_characteristic.properties)")
-        case BLECharacteristicUUID.BLEAntihijackCha.rawValue:
-            antiHijackCharacteristic = _characteristic
-            // 写入反劫持串
-            peripheral?.writeValue(antiHijackData, for: _characteristic, type: .withResponse)
-            print("开始写入反劫持串 \(antiHijackData)")
-            sendStopContinuous()
-        default:
-            print("not match characteristic \(_characteristic.uuid.hexIntValue)")
+        // 将所有特征值按照指定顺序进行排列
+        _characteristics = _characteristics
+            .filter { (char) -> Bool in
+                guard let charHex = char.uuid.hexIntValue else {
+                    return false
+                }
+                return BLECharacteristicOrderedUUID.contains(charHex)
+            }
+            .sorted { (char1, char2) -> Bool in
+                guard let char1Hex = char1.uuid.hexIntValue,
+                      let char2Hex = char2.uuid.hexIntValue  else {
+                    return false
+                }
+                guard let index1 = BLECharacteristicOrderedUUID.firstIndex(of: char1Hex),
+                      let index2 = BLECharacteristicOrderedUUID.firstIndex(of: char2Hex) else {
+                    return false
+                }
+                return index1 < index2
+            }
+        
+        // 排序后，依次处理
+        for _characteristic in _characteristics {
+            // 客户端如何处理服务器特征值更新(0x2902)
+            // 启用通知: QByteArray::fromHex("0100")
+            // 禁用通知: QByteArray::fromHex("0000")
+            // 这里主要是接受数据、反蓝牙劫持服务(service)开启了接受通知
+            // 在swift的CB中，和QT的QLowEnergyService设计不同，有独立的方法setNotifyValue来完成对描述符的订阅
+            switch _characteristic.uuid.hexIntValue {
+            case BLECharacteristicUUID.BLEReceiveDataCha.rawValue:
+                receiveDataCharacteristic = _characteristic
+                _peripheral.setNotifyValue(true, for: _characteristic)
+            case BLECharacteristicUUID.BLESendDataCha.rawValue:
+                sendDataCharacteristic = _characteristic
+            case BLECharacteristicUUID.BLERenameCha.rawValue:
+                renameCharacteristic = _characteristic
+            case BLECharacteristicUUID.BLEBaudCha.rawValue:
+                baudCharacteristic = _characteristic
+            case BLECharacteristicUUID.BLEAntihijackChaNofi.rawValue:
+                antiHijackNotifyCharacteristic = _characteristic
+                // 监听反劫持广播
+                peripheral?.setNotifyValue(true, for: _characteristic)
+            case BLECharacteristicUUID.BLEAntihijackCha.rawValue:
+                antiHijackCharacteristic = _characteristic
+                // 写入反劫持串
+                peripheral?.writeValue(antiHijackData, for: _characteristic, type: .withResponse)
+            default:
+                print("not match characteristic \(_characteristic.uuid.hexIntValue)")
+            }
         }
     }
     
     func receivePeripheralData(peripheral: CBPeripheral, characteristic: CBCharacteristic) {
-        if let value = characteristic.value {
-            print("输出外围命中的值 \(value)")
+        guard let charValue = characteristic.value, let charHex = characteristic.uuid.hexIntValue else {
+            return
         }
-        if let value = characteristic.value, characteristic.uuid.hexIntValue == BLECharacteristicUUID.BLEReceiveDataCha.rawValue {
-            receivedArray.append(contentsOf: value)
-            print("匹配命中 receivedArray=>\(receivedArray)")
+        if charHex == BLECharacteristicUUID.BLEReceiveDataCha.rawValue {
+            receivedArray.append(contentsOf: charValue)
+            print("接受到外设数据(\(characteristic.uuid))=>\(receivedArray)")
 
 //            if receivedArray.count >= 20 {
 //                QByteArray firstArray=getFirstArray();
@@ -224,7 +275,22 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     func convertToData(from: [UInt8]) -> Data {
         return Data(from)
     }
-    
+
+    // 发送链接请求
+    func sendContinuous() {
+        sendArray.append(SensorCommand.CO2Waveform.rawValue)
+        sendArray.append(0x02)
+        sendArray.append(0x00)
+        appendCKS()
+
+        let data = convertToData(from: sendArray)
+        if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            peripheral.writeValue(data, for: characteristic, type: .withResponse)
+            sendArray = []
+            print("[sendContinuous]发起链接请求")
+        }
+    }
+
     // 发送链接请求
     func sendStopContinuous() {
         sendArray.append(SensorCommand.StopContinuous.rawValue)
@@ -234,12 +300,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         let data = convertToData(from: sendArray)
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
-            print("[sendStopContinuous]发起链接请求")
-            if let rCharacteristic = receiveDataCharacteristic {
-                // 监听接受数据广播
-                peripheral.setNotifyValue(true, for: rCharacteristic)
-                print("接受数据广播==> \(rCharacteristic.properties)")
-            }
+            sendArray = []
+            print("[sendStopContinuous]终止链接请求")
         }
     }
     
@@ -280,37 +342,28 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     /**------  外围设备事件回调 ------*/
     // 扫描设备服务
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        if let services = peripheral.services {
-            for service in services {
-                registerService(peripheral: peripheral, service: service)
-            }
-        }
+        registerService(peripheral: peripheral, services: peripheral.services)
     }
     
     // 扫描服务特征值
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        if let characteristics = service.characteristics {
-            for characteristic in characteristics {
-                registerCharacteristic(peripheral: peripheral, characteristic: characteristic)
-            }
-        }
+        registerCharacteristic(peripheral: peripheral, characteristics: service.characteristics)
     }
     
     // 特征值更新
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        if let value = characteristic.value {
-            receivePeripheralData(peripheral: peripheral, characteristic: characteristic)
-        }
+        receivePeripheralData(peripheral: peripheral, characteristic: characteristic)
     }
     
     // 外设返回响应（针对写特征值并等待返回的情况）
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        print("接受到\(characteristic.uuid)返回数据 \(characteristic.value)")
         if error != nil {
-            print("[sendStopContinuous]发起链接请求失败 => \(error) 尝试写入的特征是=>\(characteristic) 此时的设备是 \(connectedPeripheral)")
+            print("接受特征\(characteristic.uuid)返回值异常=> \(error)")
             return
         }
         if let value = characteristic.value {
-            print("返回响应 \(characteristic.uuid): \(String(data: value, encoding: .utf8))")
+            print("接受特征\(characteristic.uuid)返回值正常=> \(String(data: value, encoding: .utf8))")
         }
     }
     
@@ -320,6 +373,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             print("设置订阅状态失败: \(characteristic.uuid) \(error.localizedDescription)")
         } else {
             print("设置订阅状态成功: \(characteristic.uuid)")
+            // receiveData成功后，发送链接请求
+            if characteristic.uuid.hexIntValue == BLECharacteristicUUID.BLEReceiveDataCha.rawValue {
+                sendStopContinuous()
+                sendContinuous()
+            }
         }
     }
     
