@@ -51,7 +51,7 @@ enum BLECharacteristicUUID: UInt16 {
     case BLEAntihijackCha = 0xFFC1
 };
 
-//蓝牙描述符UUID
+//蓝牙描述符UUIDåå
 enum BLEDescriptorUUID: UInt16 {
     case CCCDDescriptor = 0x2902
 }
@@ -95,6 +95,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var startScanningCallback: (() -> Void)?
     var connectedCallback: (() -> Void)?
     var sendArray: [UInt8] = []
+    var receivedArray: [UInt8] = []
     var sendDataService: CBService?
     var sendDataCharacteristic: CBCharacteristic?
     var receiveDataService: CBService?
@@ -173,12 +174,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         switch _characteristic.uuid.hexIntValue {
         case BLECharacteristicUUID.BLEReceiveDataCha.rawValue:
             receiveDataCharacteristic = _characteristic
-            // 监听接受数据广播
-            peripheral?.setNotifyValue(true, for: _characteristic)
-            print("接受数据广播==> \(_characteristic.properties)")
         case BLECharacteristicUUID.BLESendDataCha.rawValue:
             sendDataCharacteristic = _characteristic
-            sendStopContinuous()
         case BLECharacteristicUUID.BLERenameCha.rawValue:
             renameCharacteristic = _characteristic
         case BLECharacteristicUUID.BLEBaudCha.rawValue:
@@ -188,18 +185,31 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             // 监听反劫持广播
             peripheral?.setNotifyValue(true, for: _characteristic)
             print("反劫持数据广播==> \(_characteristic.properties)")
-            // 写入反劫持串
-            peripheral?.writeValue(antiHijackData, for: _characteristic, type: .withResponse)
-            print("写入反劫持串成功")
         case BLECharacteristicUUID.BLEAntihijackCha.rawValue:
             antiHijackCharacteristic = _characteristic
+            // 写入反劫持串
+            peripheral?.writeValue(antiHijackData, for: _characteristic, type: .withResponse)
+            print("开始写入反劫持串 \(antiHijackData)")
+            sendStopContinuous()
         default:
             print("not match characteristic \(_characteristic.uuid.hexIntValue)")
         }
     }
+    
+    func receivePeripheralData(peripheral: CBPeripheral, characteristic: CBCharacteristic) {
+        if let value = characteristic.value {
+            print("输出外围命中的值 \(value)")
+        }
+        if let value = characteristic.value, characteristic.uuid.hexIntValue == BLECharacteristicUUID.BLEReceiveDataCha.rawValue {
+            receivedArray.append(contentsOf: value)
+            print("匹配命中 receivedArray=>\(receivedArray)")
+
+//            if receivedArray.count >= 20 {
+//                QByteArray firstArray=getFirstArray();
+//                getSpecificValue(firstArray);
+//            }
+        }
         
-    // 处理反劫持
-    func antiHijack() {
     }
     
     func appendCKS() {
@@ -225,6 +235,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             print("[sendStopContinuous]发起链接请求")
+            if let rCharacteristic = receiveDataCharacteristic {
+                // 监听接受数据广播
+                peripheral.setNotifyValue(true, for: rCharacteristic)
+                print("接受数据广播==> \(rCharacteristic.properties)")
+            }
         }
     }
     
@@ -284,7 +299,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     // 特征值更新
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if let value = characteristic.value {
-            print("特征值更新Value for \(characteristic.uuid): \(String(data: value, encoding: .utf8))")
+            receivePeripheralData(peripheral: peripheral, characteristic: characteristic)
         }
     }
     
@@ -296,6 +311,15 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
         if let value = characteristic.value {
             print("返回响应 \(characteristic.uuid): \(String(data: value, encoding: .utf8))")
+        }
+    }
+    
+    // 监听订阅状态是否成功切换
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        if let error = error {
+            print("设置订阅状态失败: \(characteristic.uuid) \(error.localizedDescription)")
+        } else {
+            print("设置订阅状态成功: \(characteristic.uuid)")
         }
     }
     
