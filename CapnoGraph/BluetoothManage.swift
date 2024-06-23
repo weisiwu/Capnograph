@@ -17,12 +17,11 @@ extension CBUUID {
     }
 }
 
-// TODO: QT中的getFirstArray逻辑不了解
 //指令集合
 enum SensorCommand: UInt8 {
     case CO2Waveform = 0x80 // 接受数据
     case Zero = 0x82 // 校零
-    case Expand = 0xF2 // TODO: 后续待确认具体作用
+    case Expand = 0xF2 // 获取系统扩展设置，如硬件、软件版本
     case Settings = 0x84 // 更改读取设置
     case StopContinuous = 0xC9 // 停止连读模式
     case NACKError = 0xC8 // 非应答错误
@@ -71,46 +70,63 @@ enum BLEDescriptorUUID: UInt16 {
     case CCCDDescriptor = 0x2902
 }
 
-//判断是否为App中可订阅的服务
-func isAvalidServer(sUuid: UInt16?) -> Bool {
-    switch sUuid {
-    case BLEServerUUID.BLESendDataSer.rawValue,
-        BLEServerUUID.BLEReceiveDataSer.rawValue,
-        BLEServerUUID.BLEModuleParamsSer.rawValue,
-        BLEServerUUID.BLEAntihijackSer.rawValue:
-        return true
-    default:
-        return false
-    }
-    return false
+// 校零状态
+enum ZSBState: Int {
+    case Start = 0
+    case NotReady
+    case Resetting
+    case DetectBreathing
 }
 
-//判断服务特征值是否为App中可订阅
-func isAvalidCharacteristic(cUuid: UInt16?) -> Bool {
-    switch cUuid {
-    case BLECharacteristicUUID.BLESendDataCha.rawValue,
-        BLECharacteristicUUID.BLEReceiveDataCha.rawValue,
-        BLECharacteristicUUID.BLERenameCha.rawValue,
-        BLECharacteristicUUID.BLEBaudCha.rawValue,
-        BLECharacteristicUUID.BLEAntihijackChaNofi.rawValue,
-        BLECharacteristicUUID.BLEAntihijackCha.rawValue:
-        return true
-    default:
-        return false
-    }
-    return false
+// 模块设置
+enum ISBState: Int {
+    case NoUse = 0 // 无效的参数设置
+    case AirPressure = 1 // 大气压
+    case Temperature = 4 // 气体温度
+    case ETCO2Period = 5 // ETCO2 时间周期
+    case NoBreaths = 6 // 窒息时间
+    case UnVerified = 7 // TODO: 待确认
+    case Sleep = 8 // 休眠模式
+    case ZeroPointGasType = 9 // 零点气类型
+    case GasCompensation = 11 // 读取/设置 气体补偿
+    case Stop = 27 // 停止采样气泵
+}
+
+// 系统扩展设置
+enum ExpandState: Int {
+    case HardFirmVersion = 2 // 获取固件、硬件版本
+    case DateSerialNumber = 4 // 获取生产日期、序列号
+    // TODO: 这两个都是没有确定的
+    // case NoUse: Int = 42 // 
+    // case NoUse: Int = 44 // 
 }
 
 class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private var centralManager: CBCentralManager!
     @Published var discoveredPeripherals = [CBPeripheral]() // 周围设备列表，创建了一个指定类型的空列表
-    @Published var connectedPeripheral: CBPeripheral? // 以链接设备
+    @Published var connectedPeripheral: CBPeripheral? // 已链接设备
     @Published var toastMessage: String? = nil // 通知消息
+    @Published var receivedCO2WavedData: [DataPoint] = [DataPoint(date: 1, value: 0)]
     var isScanning: Bool = false
     var startScanningCallback: (() -> Void)?
     var connectedCallback: (() -> Void)?
     var sendArray: [UInt8] = []
     var receivedArray: [UInt8] = []
+    var currentCO2: Float = 0
+    var currentFrameIndex: Int = 0
+    var ETCO2: Float = 0
+    var RespiratoryRate: Int = 0
+    var FiCO2: Int = 0
+    var Breathe: Bool = false
+    var canZero: Bool = false
+    var barometricPressure: Int = 0
+    var NoBreaths: Bool = false
+    var O2Compensation: Int = 0
+    var sFirmwareVersion: String = ""
+    var sHardwareVersion: String = ""
+    var sProductionDate: String = ""
+    var sSerialNumber: String = ""
+    // 扫描的设备、服务、特征
     var sendDataService: CBService?
     var sendDataCharacteristic: CBCharacteristic?
     var receiveDataService: CBService?
@@ -251,24 +267,41 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         guard let charValue = characteristic.value, let charHex = characteristic.uuid.hexIntValue else {
             return
         }
+        
+        // 处理接受波形数据
         if charHex == BLECharacteristicUUID.BLEReceiveDataCha.rawValue {
             receivedArray.append(contentsOf: charValue)
             print("接受到外设数据(\(characteristic.uuid))=>\(receivedArray)")
 
-//            if receivedArray.count >= 20 {
-//                QByteArray firstArray=getFirstArray();
-//                getSpecificValue(firstArray);
-//            }
+            // TODO: 明确为什么不能多余20
+            if receivedArray.count >= 20 {
+                let firstArray = getFirstArray()
+                getSpecificValue(firstArray: firstArray);
+            }
         }
         
     }
+
+    // 监听特征值状态变化
+    func characteristicStateUpdate (characteristic: CBCharacteristic) {
+        // 订阅receiveData成功后，发送链接请求
+        if characteristic.uuid.hexIntValue == BLECharacteristicUUID.BLEReceiveDataCha.rawValue {
+            sendStopContinuous() // 停止历史可能存在数据串
+            sendContinuous() // 重新开始请求新的数据串
+        }
+    }
     
-    func appendCKS() {
-        var cks: UInt8 = 0;
-        for i in 0..<sendArray.count {
-            cks += sendArray[i];
+    func calculateCKS(arr: [UInt8]) -> UInt8 {
+        var cks: Int = 0;
+        for i in 0..<arr.count {
+            cks += Int(arr[i]);
         }
         cks=((~cks+1) & 0x7f);
+        return UInt8(cks)
+    }
+
+    func appendCKS() {
+        let cks = calculateCKS(arr: sendArray)
         sendArray.append(cks);
     }
 
@@ -286,8 +319,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         let data = convertToData(from: sendArray)
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
-            sendArray = []
-            print("[sendContinuous]发起链接请求")
+            resetSendData()
         }
     }
 
@@ -300,15 +332,207 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         let data = convertToData(from: sendArray)
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
-            sendArray = []
+            resetSendData()
             print("[sendStopContinuous]终止链接请求")
         }
     }
     
+    func getFirstArray() -> [UInt8] {
+        var getArray: [UInt8] = [];
+        let command: UInt8 = receivedArray[0]
+        
+        // 从接受到数据头部不停的向后移动，直到获取指令类型
+        while receivedArray.count > 0
+            && command != SensorCommand.CO2Waveform.rawValue
+            && command != SensorCommand.Zero.rawValue
+            && command != SensorCommand.Settings.rawValue
+            && command != SensorCommand.Expand.rawValue
+            && command != SensorCommand.StopContinuous.rawValue
+            && command != SensorCommand.NACKError.rawValue
+            && command != SensorCommand.ResetNoBreaths.rawValue {
+            receivedArray.removeSubrange(0..<1);
+        }
+
+        // 数据长度为空，排除
+        if receivedArray.count == 0 {
+            return getArray;
+        }
+
+        // 根据NBF获取所有数据: 第二位是NBF长度，但是整体需要加上额外两位(指令位、NBF位)
+        let endIndex = Int(receivedArray[1]) + 2
+        getArray = Array(receivedArray.prefix(endIndex))
+        receivedArray.removeSubrange(0..<endIndex) // 移除已经读取的数据
+        print("【接受到的蓝牙数据】本次读取的指令=>\(receivedArray[0]) 本次读取的数据=>\(getArray) 本次长度=>\(endIndex)")
+
+        return getArray;
+    }
+    
+    func getSpecificValue(firstArray: [UInt8]) {
+        // 直接访问内存
+        firstArray.withUnsafeBytes { (pointer: UnsafeRawBufferPointer) in
+            let data = pointer.bindMemory(to: UInt8.self)
+            
+            // 以M为后缀的都是内存中的数据
+            let commandM = data[0]
+            let NBFM = Int(data[1])
+            let cksM = data[firstArray.count - 1]
+            
+            // 判断内存中NBF位和传入的长度是否符合
+            if NBFM != firstArray.count - 2 {
+                print("内存中长度不对")
+                return;
+            }
+            
+            // 判断cks是否对的上
+            let cks: UInt8 = calculateCKS(arr: Array(firstArray.dropLast()))
+            if cks != cksM {
+                print("内存中的cks对不上 cks:\(cks) cksM:\(cksM)")
+                return;
+            }
+            
+            // 根据指令类型开始解析数据
+             switch commandM {
+             case SensorCommand.CO2Waveform.rawValue:
+                handleCO2Waveform(data: data, NBFM: NBFM)
+             case SensorCommand.Zero.rawValue:
+                handleSetZero(data: data, NBFM: NBFM)
+             case SensorCommand.Settings.rawValue:
+                handleSettings(data: data)
+             case SensorCommand.Expand.rawValue:
+                handleSystemExpand(data: data)
+             default:
+                 print("未知指令")
+             }
+        }
+    }
+
     func resetSendData() {
         sendArray = []
     }
+
+    // 处理CO2波形数据
+    func handleCO2Waveform(data: UnsafeBufferPointer<UInt8>, NBFM: Int) {
+        let DPIM = data[5] // DPIM 只在接受CO2波形时体现
+        // 计算当前CO2数据
+        currentCO2 = Float((128 * Int(data[3]) + Int(data[4]) - 1000)) / 100;
+        currentFrameIndex += 1
+        print("【当前CO2的值】currentCO2=> \(currentCO2)")
+        // TODO: 当前关系到设置单位的，都不移动
+        // if( currentCO2 <= m_CO2Scale * 0.02)
+        //     currentCO2 = m_CO2Scale * 0.02;
+
+        print("DPIM 是什么 \(DPIM) \(type(of: DPIM))")
+        // 存在DPI位时，常规波形信息还会携带定时上报的内容，需要额外处理
+        if NBFM > 4 {
+            switch DPIM {
+            // TODO: DPI=1还没有处理
+            case 0x01: // CO2工作状态
+                // analysisCO2WaveDPI1(firstArray);
+                print("DPI暂时没有处理")
+            case 0x02: // 监测计算到的 ETCO2 数值
+                ETCO2 = Float(Int(data[6]) * 128 + Int(data[7])) / 10;
+            case 0x03: // 表示监测计算到的呼吸率数值
+                RespiratoryRate = Int(Int(data[6]) * 128 + Int(data[7]));
+            case 0x04: // 表示监测计算到的 FiCO2 数值
+                FiCO2 = Int((Int(data[6]) * 128 + Int(data[7])) / 10);
+            case 0x05: // 表示检测到一次呼吸，该帧只有在检查到呼吸之后才会设置一次
+                Breathe = true;
+            case 0x07: // 该帧在硬件确实有问题的时候，将每秒自动汇报一次
+                print("CO2Waveform DPI 0X07 不处理")
+            default:
+                print("CO2Waveform DPI 不匹配")
+            }
+        }
+        // TODO: 告警范围改变修改，没有迁移
+        // updateRangeAlarm();
+        // 将受到的数据绘制到曲线图上
+        // TODO: 添加绘图
+//        let date = Date() // 获取当前日期和时间
+//        let calendar = Calendar.current // 获取当前日历
+//        let seconds = calendar.component(.second, from: date) // 获取当前秒数
+//        print("当前秒数 seconds => \(seconds) \(type(of: seconds))")
+        receivedCO2WavedData.append(DataPoint(date: currentFrameIndex, value: currentCO2))
+        // emit statsChanged();
+    }
+
+    // 处理校零
+    func handleSetZero(data: UnsafeBufferPointer<UInt8>, NBFM: Int) {
+        if NBFM <= 1 {
+            return
+        }
+        // 较零状态: 0: 较零开始 1: 模块还未准备好较零 2: 较零中 3: 模块尝试较零而且在过去的 20 秒内检测到呼吸。
+        let ZSBM = Int(data[2])
+        switch ZSBM {
+        case ZSBState.Start.rawValue:
+            canZero = true;
+        case ZSBState.NotReady.rawValue:
+            canZero = false;
+            // setError(languageContent.sZeroNoReadyErr());
+        case ZSBState.Resetting.rawValue:
+            canZero=false;
+            // setError(languageContent.sZeroingErr());
+        case ZSBState.DetectBreathing.rawValue:
+            canZero = false;
+            // setError(languageContent.sZeroDetectBreathingErr());
+        default:
+            print("校零过程中，遇到异常ZSB: \(ZSBM)")
+        }
+        // TODO: 校零暂时没有迁移
+        // zeroStatusChanged();
+    }
     
+    // 处理设置
+    func handleSettings(data: UnsafeBufferPointer<UInt8>) {
+        switch Int(data[2]) {
+        case ISBState.AirPressure.rawValue:
+            barometricPressure = 128 * Int(data[3]) + Int(data[4]);
+        case ISBState.NoBreaths.rawValue:
+            NoBreaths = Int(data[3]) != 0;
+            // case ISBState.UnVerified.rawValue:
+            //     // TODO:  没有搞清楚这个是什么
+            //     setCO2Unit(data[3],false);
+            //     updateCO2Scale();
+            //     getAlarmParams();
+            //     changeAlarmRange();
+            //     m_updateParams=true;
+            //     emit displayParamChanged();
+            //     sendContinuous();
+        case ISBState.GasCompensation.rawValue:
+            O2Compensation = Int(data[3]);
+            // TODO: 这里没有做
+            // emit sensorParamsChanged();
+        default:
+            print("模块参数设置 未知ISB")
+        }
+    }
+
+    // 处理系统扩展
+    func handleSystemExpand(data: UnsafeBufferPointer<UInt8>) {
+        switch Int(data[2]) {
+        case ExpandState.HardFirmVersion.rawValue:
+            sFirmwareVersion = "\(Int(data[3])).\(Int(data[4])).\(Int(data[5]))"
+            sHardwareVersion = "\(Int(data[6])).\(Int(data[7]))"
+            print("获取硬件的设置 sFirmwareVersion:\(sFirmwareVersion) sHardwareVersion:\(sHardwareVersion)")
+            // emit systemParamsChanged();
+        case ExpandState.DateSerialNumber.rawValue:
+            sProductionDate = "\(Int(data[3]) + 2000)/\(Int(data[4]))/\(Int(data[5]))"
+            sSerialNumber = String(Int(data[6]) * Int(pow(2.0, 14.0)) + Int(data[7]) * Int(pow(2.0, 7.0)) + Int(data[8]))
+            print("获取生产日期和序列号 sProductionDate:\(sProductionDate) sSerialNumber:\(sSerialNumber)")
+            // emit systemParamsChanged();
+        // case 42:
+            // setAlarmParams((qreal)(data[3]*128+data[4])/10,(qreal)(data[5]*128+data[6])/10,
+            //         data[7]*128+data[8],data[9]*128+data[10],false);
+            // emit alarmParamsChanged();
+            // sendContinuous();
+        // case 44:
+            // setCO2ScaleByIndex(data[3],false);
+            // emit displayParamChanged();
+            // sendContinuous();
+        default:
+            print("扩展指令未知场景")
+        }
+    }
+
     /**------  中央设备事件回调 ------*/
     // 开始扫描设备
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
@@ -373,11 +597,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             print("设置订阅状态失败: \(characteristic.uuid) \(error.localizedDescription)")
         } else {
             print("设置订阅状态成功: \(characteristic.uuid)")
-            // receiveData成功后，发送链接请求
-            if characteristic.uuid.hexIntValue == BLECharacteristicUUID.BLEReceiveDataCha.rawValue {
-                sendStopContinuous()
-                sendContinuous()
-            }
+            characteristicStateUpdate(characteristic: characteristic)
         }
     }
     

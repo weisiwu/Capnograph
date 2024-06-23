@@ -4,47 +4,14 @@ import Charts
 struct DataPoint: Identifiable {
     let id = UUID()
     let date: Int
-    let value: Double
+    let value: Float
 }
 
 struct LineChartView: View {
-//    let data: [DataPoint] = [
-//        DataPoint(
-//            date: 1,
-//            value: 12.1
-//        ),
-//        DataPoint(
-//            date: 2,
-//            value: 4.56
-//        ),
-//        DataPoint(
-//            date: 3,
-//            value: 47.8
-//        ),
-//        DataPoint(
-//            date: 4,
-//            value: 41.7
-//        ),
-//        DataPoint(
-//            date: 5,
-//            value: 37.1
-//        ),
-//        DataPoint(
-//            date: 6,
-//            value: 31.1
-//        ),
-//        DataPoint(
-//            date: 7,
-//            value: 25.8
-//        )
-//    ]
     @EnvironmentObject var bluetoothManager: BluetoothManager
-    let data: [DataPoint] = [
-        DataPoint(date: 1, value: 0)
-    ]
 
     var body: some View {
-        Chart(data) { point in
+        Chart(bluetoothManager.receivedCO2WavedData) { point in
             LineMark(
                 x: .value("时间", point.date),
                 y: .value("数值", point.value)
@@ -99,7 +66,8 @@ struct TableView: View {
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-            // Text("76/min")
+//        TODO: 临时注释掉
+//            Text(bluetoothManager.RespiratoryRate == 0 ? "--/min" : "\(bluetoothManager.RespiratoryRate)/min")
             Text("--/min")
                 .font(.system(size: 16))
                 .fontWeight(.thin)
@@ -114,7 +82,8 @@ struct TableView: View {
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-            // Text("0mmHg")
+//        TODO: 临时注释掉
+//            Text(bluetoothManager.ETCO2 == 0 ? "--/mmHg" : "\(bluetoothManager.ETCO2)/mmHg")
             Text("--mmHg")
                 .font(.system(size: 16))
                 .fontWeight(.thin)
