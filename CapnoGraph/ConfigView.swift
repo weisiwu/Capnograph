@@ -89,7 +89,7 @@ struct ConfigItem: View {
                 NavigationLink(destination: SubConfigContainerView(configType: configType.rawValue)) {
                     HStack(spacing: 0) {
                         Text(text)
-                            .font(.system(size: 20))
+                            .font(.system(size: 16))
                             .fontWeight(.light)
                             .padding(.bottom, 2)
                         Spacer()
@@ -103,7 +103,7 @@ struct ConfigItem: View {
                 .opacity(0)
                 HStack(spacing: 0) {
                     Text(text)
-                        .font(.system(size: 20))
+                        .font(.system(size: 16))
                         .fontWeight(.light)
                         .padding(.bottom, 2)
                     Spacer()
@@ -122,7 +122,7 @@ struct ConfigItem: View {
         } else {
             HStack(spacing: 0) {
                 Text(text)
-                    .font(.system(size: 20))
+                    .font(.system(size: 16))
                     .fontWeight(.light)
                     .padding(.bottom, 2)
                 Spacer()

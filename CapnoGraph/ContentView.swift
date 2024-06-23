@@ -74,21 +74,21 @@ struct ActionsTabView: View {
             SearchDeviceListView(selectedPeripheral: nil, showToast: $showToast, selectedTabIndex: $selectedTabIndex, toggleLoading: toggleLoading)
                 .tabItem {
                     Image(selectedTabIndex == PageTypes.SearchDeviceList.rawValue ? "tabs_search_active" : "tabs_search")
-                    Text("搜索设备")
+                    Text("搜索设备").font(.system(size: 20))
                 }
                 .tag(PageTypes.SearchDeviceList.rawValue)
             
             ResultView()
                 .tabItem {
                     Image(selectedTabIndex == PageTypes.Result.rawValue ? "tabs_home_active" : "tabs_home")
-                    Text("主页")
+                    Text("主页").font(.system(size: 20))
                 }
                 .tag(PageTypes.Result.rawValue)
             
             ConfigView(toggleLoading: toggleLoading)
                 .tabItem {
                     Image(![PageTypes.SearchDeviceList.rawValue, PageTypes.Result.rawValue].contains(selectedTabIndex) ? "tabs_settings_active" : "tabs_settings")
-                    Text("设置")
+                    Text("设置").font(.system(size: 20))
                 }
                 .tag(PageTypes.Config.rawValue)
         }

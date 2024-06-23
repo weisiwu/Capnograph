@@ -58,7 +58,7 @@ struct InfoItem: View {
             Spacer()
             if type == InfoTypes.Text {
                 Text(desc)
-                    .font(.system(size: 16))
+                    .font(.system(size: 14))
                     .fontWeight(.thin)
                     .foregroundStyle(Color(red: 61/255, green: 61/255, blue: 61/255))
 
@@ -87,15 +87,12 @@ struct SystemConfigView: View {
                 }
                 .background(Color.white)
                 .listStyle(PlainListStyle())
-                .padding(0)
                 .padding(.bottom, 48)
                 Spacer()
             }
-            .padding()
         }
         .background(Color.white)
         .listStyle(PlainListStyle())
-        .padding()
         .navigationTitle("CapnoGraph - 系统设置")
     }
 }

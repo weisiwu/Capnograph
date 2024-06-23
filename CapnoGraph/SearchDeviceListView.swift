@@ -18,8 +18,8 @@ struct SearchDeviceListView: View {
                         HStack {
                             VStack(alignment: .leading) {
                                 Text(peripheral.name ?? "未知设备")
-                                    .font(.system(size: 17))
-                                    .padding(.bottom, 2)
+                                    .font(.system(size: 16))
+                                    .padding(.bottom, 0)
                                 Text(peripheral.identifier.uuidString)
                                     .font(.system(size: 15))
                                     .fontWeight(.thin)
@@ -78,7 +78,7 @@ struct SearchDeviceListView: View {
                 // TODO: 这里的按钮没有固定里底部距离
                 Text("搜索设备")
                     .frame(width: 105, height: 35)
-                    .font(.system(size: 18))
+                    .font(.system(size: 16))
                     .background(Color(red: 232/255, green: 243/255, blue: 1))
                     .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                     .cornerRadius(16)
