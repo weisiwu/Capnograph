@@ -102,7 +102,6 @@ struct ModuleConfigView: View {
     @State var airPressure: Double = 103
     @State var asphyxiationTime: Double = 30
     @State var oxygenCompensation: Double = 20
-    @State private var sliderValue: Double = 0.5
     
     var body: some View {
         BaseConfigContainerView(configType: ConfigItemTypes.Alert) {

@@ -23,6 +23,7 @@
 		414511E72C2037AC0028E8DC /* ConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 414511E62C2037AC0028E8DC /* ConfigView.swift */; };
 		41C305352C1306E60063E295 /* BluetoothManage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C305342C1306E60063E295 /* BluetoothManage.swift */; };
 		41C565A32C10384D00302E64 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C565A22C10384D00302E64 /* SplashView.swift */; };
+		41D29C062C299C1C0052585F /* AppConfigManage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41D29C052C299C1C0052585F /* AppConfigManage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +63,7 @@
 		414511E62C2037AC0028E8DC /* ConfigView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigView.swift; sourceTree = "<group>"; };
 		41C305342C1306E60063E295 /* BluetoothManage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManage.swift; sourceTree = "<group>"; };
 		41C565A22C10384D00302E64 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		41D29C052C299C1C0052585F /* AppConfigManage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigManage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +117,7 @@
 			children = (
 				41C565A22C10384D00302E64 /* SplashView.swift */,
 				1649F3A82C0B3CDE009DCE65 /* CapnoGraphApp.swift */,
+				41D29C052C299C1C0052585F /* AppConfigManage.swift */,
 				1649F3AA2C0B3CDE009DCE65 /* ContentView.swift */,
 				16E9F2632C0C7491004B977E /* ResultView.swift */,
 				16E9F2612C0C7450004B977E /* SystemConfigView.swift */,
@@ -300,6 +303,7 @@
 				16E9F2622C0C7450004B977E /* SystemConfigView.swift in Sources */,
 				16E9F2602C0C7402004B977E /* SearchDeviceListView.swift in Sources */,
 				1649F3AB2C0B3CDE009DCE65 /* ContentView.swift in Sources */,
+				41D29C062C299C1C0052585F /* AppConfigManage.swift in Sources */,
 				414511E72C2037AC0028E8DC /* ConfigView.swift in Sources */,
 				414511E32C202F8A0028E8DC /* DisplayConfigView.swift in Sources */,
 				1649F3A92C0B3CDE009DCE65 /* CapnoGraphApp.swift in Sources */,

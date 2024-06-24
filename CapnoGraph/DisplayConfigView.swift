@@ -4,9 +4,9 @@ struct DisplayConfigView: View {
     @State private var CO2Unit: String?
     @State private var CO2Scale: Double?
     @State private var WFSpeed: Int?
-    let CO2Units = ["KPa", "%", "mmHg"]
-    let CO2Scales = [6.7, 8, 10]
-    let WFSpeeds = [1,2,3,4]
+    let CO2Units: [CO2UnitType] = [CO2UnitType.KPa, CO2UnitType.Percentage, CO2UnitType.mmHg]
+    let CO2Scales: [CO2ScaleEnum] = [CO2ScaleEnum.Small, CO2ScaleEnum.Middle, CO2ScaleEnum.Large]
+    let WFSpeeds: [WFSpeedEnum] = [WFSpeedEnum.One, WFSpeedEnum.Two, WFSpeedEnum.Three, WFSpeedEnum.Four]
 
     var body: some View {
         BaseConfigContainerView(configType: ConfigItemTypes.System) {
@@ -15,7 +15,7 @@ struct DisplayConfigView: View {
                 Text("CO2单位").font(.system(size: 18)).fontWeight(.bold).padding(0)
                 Picker("Select CO2单位", selection: $CO2Unit) {
                     ForEach(CO2Units, id: \.self) { unit in
-                        Text(unit)
+                        Text(unit.rawValue)
                             .frame(height: 30)
                             .font(.system(size: 14))
                     }
@@ -27,7 +27,7 @@ struct DisplayConfigView: View {
                 Text("CO2 Scale").font(.system(size: 18)).fontWeight(.bold)
                 Picker("Select CO2 Scale", selection: $CO2Scale) {
                     ForEach(CO2Scales, id: \.self) { scale in
-                        Text(scale.formatted(.number.precision(.fractionLength(0...2))))
+                        Text(scale.rawValue.formatted(.number.precision(.fractionLength(0...2))))
                             .frame(height: 30)
                             .font(.system(size: 14))
                     }
@@ -39,7 +39,7 @@ struct DisplayConfigView: View {
                 Text("WF Speed").font(.system(size: 18)).fontWeight(.bold)
                 Picker("Select WF Speed", selection: $WFSpeed) {
                     ForEach(WFSpeeds, id: \.self) { speed in
-                        Text("\(speed)mm/S")
+                        Text("\(speed.rawValue)mm/S")
                             .frame(height: 30)
                             .font(.system(size: 14))
                     }
