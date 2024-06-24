@@ -129,6 +129,7 @@ struct AlertConfigView: View {
     @State private var etCo2Upper: CGFloat = 50
     @State private var rrLower: CGFloat = 20
     @State private var rrUpper: CGFloat = 50
+    @EnvironmentObject var appConfigManage: AppConfigManage
 
     var body: some View {
         BaseConfigContainerView(configType: ConfigItemTypes.Alert) {

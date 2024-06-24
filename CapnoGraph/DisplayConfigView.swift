@@ -4,6 +4,7 @@ struct DisplayConfigView: View {
     @State private var CO2Unit: String?
     @State private var CO2Scale: Double?
     @State private var WFSpeed: Int?
+    @EnvironmentObject var appConfigManage: AppConfigManage
     let CO2Units: [CO2UnitType] = [CO2UnitType.KPa, CO2UnitType.Percentage, CO2UnitType.mmHg]
     let CO2Scales: [CO2ScaleEnum] = [CO2ScaleEnum.Small, CO2ScaleEnum.Middle, CO2ScaleEnum.Large]
     let WFSpeeds: [WFSpeedEnum] = [WFSpeedEnum.One, WFSpeedEnum.Two, WFSpeedEnum.Three, WFSpeedEnum.Four]
@@ -74,6 +75,6 @@ struct DisplayConfigView: View {
     }
 }
 
-#Preview {
-    DisplayConfigView()
-}
+//#Preview {
+//    DisplayConfigView()
+//}

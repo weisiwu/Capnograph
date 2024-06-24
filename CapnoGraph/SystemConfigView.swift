@@ -73,6 +73,8 @@ struct InfoItem: View {
 }
 
 struct SystemConfigView: View {
+    @EnvironmentObject var appConfigManage: AppConfigManage
+    
     var body: some View {
         BaseConfigContainerView(configType: ConfigItemTypes.System) {
             VStack(alignment: .leading) {
@@ -98,6 +100,6 @@ struct SystemConfigView: View {
 }
 
 
-#Preview {
-    SystemConfigView()
-}
+//#Preview {
+//    SystemConfigView()
+//}

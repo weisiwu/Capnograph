@@ -102,6 +102,7 @@ struct ModuleConfigView: View {
     @State var airPressure: Double = 103
     @State var asphyxiationTime: Double = 30
     @State var oxygenCompensation: Double = 20
+    @EnvironmentObject var appConfigManage: AppConfigManage
     
     var body: some View {
         BaseConfigContainerView(configType: ConfigItemTypes.Alert) {
