@@ -1,9 +1,12 @@
 import SwiftUI
 import Charts
 
+// 最多展示的横向点数量，每10ms接收到一帧数据，横坐标展示10s的波形图，则共1000个横坐标
+let maxXPoints: Int = 500
+let xPointStep: Int = 100 // 步长，每搁20取一个坐标点
+
 struct DataPoint: Identifiable {
     let id = UUID()
-    let date: Int
     let value: Float
 }
 
@@ -11,18 +14,26 @@ struct LineChartView: View {
     @EnvironmentObject var bluetoothManager: BluetoothManager
 
     var body: some View {
-        Chart(bluetoothManager.receivedCO2WavedData) { point in
-            LineMark(
-                x: .value("时间", point.date),
-                y: .value("数值", point.value)
-            )
-            .interpolationMethod(.cardinal)
+        Chart {
+            ForEach(Array(bluetoothManager.receivedCO2WavedData.enumerated()), id: \.offset) { index, point in
+                LineMark(
+                    x: .value("Index", index),
+                    y: .value("Value", point.value)
+                )
+                .interpolationMethod(.cardinal)
+            }
         }
         .chartXAxis {
-            AxisMarks(values: [1,2,3,4,5,6,7])
+            AxisMarks(values: Array(stride(from: 0, to: maxXPoints, by: xPointStep))) { value in
+                AxisValueLabel {
+                    if let intValue = value.as(Int.self) {
+                        Text("\(intValue / 100 + 1)秒") // 自定义标签
+                    }
+                }
+            }
         }
         .chartYAxis {
-            AxisMarks(position: .leading, values: [0,10.0,20.0,30.0,40.0,50.0])
+            AxisMarks(position: .leading, values: [0, 10.0, 20.0, 30.0, 40.0, 50.0])
         }
         .frame(height: 300)
         .padding()
@@ -66,9 +77,7 @@ struct TableView: View {
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-//        TODO: 临时注释掉
-//            Text(bluetoothManager.RespiratoryRate == 0 ? "--/min" : "\(bluetoothManager.RespiratoryRate)/min")
-            Text("--/min")
+            Text(bluetoothManager.RespiratoryRate == 0 ? "--/min" : "\(bluetoothManager.RespiratoryRate)/min")
                 .font(.system(size: 16))
                 .fontWeight(.thin)
                 .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))
@@ -82,9 +91,7 @@ struct TableView: View {
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-//        TODO: 临时注释掉
-//            Text(bluetoothManager.ETCO2 == 0 ? "--/mmHg" : "\(bluetoothManager.ETCO2)/mmHg")
-            Text("--mmHg")
+            Text(bluetoothManager.ETCO2 == 0 ? "--/mmHg" : "\(bluetoothManager.ETCO2.formatted(.number.precision(.fractionLength(0...2))))/mmHg")
                 .font(.system(size: 16))
                 .fontWeight(.thin)
                 .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))

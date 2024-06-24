@@ -106,16 +106,15 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     @Published var discoveredPeripherals = [CBPeripheral]() // 周围设备列表，创建了一个指定类型的空列表
     @Published var connectedPeripheral: CBPeripheral? // 已链接设备
     @Published var toastMessage: String? = nil // 通知消息
-    @Published var receivedCO2WavedData: [DataPoint] = [DataPoint(date: 1, value: 0)]
+    @Published var receivedCO2WavedData: [DataPoint] = [DataPoint(value: 0)]
     var isScanning: Bool = false
     var startScanningCallback: (() -> Void)?
     var connectedCallback: (() -> Void)?
     var sendArray: [UInt8] = []
     var receivedArray: [UInt8] = []
     var currentCO2: Float = 0
-    var currentFrameIndex: Int = 0
-    var ETCO2: Float = 0
-    var RespiratoryRate: Int = 0
+    @Published var ETCO2: Float = 0
+    @Published var RespiratoryRate: Int = 0
     var FiCO2: Int = 0
     var Breathe: Bool = false
     var canZero: Bool = false
@@ -271,7 +270,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         // 处理接受波形数据
         if charHex == BLECharacteristicUUID.BLEReceiveDataCha.rawValue {
             receivedArray.append(contentsOf: charValue)
-            print("接受到外设数据(\(characteristic.uuid))=>\(receivedArray)")
+//            print("接受到外设数据(\(characteristic.uuid))=>\(receivedArray)")
 
             // TODO: 明确为什么不能多余20
             if receivedArray.count >= 20 {
@@ -362,7 +361,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         let endIndex = Int(receivedArray[1]) + 2
         getArray = Array(receivedArray.prefix(endIndex))
         receivedArray.removeSubrange(0..<endIndex) // 移除已经读取的数据
-        print("【接受到的蓝牙数据】本次读取的指令=>\(receivedArray[0]) 本次读取的数据=>\(getArray) 本次长度=>\(endIndex)")
+//        print("【接受到的蓝牙数据】本次读取的指令=>\(receivedArray[0]) 本次读取的数据=>\(getArray) 本次长度=>\(endIndex)")
 
         return getArray;
     }
@@ -415,13 +414,12 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         let DPIM = data[5] // DPIM 只在接受CO2波形时体现
         // 计算当前CO2数据
         currentCO2 = Float((128 * Int(data[3]) + Int(data[4]) - 1000)) / 100;
-        currentFrameIndex += 1
-        print("【当前CO2的值】currentCO2=> \(currentCO2)")
+//        print("【当前CO2的值】currentCO2=> \(currentCO2)")
         // TODO: 当前关系到设置单位的，都不移动
         // if( currentCO2 <= m_CO2Scale * 0.02)
         //     currentCO2 = m_CO2Scale * 0.02;
 
-        print("DPIM 是什么 \(DPIM) \(type(of: DPIM))")
+//        print("DPIM 是什么 \(DPIM) \(type(of: DPIM))")
         // 存在DPI位时，常规波形信息还会携带定时上报的内容，需要额外处理
         if NBFM > 4 {
             switch DPIM {
@@ -447,11 +445,12 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         // updateRangeAlarm();
         // 将受到的数据绘制到曲线图上
         // TODO: 添加绘图
-//        let date = Date() // 获取当前日期和时间
-//        let calendar = Calendar.current // 获取当前日历
-//        let seconds = calendar.component(.second, from: date) // 获取当前秒数
-//        print("当前秒数 seconds => \(seconds) \(type(of: seconds))")
-        receivedCO2WavedData.append(DataPoint(date: currentFrameIndex, value: currentCO2))
+        receivedCO2WavedData.append(DataPoint(value: currentCO2))
+        if receivedCO2WavedData.count > maxXPoints {
+            receivedCO2WavedData.removeFirst()
+        }
+//        print("外面的长度是多少 \(receivedCO2WavedData.count)")
+
         // emit statsChanged();
     }
 

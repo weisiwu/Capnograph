@@ -1,8 +1,8 @@
 import Foundation
 
-enum Languages: Int {
-    case Chinese = 0
-    case English = 1
+enum Languages: String {
+    case Chinese = "中文"
+    case English = "English"
 }
 
 enum CO2UnitType: String {

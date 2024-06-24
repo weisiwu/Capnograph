@@ -3,10 +3,10 @@ import SwiftUI
 //TODO: 二次点击radio没有效果
 //TODO: radio需要换选中样式
 struct RadioButtonGroup: View {
-    let items: [String]
-    @Binding var selectedId: String
+    let items: [Languages]
+    @Binding var selectedId: Languages
     
-    let callback: (String) -> Void
+    let callback: (Languages) -> Void
     
     var body: some View {
         ForEach(items, id: \.self) { item in
@@ -17,9 +17,9 @@ struct RadioButtonGroup: View {
 }
 
 struct RadioButton: View {
-    let id: String
-    @Binding var selectedId: String
-    let callback: (String) -> Void
+    let id: Languages
+    @Binding var selectedId: Languages
+    let callback: (Languages) -> Void
     
     var body: some View {
         Button(action: {
@@ -31,7 +31,7 @@ struct RadioButton: View {
                     .resizable()
                     .frame(width: 24, height: 24)
                     .foregroundColor(self.selectedId == id ? .blue : .gray)
-                Text(id)
+                Text(id.rawValue)
                     .foregroundColor(Color.black)
             }
         }
@@ -48,22 +48,22 @@ struct InfoItem: View {
     var title: String = ""
     var desc: String = ""
     var type: InfoTypes = InfoTypes.Text
-    @State private var selectedOption: String = "中文"
+    @State private var selectedOption: Languages = Languages.Chinese
     
     var body: some View {
         HStack {
             Text(title)
-                .font(.system(size: 18))
+                .font(.system(size: 16))
                 .fontWeight(.regular)
             Spacer()
             if type == InfoTypes.Text {
                 Text(desc)
-                    .font(.system(size: 14))
+                    .font(.system(size: 16))
                     .fontWeight(.thin)
                     .foregroundStyle(Color(red: 61/255, green: 61/255, blue: 61/255))
 
             } else if type == InfoTypes.Radio {
-                RadioButtonGroup(items: ["中文", "English"], selectedId: $selectedOption) { selected in
+                RadioButtonGroup(items: [Languages.Chinese, Languages.English], selectedId: $selectedOption) { selected in
                     print("Selected option: \(selected)")
                 }
             }
