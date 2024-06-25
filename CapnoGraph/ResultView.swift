@@ -3,7 +3,8 @@ import Charts
 
 // 最多展示的横向点数量，每10ms接收到一帧数据，横坐标展示10s的波形图，则共1000个横坐标
 let maxXPoints: Int = 500
-let xPointStep: Int = 100 // 步长，每搁20取一个坐标点
+let xPointStep: Int = 100 // 步长，每100取一个坐标点
+let unRealValue: Float = -1 // 初始线表时，所有点的初始值
 
 struct DataPoint: Identifiable {
     let id = UUID()
@@ -28,7 +29,7 @@ struct LineChartView: View {
             AxisMarks(values: Array(stride(from: 0, to: maxXPoints, by: xPointStep))) { value in
                 AxisValueLabel {
                     if let intValue = value.as(Int.self) {
-                        Text("\(intValue / 100 + 1)\(appConfigManage.getTextByKey(key: "MainLineCharUnit"))") // 自定义标签
+                        Text("\(intValue / 100 + 1)\(appConfigManage.getTextByKey(key: "MainLineCharUnit"))")
                     }
                 }
             }

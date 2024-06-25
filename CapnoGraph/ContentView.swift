@@ -69,29 +69,35 @@ struct ActionsTabView: View {
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
     var toggleLoading: (Bool, String) -> Bool
+    let tabFontSize: CGFloat = 16
     
     var body: some View {
         TabView(selection: $selectedTabIndex) {
             SearchDeviceListView(selectedPeripheral: nil, showToast: $showToast, selectedTabIndex: $selectedTabIndex, toggleLoading: toggleLoading)
                 .tabItem {
                     Image(selectedTabIndex == PageTypes.SearchDeviceList.rawValue ? "tabs_search_active" : "tabs_search")
-                    Text(appConfigManage.getTextByKey(key: "TabSearch")).font(.system(size: 20))
+                    Text(appConfigManage.getTextByKey(key: "TabSearch"))
                 }
                 .tag(PageTypes.SearchDeviceList.rawValue)
             
             ResultView()
                 .tabItem {
                     Image(selectedTabIndex == PageTypes.Result.rawValue ? "tabs_home_active" : "tabs_home")
-                    Text(appConfigManage.getTextByKey(key: "TabMain")).font(.system(size: 20))
+                    Text(appConfigManage.getTextByKey(key: "TabMain"))
                 }
                 .tag(PageTypes.Result.rawValue)
             
             ConfigView(toggleLoading: toggleLoading)
                 .tabItem {
                     Image(![PageTypes.SearchDeviceList.rawValue, PageTypes.Result.rawValue].contains(selectedTabIndex) ? "tabs_settings_active" : "tabs_settings")
-                    Text(appConfigManage.getTextByKey(key: "TabSetting")).font(.system(size: 20))
+                    Text(appConfigManage.getTextByKey(key: "TabSetting"))
                 }
                 .tag(PageTypes.Config.rawValue)
+        }
+        .onAppear {
+            // 启动后，设置字体大小
+            // https://stackoverflow.com/questions/58353718/swiftui-tabview-tabitem-with-custom-font-does-not-work
+            UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: tabFontSize, weight: .medium) ], for: .normal)
         }
     }
 }

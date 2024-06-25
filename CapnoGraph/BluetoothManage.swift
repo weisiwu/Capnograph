@@ -106,7 +106,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     @Published var discoveredPeripherals = [CBPeripheral]() // 周围设备列表，创建了一个指定类型的空列表
     @Published var connectedPeripheral: CBPeripheral? // 已链接设备
     @Published var toastMessage: String? = nil // 通知消息
-    @Published var receivedCO2WavedData: [DataPoint] = [DataPoint(value: 0)]
+    @Published var receivedCO2WavedData: [DataPoint] = Array(repeating: DataPoint(value: unRealValue), count: maxXPoints)
     var isScanning: Bool = false
     var startScanningCallback: (() -> Void)?
     var connectedCallback: (() -> Void)?
@@ -444,13 +444,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         // TODO: 告警范围改变修改，没有迁移
         // updateRangeAlarm();
         // 将受到的数据绘制到曲线图上
-        // TODO: 添加绘图
         receivedCO2WavedData.append(DataPoint(value: currentCO2))
         if receivedCO2WavedData.count > maxXPoints {
             receivedCO2WavedData.removeFirst()
         }
-//        print("外面的长度是多少 \(receivedCO2WavedData.count)")
-
+        // TODO: 没有迁移
         // emit statsChanged();
     }
 
@@ -488,7 +486,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         case ISBState.NoBreaths.rawValue:
             NoBreaths = Int(data[3]) != 0;
             // case ISBState.UnVerified.rawValue:
-            //     // TODO:  没有搞清楚这个是什么
+            // TODO:  没有搞清楚这个是什么
             //     setCO2Unit(data[3],false);
             //     updateCO2Scale();
             //     getAlarmParams();
@@ -580,13 +578,12 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     
     // 外设返回响应（针对写特征值并等待返回的情况）
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
-        print("接受到\(characteristic.uuid)返回数据 \(characteristic.value)")
         if error != nil {
-            print("接受特征\(characteristic.uuid)返回值异常=> \(error)")
+            print("特征\(characteristic.uuid)返回值异常=> \(error)")
             return
         }
         if let value = characteristic.value {
-            print("接受特征\(characteristic.uuid)返回值正常=> \(String(data: value, encoding: .utf8))")
+            print("特征\(characteristic.uuid)返回值正常=> \(String(data: value, encoding: .utf8))")
         }
     }
     
