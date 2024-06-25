@@ -13,8 +13,8 @@ struct DisplayConfigView: View {
         BaseConfigContainerView(configType: ConfigItemTypes.System) {
             VStack(alignment: .leading) {
                 Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
-                Text("CO2单位").font(.system(size: 18)).fontWeight(.bold).padding(0)
-                Picker("Select CO2单位", selection: $CO2Unit) {
+                Text(appConfigManage.getTextByKey(key: "DisplayCO2Unit")).font(.system(size: 18)).fontWeight(.bold).padding(0)
+                Picker(appConfigManage.getTextByKey(key: "DisplayCO2Unit"), selection: $CO2Unit) {
                     ForEach(CO2Units, id: \.self) { unit in
                         Text(unit.rawValue)
                             .frame(height: 30)
@@ -25,8 +25,8 @@ struct DisplayConfigView: View {
                 .frame(height: 110)
 
                 Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
-                Text("CO2 Scale").font(.system(size: 18)).fontWeight(.bold)
-                Picker("Select CO2 Scale", selection: $CO2Scale) {
+                Text(appConfigManage.getTextByKey(key: "DisplayCO2Scale")).font(.system(size: 18)).fontWeight(.bold)
+                Picker(appConfigManage.getTextByKey(key: "DisplayCO2Scale"), selection: $CO2Scale) {
                     ForEach(CO2Scales, id: \.self) { scale in
                         Text(scale.rawValue.formatted(.number.precision(.fractionLength(0...2))))
                             .frame(height: 30)
@@ -37,8 +37,8 @@ struct DisplayConfigView: View {
                 .frame(height: 110)
                 
                 Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
-                Text("WF Speed").font(.system(size: 18)).fontWeight(.bold)
-                Picker("Select WF Speed", selection: $WFSpeed) {
+                Text(appConfigManage.getTextByKey(key: "DisplayWFSpeed")).font(.system(size: 18)).fontWeight(.bold)
+                Picker(appConfigManage.getTextByKey(key: "DisplayWFSpeed"), selection: $WFSpeed) {
                     ForEach(WFSpeeds, id: \.self) { speed in
                         Text("\(speed.rawValue)mm/S")
                             .frame(height: 30)
@@ -51,13 +51,13 @@ struct DisplayConfigView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button("更新") {}
+                    Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {}
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                         .cornerRadius(22)
                     Spacer().frame(width: 78)
-                    Button("设置") {}
+                    Button(appConfigManage.getTextByKey(key: "TabSetting")) {}
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
@@ -71,7 +71,7 @@ struct DisplayConfigView: View {
         .background(Color.white)
         .listStyle(PlainListStyle())
         .padding()
-        .navigationTitle("CapnoGraph - 显示设置")
+        .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleDisplayConfig"))")
     }
 }
 

@@ -109,7 +109,7 @@ struct ModuleConfigView: View {
             VStack(alignment: .leading) {
 
                 SingleSlider(
-                    title: "大气压(mmHg)",
+                    title: appConfigManage.getTextByKey(key: "ModuleAirPressure"),
                     minimumValue: 94.6,
                     maximumValue: 104.9,
                     unit: "mmHg",
@@ -117,14 +117,14 @@ struct ModuleConfigView: View {
                 )
 
                 SingleSlider(
-                    title: "窒息时间(S)",
+                    title: appConfigManage.getTextByKey(key: "ModuleAirPressure"),
                     minimumValue: 10,
                     maximumValue: 60,
                     value: $asphyxiationTime
                 )
                 
                 SingleSlider(
-                    title: "氧气补偿(%)",
+                    title: appConfigManage.getTextByKey(key: "ModuleAirPressure"),
                     minimumValue: 0,
                     maximumValue: 100,
                     value: $oxygenCompensation
@@ -133,13 +133,13 @@ struct ModuleConfigView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button("更新") {}
+                    Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {}
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                         .cornerRadius(22)
                     Spacer().frame(width: 78)
-                    Button("设置") {}
+                    Button(appConfigManage.getTextByKey(key: "TabSetting")) {}
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
@@ -153,7 +153,7 @@ struct ModuleConfigView: View {
         .background(Color.white)
         .listStyle(PlainListStyle())
         .padding()
-        .navigationTitle("CapnoGraph - 模块设置")
+        .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "SystemLanguage"))")
     }
 }
 

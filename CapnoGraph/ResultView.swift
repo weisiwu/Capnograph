@@ -12,6 +12,7 @@ struct DataPoint: Identifiable {
 
 struct LineChartView: View {
     @EnvironmentObject var bluetoothManager: BluetoothManager
+    @EnvironmentObject var appConfigManage: AppConfigManage
 
     var body: some View {
         Chart {
@@ -27,7 +28,7 @@ struct LineChartView: View {
             AxisMarks(values: Array(stride(from: 0, to: maxXPoints, by: xPointStep))) { value in
                 AxisValueLabel {
                     if let intValue = value.as(Int.self) {
-                        Text("\(intValue / 100 + 1)秒") // 自定义标签
+                        Text("\(intValue / 100 + 1)\(appConfigManage.getTextByKey(key: "MainLineCharUnit"))") // 自定义标签
                     }
                 }
             }
@@ -42,14 +43,15 @@ struct LineChartView: View {
 
 struct TableView: View {
     @EnvironmentObject var bluetoothManager: BluetoothManager
+    @EnvironmentObject var appConfigManage: AppConfigManage
 
     var body: some View {
         HStack(spacing:0) {
-            Text("设备名称")
+            Text(appConfigManage.getTextByKey(key: "MainDeviceName"))
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-            Text(bluetoothManager.connectedPeripheral?.name ?? "未知设备")
+            Text(bluetoothManager.connectedPeripheral?.name ?? appConfigManage.getTextByKey(key: "MainUnknownName"))
                 .font(.system(size: 16))
                 .fontWeight(.thin)
                 .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))
@@ -59,7 +61,7 @@ struct TableView: View {
         .padding(.trailing, 28)
         
         HStack(spacing:0) {
-            Text("设备ID")
+            Text(appConfigManage.getTextByKey(key: "MainDeviceID"))
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
@@ -73,7 +75,7 @@ struct TableView: View {
         .padding(.trailing, 28)
         
         HStack(spacing:0) {
-            Text("PR")
+            Text(appConfigManage.getTextByKey(key: "MainPR"))
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
@@ -87,7 +89,7 @@ struct TableView: View {
         .padding(.trailing, 28)
         
         HStack(spacing:0) {
-            Text("ETCO2")
+            Text(appConfigManage.getTextByKey(key: "MainETCO2"))
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()

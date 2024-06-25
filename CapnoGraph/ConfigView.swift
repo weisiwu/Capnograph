@@ -143,7 +143,9 @@ struct ConfigView: View {
     var toggleLoading: ((Bool, String) -> Bool)?
     @State var currentConfigType: Int?
     @EnvironmentObject var bluetoothManager: BluetoothManager
+    @EnvironmentObject var appConfigManage: AppConfigManage
 
+    // TODO: 这里需要调整兼容
     func handleTapGesture(show: Bool, text: String?) -> Bool {
         var loadingText = ""
 
@@ -182,21 +184,63 @@ struct ConfigView: View {
                     ModuleConfigView()
                 default:
                     List {
-                        ConfigItem(text: "蓝牙连接", icon: "setting_icon_bluetooth", configType: ConfigItemTypes.ConnectBlueTooth, currentConfigType: $currentConfigType)
-                        ConfigItem(text: "校零", icon: "setting_icon_reset", configType: ConfigItemTypes.CorrectZero, currentConfigType: $currentConfigType, handleTapGesture: handleTapGesture)
-                        ConfigItem(text: "报警参数", icon: "setting_icon_back", configType: ConfigItemTypes.Alert, currentConfigType: $currentConfigType)
-                        ConfigItem(text: "显示参数", icon: "setting_icon_back", configType: ConfigItemTypes.Display, currentConfigType: $currentConfigType)
-                        ConfigItem(text: "模块参数", icon: "setting_icon_back", configType: ConfigItemTypes.Module, currentConfigType: $currentConfigType)
-                        ConfigItem(text: "系统设置", icon: "setting_icon_back", configType: ConfigItemTypes.System, currentConfigType: $currentConfigType)
-                        ConfigItem(text: "关机", icon: "setting_icon_shutdown", configType: ConfigItemTypes.Showdown, currentConfigType: $currentConfigType, handleTapGesture: handleTapGesture)
-                        ConfigItem(text: "屏幕常亮", icon: "setting_icon_lighter", configType: ConfigItemTypes.Lighter, currentConfigType: $currentConfigType)
+                        ConfigItem(
+                            text: appConfigManage.getTextByKey(key: "SettingBLConnect"),
+                            icon: "setting_icon_bluetooth",
+                            configType: ConfigItemTypes.ConnectBlueTooth,
+                            currentConfigType: $currentConfigType
+                        )
+                        ConfigItem(
+                            text: appConfigManage.getTextByKey(key: "SettingReset"),
+                            icon: "setting_icon_reset",
+                            configType: ConfigItemTypes.CorrectZero,
+                            currentConfigType: $currentConfigType,
+                            handleTapGesture: handleTapGesture
+                        )
+                        ConfigItem(
+                            text: appConfigManage.getTextByKey(key: "SettingAlertParams"),
+                            icon: "setting_icon_back",
+                            configType: ConfigItemTypes.Alert,
+                            currentConfigType: $currentConfigType
+                        )
+                        ConfigItem(
+                            text: appConfigManage.getTextByKey(key: "SettingDisplayParams"),
+                            icon: "setting_icon_back",
+                            configType: ConfigItemTypes.Display,
+                            currentConfigType: $currentConfigType
+                        )
+                        ConfigItem(
+                            text: appConfigManage.getTextByKey(key: "SettingModuleParams"),
+                            icon: "setting_icon_back",
+                            configType: ConfigItemTypes.Module,
+                            currentConfigType: $currentConfigType
+                        )
+                        ConfigItem(
+                            text: appConfigManage.getTextByKey(key: "SettingSystem"),
+                            icon: "setting_icon_back",
+                            configType: ConfigItemTypes.System,
+                            currentConfigType: $currentConfigType
+                        )
+                        ConfigItem(
+                            text: appConfigManage.getTextByKey(key: "SettingShutDown"),
+                            icon: "setting_icon_shutdown",
+                            configType: ConfigItemTypes.Showdown,
+                            currentConfigType: $currentConfigType,
+                            handleTapGesture: handleTapGesture
+                        )
+                        ConfigItem(
+                            text: appConfigManage.getTextByKey(key: "SettingLighter"),
+                            icon: "setting_icon_lighter",
+                            configType: ConfigItemTypes.Lighter,
+                            currentConfigType: $currentConfigType
+                        )
                     }
                     .background(Color.white)
                     .listStyle(PlainListStyle())
                     .padding(.bottom, 48)
                 }
             }
-            .navigationTitle("CapnoGraph - 设置")
+            .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleSetting"))")
             .navigationBarTitleDisplayMode(.inline)
             .onDisappear {
                 currentConfigType = nil

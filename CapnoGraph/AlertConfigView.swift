@@ -135,7 +135,7 @@ struct AlertConfigView: View {
         BaseConfigContainerView(configType: ConfigItemTypes.Alert) {
             VStack(alignment: .leading) {
                 RangeSlider(
-                    title: "ETCO2范围(mmHg)",
+                    title: appConfigManage.getTextByKey(key: "AlertETCO2"),
                     lowerValue: $etCoLower,
                     upperValue: $etCo2Upper,
                     range: 0...100,
@@ -143,7 +143,7 @@ struct AlertConfigView: View {
                 )
                 
                 RangeSlider(
-                    title: "RR范围(bmp)",
+                    title: appConfigManage.getTextByKey(key: "AlertRR"),
                     lowerValue: $rrLower,
                     upperValue: $rrUpper,
                     range: 0...100,
@@ -153,13 +153,13 @@ struct AlertConfigView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button("更新") {}
+                    Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {}
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                         .cornerRadius(22)
                     Spacer().frame(width: 78)
-                    Button("设置") {}
+                    Button(appConfigManage.getTextByKey(key: "TabSetting")) {}
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
@@ -173,7 +173,7 @@ struct AlertConfigView: View {
         .background(Color.white)
         .listStyle(PlainListStyle())
         .padding()
-        .navigationTitle("CapnoGraph - 报警设置")
+        .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleAlertParams"))")
     }
 }
 

@@ -67,6 +67,7 @@ struct ActionsTabView: View {
     @Binding var selectedTabIndex: Int
     @Binding var showToast: Bool
     @EnvironmentObject var bluetoothManager: BluetoothManager
+    @EnvironmentObject var appConfigManage: AppConfigManage
     var toggleLoading: (Bool, String) -> Bool
     
     var body: some View {
@@ -74,21 +75,21 @@ struct ActionsTabView: View {
             SearchDeviceListView(selectedPeripheral: nil, showToast: $showToast, selectedTabIndex: $selectedTabIndex, toggleLoading: toggleLoading)
                 .tabItem {
                     Image(selectedTabIndex == PageTypes.SearchDeviceList.rawValue ? "tabs_search_active" : "tabs_search")
-                    Text("搜索设备").font(.system(size: 20))
+                    Text(appConfigManage.getTextByKey(key: "TabSearch")).font(.system(size: 20))
                 }
                 .tag(PageTypes.SearchDeviceList.rawValue)
             
             ResultView()
                 .tabItem {
                     Image(selectedTabIndex == PageTypes.Result.rawValue ? "tabs_home_active" : "tabs_home")
-                    Text("主页").font(.system(size: 20))
+                    Text(appConfigManage.getTextByKey(key: "TabMain")).font(.system(size: 20))
                 }
                 .tag(PageTypes.Result.rawValue)
             
             ConfigView(toggleLoading: toggleLoading)
                 .tabItem {
                     Image(![PageTypes.SearchDeviceList.rawValue, PageTypes.Result.rawValue].contains(selectedTabIndex) ? "tabs_settings_active" : "tabs_settings")
-                    Text("设置").font(.system(size: 20))
+                    Text(appConfigManage.getTextByKey(key: "TabSetting")).font(.system(size: 20))
                 }
                 .tag(PageTypes.Config.rawValue)
         }
@@ -117,21 +118,6 @@ struct BasePageView<Content: View>: View {
         isLoading = show
         loadingText = text
         return show
-    }
-
-    var title: String {
-        get {
-            switch selectedTabIndex {
-            case PageTypes.SearchDeviceList.rawValue:
-                return "CapnoGraph - 附近设备";
-            case PageTypes.Result.rawValue:
-                return "CapnoGraph";
-            case PageTypes.Config.rawValue:
-                return "CapnoGraph - 设置";
-            default:
-                return "CapnoGraph";
-            }
-        }
     }
     
     init(@ViewBuilder content: () -> Content) {
