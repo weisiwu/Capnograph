@@ -85,6 +85,9 @@ enum AppTextsChinese: String {
     // 报警设置页
     case AlertETCO2 = "ETCO2范围(mmHg)"
     case AlertRR = "RR范围(bmp)"
+    // Toast相关文案
+    case ToastZeroing = "正在校零"
+    case ToastShutDown = "正在关机"
 }
 
 //App英文
@@ -149,6 +152,9 @@ enum AppTextsEnglish: String {
     // 报警设置页
     case AlertETCO2 = "ETCO2 Range(mmHg)"
     case AlertRR = "Respiratory Rate Range(bmp)"
+    // Toast相关文案
+    case ToastZeroing = "Zeroing"
+    case ToastShutDown = "Shutting Down"
 }
 
 enum LocalizedText {
@@ -164,6 +170,12 @@ class AppConfigManage: ObservableObject {
     @Published var productionDate: String = ""
     @Published var serialNumber: String = ""
     @Published var ModuleName: String = ""
+
+    // 全局loading相关配置
+    @Published var loadingMessage: String = ""
+    
+    // Toast相关配置
+    @Published var toastMessage: String = ""
 
 //TODO: 这里要保存一下用户选中的默认选项
 //    UserDefaults.standard.set(self.language, forKey: "SelectedLanguage")
@@ -283,6 +295,11 @@ class AppConfigManage: ObservableObject {
                     return AppTextsChinese.AlertETCO2.rawValue
                 case "AlertRR":
                     return AppTextsChinese.AlertRR.rawValue
+                // Toast相关文案
+                case "ToastZeroing":
+                    return AppTextsChinese.ToastZeroing.rawValue
+                case "ToastShutDown":
+                    return AppTextsChinese.ToastShutDown.rawValue
                 default:
                     return ""
             }
@@ -396,6 +413,10 @@ class AppConfigManage: ObservableObject {
                     return AppTextsEnglish.AlertETCO2.rawValue
                 case "AlertRR":
                     return AppTextsEnglish.AlertRR.rawValue
+                case "ToastZeroing":
+                    return AppTextsEnglish.ToastZeroing.rawValue
+                case "ToastShutDown":
+                    return AppTextsEnglish.ToastShutDown.rawValue
                 default:
                     return ""
             }

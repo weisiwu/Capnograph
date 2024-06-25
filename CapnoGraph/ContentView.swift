@@ -65,15 +65,13 @@ struct LoadingView: View {
 
 struct ActionsTabView: View {
     @Binding var selectedTabIndex: Int
-    @Binding var showToast: Bool
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
-    var toggleLoading: (Bool, String) -> Bool
     let tabFontSize: CGFloat = 16
     
     var body: some View {
         TabView(selection: $selectedTabIndex) {
-            SearchDeviceListView(selectedPeripheral: nil, showToast: $showToast, selectedTabIndex: $selectedTabIndex, toggleLoading: toggleLoading)
+            SearchDeviceListView(selectedPeripheral: nil, selectedTabIndex: $selectedTabIndex)
                 .tabItem {
                     Image(selectedTabIndex == PageTypes.SearchDeviceList.rawValue ? "tabs_search_active" : "tabs_search")
                     Text(appConfigManage.getTextByKey(key: "TabSearch"))
@@ -87,7 +85,7 @@ struct ActionsTabView: View {
                 }
                 .tag(PageTypes.Result.rawValue)
             
-            ConfigView(toggleLoading: toggleLoading)
+            ConfigView()
                 .tabItem {
                     Image(![PageTypes.SearchDeviceList.rawValue, PageTypes.Result.rawValue].contains(selectedTabIndex) ? "tabs_settings_active" : "tabs_settings")
                     Text(appConfigManage.getTextByKey(key: "TabSetting"))
@@ -114,17 +112,8 @@ struct BasePageView<Content: View>: View {
     let content: Content
     @State private var selectedTabIndex: Int = PageTypes.Result.rawValue
     @State private var selectedConfigPage: Int?
-    @State private var isLoading = false
-    @State private var loadingText = ""
-    @State private var showToast = false
-    @State private var toastText = ""
-    @StateObject var bluetoothManager = BluetoothManager()
-    
-    func toggleLoading(show: Bool, text: String) -> Bool  {
-        isLoading = show
-        loadingText = text
-        return show
-    }
+    @EnvironmentObject var bluetoothManager: BluetoothManager
+    @EnvironmentObject var appConfigManage: AppConfigManage
     
     init(@ViewBuilder content: () -> Content) {
         self.content = content()
@@ -144,19 +133,17 @@ struct BasePageView<Content: View>: View {
                 Color.white.edgesIgnoringSafeArea(.all)
                     .frame(height: 0)
                 content
-                ActionsTabView(selectedTabIndex: $selectedTabIndex, showToast: $showToast, toggleLoading: toggleLoading)
+                ActionsTabView(selectedTabIndex: $selectedTabIndex)
             }
             .overlay(
-                isLoading ? LoadingView(loadingText: loadingText) : nil
+                appConfigManage.loadingMessage != "" ? LoadingView(loadingText: appConfigManage.loadingMessage) : nil
             )
-            if showToast {
-                if let toastMsg = bluetoothManager.toastMessage {
-                    VStack {
-                        Spacer()
-                        Toast(message: toastMsg)
-                    }
-                    .animation(.easeInOut, value: showToast)
+            if appConfigManage.toastMessage != "" {
+                VStack {
+                    Spacer()
+                    Toast(message: appConfigManage.toastMessage)
                 }
+                .animation(.easeInOut, value: true)
             }
         }
     }

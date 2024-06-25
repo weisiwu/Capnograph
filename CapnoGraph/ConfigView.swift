@@ -19,15 +19,8 @@ struct BaseConfigContainerView<Content: View>: View {
     @State private var selectedConfigPage: Int
     @State private var isLoading = false
     @State private var loadingText = ""
-    @State private var showToast = false
     @State private var toastText = ""
-    @StateObject var bluetoothManager = BluetoothManager()
-    
-    func toggleLoading(show: Bool, text: String) -> Bool  {
-        isLoading = show
-        loadingText = text
-        return show
-    }
+    @EnvironmentObject var appConfigManage: AppConfigManage
 
     init(configType: ConfigItemTypes, @ViewBuilder content: () -> Content) {
         self.selectedConfigPage = configType.rawValue
@@ -44,14 +37,12 @@ struct BaseConfigContainerView<Content: View>: View {
             .overlay(
                 isLoading ? LoadingView(loadingText: loadingText) : nil
             )
-            if showToast {
-                if let toastMsg = bluetoothManager.toastMessage {
-                    VStack {
-                        Spacer()
-                        Toast(message: toastMsg)
-                    }
-                    .animation(.easeInOut, value: showToast)
+            if appConfigManage.toastMessage != "" {
+                VStack {
+                    Spacer()
+                    Toast(message: appConfigManage.toastMessage)
                 }
+                .animation(.easeInOut, value: true)
             }
         }
     }
@@ -73,15 +64,9 @@ struct ConfigItem: View {
 
     // 处理点击
     func _handleTapGesture(show: Bool, text: String? = nil) -> Bool? {
-        if let result = handleTapGesture?(true, text) {
-            if result {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    _handleTapGesture(show: false)
-                }
-            }
-        }
-        return nil
+        return handleTapGesture?(true, text)
     }
+
     
     var body: some View {
         if isLink {
@@ -133,38 +118,46 @@ struct ConfigItem: View {
             }
             .frame(height: 40)
             .contentShape(Rectangle())
-            .onTapGesture { _handleTapGesture(show: false) }
+            .onTapGesture { _handleTapGesture(show: true, text: text) }
         }
     }
 }
 
 // 一级配置View
 struct ConfigView: View {
-    var toggleLoading: ((Bool, String) -> Bool)?
     @State var currentConfigType: Int?
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
 
-    // TODO: 这里需要调整兼容
     func handleTapGesture(show: Bool, text: String?) -> Bool {
         var loadingText = ""
 
-        if text != nil {
-            switch text {
-            case "校零":
-                loadingText = "正在校零"
-            case "关机":
-                loadingText = "正在关机"
-            default:
-                loadingText = ""
-            }
+        switch text {
+        // 校零
+        case AppTextsChinese.SettingReset.rawValue:
+            loadingText = AppTextsChinese.ToastZeroing.rawValue
+        case AppTextsEnglish.SettingReset.rawValue:
+            loadingText = AppTextsEnglish.ToastZeroing.rawValue
+        // 关机
+        case AppTextsChinese.SettingShutDown.rawValue:
+            loadingText = AppTextsChinese.ToastShutDown.rawValue
+        case AppTextsEnglish.SettingShutDown.rawValue:
+            loadingText = AppTextsEnglish.ToastShutDown.rawValue
+        default:
+            loadingText = ""
         }
-        if let toggleLoading {
-            if show {
-                return toggleLoading(true, loadingText)
-            } else {
-                return toggleLoading(false, "")
-            }
+
+        appConfigManage.loadingMessage = loadingText
+        
+        switch text {
+        // 校零
+        case AppTextsChinese.SettingReset.rawValue, AppTextsEnglish.SettingReset.rawValue:
+            bluetoothManager.correctZero()
+        // 关机
+        case AppTextsChinese.SettingShutDown.rawValue, AppTextsEnglish.SettingShutDown.rawValue:
+            bluetoothManager.shutdown()
+        default:
+            print("No Action when Click In System Config Page")
         }
         return false
     }

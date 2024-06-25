@@ -4,12 +4,10 @@ import CoreBluetooth
 struct SearchDeviceListView: View {
     @State private var showAlert = false
     @State public var selectedPeripheral: CBPeripheral? = nil
-    @Binding var showToast: Bool
     @Binding var selectedTabIndex: Int
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
     let systemHeight:CGFloat = UIScreen.main.bounds.height - 200
-    var toggleLoading: ((Bool, String) -> Bool)?
     
     var body: some View {
         NavigationView() {
@@ -43,17 +41,14 @@ struct SearchDeviceListView: View {
                                             title: Text(appConfigManage.getTextByKey(key: "MainUnknownName")),
                                             message: Text("\(appConfigManage.getTextByKey(key: "SearchDevicePrefix")): \(selectedPeripheral?.name ?? appConfigManage.getTextByKey(key: "SearchConfirmTitle"))"),
                                             primaryButton: .default(Text(appConfigManage.getTextByKey(key: "SearchConfirmYes")), action: {
-                                                if let toggleLoading {
-                                                    toggleLoading(true, appConfigManage.getTextByKey(key: "SearchConnected"))
-                                                    bluetoothManager.connect(to: selectedPeripheral) {
-                                                        withAnimation {
-                                                            toggleLoading(false, "")
-                                                            showToast = true
-                                                            bluetoothManager.toastMessage = appConfigManage.getTextByKey(key: "SearchConnecting")
-                                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                                                                showToast = false
-                                                                selectedTabIndex = PageTypes.Result.rawValue
-                                                            }
+                                                appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "SearchConnecting")
+                                                bluetoothManager.connect(to: selectedPeripheral) {
+                                                    withAnimation {
+                                                        appConfigManage.loadingMessage = ""
+                                                        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "SearchConnected")
+                                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                                            selectedTabIndex = PageTypes.Result.rawValue
+                                                            appConfigManage.toastMessage = ""
                                                         }
                                                     }
                                                 }
@@ -84,13 +79,11 @@ struct SearchDeviceListView: View {
                     .cornerRadius(16)
                     .padding(.bottom, 32)
                     .onTapGesture {
-                        if let toggleLoading {
-                            let isSearch = toggleLoading(true, appConfigManage.getTextByKey(key: "SearchSearching"))
-                            // 开启搜索后，会不停的搜搜外设
-                            bluetoothManager.startScanning() {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                    toggleLoading(false, "")
-                                }
+                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "SearchSearching")
+                        // 开启搜索后，会不停的搜搜外设
+                        bluetoothManager.startScanning() {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                appConfigManage.loadingMessage = ""
                             }
                         }
                     }

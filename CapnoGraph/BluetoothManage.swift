@@ -105,7 +105,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     private var centralManager: CBCentralManager!
     @Published var discoveredPeripherals = [CBPeripheral]() // 周围设备列表，创建了一个指定类型的空列表
     @Published var connectedPeripheral: CBPeripheral? // 已链接设备
-    @Published var toastMessage: String? = nil // 通知消息
     @Published var receivedCO2WavedData: [DataPoint] = Array(repeating: DataPoint(value: unRealValue), count: maxXPoints)
     var isScanning: Bool = false
     var startScanningCallback: (() -> Void)?
@@ -270,7 +269,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         // 处理接受波形数据
         if charHex == BLECharacteristicUUID.BLEReceiveDataCha.rawValue {
             receivedArray.append(contentsOf: charValue)
-//            print("接受到外设数据(\(characteristic.uuid))=>\(receivedArray)")
 
             // TODO: 明确为什么不能多余20
             if receivedArray.count >= 20 {
@@ -336,6 +334,32 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
     
+    // 发送关机指令
+    func shutdown() {
+        sendArray.append(SensorCommand.Reset.rawValue)
+        sendArray.append(0x01)
+        appendCKS()
+
+        let data = convertToData(from: sendArray)
+        if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            peripheral.writeValue(data, for: characteristic, type: .withResponse)
+            resetSendData()
+        }
+    }
+
+    // 发送校零指令
+    func correctZero() {
+        sendArray.append(SensorCommand.Zero.rawValue)
+        sendArray.append(0x01)
+        appendCKS()
+
+        let data = convertToData(from: sendArray)
+        if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            peripheral.writeValue(data, for: characteristic, type: .withResponse)
+            resetSendData()
+        }
+    }
+
     func getFirstArray() -> [UInt8] {
         var getArray: [UInt8] = [];
         let command: UInt8 = receivedArray[0]
