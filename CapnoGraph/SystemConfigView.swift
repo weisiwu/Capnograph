@@ -64,6 +64,7 @@ struct InfoItem: View {
 }
 
 struct SystemConfigView: View {
+    @Environment(\.presentationMode) var presentationMode
     @State var selectedOption: Languages = Languages.Chinese
     @EnvironmentObject var appConfigManage: AppConfigManage
     
@@ -88,6 +89,9 @@ struct SystemConfigView: View {
         .background(Color.white)
         .listStyle(PlainListStyle())
         .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleSystemSetting"))")
+        .onDisappear {
+            presentationMode.wrappedValue.dismiss()
+        }
     }
 }
 

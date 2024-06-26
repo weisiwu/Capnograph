@@ -102,6 +102,7 @@ struct ModuleConfigView: View {
     @State var airPressure: Double = 103
     @State var asphyxiationTime: Double = 30
     @State var oxygenCompensation: Double = 20
+    @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appConfigManage: AppConfigManage
     
     var body: some View {
@@ -154,6 +155,9 @@ struct ModuleConfigView: View {
         .listStyle(PlainListStyle())
         .padding()
         .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "SystemLanguage"))")
+        .onDisappear {
+            presentationMode.wrappedValue.dismiss()
+        }
     }
 }
 

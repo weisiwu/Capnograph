@@ -129,6 +129,7 @@ struct AlertConfigView: View {
     @State private var etCo2Upper: CGFloat = 50
     @State private var rrLower: CGFloat = 20
     @State private var rrUpper: CGFloat = 50
+    @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appConfigManage: AppConfigManage
 
     var body: some View {
@@ -174,6 +175,9 @@ struct AlertConfigView: View {
         .listStyle(PlainListStyle())
         .padding()
         .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleAlertParams"))")
+        .onDisappear {
+            presentationMode.wrappedValue.dismiss()
+        }
     }
 }
 

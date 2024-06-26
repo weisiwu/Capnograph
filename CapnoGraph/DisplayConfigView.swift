@@ -4,6 +4,7 @@ struct DisplayConfigView: View {
     @State private var CO2Unit: String?
     @State private var CO2Scale: Double?
     @State private var WFSpeed: Int?
+    @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appConfigManage: AppConfigManage
     let CO2Units: [CO2UnitType] = [CO2UnitType.KPa, CO2UnitType.Percentage, CO2UnitType.mmHg]
     let CO2Scales: [CO2ScaleEnum] = [CO2ScaleEnum.Small, CO2ScaleEnum.Middle, CO2ScaleEnum.Large]
@@ -72,6 +73,9 @@ struct DisplayConfigView: View {
         .listStyle(PlainListStyle())
         .padding()
         .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleDisplayConfig"))")
+        .onDisappear {
+            presentationMode.wrappedValue.dismiss()
+        }
     }
 }
 
