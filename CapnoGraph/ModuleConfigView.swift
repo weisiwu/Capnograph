@@ -98,10 +98,9 @@ struct SingleSlider: View {
 }
 
 struct ModuleConfigView: View {
-    // TODO: 这里的初始值需要调整
-    @State var airPressure: Double = 103
-    @State var asphyxiationTime: Double = 30
-    @State var oxygenCompensation: Double = 20
+    @State var airPressure: Double = UserDefaults.standard.double(forKey: "airPressure")
+    @State var asphyxiationTime: Double = UserDefaults.standard.double(forKey: "asphyxiationTime")
+    @State var oxygenCompensation: Double = UserDefaults.standard.double(forKey: "oxygenCompensation")
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appConfigManage: AppConfigManage
     
@@ -134,18 +133,29 @@ struct ModuleConfigView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {}
+                    Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
+                        print("点击了更新按钮对对")
+                        appConfigManage.loadingMessage = "更新中"
+                        appConfigManage.airPressure = airPressure
+                        appConfigManage.asphyxiationTime = asphyxiationTime
+                        appConfigManage.oxygenCompensation = oxygenCompensation
+                        UserDefaults.standard.set(airPressure, forKey: "airPressure")
+                        UserDefaults.standard.set(asphyxiationTime, forKey: "asphyxiationTime")
+                        UserDefaults.standard.set(oxygenCompensation, forKey: "oxygenCompensation")
+                        UserDefaults.standard.synchronize()
+                        appConfigManage.loadingMessage = ""
+                    }
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                         .cornerRadius(22)
-                    Spacer().frame(width: 78)
-                    Button(appConfigManage.getTextByKey(key: "TabSetting")) {}
-                        .frame(width: 68, height: 43)
-                        .background(Color(red: 224/255, green: 234/255, blue: 1))
-                        .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
-                        .cornerRadius(22)
-                    Spacer()
+                    // Spacer().frame(width: 78)
+                    // Button(appConfigManage.getTextByKey(key: "TabSetting")) {}
+                    //     .frame(width: 68, height: 43)
+                    //     .background(Color(red: 224/255, green: 234/255, blue: 1))
+                    //     .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
+                    //     .cornerRadius(22)
+                     Spacer()
                 }
                 .padding(.bottom, 20)
             }

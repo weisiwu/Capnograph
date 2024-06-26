@@ -163,23 +163,32 @@ enum LocalizedText {
 }
 
 class AppConfigManage: ObservableObject {
+    init() {
+        // 设置默认值
+        UserDefaults.standard.register(defaults: [
+            "airPressure": 103,
+            "asphyxiationTime": 30,
+            "oxygenCompensation": 20,
+            "etCoLower": 0,
+            "etCo2Upper":50,
+            "rrLower": 20,
+            "rrUpper": 50,
+        ])
+    }
+    
     // 静态的属性，从外设中读取后就不变化了
     @Published var firmwareVersion: String = "--"
     @Published var hardwareVersion: String = "--"
     @Published var softwareVersion: String = "--"
-    @Published var productionDate: String = ""
-    @Published var serialNumber: String = ""
-    @Published var ModuleName: String = ""
+    @Published var productionDate: String = "--"
+    @Published var serialNumber: String = "--"
+    @Published var ModuleName: String = "CapnoGraph"
 
     // 全局loading相关配置
     @Published var loadingMessage: String = ""
     
     // Toast相关配置
     @Published var toastMessage: String = ""
-
-//TODO: 这里要保存一下用户选中的默认选项
-//    UserDefaults.standard.set(self.language, forKey: "SelectedLanguage")
-//    UserDefaults.standard.synchronize()
     
     // App语言设置
     @Published var language: Languages = Languages.Chinese
@@ -424,9 +433,9 @@ class AppConfigManage: ObservableObject {
     }
 
     // 模块参数设置
-    @Published var airPressure: Double = 0
-    @Published var asphyxiationTime: Double = 0
-    @Published var oxygenCompensation: Double = 0
+    @Published var airPressure: Double = UserDefaults.standard.double(forKey: "airPressure")
+    @Published var asphyxiationTime: Double = UserDefaults.standard.double(forKey: "asphyxiationTime")
+    @Published var oxygenCompensation: Double = UserDefaults.standard.double(forKey: "oxygenCompensation")
     
     // 展示参数设置
     @Published var CO2Unit: CO2UnitType = CO2UnitType.KPa
@@ -434,8 +443,8 @@ class AppConfigManage: ObservableObject {
     @Published var WFSpeed: WFSpeedEnum = WFSpeedEnum.One
     
     // 报警参数设置
-    @Published var etCoLower: Float = 0
-    @Published var etCo2Upper: Float = 0
-    @Published var rrLower: Float = 0
-    @Published var rrUpper: Float = 0
+    @Published var etCoLower: Float = UserDefaults.standard.float(forKey: "etCoLower")
+    @Published var etCo2Upper: Float = UserDefaults.standard.float(forKey: "etCo2Upper")
+    @Published var rrLower: Float = UserDefaults.standard.float(forKey: "rrLower")
+    @Published var rrUpper: Float = UserDefaults.standard.float(forKey: "rrUpper")
 }

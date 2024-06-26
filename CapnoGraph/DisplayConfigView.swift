@@ -57,12 +57,12 @@ struct DisplayConfigView: View {
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                         .cornerRadius(22)
-                    Spacer().frame(width: 78)
-                    Button(appConfigManage.getTextByKey(key: "TabSetting")) {}
-                        .frame(width: 68, height: 43)
-                        .background(Color(red: 224/255, green: 234/255, blue: 1))
-                        .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
-                        .cornerRadius(22)
+                    // Spacer().frame(width: 78)
+                    // Button(appConfigManage.getTextByKey(key: "TabSetting")) {}
+                    //     .frame(width: 68, height: 43)
+                    //     .background(Color(red: 224/255, green: 234/255, blue: 1))
+                    //     .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
+                    //     .cornerRadius(22)
                     Spacer()
                 }
                 .padding(.bottom, 20)

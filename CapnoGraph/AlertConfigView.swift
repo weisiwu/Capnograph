@@ -125,10 +125,10 @@ struct RangeSlider: View {
 }
 
 struct AlertConfigView: View {
-    @State private var etCoLower: CGFloat = 0
-    @State private var etCo2Upper: CGFloat = 50
-    @State private var rrLower: CGFloat = 20
-    @State private var rrUpper: CGFloat = 50
+    @State private var etCoLower: CGFloat = UserDefaults.standard.double(forKey: "etCoLower")
+    @State private var etCo2Upper: CGFloat = UserDefaults.standard.double(forKey: "etCo2Upper")
+    @State private var rrLower: CGFloat = UserDefaults.standard.double(forKey: "rrLower")
+    @State private var rrUpper: CGFloat = UserDefaults.standard.double(forKey: "rrUpper")
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appConfigManage: AppConfigManage
 
@@ -154,18 +154,28 @@ struct AlertConfigView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {}
+                    Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
+                        appConfigManage.etCoLower = Float(etCoLower)
+                        appConfigManage.etCo2Upper = Float(etCo2Upper)
+                        appConfigManage.rrLower = Float(rrLower)
+                        appConfigManage.rrUpper = Float(rrUpper)
+                        UserDefaults.standard.set(etCoLower, forKey: "etCoLower")
+                        UserDefaults.standard.set(etCo2Upper, forKey: "etCo2Upper")
+                        UserDefaults.standard.set(rrLower, forKey: "rrLower")
+                        UserDefaults.standard.set(rrUpper, forKey: "rrUpper")
+                        UserDefaults.standard.synchronize()
+                    }
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                         .cornerRadius(22)
-                    Spacer().frame(width: 78)
-                    Button(appConfigManage.getTextByKey(key: "TabSetting")) {}
-                        .frame(width: 68, height: 43)
-                        .background(Color(red: 224/255, green: 234/255, blue: 1))
-                        .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
-                        .cornerRadius(22)
-                    Spacer()
+                    // Spacer().frame(width: 78)
+                    // Button(appConfigManage.getTextByKey(key: "TabSetting")) {}
+                    //     .frame(width: 68, height: 43)
+                    //     .background(Color(red: 224/255, green: 234/255, blue: 1))
+                    //     .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
+                    //     .cornerRadius(22)
+                     Spacer()
                 }
                 .padding(.bottom, 20)
             }

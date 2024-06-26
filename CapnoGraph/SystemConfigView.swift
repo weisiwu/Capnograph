@@ -73,12 +73,12 @@ struct SystemConfigView: View {
             VStack(alignment: .leading) {
                 List {
                     InfoItem(title: appConfigManage.getTextByKey(key: "SystemLanguage"), type: InfoTypes.Radio)
-                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemFirmwareVersion"), desc: "V1.0.0")
-                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemHardwareVersion"), desc: "V1.0.1")
-                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemSoftwareVersion"), desc: "V1.0.2")
-                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemProductionDate"), desc: "2024年05月13日17:56:47")
-                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemSerialNumber"), desc: "FKUXP72K0P094")
-                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemModuleName"), desc: "CapnoGraph")
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemFirmwareVersion"), desc: appConfigManage.firmwareVersion)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemHardwareVersion"), desc: appConfigManage.hardwareVersion)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemSoftwareVersion"), desc: appConfigManage.softwareVersion)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemProductionDate"), desc: appConfigManage.productionDate)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemSerialNumber"), desc: appConfigManage.serialNumber)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemModuleName"), desc: appConfigManage.ModuleName)
                 }
                 .background(Color.white)
                 .listStyle(PlainListStyle())
