@@ -155,6 +155,7 @@ struct AlertConfigView: View {
                 HStack {
                     Spacer()
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
+                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
                         appConfigManage.etCoLower = Float(etCoLower)
                         appConfigManage.etCo2Upper = Float(etCo2Upper)
                         appConfigManage.rrLower = Float(rrLower)
@@ -164,17 +165,18 @@ struct AlertConfigView: View {
                         UserDefaults.standard.set(rrLower, forKey: "rrLower")
                         UserDefaults.standard.set(rrUpper, forKey: "rrUpper")
                         UserDefaults.standard.synchronize()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.51) {
+                            appConfigManage.loadingMessage = ""
+                            appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                appConfigManage.toastMessage = ""
+                            }
+                        }
                     }
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                         .cornerRadius(22)
-                    // Spacer().frame(width: 78)
-                    // Button(appConfigManage.getTextByKey(key: "TabSetting")) {}
-                    //     .frame(width: 68, height: 43)
-                    //     .background(Color(red: 224/255, green: 234/255, blue: 1))
-                    //     .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
-                    //     .cornerRadius(22)
                      Spacer()
                 }
                 .padding(.bottom, 20)

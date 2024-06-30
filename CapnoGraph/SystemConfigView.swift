@@ -67,7 +67,24 @@ struct SystemConfigView: View {
     @Environment(\.presentationMode) var presentationMode
     @State var selectedOption: Languages = Languages.Chinese
     @EnvironmentObject var appConfigManage: AppConfigManage
+    @EnvironmentObject var bluetoothManager: BluetoothManager
     
+    func getSettingInfoCallback(value: String, type: ISBState84H) {
+        if type == ISBState84H.GetSensorPartNumber {
+            appConfigManage.ModuleName = value
+        } else if type == ISBState84H.GetSerialNumber {
+            appConfigManage.serialNumber = value
+        } else if type == ISBState84H.GetHardWareRevision {
+            appConfigManage.hardwareVersion = value
+        } else if type == ISBState84H.GetProductionDate {
+            appConfigManage.productionDate = value
+        } else if type == ISBState84H.GetModuleName {
+            appConfigManage.ModuleName = value
+        } else if type == ISBState84H.GetSoftWareRevision {
+            appConfigManage.softwareVersion = value
+        }
+    }
+
     var body: some View {
         BaseConfigContainerView(configType: ConfigItemTypes.System) {
             VStack(alignment: .leading) {
@@ -92,9 +109,11 @@ struct SystemConfigView: View {
         .onDisappear {
             presentationMode.wrappedValue.dismiss()
         }
+        .onAppear {
+            // 进入系统设置页后判断是否已经成功获取设备
+            if appConfigManage.firmwareVersion == defaultDeviceInfo {
+                bluetoothManager.getDeviceInfo(cb: getSettingInfoCallback) // 获取设备信息
+            }
+        }
     }
 }
-
-//#Preview {
-//    SystemConfigView()
-//}

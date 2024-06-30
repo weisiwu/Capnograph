@@ -85,7 +85,7 @@ struct ActionsTabView: View {
                 }
                 .tag(PageTypes.Result.rawValue)
             
-            ConfigView()
+            ConfigView(selectedTabIndex: $selectedTabIndex)
                 .tabItem {
                     Image(![PageTypes.SearchDeviceList.rawValue, PageTypes.Result.rawValue].contains(selectedTabIndex) ? "tabs_settings_active" : "tabs_settings")
                     Text(appConfigManage.getTextByKey(key: "TabSetting"))
@@ -141,7 +141,7 @@ struct BasePageView<Content: View>: View {
             if appConfigManage.toastMessage != "" {
                 VStack {
                     Spacer()
-                    Toast(message: appConfigManage.toastMessage)
+                    Toast(message: appConfigManage.toastMessage, type: appConfigManage.toastType)
                 }
                 .animation(.easeInOut, value: true)
             }
@@ -154,7 +154,3 @@ struct ContentView: View {
         BasePageView {}
     }
 }
-
-//#Preview {
-//    ContentView()
-//}

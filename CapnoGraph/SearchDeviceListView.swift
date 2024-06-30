@@ -94,7 +94,3 @@ struct SearchDeviceListView: View {
         }
     }
 }
-
-//#Preview {
-//    SearchDeviceListView()
-//}

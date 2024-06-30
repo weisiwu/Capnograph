@@ -37,13 +37,6 @@ struct BaseConfigContainerView<Content: View>: View {
             .overlay(
                 isLoading ? LoadingView(loadingText: loadingText) : nil
             )
-            if appConfigManage.toastMessage != "" {
-                VStack {
-                    Spacer()
-                    Toast(message: appConfigManage.toastMessage)
-                }
-                .animation(.easeInOut, value: true)
-            }
         }
     }
 }
@@ -126,38 +119,82 @@ struct ConfigItem: View {
 // 一级配置View
 struct ConfigView: View {
     @State var currentConfigType: Int?
+    @State var showAlert: Bool = false
+    @Binding var selectedTabIndex: Int
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
+    
+     func handleShutdown() {
+        appConfigManage.loadingMessage = ""
+        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "ToastShutDownComplete")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            appConfigManage.toastMessage = ""
+        }
+    }
+
+    func handleSetZero() {
+        appConfigManage.loadingMessage = ""
+        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "ToastZeroComplete")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            appConfigManage.toastMessage = ""
+        }
+    }
+
+    func handleKeepScreenOn() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            appConfigManage.loadingMessage = ""
+            appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "ToastLighterFinished")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                appConfigManage.toastMessage = ""
+            }
+        }
+    }
 
     func handleTapGesture(show: Bool, text: String?) -> Bool {
         var loadingText = ""
 
+        // 如果没有链接设备，直接出alert，让用户前往链接设备
+        if let connectedPeripheral = bluetoothManager.connectedPeripheral {
+            showAlert = false
+        } else {
+            showAlert = true
+            return false
+        }
+
         switch text {
-        // 校零
-        case AppTextsChinese.SettingReset.rawValue:
-            loadingText = AppTextsChinese.ToastZeroing.rawValue
-        case AppTextsEnglish.SettingReset.rawValue:
-            loadingText = AppTextsEnglish.ToastZeroing.rawValue
-        // 关机
-        case AppTextsChinese.SettingShutDown.rawValue:
-            loadingText = AppTextsChinese.ToastShutDown.rawValue
-        case AppTextsEnglish.SettingShutDown.rawValue:
-            loadingText = AppTextsEnglish.ToastShutDown.rawValue
-        default:
-            loadingText = ""
+            // 校零
+            case AppTextsChinese.SettingReset.rawValue:
+                loadingText = AppTextsChinese.ToastZeroing.rawValue
+            case AppTextsEnglish.SettingReset.rawValue:
+                loadingText = AppTextsEnglish.ToastZeroing.rawValue
+            // 关机
+            case AppTextsChinese.SettingShutDown.rawValue:
+                loadingText = AppTextsChinese.ToastShutDown.rawValue
+            case AppTextsEnglish.SettingShutDown.rawValue:
+                loadingText = AppTextsEnglish.ToastShutDown.rawValue
+            // 屏幕常量
+            case AppTextsChinese.SettingLighter.rawValue:
+                loadingText = AppTextsChinese.ToastLighting.rawValue
+            case AppTextsEnglish.SettingLighter.rawValue:
+                loadingText = AppTextsEnglish.ToastLighting.rawValue
+            default:
+                loadingText = ""
         }
 
         appConfigManage.loadingMessage = loadingText
         
         switch text {
-        // 校零
-        case AppTextsChinese.SettingReset.rawValue, AppTextsEnglish.SettingReset.rawValue:
-            bluetoothManager.correctZero()
-        // 关机
-        case AppTextsChinese.SettingShutDown.rawValue, AppTextsEnglish.SettingShutDown.rawValue:
-            bluetoothManager.shutdown()
-        default:
-            print("No Action when Click In System Config Page")
+            // 校零
+            case AppTextsChinese.SettingReset.rawValue, AppTextsEnglish.SettingReset.rawValue:
+                bluetoothManager.correctZero(cb: handleSetZero)
+            // 关机
+            case AppTextsChinese.SettingShutDown.rawValue, AppTextsEnglish.SettingShutDown.rawValue:
+                bluetoothManager.shutdown(cb: handleShutdown)
+            // 屏幕常亮
+            case AppTextsChinese.SettingLighter.rawValue, AppTextsEnglish.SettingLighter.rawValue:
+                bluetoothManager.keepScreenOn(cb: handleKeepScreenOn)
+            default:
+                print("No Action when Click In System Config Page")
         }
         return false
     }
@@ -177,12 +214,12 @@ struct ConfigView: View {
                     ModuleConfigView()
                 default:
                     List {
-                        ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingBLConnect"),
-                            icon: "setting_icon_bluetooth",
-                            configType: ConfigItemTypes.ConnectBlueTooth,
-                            currentConfigType: $currentConfigType
-                        )
+                        // ConfigItem(
+                        //     text: appConfigManage.getTextByKey(key: "SettingBLConnect"),
+                        //     icon: "setting_icon_bluetooth",
+                        //     configType: ConfigItemTypes.ConnectBlueTooth,
+                        //     currentConfigType: $currentConfigType
+                        // )
                         ConfigItem(
                             text: appConfigManage.getTextByKey(key: "SettingReset"),
                             icon: "setting_icon_reset",
@@ -225,12 +262,23 @@ struct ConfigView: View {
                             text: appConfigManage.getTextByKey(key: "SettingLighter"),
                             icon: "setting_icon_lighter",
                             configType: ConfigItemTypes.Lighter,
-                            currentConfigType: $currentConfigType
+                            currentConfigType: $currentConfigType,
+                            handleTapGesture: handleTapGesture
                         )
                     }
                     .background(Color.white)
                     .listStyle(PlainListStyle())
                     .padding(.bottom, 48)
+                    .alert(isPresented: $showAlert) {
+                        Alert(
+                            title: Text(appConfigManage.getTextByKey(key: "NoDeviceTitle")),
+                            message: Text(appConfigManage.getTextByKey(key: "NoDeviceMessage")),
+                            primaryButton: .default(Text(appConfigManage.getTextByKey(key: "NoDeviceJump")), action: {
+                                selectedTabIndex = PageTypes.SearchDeviceList.rawValue
+                            }),
+                            secondaryButton: .default(Text(appConfigManage.getTextByKey(key: "SearchConfirmNo")))
+                        )
+                    }
                 }
             }
             .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleSetting"))")

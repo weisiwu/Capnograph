@@ -117,14 +117,14 @@ struct ModuleConfigView: View {
                 )
 
                 SingleSlider(
-                    title: appConfigManage.getTextByKey(key: "ModuleAirPressure"),
+                    title: appConfigManage.getTextByKey(key: "ModuleAsphyxiationTime"),
                     minimumValue: 10,
                     maximumValue: 60,
                     value: $asphyxiationTime
                 )
                 
                 SingleSlider(
-                    title: appConfigManage.getTextByKey(key: "ModuleAirPressure"),
+                    title: appConfigManage.getTextByKey(key: "ModuleOxygenCompensation"),
                     minimumValue: 0,
                     maximumValue: 100,
                     value: $oxygenCompensation
@@ -134,8 +134,7 @@ struct ModuleConfigView: View {
                 HStack {
                     Spacer()
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
-                        print("点击了更新按钮对对")
-                        appConfigManage.loadingMessage = "更新中"
+                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
                         appConfigManage.airPressure = airPressure
                         appConfigManage.asphyxiationTime = asphyxiationTime
                         appConfigManage.oxygenCompensation = oxygenCompensation
@@ -143,18 +142,18 @@ struct ModuleConfigView: View {
                         UserDefaults.standard.set(asphyxiationTime, forKey: "asphyxiationTime")
                         UserDefaults.standard.set(oxygenCompensation, forKey: "oxygenCompensation")
                         UserDefaults.standard.synchronize()
-                        appConfigManage.loadingMessage = ""
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            appConfigManage.loadingMessage = ""
+                            appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                appConfigManage.toastMessage = ""
+                            }
+                        }
                     }
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                         .cornerRadius(22)
-                    // Spacer().frame(width: 78)
-                    // Button(appConfigManage.getTextByKey(key: "TabSetting")) {}
-                    //     .frame(width: 68, height: 43)
-                    //     .background(Color(red: 224/255, green: 234/255, blue: 1))
-                    //     .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
-                    //     .cornerRadius(22)
                      Spacer()
                 }
                 .padding(.bottom, 20)

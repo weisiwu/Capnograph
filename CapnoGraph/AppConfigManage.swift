@@ -6,22 +6,21 @@ enum Languages: String {
 }
 
 enum CO2UnitType: String {
-    case KPa = "KPa"
+    case KPa = "kPa"
     case Percentage = "%"
     case mmHg = "mmHg"
 }
 
 enum CO2ScaleEnum: Double {
-    case Small = 6.7
-    case Middle = 8
-    case Large = 10
+    case Small = 50
+    case Middle = 60
+    case Large = 75
 }
 
 enum WFSpeedEnum: Int {
     case One = 1
-    case Two
-    case Three
-    case Four
+    case Two = 2
+    case Four = 4
 }
 
 //App中文
@@ -87,7 +86,18 @@ enum AppTextsChinese: String {
     case AlertRR = "RR范围(bmp)"
     // Toast相关文案
     case ToastZeroing = "正在校零"
+    case ToastZeroComplete = "校零结束"
     case ToastShutDown = "正在关机"
+    case ToastShutDownComplete = "已关机"
+    case ToastLighting = "正在设置常亮"
+    case ToastLighterFinished = "设置常亮成功"
+    // 更新信息
+    case UpdateSetting = "更新中"
+    case UpdateSettingFinished = "更新成功"
+    // 无设备提示
+    case NoDeviceTitle = "未连接设备"
+    case NoDeviceMessage = "需要先链接设备才能设置功能"
+    case NoDeviceJump = "跳转"
 }
 
 //App英文
@@ -154,13 +164,27 @@ enum AppTextsEnglish: String {
     case AlertRR = "Respiratory Rate Range(bmp)"
     // Toast相关文案
     case ToastZeroing = "Zeroing"
+    case ToastZeroComplete = "Zero Calibration Finished"
     case ToastShutDown = "Shutting Down"
+    case ToastShutDownComplete = "Powered Off"
+    case ToastLighting = "Setting Sceen On"
+    case ToastLighterFinished = "Keep Screen On Finished"
+    // 更新loading
+    case UpdateSetting = "Updating"
+    case UpdateSettingFinished = "Update Success"
+    // 无设备提示
+    case NoDeviceTitle = "Device Not Connected"
+    case NoDeviceMessage = "You need to connect the device first to enable this feature."
+    case NoDeviceJump = "Jump"
 }
 
 enum LocalizedText {
     case english(AppTextsEnglish)
     case chinese(AppTextsChinese)
 }
+
+//默认值信息
+let defaultDeviceInfo: String = "--"
 
 class AppConfigManage: ObservableObject {
     init() {
@@ -177,18 +201,19 @@ class AppConfigManage: ObservableObject {
     }
     
     // 静态的属性，从外设中读取后就不变化了
-    @Published var firmwareVersion: String = "--"
-    @Published var hardwareVersion: String = "--"
-    @Published var softwareVersion: String = "--"
-    @Published var productionDate: String = "--"
-    @Published var serialNumber: String = "--"
+    @Published var firmwareVersion: String = defaultDeviceInfo
+    @Published var hardwareVersion: String = defaultDeviceInfo
+    @Published var softwareVersion: String = defaultDeviceInfo
+    @Published var productionDate: String = defaultDeviceInfo
+    @Published var serialNumber: String = defaultDeviceInfo
     @Published var ModuleName: String = "CapnoGraph"
 
     // 全局loading相关配置
     @Published var loadingMessage: String = ""
     
     // Toast相关配置
-    @Published var toastMessage: String = ""
+     @Published var toastMessage: String = ""
+    @Published var toastType: ToastType = ToastType.SUCCESS
     
     // App语言设置
     @Published var language: Languages = Languages.Chinese
@@ -307,8 +332,28 @@ class AppConfigManage: ObservableObject {
                 // Toast相关文案
                 case "ToastZeroing":
                     return AppTextsChinese.ToastZeroing.rawValue
+               case "ToastZeroComplete":
+                    return AppTextsChinese.ToastZeroComplete.rawValue
                 case "ToastShutDown":
                     return AppTextsChinese.ToastShutDown.rawValue
+                case "ToastShutDownComplete":
+                    return AppTextsChinese.ToastShutDownComplete.rawValue
+                case "ToastLighting":
+                    return AppTextsChinese.ToastLighting.rawValue
+                case "ToastLighterFinished":
+                return AppTextsChinese.ToastLighterFinished.rawValue
+                // 更新loading
+                case "UpdateSetting":
+                    return AppTextsChinese.UpdateSetting.rawValue
+                case "UpdateSettingFinished":
+                    return AppTextsChinese.UpdateSettingFinished.rawValue
+                // 无设备提示
+                case "NoDeviceTitle":
+                    return AppTextsChinese.NoDeviceTitle.rawValue
+                case "NoDeviceMessage":
+                    return AppTextsChinese.NoDeviceMessage.rawValue
+                case "NoDeviceJump":
+                    return AppTextsChinese.NoDeviceJump.rawValue
                 default:
                     return ""
             }
@@ -422,10 +467,31 @@ class AppConfigManage: ObservableObject {
                     return AppTextsEnglish.AlertETCO2.rawValue
                 case "AlertRR":
                     return AppTextsEnglish.AlertRR.rawValue
+                // toast相关文案
                 case "ToastZeroing":
                     return AppTextsEnglish.ToastZeroing.rawValue
+               case "ToastZeroComplete":
+                    return AppTextsEnglish.ToastZeroComplete.rawValue
                 case "ToastShutDown":
                     return AppTextsEnglish.ToastShutDown.rawValue
+                case "ToastShutDownComplete":
+                    return AppTextsEnglish.ToastShutDownComplete.rawValue
+                case "ToastLighting":
+                    return AppTextsEnglish.ToastLighting.rawValue
+                case "ToastLighterFinished":
+                    return AppTextsEnglish.ToastLighting.rawValue
+                // 更新loading
+                case "UpdateSetting":
+                    return AppTextsEnglish.UpdateSetting.rawValue
+                case "UpdateSettingFinished":
+                    return AppTextsEnglish.UpdateSettingFinished.rawValue
+                // 无设备提示
+                case "NoDeviceTitle":
+                    return AppTextsChinese.NoDeviceTitle.rawValue
+                case "NoDeviceMessage":
+                    return AppTextsChinese.NoDeviceMessage.rawValue
+                case "NoDeviceJump":
+                    return AppTextsChinese.NoDeviceJump.rawValue
                 default:
                     return ""
             }
