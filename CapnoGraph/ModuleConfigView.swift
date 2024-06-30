@@ -163,7 +163,7 @@ struct ModuleConfigView: View {
         .background(Color.white)
         .listStyle(PlainListStyle())
         .padding()
-        .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "SystemLanguage"))")
+        .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleModuleConfig"))")
         .onDisappear {
             presentationMode.wrappedValue.dismiss()
         }
