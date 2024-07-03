@@ -150,7 +150,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var isConnectToDevice: Bool = false
     var shutdownCallback: (() -> Void)?
     var correctZeroCallback: (() -> Void)?
-    var updateCO2UnitCallback: (() -> Void)?
     var updateCO2ScaleCallback: (() -> Void)?
     var getSettingInfoCallback: ((String, ISBState84H) -> Void)?
     var isSupportCMD: [UInt8] = [
@@ -451,65 +450,62 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
 
     // 更新CO2单位/CO2Scale
-    func updateCO2Unit(CO2Unit unit: CO2UnitType, CO2Scale scale: CO2ScaleEnum, WFSpeed speed: WFSpeedEnum, cb: @escaping () -> Void) {
-        CO2Unit = unit
-        CO2Scale = scale
-        WFSpeed = speed
-        
+    func updateCO2Unit(cb: @escaping () -> Void) {
         // 读取单位前，必须要先停止设置
         sendStopContinuous()
 
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             // 设置CO2单位
-            let data = convertToData(from: sendArray)
             sendArray.append(SensorCommand.Settings.rawValue)
             sendArray.append(0x03)
             sendArray.append(0x07)
-            if unit == CO2UnitType.mmHg {
+            if CO2Unit == CO2UnitType.mmHg {
                 sendArray.append(0x00)
-            } else if unit == CO2UnitType.KPa {
+            } else if CO2Unit == CO2UnitType.KPa {
                 sendArray.append(0x01)
-            } else if unit == CO2UnitType.Percentage {
+            } else if CO2Unit == CO2UnitType.Percentage {
                 sendArray.append(0x02)
             }
             appendCKS()
+            let data = convertToData(from: sendArray)
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             resetSendData()
+            print("修改完毕单位 \(CO2Unit)")
 
             // 设置CO2Scale
             sendArray.append(SensorCommand.Expand.rawValue)
             sendArray.append(0x03)
             sendArray.append(0x2C)
-            if scale == CO2ScaleEnum.mmHg_Small {
-                sendArray.append(0x00)
-            } else if scale == CO2ScaleEnum.mmHg_Middle {
-                sendArray.append(0x01)
-            } else if scale == CO2ScaleEnum.mmHg_Large {
-                sendArray.append(0x02)
+            switch CO2Scale {
+                case .mmHg_Small, .percentage_Small, .KPa_Small:
+                    sendArray.append(0x00)
+                case .mmHg_Middle, .percentage_Middle, .KPa_Middle:
+                    sendArray.append(0x01)
+                case .mmHg_Large, .percentage_Large, .KPa_Large:
+                    sendArray.append(0x02)
             }
             appendCKS()
             let data2 = convertToData(from: sendArray)
             peripheral.writeValue(data2, for: characteristic, type: .withResponse)
             resetSendData()
 
-            // TODO:(wsw)wfspeed没有作用
             // 设置WFSpeed
-            // sendArray.append(SensorCommand.Expand.rawValue)
-            // sendArray.append(0x03)
-            // sendArray.append(0x2C)
-            // if speed == CO2ScaleEnum.Small {
-            //     sendArray.append(0x00)
-            // } else if speed == CO2ScaleEnum.Middle {
-            //     sendArray.append(0x01)
-            // } else if speed == CO2ScaleEnum.Large {
-            //     sendArray.append(0x02)
-            // }
-            // appendCKS()
-            // let data2 = convertToData(from: sendArray)
-            // peripheral.writeValue(data2, for: characteristic, type: .withResponse)
-            // resetSendData()
+             sendArray.append(SensorCommand.Expand.rawValue)
+             sendArray.append(0x03)
+             sendArray.append(0x2C)
+            if WFSpeed == .One {
+                 sendArray.append(0x00)
+            } else if WFSpeed == .Two {
+                 sendArray.append(0x01)
+            } else if WFSpeed == .Four {
+                 sendArray.append(0x02)
+             }
+             appendCKS()
+             let data3 = convertToData(from: sendArray)
+             peripheral.writeValue(data3, for: characteristic, type: .withResponse)
+             resetSendData()
 
-            updateCO2UnitCallback = cb
+            cb()
         }
     }
 

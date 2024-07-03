@@ -1,5 +1,6 @@
 import SwiftUI
 import Charts
+import Foundation
 
 // 最多展示的横向点数量，每10ms接收到一帧数据，横坐标展示20s的波形图，则共1000个横坐标
 let maxXPoints: Int = 2000
@@ -35,7 +36,7 @@ struct LineChartView: View {
             }
         }
         .chartYAxis {
-            AxisMarks(position: .leading, values: Array(stride(from: 0.0, through: bluetoothManager.CO2Scale.rawValue, by: 10.0)))
+            AxisMarks(position: .leading, values: Array(stride(from: 0.0, through: bluetoothManager.CO2Scale.rawValue, by: min(ceil(bluetoothManager.CO2Scale.rawValue / 5), 10.0))))
         }
         .frame(height: 300)
         .padding()

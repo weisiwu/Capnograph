@@ -73,9 +73,12 @@ struct DisplayConfigView: View {
                     // }
                     // TODO:(wsw) 单位先不使用默认值
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
-//                    TODO: 临时注释
-//                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
-//                        bluetoothManager.updateCO2Unit(CO2Unit: CO2Unit, CO2Scale: CO2Scale, WFSpeed: WFSpeed, cb: UpdateSettingCallback)
+                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
+                        bluetoothManager.updateCO2Unit {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                appConfigManage.loadingMessage = ""
+                            }
+                        }
                     }
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
