@@ -159,7 +159,26 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         SensorCommand.GetSoftwareRevision.rawValue,
         SensorCommand.Expand.rawValue,
     ]
-    
+    // 图标展示的实时单位、范围、速度
+    @Published var CO2Unit: CO2UnitType = .mmHg {
+        didSet {
+            switch CO2Unit {
+                case .mmHg:
+                    CO2Scale = .mmHg_Small
+                    CO2Scales = [.mmHg_Small, .mmHg_Middle, .mmHg_Large]
+                case .Percentage:
+                    CO2Scale = .percentage_Small
+                    CO2Scales = [.percentage_Small, .percentage_Middle, .percentage_Large]
+                case .KPa:
+                    CO2Scale = .KPa_Small
+                    CO2Scales = [.KPa_Small, .KPa_Middle, .KPa_Large]
+            }
+        }
+    }
+    @Published var CO2Scale: CO2ScaleEnum = .mmHg_Small
+    @Published var WFSpeed: WFSpeedEnum = .Two
+    @Published var CO2Scales: [CO2ScaleEnum] = [.mmHg_Small, .mmHg_Middle, .mmHg_Large]
+
     override init() {
         super.init()
         // 中央设备管理器
@@ -432,7 +451,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
 
     // 更新CO2单位/CO2Scale
-    func updateCO2Unit(CO2Unit: CO2UnitType, CO2Scale: CO2ScaleEnum, WFSpeed: WFSpeedEnum, cb: @escaping () -> Void) {
+    func updateCO2Unit(CO2Unit unit: CO2UnitType, CO2Scale scale: CO2ScaleEnum, WFSpeed speed: WFSpeedEnum, cb: @escaping () -> Void) {
+        CO2Unit = unit
+        CO2Scale = scale
+        WFSpeed = speed
+        
         // 读取单位前，必须要先停止设置
         sendStopContinuous()
 
@@ -442,11 +465,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             sendArray.append(SensorCommand.Settings.rawValue)
             sendArray.append(0x03)
             sendArray.append(0x07)
-            if CO2Unit == CO2UnitType.mmHg {
+            if unit == CO2UnitType.mmHg {
                 sendArray.append(0x00)
-            } else if CO2Unit == CO2UnitType.KPa {
+            } else if unit == CO2UnitType.KPa {
                 sendArray.append(0x01)
-            } else if CO2Unit == CO2UnitType.Percentage {
+            } else if unit == CO2UnitType.Percentage {
                 sendArray.append(0x02)
             }
             appendCKS()
@@ -457,11 +480,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             sendArray.append(SensorCommand.Expand.rawValue)
             sendArray.append(0x03)
             sendArray.append(0x2C)
-            if CO2Scale == CO2ScaleEnum.Small {
+            if scale == CO2ScaleEnum.mmHg_Small {
                 sendArray.append(0x00)
-            } else if CO2Scale == CO2ScaleEnum.Middle {
+            } else if scale == CO2ScaleEnum.mmHg_Middle {
                 sendArray.append(0x01)
-            } else if CO2Scale == CO2ScaleEnum.Large {
+            } else if scale == CO2ScaleEnum.mmHg_Large {
                 sendArray.append(0x02)
             }
             appendCKS()
@@ -474,11 +497,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             // sendArray.append(SensorCommand.Expand.rawValue)
             // sendArray.append(0x03)
             // sendArray.append(0x2C)
-            // if CO2Scale == CO2ScaleEnum.Small {
+            // if speed == CO2ScaleEnum.Small {
             //     sendArray.append(0x00)
-            // } else if CO2Scale == CO2ScaleEnum.Middle {
+            // } else if speed == CO2ScaleEnum.Middle {
             //     sendArray.append(0x01)
-            // } else if CO2Scale == CO2ScaleEnum.Large {
+            // } else if speed == CO2ScaleEnum.Large {
             //     sendArray.append(0x02)
             // }
             // appendCKS()

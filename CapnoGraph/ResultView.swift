@@ -1,9 +1,9 @@
 import SwiftUI
 import Charts
 
-// 最多展示的横向点数量，每10ms接收到一帧数据，横坐标展示10s的波形图，则共1000个横坐标
-let maxXPoints: Int = 500
-let xPointStep: Int = 100 // 步长，每100取一个坐标点
+// 最多展示的横向点数量，每10ms接收到一帧数据，横坐标展示20s的波形图，则共1000个横坐标
+let maxXPoints: Int = 2000
+let xPointStep: Int = 500 // 步长，每100取一个坐标点
 let unRealValue: Float = -1 // 初始线表时，所有点的初始值
 
 struct DataPoint: Identifiable {
@@ -35,7 +35,7 @@ struct LineChartView: View {
             }
         }
         .chartYAxis {
-            AxisMarks(position: .leading, values: [0, 10.0, 20.0, 30.0, 40.0, 50.0])
+            AxisMarks(position: .leading, values: Array(stride(from: 0.0, through: bluetoothManager.CO2Scale.rawValue, by: 10.0)))
         }
         .frame(height: 300)
         .padding()
@@ -94,7 +94,7 @@ struct TableView: View {
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-            Text(bluetoothManager.ETCO2 == 0 ? "--/mmHg" : "\(bluetoothManager.ETCO2.formatted(.number.precision(.fractionLength(0...2))))/mmHg")
+            Text(bluetoothManager.ETCO2 == 0 ? "--/\(bluetoothManager.CO2Unit.rawValue)" : "\(bluetoothManager.ETCO2.formatted(.number.precision(.fractionLength(0...2))))/\(bluetoothManager.CO2Unit.rawValue)")
                 .font(.system(size: 16))
                 .fontWeight(.thin)
                 .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))
@@ -119,8 +119,3 @@ struct ResultView: View {
         }
     }
 }
-
-
-//#Preview {
-//    ResultView()
-//}

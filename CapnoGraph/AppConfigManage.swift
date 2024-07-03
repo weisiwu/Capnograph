@@ -12,9 +12,15 @@ enum CO2UnitType: String {
 }
 
 enum CO2ScaleEnum: Double {
-    case Small = 50
-    case Middle = 60
-    case Large = 75
+    case mmHg_Small = 50
+    case mmHg_Middle = 60
+    case mmHg_Large = 75
+    case KPa_Small = 6.7
+    case KPa_Middle = 8
+    case KPa_Large = 10
+    case percentage_Small = 6.6
+    case percentage_Middle = 7.9
+    case percentage_Large = 9.9
 }
 
 enum WFSpeedEnum: Int {
@@ -502,11 +508,6 @@ class AppConfigManage: ObservableObject {
     @Published var airPressure: Double = UserDefaults.standard.double(forKey: "airPressure")
     @Published var asphyxiationTime: Double = UserDefaults.standard.double(forKey: "asphyxiationTime")
     @Published var oxygenCompensation: Double = UserDefaults.standard.double(forKey: "oxygenCompensation")
-    
-    // 展示参数设置
-    @Published var CO2Unit: CO2UnitType = CO2UnitType.KPa
-    @Published var CO2Scale: CO2ScaleEnum = CO2ScaleEnum.Small
-    @Published var WFSpeed: WFSpeedEnum = WFSpeedEnum.One
     
     // 报警参数设置
     @Published var etCoLower: Float = UserDefaults.standard.float(forKey: "etCoLower")

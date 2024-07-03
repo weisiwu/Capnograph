@@ -1,15 +1,12 @@
 import SwiftUI
 
 struct DisplayConfigView: View {
-    @State private var CO2Unit: CO2UnitType = CO2UnitType.KPa
-    @State private var CO2Scale: CO2ScaleEnum = CO2ScaleEnum.Small
-    @State private var WFSpeed: WFSpeedEnum = WFSpeedEnum.One
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appConfigManage: AppConfigManage
     @EnvironmentObject var bluetoothManager: BluetoothManager
-    let CO2Units: [CO2UnitType] = [CO2UnitType.KPa, CO2UnitType.Percentage, CO2UnitType.mmHg]
-    let CO2Scales: [CO2ScaleEnum] = [CO2ScaleEnum.Small, CO2ScaleEnum.Middle, CO2ScaleEnum.Large]
-    let WFSpeeds: [WFSpeedEnum] = [WFSpeedEnum.One, WFSpeedEnum.Two, WFSpeedEnum.Four]
+    let CO2Units: [CO2UnitType] = [.KPa, .Percentage, .mmHg]
+
+    let WFSpeeds: [WFSpeedEnum] = [.One, .Two, .Four]
 
     func UpdateSettingCallback() {
         appConfigManage.loadingMessage = ""
@@ -24,7 +21,7 @@ struct DisplayConfigView: View {
             VStack(alignment: .leading) {
                 Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
                 Text(appConfigManage.getTextByKey(key: "DisplayCO2Unit")).font(.system(size: 18)).fontWeight(.bold).padding(0)
-                Picker(appConfigManage.getTextByKey(key: "DisplayCO2Unit"), selection: $CO2Unit) {
+                Picker(appConfigManage.getTextByKey(key: "DisplayCO2Unit"), selection: $bluetoothManager.CO2Unit) {
                     ForEach(CO2Units, id: \.self) { unit in
                         Text(unit.rawValue)
                             .frame(height: 30)
@@ -36,8 +33,8 @@ struct DisplayConfigView: View {
 
                 Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
                 Text(appConfigManage.getTextByKey(key: "DisplayCO2Scale")).font(.system(size: 18)).fontWeight(.bold)
-                Picker(appConfigManage.getTextByKey(key: "DisplayCO2Scale"), selection: $CO2Scale) {
-                    ForEach(CO2Scales, id: \.self) { scale in
+                Picker(appConfigManage.getTextByKey(key: "DisplayCO2Scale"), selection: $bluetoothManager.CO2Scale) {
+                    ForEach(bluetoothManager.CO2Scales, id: \.self) { scale in
                         Text(scale.rawValue.formatted(.number.precision(.fractionLength(0...2))))
                             .frame(height: 30)
                             .font(.system(size: 14))
@@ -48,7 +45,7 @@ struct DisplayConfigView: View {
                 
                 Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
                 Text(appConfigManage.getTextByKey(key: "DisplayWFSpeed")).font(.system(size: 18)).fontWeight(.bold)
-                Picker(appConfigManage.getTextByKey(key: "DisplayWFSpeed"), selection: $WFSpeed) {
+                Picker(appConfigManage.getTextByKey(key: "DisplayWFSpeed"), selection: $bluetoothManager.WFSpeed) {
                     ForEach(WFSpeeds, id: \.self) { speed in
                         Text("\(speed.rawValue)mm/S")
                             .frame(height: 30)
@@ -76,8 +73,9 @@ struct DisplayConfigView: View {
                     // }
                     // TODO:(wsw) 单位先不使用默认值
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
-                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
-                        bluetoothManager.updateCO2Unit(CO2Unit: CO2Unit, CO2Scale: CO2Scale, WFSpeed: WFSpeed, cb: UpdateSettingCallback)
+//                    TODO: 临时注释
+//                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
+//                        bluetoothManager.updateCO2Unit(CO2Unit: CO2Unit, CO2Scale: CO2Scale, WFSpeed: WFSpeed, cb: UpdateSettingCallback)
                     }
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
@@ -98,7 +96,3 @@ struct DisplayConfigView: View {
         }
     }
 }
-
-//#Preview {
-//    DisplayConfigView()
-//}
