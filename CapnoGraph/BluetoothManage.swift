@@ -158,6 +158,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         SensorCommand.GetSoftwareRevision.rawValue,
         SensorCommand.Expand.rawValue,
     ]
+
     // 图标展示的实时单位、范围、速度
     @Published var CO2Unit: CO2UnitType = .mmHg {
         didSet {
@@ -174,9 +175,17 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             }
         }
     }
+
+    // 展示设置
     @Published var CO2Scale: CO2ScaleEnum = .mmHg_Small
     @Published var WFSpeed: WFSpeedEnum = .Two
     @Published var CO2Scales: [CO2ScaleEnum] = [.mmHg_Small, .mmHg_Middle, .mmHg_Large]
+
+    // 报警参数设置
+    @Published var etCoLower: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "etCoLower"))
+    @Published var etCo2Upper: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "etCo2Upper"))
+    @Published var rrLower: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "rrLower"))    
+    @Published var rrUpper: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "rrUpper"))
 
     override init() {
         super.init()
@@ -506,6 +515,28 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
              resetSendData()
 
             cb()
+        }
+    }
+
+    // 调整ETCO2/RR的报警范围
+    func updateAlertRange() {
+        sendArray.append(SensorCommand.Expand.rawValue)
+        sendArray.append(0x10)
+        sendArray.append(0x2A) // ISB=42
+        sendArray.append(UInt8(Int(etCo2Upper * 10) >> 7))
+        sendArray.append(UInt8(Int(etCo2Upper * 10) & 0x7f))
+        sendArray.append(UInt8(Int(etCoLower) * 10 >> 7))
+        sendArray.append(UInt8(Int(etCoLower * 10) & 0x7f))
+        sendArray.append(UInt8(Int(rrUpper) >> 7))
+        sendArray.append(UInt8(Int(rrUpper) & 0x7f))
+        sendArray.append(UInt8(Int(rrLower) >> 7))
+        sendArray.append(UInt8(Int(rrLower) & 0x7f))
+        appendCKS()
+
+        let data = convertToData(from: sendArray)
+        if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            peripheral.writeValue(data, for: characteristic, type: .withResponse)
+            resetSendData()
         }
     }
 

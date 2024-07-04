@@ -125,28 +125,25 @@ struct RangeSlider: View {
 }
 
 struct AlertConfigView: View {
-    @State private var etCoLower: CGFloat = UserDefaults.standard.double(forKey: "etCoLower")
-    @State private var etCo2Upper: CGFloat = UserDefaults.standard.double(forKey: "etCo2Upper")
-    @State private var rrLower: CGFloat = UserDefaults.standard.double(forKey: "rrLower")
-    @State private var rrUpper: CGFloat = UserDefaults.standard.double(forKey: "rrUpper")
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appConfigManage: AppConfigManage
+    @EnvironmentObject var bluetoothManager: BluetoothManager
 
     var body: some View {
         BaseConfigContainerView(configType: ConfigItemTypes.Alert) {
             VStack(alignment: .leading) {
                 RangeSlider(
                     title: appConfigManage.getTextByKey(key: "AlertETCO2"),
-                    lowerValue: $etCoLower,
-                    upperValue: $etCo2Upper,
+                    lowerValue: $bluetoothManager.etCoLower,
+                    upperValue: $bluetoothManager.etCo2Upper,
                     range: 0...100,
                     unit: "mmHg"
                 )
                 
                 RangeSlider(
                     title: appConfigManage.getTextByKey(key: "AlertRR"),
-                    lowerValue: $rrLower,
-                    upperValue: $rrUpper,
+                    lowerValue: $bluetoothManager.rrLower,
+                    upperValue: $bluetoothManager.rrUpper,
                     range: 0...100,
                     unit: "bmp"
                 )
@@ -156,16 +153,14 @@ struct AlertConfigView: View {
                     Spacer()
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
                         appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
-                        appConfigManage.etCoLower = Float(etCoLower)
-                        appConfigManage.etCo2Upper = Float(etCo2Upper)
-                        appConfigManage.rrLower = Float(rrLower)
-                        appConfigManage.rrUpper = Float(rrUpper)
-                        UserDefaults.standard.set(etCoLower, forKey: "etCoLower")
-                        UserDefaults.standard.set(etCo2Upper, forKey: "etCo2Upper")
-                        UserDefaults.standard.set(rrLower, forKey: "rrLower")
-                        UserDefaults.standard.set(rrUpper, forKey: "rrUpper")
+                        UserDefaults.standard.set(bluetoothManager.etCoLower, forKey: "etCoLower")
+                        UserDefaults.standard.set(bluetoothManager.etCo2Upper, forKey: "etCo2Upper")
+                        UserDefaults.standard.set(bluetoothManager.rrLower, forKey: "rrLower")
+                        UserDefaults.standard.set(bluetoothManager.rrUpper, forKey: "rrUpper")
                         UserDefaults.standard.synchronize()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.51) {
+                        // 修改报警范围
+                        bluetoothManager.updateAlertRange()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             appConfigManage.loadingMessage = ""
                             appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
@@ -192,7 +187,3 @@ struct AlertConfigView: View {
         }
     }
 }
-
-//#Preview {
-//    AlertConfigView()
-//}

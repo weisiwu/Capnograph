@@ -508,10 +508,4 @@ class AppConfigManage: ObservableObject {
     @Published var airPressure: Double = UserDefaults.standard.double(forKey: "airPressure")
     @Published var asphyxiationTime: Double = UserDefaults.standard.double(forKey: "asphyxiationTime")
     @Published var oxygenCompensation: Double = UserDefaults.standard.double(forKey: "oxygenCompensation")
-    
-    // 报警参数设置
-    @Published var etCoLower: Float = UserDefaults.standard.float(forKey: "etCoLower")
-    @Published var etCo2Upper: Float = UserDefaults.standard.float(forKey: "etCo2Upper")
-    @Published var rrLower: Float = UserDefaults.standard.float(forKey: "rrLower")
-    @Published var rrUpper: Float = UserDefaults.standard.float(forKey: "rrUpper")
 }

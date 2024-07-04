@@ -43,18 +43,6 @@ struct DisplayConfigView: View {
                 .pickerStyle(WheelPickerStyle())
                 .frame(height: 110)
                 
-                Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
-                Text(appConfigManage.getTextByKey(key: "DisplayWFSpeed")).font(.system(size: 18)).fontWeight(.bold)
-                Picker(appConfigManage.getTextByKey(key: "DisplayWFSpeed"), selection: $bluetoothManager.WFSpeed) {
-                    ForEach(WFSpeeds, id: \.self) { speed in
-                        Text("\(speed.rawValue)mm/S")
-                            .frame(height: 30)
-                            .font(.system(size: 14))
-                    }
-                }
-                .pickerStyle(WheelPickerStyle())
-                .frame(height: 110)
-                
                 Spacer()
                 HStack {
                     Spacer()
@@ -71,7 +59,6 @@ struct DisplayConfigView: View {
                     //         appConfigManage.loadingMessage = ""
                     //     }
                     // }
-                    // TODO:(wsw) 单位先不使用默认值
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
                         appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
                         bluetoothManager.updateCO2Unit {
