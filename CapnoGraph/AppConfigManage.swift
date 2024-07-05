@@ -199,10 +199,12 @@ class AppConfigManage: ObservableObject {
             "airPressure": 103,
             "asphyxiationTime": 30,
             "oxygenCompensation": 20,
-            "etCoLower": 0,
+            "etCo2Lower": 0,
             "etCo2Upper":50,
             "rrLower": 20,
             "rrUpper": 50,
+            "CO2Scale": CO2ScaleEnum.mmHg_Small.rawValue,
+            "CO2Unit": CO2UnitType.mmHg.rawValue
         ])
     }
     

@@ -5,7 +5,6 @@ struct DisplayConfigView: View {
     @EnvironmentObject var appConfigManage: AppConfigManage
     @EnvironmentObject var bluetoothManager: BluetoothManager
     let CO2Units: [CO2UnitType] = [.KPa, .Percentage, .mmHg]
-
     let WFSpeeds: [WFSpeedEnum] = [.One, .Two, .Four]
 
     func UpdateSettingCallback() {
@@ -46,21 +45,10 @@ struct DisplayConfigView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    // Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
-                    //     appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
-                    //     appConfigManage.CO2Unit = CO2Unit
-                    //     appConfigManage.CO2Scale = CO2Scale
-                    //     appConfigManage.WFSpeed = WFSpeed
-                    //     UserDefaults.standard.set(CO2Unit.rawValue, forKey: "CO2Unit")
-                    //     UserDefaults.standard.set(CO2Scale.rawValue, forKey: "CO2Scale")
-                    //     UserDefaults.standard.set(WFSpeed.rawValue, forKey: "WFSpeed")
-                    //     UserDefaults.standard.synchronize()
-                    //     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    //         appConfigManage.loadingMessage = ""
-                    //     }
-                    // }
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
                         appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
+                        UserDefaults.standard.set(bluetoothManager.CO2Unit.rawValue, forKey: "CO2Unit")
+                        UserDefaults.standard.set(bluetoothManager.CO2Scale.rawValue, forKey: "CO2Scale")
                         bluetoothManager.updateCO2Unit {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 appConfigManage.loadingMessage = ""

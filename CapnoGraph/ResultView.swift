@@ -27,16 +27,22 @@ struct LineChartView: View {
             }
         }
         .chartXAxis {
-            AxisMarks(values: Array(stride(from: 0, to: maxXPoints, by: xPointStep))) { value in
+            // not show last axis marks
+            // https://stackoverflow.com/questions/74240487/swift-charts-will-not-display-the-last-x-axis-axisvaluelabel-with-axismarks
+            AxisMarks(preset: .aligned, values: Array(stride(from: 0, through: maxXPoints, by: xPointStep))) { value in
                 AxisValueLabel {
                     if let intValue = value.as(Int.self) {
-                        Text("\(intValue / 100 + 1)\(appConfigManage.getTextByKey(key: "MainLineCharUnit"))")
+                        Text("\(intValue / 100)\(appConfigManage.getTextByKey(key: "MainLineCharUnit"))")
                     }
                 }
             }
         }
         .chartYAxis {
-            AxisMarks(position: .leading, values: Array(stride(from: 0.0, through: bluetoothManager.CO2Scale.rawValue, by: min(ceil(bluetoothManager.CO2Scale.rawValue / 5), 10.0))))
+            AxisMarks(
+                preset: .aligned,
+                position: .leading,
+                values: Array(stride(from: 0.0, through: ceil(bluetoothManager.CO2Scale.rawValue / 10) * 10, by: floor(bluetoothManager.CO2ScaleStep)))
+            )
         }
         .frame(height: 300)
         .padding()
@@ -107,6 +113,8 @@ struct TableView: View {
 }
 
 struct ResultView: View {
+    @EnvironmentObject var bluetoothManager: BluetoothManager
+
     var body: some View {
         NavigationView() {
             VStack(spacing: 0){
@@ -117,6 +125,17 @@ struct ResultView: View {
             .navigationTitle("CapnoGraph")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(false)
+        }
+        .onAppear {
+            // 展示的时候，从本地获取用户保存的展示参数
+            if let defaultUnitStr: String = UserDefaults.standard.string(forKey: "CO2Unit"),
+               let defaultUnit: CO2UnitType = CO2UnitType(rawValue: defaultUnitStr) {
+                bluetoothManager.CO2Unit = defaultUnit
+            }
+            let defaultScaleStr: Double = UserDefaults.standard.double(forKey: "CO2Scale")
+            if let defaultScale: CO2ScaleEnum = CO2ScaleEnum(rawValue: defaultScaleStr) {
+                bluetoothManager.CO2Scale = defaultScale
+            }
         }
     }
 }

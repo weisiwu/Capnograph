@@ -80,7 +80,7 @@ enum ZSBState: Int {
     case DetectBreathing = 12
 }
 
-// 模块设置
+// 【ISB】读取/设置模块指令
 enum ISBState84H: Int {
     case NoUse = 0 // 无效的参数设置
     case AirPressure = 1 // 大气压
@@ -95,17 +95,19 @@ enum ISBState84H: Int {
     case GetSerialNumber = 20 // 获取sensor serial number
     case GetHardWareRevision = 21 // 获取硬件版本
     case Stop = 27 // 停止采样气泵
-    // 从CAH中移动过来的
+}
+
+// 【ISB】扩展指令
+enum ISBStateF2H: Int {
+    case NoUse = 0x2A //
+    case CO2Scale = 0x2C //
+}
+
+// 【ISB】获取软件信息指令
+enum ISBStateCAH: Int {
     case GetSoftWareRevision = 99 // 获取软件版本
     case GetProductionDate = 98 // 生产日期
     case GetModuleName = 97 // 模块名称
-}
-
-// 系统扩展设置
-enum ExpandState: Int {
-    // TODO: 这两个都是没有确定的
-    case NoUse = 42 // 
-    // case NoUse = 44 // 
 }
 
 class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
@@ -166,23 +168,27 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 case .mmHg:
                     CO2Scale = .mmHg_Small
                     CO2Scales = [.mmHg_Small, .mmHg_Middle, .mmHg_Large]
+                    CO2ScaleStep = 10
                 case .Percentage:
                     CO2Scale = .percentage_Small
                     CO2Scales = [.percentage_Small, .percentage_Middle, .percentage_Large]
+                    CO2ScaleStep = 2
                 case .KPa:
                     CO2Scale = .KPa_Small
                     CO2Scales = [.KPa_Small, .KPa_Middle, .KPa_Large]
+                    CO2ScaleStep = 2
             }
         }
     }
 
     // 展示设置
     @Published var CO2Scale: CO2ScaleEnum = .mmHg_Small
-    @Published var WFSpeed: WFSpeedEnum = .Two
+    @Published var CO2ScaleStep: Double = 10
     @Published var CO2Scales: [CO2ScaleEnum] = [.mmHg_Small, .mmHg_Middle, .mmHg_Large]
+    @Published var WFSpeed: WFSpeedEnum = .Two // 目前未用到
 
     // 报警参数设置
-    @Published var etCoLower: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "etCoLower"))
+    @Published var etCo2Lower: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "etCo2Lower"))
     @Published var etCo2Upper: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "etCo2Upper"))
     @Published var rrLower: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "rrLower"))    
     @Published var rrUpper: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "rrUpper"))
@@ -467,7 +473,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             // 设置CO2单位
             sendArray.append(SensorCommand.Settings.rawValue)
             sendArray.append(0x03)
-            sendArray.append(0x07)
+            sendArray.append(UInt8(ISBState84H.SetCO2Unit.rawValue))
             if CO2Unit == CO2UnitType.mmHg {
                 sendArray.append(0x00)
             } else if CO2Unit == CO2UnitType.KPa {
@@ -479,12 +485,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             let data = convertToData(from: sendArray)
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             resetSendData()
-            print("修改完毕单位 \(CO2Unit)")
 
             // 设置CO2Scale
             sendArray.append(SensorCommand.Expand.rawValue)
             sendArray.append(0x03)
-            sendArray.append(0x2C)
+            sendArray.append(UInt8(ISBStateF2H.CO2Scale.rawValue))
             switch CO2Scale {
                 case .mmHg_Small, .percentage_Small, .KPa_Small:
                     sendArray.append(0x00)
@@ -498,22 +503,9 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             peripheral.writeValue(data2, for: characteristic, type: .withResponse)
             resetSendData()
 
-            // 设置WFSpeed
-             sendArray.append(SensorCommand.Expand.rawValue)
-             sendArray.append(0x03)
-             sendArray.append(0x2C)
-            if WFSpeed == .One {
-                 sendArray.append(0x00)
-            } else if WFSpeed == .Two {
-                 sendArray.append(0x01)
-            } else if WFSpeed == .Four {
-                 sendArray.append(0x02)
-             }
-             appendCKS()
-             let data3 = convertToData(from: sendArray)
-             peripheral.writeValue(data3, for: characteristic, type: .withResponse)
-             resetSendData()
-
+            cb()
+        } else {
+            // TODO: 这里要说明，他失败了
             cb()
         }
     }
@@ -525,8 +517,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         sendArray.append(0x2A) // ISB=42
         sendArray.append(UInt8(Int(etCo2Upper * 10) >> 7))
         sendArray.append(UInt8(Int(etCo2Upper * 10) & 0x7f))
-        sendArray.append(UInt8(Int(etCoLower) * 10 >> 7))
-        sendArray.append(UInt8(Int(etCoLower * 10) & 0x7f))
+        sendArray.append(UInt8(Int(etCo2Lower) * 10 >> 7))
+        sendArray.append(UInt8(Int(etCo2Lower * 10) & 0x7f))
         sendArray.append(UInt8(Int(rrUpper) >> 7))
         sendArray.append(UInt8(Int(rrUpper) & 0x7f))
         sendArray.append(UInt8(Int(rrLower) >> 7))
@@ -779,13 +771,13 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                     formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
                     let formattedDateString = formatter.string(from: date)
                     print("Formatted Time: \(formattedDateString)")
-                    getSettingInfoCallback?(formattedDateString, ISBState84H.GetProductionDate)
+                    getSettingInfoCallback?(formattedDateString, ISBStateCAH.GetProductionDate)
                 } else {
                     print("Failed to parse date")
                 }
                 
                 print("Remaining text: \(remainingText)")
-                getSettingInfoCallback?(remainingText, ISBState84H.GetModuleName)
+                getSettingInfoCallback?(remainingText, ISBStateCAH.GetModuleName)
             } else {
                 print("No match found")
             }

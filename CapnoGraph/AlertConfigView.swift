@@ -134,7 +134,7 @@ struct AlertConfigView: View {
             VStack(alignment: .leading) {
                 RangeSlider(
                     title: appConfigManage.getTextByKey(key: "AlertETCO2"),
-                    lowerValue: $bluetoothManager.etCoLower,
+                    lowerValue: $bluetoothManager.etCo2Lower,
                     upperValue: $bluetoothManager.etCo2Upper,
                     range: 0...100,
                     unit: "mmHg"
@@ -153,7 +153,7 @@ struct AlertConfigView: View {
                     Spacer()
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
                         appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
-                        UserDefaults.standard.set(bluetoothManager.etCoLower, forKey: "etCoLower")
+                        UserDefaults.standard.set(bluetoothManager.etCo2Lower, forKey: "etCo2Lower")
                         UserDefaults.standard.set(bluetoothManager.etCo2Upper, forKey: "etCo2Upper")
                         UserDefaults.standard.set(bluetoothManager.rrLower, forKey: "rrLower")
                         UserDefaults.standard.set(bluetoothManager.rrUpper, forKey: "rrUpper")
