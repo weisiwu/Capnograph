@@ -110,6 +110,13 @@ enum ISBStateCAH: Int {
     case GetModuleName = 97 // 模块名称
 }
 
+// 所有CMD的ISB聚合使用
+enum ISBState {
+    case CMD_84H(ISBState84H)
+    case CMD_CAH(ISBStateCAH)
+    case CMD_F2H(ISBStateF2H)
+}
+
 class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private var centralManager: CBCentralManager!
     @Published var discoveredPeripherals = [CBPeripheral]() // 周围设备列表，创建了一个指定类型的空列表
@@ -153,7 +160,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var shutdownCallback: (() -> Void)?
     var correctZeroCallback: (() -> Void)?
     var updateCO2ScaleCallback: (() -> Void)?
-    var getSettingInfoCallback: ((String, ISBState84H) -> Void)?
+    var getSettingInfoCallback: ((String, ISBState) -> Void)?
     var isSupportCMD: [UInt8] = [
         SensorCommand.CO2Waveform.rawValue,
         SensorCommand.Settings.rawValue,
@@ -376,7 +383,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
      * 通过CAH获取
      * 软件版本
     */
-    func getDeviceInfo(cb: @escaping (String, ISBState84H) -> Void) {
+    func getDeviceInfo(cb: @escaping (String, ISBState) -> Void) {
 
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             // ISB=21
@@ -698,7 +705,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                         deviceName += String(uScalar)
                     }
                 }
-                getSettingInfoCallback?(deviceName, ISBState84H.GetSensorPartNumber)
+            getSettingInfoCallback?(deviceName, ISBState.CMD_84H(.GetSensorPartNumber))
             case ISBState84H.GetSerialNumber.rawValue:
                 // B2A解析方法
                 let DB1: Double = Double(data[3]) * pow(2, 28)
@@ -708,11 +715,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 let DB5: Double = Double(data[7])
                 let sNum = DB1 + DB2 + DB3 + DB4 + DB5
                 let sSerialNumber = String(format: "%.0f", sNum)
-                getSettingInfoCallback?(sSerialNumber, ISBState84H.GetSerialNumber)
+            getSettingInfoCallback?(sSerialNumber, ISBState.CMD_84H(.GetSerialNumber))
             case ISBState84H.GetHardWareRevision.rawValue:
                 if let DB1 = UnicodeScalar(Int(data[3])), let DB2 = UnicodeScalar(Int(data[4])), let DB3 = UnicodeScalar(Int(data[5])) {
                     sHardwareVersion = "\(DB1).\(DB2).\(DB3)"
-                    getSettingInfoCallback?(sHardwareVersion, ISBState84H.GetHardWareRevision)
+                    getSettingInfoCallback?(sHardwareVersion, ISBState.CMD_84H(.GetHardWareRevision))
                 }
             case ISBState84H.GasCompensation.rawValue:
                 O2Compensation = Int(data[3]);
@@ -771,13 +778,13 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                     formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
                     let formattedDateString = formatter.string(from: date)
                     print("Formatted Time: \(formattedDateString)")
-                    getSettingInfoCallback?(formattedDateString, ISBStateCAH.GetProductionDate)
+                    getSettingInfoCallback?(formattedDateString, ISBState.CMD_CAH(.GetProductionDate))
                 } else {
                     print("Failed to parse date")
                 }
                 
                 print("Remaining text: \(remainingText)")
-                getSettingInfoCallback?(remainingText, ISBStateCAH.GetModuleName)
+                getSettingInfoCallback?(remainingText, ISBState.CMD_CAH(.GetModuleName))
             } else {
                 print("No match found")
             }
