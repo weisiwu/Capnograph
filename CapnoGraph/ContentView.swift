@@ -74,21 +74,21 @@ struct ActionsTabView: View {
             SearchDeviceListView(selectedPeripheral: nil, selectedTabIndex: $selectedTabIndex)
                 .tabItem {
                     Image(selectedTabIndex == PageTypes.SearchDeviceList.rawValue ? "tabs_search_active" : "tabs_search")
-                    Text(appConfigManage.getTextByKey(key: "TabSearch"))
+                    Text("TabSearch")
                 }
                 .tag(PageTypes.SearchDeviceList.rawValue)
             
             ResultView()
                 .tabItem {
                     Image(selectedTabIndex == PageTypes.Result.rawValue ? "tabs_home_active" : "tabs_home")
-                    Text(appConfigManage.getTextByKey(key: "TabMain"))
+                    Text("TabMain")
                 }
                 .tag(PageTypes.Result.rawValue)
             
             ConfigView(selectedTabIndex: $selectedTabIndex)
                 .tabItem {
                     Image(![PageTypes.SearchDeviceList.rawValue, PageTypes.Result.rawValue].contains(selectedTabIndex) ? "tabs_settings_active" : "tabs_settings")
-                    Text(appConfigManage.getTextByKey(key: "TabSetting"))
+                    Text("TabSetting")
                 }
                 .tag(PageTypes.Config.rawValue)
         }

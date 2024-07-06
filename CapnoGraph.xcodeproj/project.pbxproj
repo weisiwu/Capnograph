@@ -18,6 +18,7 @@
 		16E9F2622C0C7450004B977E /* SystemConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2612C0C7450004B977E /* SystemConfigView.swift */; };
 		16E9F2642C0C7491004B977E /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2632C0C7491004B977E /* ResultView.swift */; };
 		16E9F26E2C0CC1CB004B977E /* AlertConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F26D2C0CC1CB004B977E /* AlertConfigView.swift */; };
+		16EA75022C3927AA00AC3FD2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 16EA75002C3927AA00AC3FD2 /* Localizable.strings */; };
 		414511E32C202F8A0028E8DC /* DisplayConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 414511E22C202F8A0028E8DC /* DisplayConfigView.swift */; };
 		414511E52C202F970028E8DC /* ModuleConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 414511E42C202F970028E8DC /* ModuleConfigView.swift */; };
 		414511E72C2037AC0028E8DC /* ConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 414511E62C2037AC0028E8DC /* ConfigView.swift */; };
@@ -58,6 +59,8 @@
 		16E9F2612C0C7450004B977E /* SystemConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemConfigView.swift; sourceTree = "<group>"; };
 		16E9F2632C0C7491004B977E /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		16E9F26D2C0CC1CB004B977E /* AlertConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertConfigView.swift; sourceTree = "<group>"; };
+		16EA75012C3927AA00AC3FD2 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		16EA75032C3927D700AC3FD2 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		414511E22C202F8A0028E8DC /* DisplayConfigView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DisplayConfigView.swift; sourceTree = "<group>"; };
 		414511E42C202F970028E8DC /* ModuleConfigView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ModuleConfigView.swift; sourceTree = "<group>"; };
 		414511E62C2037AC0028E8DC /* ConfigView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigView.swift; sourceTree = "<group>"; };
@@ -94,6 +97,7 @@
 		1649F39C2C0B3CDD009DCE65 = {
 			isa = PBXGroup;
 			children = (
+				16EA75002C3927AA00AC3FD2 /* Localizable.strings */,
 				1649F3A72C0B3CDE009DCE65 /* CapnoGraph */,
 				1649F3B82C0B3CE0009DCE65 /* CapnoGraphTests */,
 				1649F3C22C0B3CE0009DCE65 /* CapnoGraphUITests */,
@@ -248,11 +252,11 @@
 			};
 			buildConfigurationList = 1649F3A02C0B3CDD009DCE65 /* Build configuration list for PBXProject "CapnoGraph" */;
 			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = en;
+			developmentRegion = "zh-Hans";
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				Base,
+				"zh-Hans",
 			);
 			mainGroup = 1649F39C2C0B3CDD009DCE65;
 			packageReferences = (
@@ -274,6 +278,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1649F3B02C0B3CE0009DCE65 /* Preview Assets.xcassets in Resources */,
+				16EA75022C3927AA00AC3FD2 /* Localizable.strings in Resources */,
 				1649F3AD2C0B3CE0009DCE65 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -345,6 +350,18 @@
 			targetProxy = 1649F3C02C0B3CE0009DCE65 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		16EA75002C3927AA00AC3FD2 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				16EA75012C3927AA00AC3FD2 /* zh-Hans */,
+				16EA75032C3927D700AC3FD2 /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		1649F3C72C0B3CE0009DCE65 /* Debug */ = {

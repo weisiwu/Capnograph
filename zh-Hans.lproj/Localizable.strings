@@ -1,0 +1,69 @@
+/* 
+  Localizable.strings
+  CapnoGraph
+
+  Created by weisiwu on 2024/7/6.
+  
+*/
+
+//中文
+TabSearch = "搜索";
+TabMain = "主页";
+TabSetting = "设置";
+TitleSearch = "CapnoGraph - 附近设备";
+TitleMain = "CapnoGraph";
+TitleSetting = "CapnoGraph - 设置";
+TitleSystemSetting = "CapnoGraph - 系统设置";
+TitleAlertParams = "CapnoGraph - 报警设置";
+TitleModuleConfig = "CapnoGraph - 模块设置";
+TitleDisplayConfig = "CapnoGraph - 显示设置";
+SearchNoResult = "附近没有可用蓝牙设备！";
+SearchBtn = "搜索设备";
+SearchConfirmTitle = "确认要链接此设备？";
+SearchConfirmYes = "链接";
+SearchConfirmNo = "取消";
+SearchConnecting = "链接中";
+SearchConnected = "链接成功";
+SearchSearching = "搜索设备中";
+SearchDevicePrefix = "设备名";
+MainDeviceName = "设备名称";
+MainDeviceID = "设备ID";
+MainPR = "PR/呼吸率";
+MainETCO2 = "ETCO2";
+MainUnknownName = "未知设备";
+MainLineCharUnit = "秒";
+SettingBLConnect = "蓝牙连接";
+SettingReset = "校零";
+SettingAlertParams = "报警参数";
+SettingDisplayParams = "显示参数";
+SettingModuleParams = "模块参数";
+SettingSystem = "系统设置";
+SettingShutDown = "关机";
+SettingLighter = "屏幕常亮";
+SystemLanguage = "语言";
+SystemFirmwareVersion = "固件版本";
+SystemHardwareVersion = "硬件版本";
+SystemSoftwareVersion = "软件版本";
+SystemProductionDate = "生产日期";
+SystemSerialNumber = "序列号";
+SystemModuleName = "模块名称";
+ModuleAirPressure = "大气压(mmHg)";
+ModuleAsphyxiationTime = "窒息时间(S)";
+ModuleOxygenCompensation = "氧气补偿(%)";
+CommonUpdateBtn = "更新";
+DisplayCO2Unit = "CO2单位";
+DisplayCO2Scale = "CO2 Scale";
+DisplayWFSpeed = "WF Speed";
+AlertETCO2 = "ETCO2范围(mmHg)";
+AlertRR = "RR范围(bmp)";
+ToastZeroing = "正在校零";
+ToastZeroComplete = "校零结束";
+ToastShutDown = "正在关机";
+ToastShutDownComplete = "已关机";
+ToastLighting = "正在设置常亮";
+ToastLighterFinished = "设置常亮成功";
+UpdateSetting = "更新中";
+UpdateSettingFinished = "更新成功";
+NoDeviceTitle = "未连接设备";
+NoDeviceMessage = "需要先链接设备才能设置功能";
+NoDeviceJump = "跳转";

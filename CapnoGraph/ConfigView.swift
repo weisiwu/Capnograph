@@ -126,7 +126,7 @@ struct ConfigView: View {
     
      func handleShutdown() {
         appConfigManage.loadingMessage = ""
-        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "ToastShutDownComplete")
+        appConfigManage.toastMessage = "ToastShutDownComplete"
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             appConfigManage.toastMessage = ""
         }
@@ -134,7 +134,7 @@ struct ConfigView: View {
 
     func handleSetZero() {
         appConfigManage.loadingMessage = ""
-        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "ToastZeroComplete")
+        appConfigManage.toastMessage = "ToastZeroComplete"
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             appConfigManage.toastMessage = ""
         }
@@ -143,7 +143,7 @@ struct ConfigView: View {
     func handleKeepScreenOn() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             appConfigManage.loadingMessage = ""
-            appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "ToastLighterFinished")
+            appConfigManage.toastMessage = "ToastLighterFinished"
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 appConfigManage.toastMessage = ""
             }
@@ -163,20 +163,14 @@ struct ConfigView: View {
 
         switch text {
             // 校零
-            case AppTextsChinese.SettingReset.rawValue:
-                loadingText = AppTextsChinese.ToastZeroing.rawValue
-            case AppTextsEnglish.SettingReset.rawValue:
-                loadingText = AppTextsEnglish.ToastZeroing.rawValue
+            case "SettingReset":
+                loadingText = "SettingReset"
             // 关机
-            case AppTextsChinese.SettingShutDown.rawValue:
-                loadingText = AppTextsChinese.ToastShutDown.rawValue
-            case AppTextsEnglish.SettingShutDown.rawValue:
-                loadingText = AppTextsEnglish.ToastShutDown.rawValue
+            case "SettingShutDown":
+                loadingText = "SettingShutDown"
             // 屏幕常量
-            case AppTextsChinese.SettingLighter.rawValue:
-                loadingText = AppTextsChinese.ToastLighting.rawValue
-            case AppTextsEnglish.SettingLighter.rawValue:
-                loadingText = AppTextsEnglish.ToastLighting.rawValue
+            case "ToastLighting":
+                loadingText = "ToastLighting"
             default:
                 loadingText = ""
         }
@@ -185,13 +179,13 @@ struct ConfigView: View {
         
         switch text {
             // 校零
-            case AppTextsChinese.SettingReset.rawValue, AppTextsEnglish.SettingReset.rawValue:
+            case "SettingReset":
                 bluetoothManager.correctZero(cb: handleSetZero)
             // 关机
-            case AppTextsChinese.SettingShutDown.rawValue, AppTextsEnglish.SettingShutDown.rawValue:
+            case "SettingShutDown":
                 bluetoothManager.shutdown(cb: handleShutdown)
             // 屏幕常亮
-            case AppTextsChinese.SettingLighter.rawValue, AppTextsEnglish.SettingLighter.rawValue:
+            case "SettingLighter":
                 bluetoothManager.keepScreenOn(cb: handleKeepScreenOn)
             default:
                 print("No Action when Click In System Config Page")
@@ -215,51 +209,51 @@ struct ConfigView: View {
                 default:
                     List {
                         // ConfigItem(
-                        //     text: appConfigManage.getTextByKey(key: "SettingBLConnect"),
+                        //     text: "SettingBLConnect",
                         //     icon: "setting_icon_bluetooth",
                         //     configType: ConfigItemTypes.ConnectBlueTooth,
                         //     currentConfigType: $currentConfigType
                         // )
                         ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingReset"),
+                            text: "SettingReset",
                             icon: "setting_icon_reset",
                             configType: ConfigItemTypes.CorrectZero,
                             currentConfigType: $currentConfigType,
                             handleTapGesture: handleTapGesture
                         )
                         ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingAlertParams"),
+                            text: "SettingAlertParams",
                             icon: "setting_icon_back",
                             configType: ConfigItemTypes.Alert,
                             currentConfigType: $currentConfigType
                         )
                         ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingDisplayParams"),
+                            text: "SettingDisplayParams",
                             icon: "setting_icon_back",
                             configType: ConfigItemTypes.Display,
                             currentConfigType: $currentConfigType
                         )
                         ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingModuleParams"),
+                            text: "SettingModuleParams",
                             icon: "setting_icon_back",
                             configType: ConfigItemTypes.Module,
                             currentConfigType: $currentConfigType
                         )
                         ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingSystem"),
+                            text: "SettingSystem",
                             icon: "setting_icon_back",
                             configType: ConfigItemTypes.System,
                             currentConfigType: $currentConfigType
                         )
                         ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingShutDown"),
+                            text: "SettingShutDown",
                             icon: "setting_icon_shutdown",
                             configType: ConfigItemTypes.Showdown,
                             currentConfigType: $currentConfigType,
                             handleTapGesture: handleTapGesture
                         )
                         ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingLighter"),
+                            text: "SettingLighter",
                             icon: "setting_icon_lighter",
                             configType: ConfigItemTypes.Lighter,
                             currentConfigType: $currentConfigType,
@@ -271,17 +265,17 @@ struct ConfigView: View {
                     .padding(.bottom, 48)
                     .alert(isPresented: $showAlert) {
                         Alert(
-                            title: Text(appConfigManage.getTextByKey(key: "NoDeviceTitle")),
-                            message: Text(appConfigManage.getTextByKey(key: "NoDeviceMessage")),
-                            primaryButton: .default(Text(appConfigManage.getTextByKey(key: "NoDeviceJump")), action: {
+                            title: Text("NoDeviceTitle"),
+                            message: Text("NoDeviceMessage"),
+                            primaryButton: .default(Text("NoDeviceJump"), action: {
                                 selectedTabIndex = PageTypes.SearchDeviceList.rawValue
                             }),
-                            secondaryButton: .default(Text(appConfigManage.getTextByKey(key: "SearchConfirmNo")))
+                            secondaryButton: .default(Text("SearchConfirmNo"))
                         )
                     }
                 }
             }
-            .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleSetting"))")
+            .navigationTitle("TitleSetting")
             .navigationBarTitleDisplayMode(.inline)
             .onDisappear {
                 currentConfigType = nil

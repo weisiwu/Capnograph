@@ -133,7 +133,7 @@ struct AlertConfigView: View {
         BaseConfigContainerView(configType: ConfigItemTypes.Alert) {
             VStack(alignment: .leading) {
                 RangeSlider(
-                    title: appConfigManage.getTextByKey(key: "AlertETCO2"),
+                    title: "AlertETCO2",
                     lowerValue: $bluetoothManager.etCo2Lower,
                     upperValue: $bluetoothManager.etCo2Upper,
                     range: 0...100,
@@ -141,7 +141,7 @@ struct AlertConfigView: View {
                 )
                 
                 RangeSlider(
-                    title: appConfigManage.getTextByKey(key: "AlertRR"),
+                    title: "AlertRR",
                     lowerValue: $bluetoothManager.rrLower,
                     upperValue: $bluetoothManager.rrUpper,
                     range: 0...100,
@@ -151,9 +151,9 @@ struct AlertConfigView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
-                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
-                        UserDefaults.standard.set(bluetoothManager.etCo2Lower, forKey: "etCo2Lower")
+                    Button(action: {
+                        appConfigManage.loadingMessage = "UpdateSetting"
+                        UserDefaults.standard.set(bluetoothManager.etCo2Lower, forKey: "etCoLower")
                         UserDefaults.standard.set(bluetoothManager.etCo2Upper, forKey: "etCo2Upper")
                         UserDefaults.standard.set(bluetoothManager.rrLower, forKey: "rrLower")
                         UserDefaults.standard.set(bluetoothManager.rrUpper, forKey: "rrUpper")
@@ -162,11 +162,13 @@ struct AlertConfigView: View {
                         bluetoothManager.updateAlertRange()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             appConfigManage.loadingMessage = ""
-                            appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
+                            appConfigManage.toastMessage = "UpdateSettingFinished"
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                 appConfigManage.toastMessage = ""
                             }
                         }
+                    }) {
+                        Text("CommonUpdateBtn")
                     }
                         .frame(width: 68, height: 43)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
@@ -181,7 +183,7 @@ struct AlertConfigView: View {
         .background(Color.white)
         .listStyle(PlainListStyle())
         .padding()
-        .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleAlertParams"))")
+        .navigationTitle("CapnoGraph\("TitleAlertParams")")
         .onDisappear {
             presentationMode.wrappedValue.dismiss()
         }
