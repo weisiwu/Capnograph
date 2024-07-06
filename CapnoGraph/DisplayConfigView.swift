@@ -9,7 +9,7 @@ struct DisplayConfigView: View {
 
     func UpdateSettingCallback() {
         appConfigManage.loadingMessage = ""
-        appConfigManage.toastMessage = "UpdateSettingFinished"
+        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             appConfigManage.toastMessage = ""
         }
@@ -19,8 +19,8 @@ struct DisplayConfigView: View {
         BaseConfigContainerView(configType: ConfigItemTypes.System) {
             VStack(alignment: .leading) {
                 Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
-                Text("DisplayCO2Unit").font(.system(size: 18)).fontWeight(.bold).padding(0)
-                Picker("DisplayCO2Unit", selection: $bluetoothManager.CO2Unit) {
+                Text(appConfigManage.getTextByKey(key: "DisplayCO2Unit")).font(.system(size: 18)).fontWeight(.bold).padding(0)
+                Picker(appConfigManage.getTextByKey(key: "DisplayCO2Unit"), selection: $bluetoothManager.CO2Unit) {
                     ForEach(CO2Units, id: \.self) { unit in
                         Text(unit.rawValue)
                             .frame(height: 30)
@@ -31,8 +31,8 @@ struct DisplayConfigView: View {
                 .frame(height: 110)
 
                 Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
-                Text("DisplayCO2Scale").font(.system(size: 18)).fontWeight(.bold)
-                Picker("DisplayCO2Scale", selection: $bluetoothManager.CO2Scale) {
+                Text(appConfigManage.getTextByKey(key: "DisplayCO2Scale")).font(.system(size: 18)).fontWeight(.bold)
+                Picker(appConfigManage.getTextByKey(key: "DisplayCO2Scale"), selection: $bluetoothManager.CO2Scale) {
                     ForEach(bluetoothManager.CO2Scales, id: \.self) { scale in
                         Text(scale.rawValue.formatted(.number.precision(.fractionLength(0...2))))
                             .frame(height: 30)
@@ -45,8 +45,8 @@ struct DisplayConfigView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button("CommonUpdateBtn") {
-                        appConfigManage.loadingMessage = "UpdateSetting"
+                    Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
+                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
                         UserDefaults.standard.set(bluetoothManager.CO2Unit.rawValue, forKey: "CO2Unit")
                         UserDefaults.standard.set(bluetoothManager.CO2Scale.rawValue, forKey: "CO2Scale")
                         bluetoothManager.updateCO2Unit {
@@ -68,7 +68,7 @@ struct DisplayConfigView: View {
         .background(Color.white)
         .listStyle(PlainListStyle())
         .padding()
-        .navigationTitle("TitleDisplayConfig")
+        .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleDisplayConfig"))")
         .onDisappear {
             presentationMode.wrappedValue.dismiss()
         }

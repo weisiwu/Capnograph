@@ -32,7 +32,7 @@ struct LineChartView: View {
             AxisMarks(preset: .aligned, values: Array(stride(from: 0, through: maxXPoints, by: xPointStep))) { value in
                 AxisValueLabel {
                     if let intValue = value.as(Int.self) {
-                        Text("\(intValue / 100)\("MainLineCharUnit")")
+                        Text("\(intValue / 100)\(appConfigManage.getTextByKey(key: "MainLineCharUnit"))")
                     }
                 }
             }
@@ -55,11 +55,11 @@ struct TableView: View {
 
     var body: some View {
         HStack(spacing:0) {
-            Text("MainDeviceName")
+            Text(appConfigManage.getTextByKey(key: "MainDeviceName"))
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-            Text(bluetoothManager.connectedPeripheral?.name ?? "MainUnknownName")
+            Text(bluetoothManager.connectedPeripheral?.name ?? appConfigManage.getTextByKey(key: "MainUnknownName"))
                 .font(.system(size: 16))
                 .fontWeight(.thin)
                 .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))
@@ -69,7 +69,7 @@ struct TableView: View {
         .padding(.trailing, 28)
         
         HStack(spacing:0) {
-            Text("MainDeviceID")
+            Text(appConfigManage.getTextByKey(key: "MainDeviceID"))
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
@@ -83,7 +83,7 @@ struct TableView: View {
         .padding(.trailing, 28)
         
         HStack(spacing:0) {
-            Text("MainPR")
+            Text(appConfigManage.getTextByKey(key: "MainPR"))
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
@@ -97,7 +97,7 @@ struct TableView: View {
         .padding(.trailing, 28)
         
         HStack(spacing:0) {
-            Text("MainETCO2")
+            Text(appConfigManage.getTextByKey(key: "MainETCO2"))
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()

@@ -109,7 +109,7 @@ struct ModuleConfigView: View {
             VStack(alignment: .leading) {
 
                 SingleSlider(
-                    title: "ModuleAirPressure",
+                    title: appConfigManage.getTextByKey(key: "ModuleAirPressure"),
                     minimumValue: 94.6,
                     maximumValue: 104.9,
                     unit: "mmHg",
@@ -117,14 +117,14 @@ struct ModuleConfigView: View {
                 )
 
                 SingleSlider(
-                    title: "ModuleAsphyxiationTime",
+                    title: appConfigManage.getTextByKey(key: "ModuleAsphyxiationTime"),
                     minimumValue: 10,
                     maximumValue: 60,
                     value: $asphyxiationTime
                 )
                 
                 SingleSlider(
-                    title: "ModuleOxygenCompensation",
+                    title: appConfigManage.getTextByKey(key: "ModuleOxygenCompensation"),
                     minimumValue: 0,
                     maximumValue: 100,
                     value: $oxygenCompensation
@@ -133,8 +133,8 @@ struct ModuleConfigView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button("CommonUpdateBtn") {
-                        appConfigManage.loadingMessage = "UpdateSetting"
+                    Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
+                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
                         appConfigManage.airPressure = airPressure
                         appConfigManage.asphyxiationTime = asphyxiationTime
                         appConfigManage.oxygenCompensation = oxygenCompensation
@@ -144,7 +144,7 @@ struct ModuleConfigView: View {
                         UserDefaults.standard.synchronize()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             appConfigManage.loadingMessage = ""
-                            appConfigManage.toastMessage = "UpdateSettingFinished"
+                            appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                 appConfigManage.toastMessage = ""
                             }
@@ -163,7 +163,7 @@ struct ModuleConfigView: View {
         .background(Color.white)
         .listStyle(PlainListStyle())
         .padding()
-        .navigationTitle("TitleModuleConfig")
+        .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleModuleConfig"))")
         .onDisappear {
             presentationMode.wrappedValue.dismiss()
         }

@@ -28,7 +28,6 @@ struct RadioButton: View {
         }
         .foregroundColor(Color.white)
         .onTapGesture {
-            // TODO:(wsw) 这里要切换为swiftui支持的版本，目前这里就是控制颜色是否变化的
             appConfigManage.language = id
         }
     }
@@ -90,13 +89,13 @@ struct SystemConfigView: View {
         BaseConfigContainerView(configType: ConfigItemTypes.System) {
             VStack(alignment: .leading) {
                 List {
-                    InfoItem(title: "SystemLanguage", type: InfoTypes.Radio)
-                    InfoItem(title: "SystemFirmwareVersion", desc: appConfigManage.firmwareVersion)
-                    InfoItem(title: "SystemHardwareVersion", desc: appConfigManage.hardwareVersion)
-                    InfoItem(title: "SystemSoftwareVersion", desc: appConfigManage.softwareVersion)
-                    InfoItem(title: "SystemProductionDate", desc: appConfigManage.productionDate)
-                    InfoItem(title: "SystemSerialNumber", desc: appConfigManage.serialNumber)
-                    InfoItem(title: "SystemModuleName", desc: appConfigManage.ModuleName)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemLanguage"), type: InfoTypes.Radio)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemFirmwareVersion"), desc: appConfigManage.firmwareVersion)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemHardwareVersion"), desc: appConfigManage.hardwareVersion)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemSoftwareVersion"), desc: appConfigManage.softwareVersion)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemProductionDate"), desc: appConfigManage.productionDate)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemSerialNumber"), desc: appConfigManage.serialNumber)
+                    InfoItem(title: appConfigManage.getTextByKey(key: "SystemModuleName"), desc: appConfigManage.ModuleName)
                 }
                 .background(Color.white)
                 .listStyle(PlainListStyle())
@@ -106,7 +105,7 @@ struct SystemConfigView: View {
         }
         .background(Color.white)
         .listStyle(PlainListStyle())
-        .navigationTitle("TitleSystemSetting")
+        .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleSystemSetting"))")
         .onDisappear {
             presentationMode.wrappedValue.dismiss()
         }

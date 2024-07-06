@@ -16,7 +16,7 @@ struct SearchDeviceListView: View {
                     List(bluetoothManager.discoveredPeripherals, id: \.identifier) { peripheral in
                         HStack {
                             VStack(alignment: .leading) {
-                                Text(peripheral.name ?? "MainUnknownName")
+                                Text(peripheral.name ?? appConfigManage.getTextByKey(key: "MainUnknownName"))
                                     .font(.system(size: 16))
                                     .padding(.bottom, 0)
                                 Text(peripheral.identifier.uuidString)
@@ -29,7 +29,7 @@ struct SearchDeviceListView: View {
                                 selectedPeripheral = peripheral
                                 showAlert = true
                             }) {
-                                Text("SearchConfirmYes")
+                                Text(appConfigManage.getTextByKey(key: "SearchConfirmYes"))
                                     .frame(width: 68, height: 32)
                                     .font(.system(size: 16))
                                     .fontWeight(.thin)
@@ -38,14 +38,14 @@ struct SearchDeviceListView: View {
                                     .cornerRadius(16)
                                     .alert(isPresented: $showAlert) {
                                         Alert(
-                                            title: Text("MainUnknownName"),
-                                            message: Text("\("SearchDevicePrefix"): \(selectedPeripheral?.name ?? "SearchConfirmTitle")"),
-                                            primaryButton: .default(Text("SearchConfirmYes"), action: {
-                                                appConfigManage.loadingMessage = "SearchConnecting"
+                                            title: Text(appConfigManage.getTextByKey(key: "MainUnknownName")),
+                                            message: Text("\(appConfigManage.getTextByKey(key: "SearchDevicePrefix")): \(selectedPeripheral?.name ?? appConfigManage.getTextByKey(key: "SearchConfirmTitle"))"),
+                                            primaryButton: .default(Text(appConfigManage.getTextByKey(key: "SearchConfirmYes")), action: {
+                                                appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "SearchConnecting")
                                                 bluetoothManager.connect(to: selectedPeripheral) {
                                                     withAnimation {
                                                         appConfigManage.loadingMessage = ""
-                                                        appConfigManage.toastMessage = "SearchConnected"
+                                                        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "SearchConnected")
                                                         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                                             selectedTabIndex = PageTypes.Result.rawValue
                                                             appConfigManage.toastMessage = ""
@@ -53,7 +53,7 @@ struct SearchDeviceListView: View {
                                                     }
                                                 }
                                             }),
-                                            secondaryButton: .default(Text("SearchConfirmNo"))
+                                            secondaryButton: .default(Text(appConfigManage.getTextByKey(key: "SearchConfirmNo")))
                                         )
                                     }
                             }
@@ -71,7 +71,7 @@ struct SearchDeviceListView: View {
                         .padding(.bottom, 48)
                 }
                 // TODO: 这里的按钮没有固定里底部距离
-                Text("SearchBtn")
+                Text(appConfigManage.getTextByKey(key: "SearchBtn"))
                     .frame(width: 105, height: 35)
                     .font(.system(size: 16))
                     .background(Color(red: 232/255, green: 243/255, blue: 1))
@@ -79,7 +79,7 @@ struct SearchDeviceListView: View {
                     .cornerRadius(16)
                     .padding(.bottom, 32)
                     .onTapGesture {
-                        appConfigManage.loadingMessage = "SearchSearching"
+                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "SearchSearching")
                         // 开启搜索后，会不停的搜搜外设
                         bluetoothManager.startScanning() {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -88,7 +88,7 @@ struct SearchDeviceListView: View {
                         }
                     }
             }
-            .navigationTitle("TitleSearch")
+            .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleSearch"))")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(false)
         }
