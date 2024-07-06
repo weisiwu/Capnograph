@@ -61,7 +61,7 @@ struct RangeSlider: View {
                 .foregroundColor(Color(red: 0, green: 206/255, blue: 201/255))
             
             // 最小值
-            Text(Double(lowerValue).formatted(.number.precision(.fractionLength(0...1))) + unit)
+            Text(Double(lowerValue).formatted(.number.precision(.fractionLength(0...0))) + unit)
                 .offset(
                     x: calculateOffsetX(for: CGFloat(lowerValue), in: geometry, with: currentRange, minV: Float(range.lowerBound)),
                     y: -30
@@ -91,7 +91,7 @@ struct RangeSlider: View {
                 .offset(x: lowerKnobPosition)
             
             // 最大值
-            Text(Double(upperValue).formatted(.number.precision(.fractionLength(0...1))) + unit)
+            Text(Double(upperValue).formatted(.number.precision(.fractionLength(0...0))) + unit)
                 .offset(
                     x: calculateOffsetX(for: CGFloat(upperValue), in: geometry, with: currentRange, minV: Float(range.lowerBound)),
                     y: -30
@@ -136,7 +136,7 @@ struct AlertConfigView: View {
                     title: appConfigManage.getTextByKey(key: "AlertETCO2"),
                     lowerValue: $bluetoothManager.etCo2Lower,
                     upperValue: $bluetoothManager.etCo2Upper,
-                    range: 0...100,
+                    range: bluetoothManager.etco2Min...bluetoothManager.etco2Max,
                     unit: "mmHg"
                 )
                 
@@ -144,7 +144,7 @@ struct AlertConfigView: View {
                     title: appConfigManage.getTextByKey(key: "AlertRR"),
                     lowerValue: $bluetoothManager.rrLower,
                     upperValue: $bluetoothManager.rrUpper,
-                    range: 0...100,
+                    range: bluetoothManager.rrMin...bluetoothManager.rrMax,
                     unit: "bmp"
                 )
 

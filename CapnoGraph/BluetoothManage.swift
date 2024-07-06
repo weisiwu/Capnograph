@@ -198,8 +198,14 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     // 报警参数设置
     @Published var etCo2Lower: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "etCo2Lower"))
     @Published var etCo2Upper: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "etCo2Upper"))
-    @Published var rrLower: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "rrLower"))    
+    @Published var rrLower: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "rrLower"))
     @Published var rrUpper: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "rrUpper"))
+
+    // 报警参数范围
+    let etco2Min: CGFloat = 0
+    let etco2Max: CGFloat = 99
+    let rrMin: CGFloat = 3
+    let rrMax: CGFloat = 150
 
     override init() {
         super.init()
@@ -363,13 +369,14 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
     // 发送链接请求
     func sendContinuous() {
-        sendArray.append(SensorCommand.CO2Waveform.rawValue)
-        sendArray.append(0x02)
-        sendArray.append(0x00)
-        appendCKS()
-
-        let data = convertToData(from: sendArray)
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            sendArray.append(SensorCommand.CO2Waveform.rawValue)
+            sendArray.append(0x02)
+            sendArray.append(0x00)
+            appendCKS()
+
+            let data = convertToData(from: sendArray)
+
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             resetSendData()
         }
@@ -385,7 +392,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
      * 软件版本
     */
     func getDeviceInfo(cb: @escaping (String, ISBState) -> Void) {
-
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             // ISB=21
             sendArray.append(SensorCommand.Settings.rawValue)
@@ -443,7 +449,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             print("[sendStopContinuous]终止链接请求")
         }
     }
-    
+
     // 发送关机指令
     func shutdown(cb: @escaping () -> Void) {
         sendArray.append(SensorCommand.Reset.rawValue)
@@ -460,12 +466,13 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
     // 发送校零指令
     func correctZero(cb: @escaping () -> Void) {
-        sendArray.append(SensorCommand.Zero.rawValue)
-        sendArray.append(0x01)
-        appendCKS()
-
-        let data = convertToData(from: sendArray)
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            sendArray.append(SensorCommand.Zero.rawValue)
+            sendArray.append(0x01)
+            appendCKS()
+
+            let data = convertToData(from: sendArray)
+
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             resetSendData()
             correctZeroCallback = cb
@@ -520,21 +527,24 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
     // 调整ETCO2/RR的报警范围
     func updateAlertRange() {
-        sendArray.append(SensorCommand.Expand.rawValue)
-        sendArray.append(0x10)
-        sendArray.append(0x2A) // ISB=42
-        sendArray.append(UInt8(Int(etCo2Upper * 10) >> 7))
-        sendArray.append(UInt8(Int(etCo2Upper * 10) & 0x7f))
-        sendArray.append(UInt8(Int(etCo2Lower) * 10 >> 7))
-        sendArray.append(UInt8(Int(etCo2Lower * 10) & 0x7f))
-        sendArray.append(UInt8(Int(rrUpper) >> 7))
-        sendArray.append(UInt8(Int(rrUpper) & 0x7f))
-        sendArray.append(UInt8(Int(rrLower) >> 7))
-        sendArray.append(UInt8(Int(rrLower) & 0x7f))
-        appendCKS()
-
-        let data = convertToData(from: sendArray)
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            sendArray.append(SensorCommand.Expand.rawValue)
+            let _etCo2Upper = Int(round(etCo2Upper) * 10)
+            let _etCo2Lower = Int(round(etCo2Lower) * 10)
+            let _rrUpper = Int(round(rrUpper))
+            let _rrLower = Int(round(rrLower))
+            sendArray.append(0x0A)
+            sendArray.append(0x2A) // ISB=42
+            sendArray.append(UInt8(_etCo2Upper >> 7))
+            sendArray.append(UInt8(_etCo2Upper & 0x7f))
+            sendArray.append(UInt8(_etCo2Lower >> 7))
+            sendArray.append(UInt8(_etCo2Lower & 0x7f))
+            sendArray.append(UInt8(_rrUpper >> 7))
+            sendArray.append(UInt8(_rrUpper & 0x7f))
+            sendArray.append(UInt8(_rrLower >> 7))
+            sendArray.append(UInt8(_rrLower & 0x7f))
+            appendCKS()
+            let data = convertToData(from: sendArray)
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             resetSendData()
         }
