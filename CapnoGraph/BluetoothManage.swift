@@ -167,6 +167,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         SensorCommand.GetSoftwareRevision.rawValue,
         SensorCommand.Expand.rawValue,
     ]
+    let savedPeripheralIdentifierKey = "SavedPeripheralIdentifier"
 
     // 图标展示的实时单位、范围、速度
     @Published var CO2Unit: CO2UnitType = .mmHg {
@@ -829,6 +830,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         // 给外设添加事件管理函数
         peripheral.delegate = self
         peripheral.discoverServices(nil)
+        UserDefaults.standard.set(peripheral.identifier.uuidString, forKey: savedPeripheralIdentifierKey)
     }
     
     // 链接失败
@@ -881,9 +883,14 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
-            print("Bluetooth is powered on and ready to use.")
-            // 在此处启动扫描或恢复连接
-            centralManager.scanForPeripherals(withServices: nil, options: nil)
+            // 恢复连接
+            if let savedIdentifier = UserDefaults.standard.string(forKey: savedPeripheralIdentifierKey) {
+                let peripherals = centralManager.retrievePeripherals(withIdentifiers: [UUID(uuidString: savedIdentifier)!])
+                if let _peripheral = peripherals.first {
+                    connectedPeripheral = _peripheral
+                    central.connect(_peripheral, options: nil)
+                }
+            }
         case .poweredOff:
             print("Bluetooth is currently powered off.")
         case .resetting:
