@@ -207,6 +207,16 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     let rrMin: CGFloat = 3
     let rrMax: CGFloat = 150
 
+    // 模块参数设置
+    @Published var asphyxiationTime: Int = UserDefaults.standard.integer(forKey: "asphyxiationTime")
+    @Published var oxygenCompensation: Double = UserDefaults.standard.double(forKey: "oxygenCompensation")
+
+    // 模块参数范围
+    let asphyxiationTimeMin: Int = 10
+    let asphyxiationTimeMax: Int = 60
+    let oxygenCompensationMin: Double = 0
+    let oxygenCompensationMax: Double = 100
+
     override init() {
         super.init()
         // 中央设备管理器
@@ -550,6 +560,34 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
 
+    // 设置模块参数: 窒息时间、氧气补偿
+    func updateNoBreathAndGasCompensation() {
+        if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            // 设置窒息时间
+            sendArray.append(SensorCommand.Settings.rawValue)
+            sendArray.append(0x03)
+            sendArray.append(UInt8(ISBState84H.NoBreaths.rawValue))
+            sendArray.append(UInt8(asphyxiationTime))
+            appendCKS()
+            let data = convertToData(from: sendArray)
+            peripheral.writeValue(data, for: characteristic, type: .withResponse)
+            resetSendData()
+
+            // 设置氧气补偿
+            sendArray.append(SensorCommand.Settings.rawValue)
+            sendArray.append(0x06)
+            sendArray.append(UInt8(ISBState84H.GasCompensation.rawValue))
+            sendArray.append(UInt8(oxygenCompensationMax))
+            sendArray.append(0x00)
+            sendArray.append(0x00)
+            sendArray.append(0x00)
+            appendCKS()
+            let data1 = convertToData(from: sendArray)
+            peripheral.writeValue(data1, for: characteristic, type: .withResponse)
+            resetSendData()
+        }
+    }
+
     // 保持屏幕常亮
     func keepScreenOn(cb: @escaping () -> Void) {
         UIApplication.shared.isIdleTimerDisabled = !UIApplication.shared.isIdleTimerDisabled
@@ -700,7 +738,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     
     // 处理设置
     func handleSettings(data: UnsafeBufferPointer<UInt8>) {
-        print("受到的setting试试吗\(Int(data[2]))")
         switch Int(data[2]) {
             case ISBState84H.AirPressure.rawValue:
                 barometricPressure = 128 * Int(data[3]) + Int(data[4]);

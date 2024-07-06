@@ -98,10 +98,8 @@ struct SingleSlider: View {
 }
 
 struct ModuleConfigView: View {
-    @State var airPressure: Double = UserDefaults.standard.double(forKey: "airPressure")
-    @State var asphyxiationTime: Double = UserDefaults.standard.double(forKey: "asphyxiationTime")
-    @State var oxygenCompensation: Double = UserDefaults.standard.double(forKey: "oxygenCompensation")
     @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
     
     var body: some View {
@@ -109,25 +107,25 @@ struct ModuleConfigView: View {
             VStack(alignment: .leading) {
 
                 SingleSlider(
-                    title: appConfigManage.getTextByKey(key: "ModuleAirPressure"),
-                    minimumValue: 94.6,
-                    maximumValue: 104.9,
-                    unit: "mmHg",
-                    value: $airPressure
-                )
-
-                SingleSlider(
                     title: appConfigManage.getTextByKey(key: "ModuleAsphyxiationTime"),
-                    minimumValue: 10,
-                    maximumValue: 60,
-                    value: $asphyxiationTime
+                    minimumValue: Float(bluetoothManager.asphyxiationTimeMin),
+                    maximumValue: Float(bluetoothManager.asphyxiationTimeMax),
+                    value: Binding(
+                        get: {
+                            Double(bluetoothManager.asphyxiationTime)
+                        },
+                        set: { newValue in
+                            bluetoothManager.asphyxiationTime = Int(newValue)
+                        }
+                    )
                 )
                 
                 SingleSlider(
                     title: appConfigManage.getTextByKey(key: "ModuleOxygenCompensation"),
-                    minimumValue: 0,
-                    maximumValue: 100,
-                    value: $oxygenCompensation
+                    minimumValue: Float(bluetoothManager.oxygenCompensationMin),
+                    maximumValue: Float(bluetoothManager.oxygenCompensationMax),
+                    unit: "%",
+                    value: $bluetoothManager.oxygenCompensation
                 )
                 
                 Spacer()
@@ -135,13 +133,10 @@ struct ModuleConfigView: View {
                     Spacer()
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
                         appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
-                        appConfigManage.airPressure = airPressure
-                        appConfigManage.asphyxiationTime = asphyxiationTime
-                        appConfigManage.oxygenCompensation = oxygenCompensation
-                        UserDefaults.standard.set(airPressure, forKey: "airPressure")
-                        UserDefaults.standard.set(asphyxiationTime, forKey: "asphyxiationTime")
-                        UserDefaults.standard.set(oxygenCompensation, forKey: "oxygenCompensation")
+                        UserDefaults.standard.set(bluetoothManager.asphyxiationTime, forKey: "asphyxiationTime")
+                        UserDefaults.standard.set(bluetoothManager.oxygenCompensation, forKey: "oxygenCompensation")
                         UserDefaults.standard.synchronize()
+                        bluetoothManager.updateNoBreathAndGasCompensation()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             appConfigManage.loadingMessage = ""
                             appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
