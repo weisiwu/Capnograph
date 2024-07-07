@@ -2,6 +2,7 @@ import CoreBluetooth
 import Combine
 import Foundation
 import UIKit
+import AVFoundation
 
 let antiHijackStr = "301001301001"
 let antiHijackData = antiHijackStr.data(using: .utf8)!
@@ -80,6 +81,16 @@ enum ZSBState: Int {
     case DetectBreathing = 12
 }
 
+// 接受数据信息DPI（等位替代ISB）
+enum ISBState80H: UInt8 {
+    case CO2WorkStatus = 0x01 // CO2工作状态
+    case ETCO2Value = 0x02 // 监测计算到的 ETCO2 数值
+    case RRValue = 0x03 // 表示监测计算到的呼吸率数值
+    case FiCO2Value = 0x04 // 表示监测计算到的 FiCO2 数值
+    case DetectBreath = 0x05 // 表示检测到一次呼吸，该帧只有在检查到呼吸之后才会设置一次
+    case DeviceError = 0x07 // 该帧在硬件确实有问题的时候，将每秒自动汇报一次
+}
+
 // 【ISB】读取/设置模块指令
 enum ISBState84H: Int {
     case NoUse = 0 // 无效的参数设置
@@ -104,6 +115,7 @@ enum ISBStateF2H: Int {
 }
 
 // 【ISB】获取软件信息指令
+// TODO:(wsw) 这里待确认ISB值是否正确
 enum ISBStateCAH: Int {
     case GetSoftWareRevision = 99 // 获取软件版本
     case GetProductionDate = 98 // 生产日期
@@ -112,6 +124,7 @@ enum ISBStateCAH: Int {
 
 // 所有CMD的ISB聚合使用
 enum ISBState {
+    case CMD_80H(ISBState80H)
     case CMD_84H(ISBState84H)
     case CMD_CAH(ISBStateCAH)
     case CMD_F2H(ISBStateF2H)
@@ -168,6 +181,27 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         SensorCommand.Expand.rawValue,
     ]
     let savedPeripheralIdentifierKey = "SavedPeripheralIdentifier"
+    // 音频播放器
+    var audioPlayer: AVAudioPlayer?
+    var isPlayingAlaram: Bool = false
+
+    func playAudio() {
+        guard let url = Bundle.main.url(forResource: "Medium", withExtension: "wav") else {
+            print("找不到音频文件")
+            return
+        }
+
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.play()
+        } catch {
+            print("无法播放音频文件: \(error.localizedDescription)")
+        }
+    }
+    
+    func stopAudio() {
+        audioPlayer?.stop()
+    }
 
     // 图标展示的实时单位、范围、速度
     @Published var CO2Unit: CO2UnitType = .mmHg {
@@ -373,6 +407,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         sendArray.append(cks);
     }
 
+    // 将UInt8格式的数据转换为Bianry格式
     func convertToData(from: [UInt8]) -> Data {
         return Data(from)
     }
@@ -406,7 +441,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             // ISB=21
             sendArray.append(SensorCommand.Settings.rawValue)
             sendArray.append(0x02)
-            sendArray.append(0x15)
+            sendArray.append(UInt8(ISBState84H.GetHardWareRevision.rawValue))
             appendCKS()
             getSettingInfoCallback = cb
 
@@ -417,7 +452,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             // ISB=20
             sendArray.append(SensorCommand.Settings.rawValue)
             sendArray.append(0x02)
-            sendArray.append(0x14)
+            sendArray.append(UInt8(ISBState84H.GetSerialNumber.rawValue))
             appendCKS()
 
             let sData2 = convertToData(from: sendArray)
@@ -427,7 +462,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             // ISB=18
             sendArray.append(SensorCommand.Settings.rawValue)
             sendArray.append(0x02)
-            sendArray.append(0x12)
+            sendArray.append(UInt8(ISBState84H.GetSensorPartNumber.rawValue))
             appendCKS()
 
             let sData3 = convertToData(from: sendArray)
@@ -654,17 +689,16 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             
             // 根据指令类型开始解析数据
             switch commandM {
-            case SensorCommand.CO2Waveform.rawValue:
-                handleCO2Waveform(data: data, NBFM: NBFM)
-            case SensorCommand.Settings.rawValue:
-                handleSettings(data: data)
-            case SensorCommand.GetSoftwareRevision.rawValue:
-                print("处理获取软件信息")
-                handleSofrWareVersion(data: data)
-            case SensorCommand.Expand.rawValue:
-                handleSystemExpand(data: data)
-            default:
-                print("未知指令 \(commandM)")
+                case SensorCommand.CO2Waveform.rawValue:
+                    handleCO2Waveform(data: data, NBFM: NBFM)
+                case SensorCommand.Settings.rawValue:
+                    handleSettings(data: data)
+                case SensorCommand.GetSoftwareRevision.rawValue:
+                    handleSofrWareVersion(data: data)
+                case SensorCommand.Expand.rawValue:
+                    handleSystemExpand(data: data)
+                default:
+                    print("未知指令 \(commandM)")
             }
         }
     }
@@ -675,42 +709,52 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
     // 处理CO2波形数据
     func handleCO2Waveform(data: UnsafeBufferPointer<UInt8>, NBFM: Int) {
-        let DPIM = data[5] // DPIM 只在接受CO2波形时体现
+        // DPI 只在接受CO2波形时体现
+        let DPIM = data[5]
         // 计算当前CO2数据
         currentCO2 = Float((128 * Int(data[3]) + Int(data[4]) - 1000)) / 100;
-//        print("【当前CO2的值】currentCO2=> \(currentCO2)")
-        // TODO: 当前关系到设置单位的，都不移动
-        // if( currentCO2 <= m_CO2Scale * 0.02)
-        //     currentCO2 = m_CO2Scale * 0.02;
 
         // 存在DPI位时，常规波形信息还会携带定时上报的内容，需要额外处理
         if NBFM > 4 {
             switch DPIM {
-            case 0x01: // CO2工作状态
+            case ISBState80H.CO2WorkStatus.rawValue:
                handleSetZero(data: data, NBFM: NBFM)
-            case 0x02: // 监测计算到的 ETCO2 数值
+            case ISBState80H.ETCO2Value.rawValue:
                 ETCO2 = Float(Int(data[6]) * 128 + Int(data[7])) / 10;
-            case 0x03: // 表示监测计算到的呼吸率数值
+            case ISBState80H.RRValue.rawValue:
                 RespiratoryRate = Int(Int(data[6]) * 128 + Int(data[7]));
-            case 0x04: // 表示监测计算到的 FiCO2 数值
+            case ISBState80H.FiCO2Value.rawValue:
                 FiCO2 = Int((Int(data[6]) * 128 + Int(data[7])) / 10);
-            case 0x05: // 表示检测到一次呼吸，该帧只有在检查到呼吸之后才会设置一次
+            case ISBState80H.DetectBreath.rawValue:
                 Breathe = true;
-            case 0x07: // 该帧在硬件确实有问题的时候，将每秒自动汇报一次
-                print("CO2Waveform DPI 0X07 不处理")
             default:
                 print("CO2Waveform DPI 不匹配")
             }
+
+            // 检查是否需要报警
+            // 1、已经检测到呼吸
+            // 2、ETCO2是否超过范围
+            // 3、RR是否超过范围
+            // 4、未正在播放报警提示
+            let isValidETCO2 = CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower;
+            let isValidRR = CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower;
+//             print("是否检测到了呼吸 \(Breathe)")
+//             print("是否为合法的ETCO2 \(isValidETCO2) \(ETCO2) \(etCo2Upper) \(etCo2Lower)")
+//             print("是否为合法的RR \(isValidRR) \(RespiratoryRate) \(rrUpper) \(rrLower)")
+            
+            if !(isValidETCO2 && isValidRR) && Breathe && !isPlayingAlaram {
+                isPlayingAlaram = true
+                playAudio()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+                    self.isPlayingAlaram = false
+                }
+            }
         }
-        // TODO: 告警范围改变修改，没有迁移
-        // updateRangeAlarm();
         // 将受到的数据绘制到曲线图上
         receivedCO2WavedData.append(DataPoint(value: currentCO2))
         if receivedCO2WavedData.count > maxXPoints {
             receivedCO2WavedData.removeFirst()
         }
-        // TODO: 没有迁移
-        // emit statsChanged();
     }
 
     // 处理校零，校零结果会在80h中获取，DPI=1
