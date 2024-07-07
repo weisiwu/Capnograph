@@ -199,10 +199,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
     
-    func stopAudio() {
-        audioPlayer?.stop()
-    }
-
     // 图标展示的实时单位、范围、速度
     @Published var CO2Unit: CO2UnitType = .mmHg {
         didSet {
@@ -753,9 +749,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             // 4、未正在播放报警提示
             let isValidETCO2 = CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower;
             let isValidRR = CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower;
-//             print("是否检测到了呼吸 \(Breathe)")
-//             print("是否为合法的ETCO2 \(isValidETCO2) \(ETCO2) \(etCo2Upper) \(etCo2Lower)")
-//             print("是否为合法的RR \(isValidRR) \(RespiratoryRate) \(rrUpper) \(rrLower)")
             
             if !(isValidETCO2 && isValidRR) && Breathe && !isPlayingAlaram {
                 isPlayingAlaram = true
@@ -802,9 +795,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 barometricPressure = 128 * Int(data[3]) + Int(data[4]);
             case ISBState84H.NoBreaths.rawValue:
                 NoBreaths = Int(data[3]) != 0;
-            case ISBState84H.SetCO2Unit.rawValue:
-                // NoBreaths = Int(data[3]) != 0;
-                print("这是什么书吗?? \(Int(data[3]))")
             case ISBState84H.GetSensorPartNumber.rawValue:
                 deviceName = ""
                 for i in 0..<10 {
@@ -812,7 +802,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                         deviceName += String(uScalar)
                     }
                 }
-            getSettingInfoCallback?(deviceName, ISBState.CMD_84H(.GetSensorPartNumber))
+                getSettingInfoCallback?(deviceName, ISBState.CMD_84H(.GetSensorPartNumber))
             case ISBState84H.GetSerialNumber.rawValue:
                 // B2A解析方法
                 let DB1: Double = Double(data[3]) * pow(2, 28)
@@ -822,7 +812,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 let DB5: Double = Double(data[7])
                 let sNum = DB1 + DB2 + DB3 + DB4 + DB5
                 let sSerialNumber = String(format: "%.0f", sNum)
-            getSettingInfoCallback?(sSerialNumber, ISBState.CMD_84H(.GetSerialNumber))
+                getSettingInfoCallback?(sSerialNumber, ISBState.CMD_84H(.GetSerialNumber))
             case ISBState84H.GetHardWareRevision.rawValue:
                 if let DB1 = UnicodeScalar(Int(data[3])), let DB2 = UnicodeScalar(Int(data[4])), let DB3 = UnicodeScalar(Int(data[5])) {
                     sHardwareVersion = "\(DB1).\(DB2).\(DB3)"
@@ -830,17 +820,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 }
             case ISBState84H.GasCompensation.rawValue:
                 O2Compensation = Int(data[3]);
-                // TODO: 这里没有做
-                // emit sensorParamsChanged();
-            // case ISBState84H.UnVerified.rawValue:
-            // TODO:  没有搞清楚这个是什么
-            //     setCO2Unit(data[3],false);
-            //     updateCO2Scale();
-            //     getAlarmParams();
-            //     changeAlarmRange();
-            //     m_updateParams=true;
-            //     emit displayParamChanged();
-            //     sendContinuous();
             default:
                 print("模块参数设置 未知ISB")
         }
@@ -900,23 +879,31 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
 
+    // app启动后触发，同步本地所有配置到设备上
+    func initDevice() {
+        // 如无设备连接，直接放弃
+        guard connectedPeripheral != nil else {
+            return
+        }
+        func silent() {}
+        updateCO2Unit(cb: silent) // 显示设置
+        updateNoBreathAndGasCompensation() // 模块设置
+        updateAlertRange() // 报警设置
+
+        // 设置节后后，开始尝试接受数据
+        sendContinuous()
+    }
+
     // 处理系统扩展
     func handleSystemExpand(data: UnsafeBufferPointer<UInt8>) {
         print("接受系统扩展相关信息=>\(Int(data[2]))")
 
         // WLD扩展ISB
         switch Int(data[2]) {
-        // case 41: // 查询设备电源状态
-        // case 42: // 读取报警配置
-        // case 43: // 读取报警静音状态
-            // setAlarmParams((qreal)(data[3]*128+data[4])/10,(qreal)(data[5]*128+data[6])/10,
-            //         data[7]*128+data[8],data[9]*128+data[10],false);
-            // emit alarmParamsChanged();
-            // sendContinuous();
-        case 44: // 设置波形显示范围
-            sendContinuous();
-        default:
-            print("扩展指令未知场景")
+            case 44: // 设置波形显示范围
+                sendContinuous();
+            default:
+                print("扩展指令未知场景")
         }
     }
 

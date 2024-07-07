@@ -136,6 +136,9 @@ struct ResultView: View {
             if let defaultScale: CO2ScaleEnum = CO2ScaleEnum(rawValue: defaultScaleStr) {
                 bluetoothManager.CO2Scale = defaultScale
             }
+            
+            // 启动后，将所有本地保存的设置都同步到设备上。
+            bluetoothManager.initDevice()
         }
     }
 }
