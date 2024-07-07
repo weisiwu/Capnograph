@@ -149,7 +149,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var barometricPressure: Int = 0
     var NoBreaths: Bool = false
     var O2Compensation: Int = 0
-    // var sFirmwareVersion: String = ""
     var deviceName: String = ""
     var sHardwareVersion: String = ""
     var sSoftwareVersion: String = ""
@@ -184,6 +183,10 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     // 音频播放器
     var audioPlayer: AVAudioPlayer?
     var isPlayingAlaram: Bool = false
+    // 蓝牙是否关闭,初始化为nil
+    @Published var isBluetoothClose: Bool? = nil
+    // 蓝牙状态发生变化
+    let bluetootheStateChanged = PassthroughSubject<Void, Never>()
 
     func playAudio() {
         guard let url = Bundle.main.url(forResource: "Medium", withExtension: "wav") else {
@@ -564,12 +567,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             let data2 = convertToData(from: sendArray)
             peripheral.writeValue(data2, for: characteristic, type: .withResponse)
             resetSendData()
-
-            cb()
-        } else {
-            // TODO: 这里要说明，他失败了
-            cb()
         }
+        cb()
     }
 
     // 调整ETCO2/RR的报警范围
@@ -972,6 +971,54 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
     
+    // 断开蓝牙连接，重设整个应用
+    func resetInstance() {
+        discoveredPeripherals = []
+        connectedPeripheral = nil
+        receivedCO2WavedData = Array(repeating: DataPoint(value: unRealValue), count: maxXPoints)
+        isScanning = false
+        startScanningCallback = nil
+        connectedCallback = nil
+        sendArray = []
+        receivedArray = []
+        currentCO2 = 0
+        ETCO2 = 0
+        RespiratoryRate = 0
+        FiCO2 = 0
+        Breathe = false
+        isCorrectZero = false
+        barometricPressure = 0
+        NoBreaths = false
+        O2Compensation = 0
+        deviceName = ""
+        sHardwareVersion = ""
+        sSoftwareVersion = ""
+        sProductionDate = ""
+        sSerialNumber = ""
+        // 扫描的设备、服务、特征
+        sendDataService = nil
+        sendDataCharacteristic = nil
+        receiveDataService = nil
+        receiveDataCharacteristic = nil
+        moduleParamsService = nil
+        moduleParamsCharacteristic = nil
+        antiHijackService = nil
+        antiHijackCharacteristic = nil
+        // 这三个特征值没有明确属于哪个服务，所以可能为空
+        baudCharacteristic = nil
+        renameCharacteristic = nil
+        antiHijackNotifyCharacteristic = nil
+        CCCDDescriptor = nil
+        isConnectToDevice = false
+        shutdownCallback = nil
+        correctZeroCallback = nil
+        updateCO2ScaleCallback = nil
+        getSettingInfoCallback = nil
+        // 音频播放器
+        audioPlayer = nil
+        isPlayingAlaram = false
+    }
+
     /**------  监听蓝牙状态 ------*/
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
@@ -984,8 +1031,12 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                     central.connect(_peripheral, options: nil)
                 }
             }
+            isBluetoothClose = false
         case .poweredOff:
             print("Bluetooth is currently powered off.")
+            resetInstance()
+            isBluetoothClose = true
+            bluetootheStateChanged.send(())
         case .resetting:
             print("Bluetooth is resetting.")
         case .unauthorized:

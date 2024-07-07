@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 //import Firebase
 //import FirebaseCore
 //import FirebaseFirestore
@@ -10,18 +11,24 @@ import SwiftUI
 //注入firebase代码
 // https://firebase.google.com/docs/ios/setup?hl=zh-cn
 // https://console.firebase.google.com/project/capnograph-d3c36/overview?hl=zh-cn
-//https://peterfriese.dev/blog/2020/swiftui-new-app-lifecycle-firebase/
+// https://peterfriese.dev/blog/2020/swiftui-new-app-lifecycle-firebase/
 @main
 struct CapnoGraphApp: App {
-    // TODO:(wsw) debug崩溃
+    // TODO:(wsw) APP 待添加崩溃监控
 //    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @State var isSplashFinish: Bool = false
     @StateObject private var bluetoothManager = BluetoothManager()
     @StateObject private var appConfigManage = AppConfigManage()
+    @State private var cancellables = Set<AnyCancellable>()
 
-//    init() {
-//      FirebaseApp.configure()
-//    }
+    // init() {
+    //     FirebaseApp.configure()
+    //     bluetoothManager.$isBluetoothClose
+    //         .sink { newValue in
+    //             print("蓝牙状态发生改变为 \(newValue)")
+    //         }
+    //         .store(in: &cancellables)
+    // }
     
     var body: some Scene {
         WindowGroup {
@@ -29,6 +36,9 @@ struct CapnoGraphApp: App {
                 ContentView()
                     .environmentObject(bluetoothManager)
                     .environmentObject(appConfigManage)
+                    .onAppear {
+                        appConfigManage.listenToBluetoothManager(bluetoothManager: bluetoothManager)
+                    }
             } else {
                 SplashView()
                     .onAppear {

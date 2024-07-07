@@ -15,7 +15,6 @@ struct RadioButton: View {
     @EnvironmentObject var appConfigManage: AppConfigManage
     
     var body: some View {
-        // TODO: 这里的action事件触发有问题
         Button(action: {}) {
             HStack(alignment: .center, spacing: 10) {
                 Image(appConfigManage.language == id ? "radio_input" : "radio_input_empty")

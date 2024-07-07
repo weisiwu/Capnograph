@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 enum Languages: String {
     case Chinese = "中文"
@@ -122,7 +123,6 @@ enum AppTextsEnglish: String {
     case TitleDisplayConfig = " - Display Config"
     // 搜索结果页
     case SearchNoResult = "There are no available Bluetooth devices nearby!"
-    // TODO: 后面要么统一了，要么改了
     case SearchBtn = "Search "
     case SearchConfirmTitle = "Are you sure you want to connect this device?"
     case SearchConfirmYes = "Connect"
@@ -219,12 +219,11 @@ class AppConfigManage: ObservableObject {
     @Published var loadingMessage: String = ""
     
     // Toast相关配置
-     @Published var toastMessage: String = ""
+    @Published var toastMessage: String = ""
     @Published var toastType: ToastType = ToastType.SUCCESS
     
     // App语言设置
     @Published var language: Languages = Languages.Chinese
-    // TODO: 非常臃肿，需要优化
     func getTextByKey(key: String) -> String {
         if self.language == Languages.Chinese {
             switch key {
@@ -505,8 +504,18 @@ class AppConfigManage: ObservableObject {
         }
     }
 
-    // 模块参数设置
-    @Published var airPressure: Double = UserDefaults.standard.double(forKey: "airPressure")
-    @Published var asphyxiationTime: Double = UserDefaults.standard.double(forKey: "asphyxiationTime")
-    @Published var oxygenCompensation: Double = UserDefaults.standard.double(forKey: "oxygenCompensation")
+    // TODO:(wsw) 好好看看，两个manage之间互相调用
+    private var cancellables = Set<AnyCancellable>()
+    
+    func listenToBluetoothManager(bluetoothManager: BluetoothManager) {
+        bluetoothManager.bluetootheStateChanged
+            .sink { [weak self] in
+                // TODO: 这里要挪走
+                self?.toastMessage = "蓝牙关闭，已重设"
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    self?.toastMessage = ""
+                }
+            }
+            .store(in: &cancellables)
+    }
 }

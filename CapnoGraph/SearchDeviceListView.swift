@@ -70,7 +70,6 @@ struct SearchDeviceListView: View {
                         .frame(width: 500)
                         .padding(.bottom, 48)
                 }
-                // TODO: 这里的按钮没有固定里底部距离
                 Text(appConfigManage.getTextByKey(key: "SearchBtn"))
                     .frame(width: 105, height: 35)
                     .font(.system(size: 16))
