@@ -123,7 +123,7 @@ enum ISBStateCAH: Int {
 }
 
 // 所有CMD的ISB聚合使用
-enum ISBState {
+enum ISBState: Equatable {
     case CMD_80H(ISBState80H)
     case CMD_84H(ISBState84H)
     case CMD_CAH(ISBStateCAH)
@@ -868,7 +868,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                     print("Failed to parse date")
                 }
                 
-                print("Remaining text: \(remainingText)")
                 getSettingInfoCallback?(remainingText, ISBState.CMD_CAH(.GetModuleName))
             } else {
                 print("No match found")
@@ -880,6 +879,16 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
     // app启动后触发，同步本地所有配置到设备上
     func initDevice() {
+        // 展示的时候，从本地获取用户保存的展示参数
+        if let defaultUnitStr: String = UserDefaults.standard.string(forKey: "CO2Unit"),
+            let defaultUnit: CO2UnitType = CO2UnitType(rawValue: defaultUnitStr) {
+            CO2Unit = defaultUnit
+        }
+        let defaultScaleStr: Double = UserDefaults.standard.double(forKey: "CO2Scale")
+        if let defaultScale: CO2ScaleEnum = CO2ScaleEnum(rawValue: defaultScaleStr) {
+            CO2Scale = defaultScale
+        }
+
         // 如无设备连接，直接放弃
         guard connectedPeripheral != nil else {
             return
@@ -1053,18 +1062,24 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
     /**------  工具方法 ------*/
     func startScanning(callback: (() -> Void)?) -> Bool {
-        guard centralManager.state == .poweredOn else { return false }
+        guard centralManager.state == .poweredOn else {
+            callback?()
+            return false
+        }
         if isScanning {
+            callback?()
             return false
         }
         // 检查状态
-        guard let isPass = checkBluetoothStatus(centralManager), !isPass else {
+        guard let isPass = checkBluetoothStatus(), !isPass else {
+            print("扫描设备到这里了")
             discoveredPeripherals.removeAll()
             centralManager.scanForPeripherals(withServices: nil, options: nil)
             isScanning = true
             startScanningCallback = callback
             return true
         }
+        callback?()
         return false
     }
     
@@ -1091,8 +1106,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     // unauthorized：应用未被授权使用蓝牙功能
     // poweredOff：蓝牙已关闭
     // poweredOn：蓝牙已打开并可用
-    func checkBluetoothStatus(_ central: CBCentralManager) -> Bool? {
-        switch central.state {
+    func checkBluetoothStatus() -> Bool? {
+        switch centralManager.state {
         case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
             return false
         case .poweredOn:

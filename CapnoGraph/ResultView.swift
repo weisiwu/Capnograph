@@ -87,7 +87,7 @@ struct TableView: View {
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-            Text(bluetoothManager.RespiratoryRate == 0 ? "--/min" : "\(bluetoothManager.RespiratoryRate)/min")
+            Text(bluetoothManager.RespiratoryRate == 0 ? "--bmp/min" : "\(bluetoothManager.RespiratoryRate)bmp/min")
                 .font(.system(size: 16))
                 .fontWeight(.thin)
                 .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))
@@ -101,7 +101,7 @@ struct TableView: View {
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-            Text(bluetoothManager.ETCO2 == 0 ? "--/\(bluetoothManager.CO2Unit.rawValue)" : "\(bluetoothManager.ETCO2.formatted(.number.precision(.fractionLength(0...2))))/\(bluetoothManager.CO2Unit.rawValue)")
+            Text(bluetoothManager.ETCO2 == 0 ? "--\(bluetoothManager.CO2Unit.rawValue)" : "\(bluetoothManager.ETCO2.formatted(.number.precision(.fractionLength(0...2))))\(bluetoothManager.CO2Unit.rawValue)")
                 .font(.system(size: 16))
                 .fontWeight(.thin)
                 .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))
@@ -126,17 +126,7 @@ struct ResultView: View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(false)
         }
-        .onAppear {
-            // 展示的时候，从本地获取用户保存的展示参数
-            if let defaultUnitStr: String = UserDefaults.standard.string(forKey: "CO2Unit"),
-               let defaultUnit: CO2UnitType = CO2UnitType(rawValue: defaultUnitStr) {
-                bluetoothManager.CO2Unit = defaultUnit
-            }
-            let defaultScaleStr: Double = UserDefaults.standard.double(forKey: "CO2Scale")
-            if let defaultScale: CO2ScaleEnum = CO2ScaleEnum(rawValue: defaultScaleStr) {
-                bluetoothManager.CO2Scale = defaultScale
-            }
-            
+        .onAppear {            
             // 启动后，将所有本地保存的设置都同步到设备上。
             bluetoothManager.initDevice()
         }

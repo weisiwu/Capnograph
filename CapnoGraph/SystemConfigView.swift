@@ -68,18 +68,19 @@ struct SystemConfigView: View {
     @EnvironmentObject var appConfigManage: AppConfigManage
     @EnvironmentObject var bluetoothManager: BluetoothManager
     
-    func getSettingInfoCallback<T>(value: String, type: T) {
-        if type as? ISBState84H == ISBState84H.GetSensorPartNumber {
+    // TODO:(wsw) 后续移动到蓝牙中去
+    func getSettingInfoCallback(value: String, type: ISBState) {
+        if type == ISBState.CMD_84H(.GetSensorPartNumber) {
             appConfigManage.ModuleName = value
-        } else if type as? ISBState84H == ISBState84H.GetSerialNumber {
+        } else if type == ISBState.CMD_84H(.GetSerialNumber) {
             appConfigManage.serialNumber = value
-        } else if type as? ISBState84H == ISBState84H.GetHardWareRevision {
+        } else if type == ISBState.CMD_84H(.GetHardWareRevision) {
             appConfigManage.hardwareVersion = value
-        } else if type as? ISBStateCAH == ISBStateCAH.GetProductionDate {
+        } else if type == ISBState.CMD_CAH(.GetProductionDate) {
             appConfigManage.productionDate = value
-        } else if type as? ISBStateCAH == ISBStateCAH.GetModuleName {
+        } else if type == ISBState.CMD_CAH(.GetModuleName) {
             appConfigManage.ModuleName = value
-        } else if type as? ISBStateCAH == ISBStateCAH.GetSoftWareRevision {
+        } else if type == ISBState.CMD_CAH(.GetSoftWareRevision) {
             appConfigManage.softwareVersion = value
         }
     }

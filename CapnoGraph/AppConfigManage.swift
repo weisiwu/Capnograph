@@ -101,6 +101,7 @@ enum AppTextsChinese: String {
     // 更新信息
     case UpdateSetting = "更新中"
     case UpdateSettingFinished = "更新成功"
+    case UpdateSettingFail = "更新失败，请检查蓝牙和设备"
     // 无设备提示
     case NoDeviceTitle = "未连接设备"
     case NoDeviceMessage = "需要先链接设备才能设置功能"
@@ -178,6 +179,7 @@ enum AppTextsEnglish: String {
     // 更新loading
     case UpdateSetting = "Updating"
     case UpdateSettingFinished = "Update Success"
+    case UpdateSettingFail = "Update Fail, Please Check Bluetooth and Device"
     // 无设备提示
     case NoDeviceTitle = "Device Not Connected"
     case NoDeviceMessage = "You need to connect the device first to enable this feature."
@@ -353,6 +355,8 @@ class AppConfigManage: ObservableObject {
                     return AppTextsChinese.UpdateSetting.rawValue
                 case "UpdateSettingFinished":
                     return AppTextsChinese.UpdateSettingFinished.rawValue
+                case "UpdateSettingFail":
+                    return AppTextsChinese.UpdateSettingFail.rawValue
                 // 无设备提示
                 case "NoDeviceTitle":
                     return AppTextsChinese.NoDeviceTitle.rawValue
@@ -491,6 +495,8 @@ class AppConfigManage: ObservableObject {
                     return AppTextsEnglish.UpdateSetting.rawValue
                 case "UpdateSettingFinished":
                     return AppTextsEnglish.UpdateSettingFinished.rawValue
+                case "UpdateSettingFail":
+                    return AppTextsEnglish.UpdateSettingFail.rawValue
                 // 无设备提示
                 case "NoDeviceTitle":
                     return AppTextsChinese.NoDeviceTitle.rawValue

@@ -152,6 +152,13 @@ struct AlertConfigView: View {
                 HStack {
                     Spacer()
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
+                        if let isPass = bluetoothManager.checkBluetoothStatus(), !isPass {
+                            appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                appConfigManage.toastMessage = ""
+                            }
+                            return
+                        }
                         appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
                         UserDefaults.standard.set(bluetoothManager.etCo2Lower, forKey: "etCo2Lower")
                         UserDefaults.standard.set(bluetoothManager.etCo2Upper, forKey: "etCo2Upper")
