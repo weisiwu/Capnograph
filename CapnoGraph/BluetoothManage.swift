@@ -399,7 +399,13 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             cks += Int(arr[i]);
         }
         cks=((~cks+1) & 0x7f);
-        return UInt8(cks)
+
+        if cks >= 0 && cks <= 255 {
+            return UInt8(cks)
+        } else {
+            // 返回0
+            return UInt8(0)
+        }
     }
 
     func appendCKS() {
@@ -652,9 +658,18 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
 
         // 根据NBF获取所有数据: 第二位是NBF长度，但是整体需要加上额外两位(指令位、NBF位)
+        guard receivedArray.count > 1 else {
+            // 只有CMD，连NBF都没有，属于异常响应
+            return getArray
+        }
+
+        // 取此段指令所有数据: CMD + NBF + DB + CKS
         let endIndex = Int(receivedArray[1]) + 2
-        getArray = Array(receivedArray.prefix(endIndex))
-        receivedArray.removeSubrange(0..<endIndex) // 移除已经读取的数据
+        
+        if endIndex <= receivedArray.count {
+            getArray = Array(receivedArray.prefix(endIndex))
+            receivedArray.removeSubrange(0..<endIndex) // 移除已经读取的数据
+        }
 
         return getArray;
     }
@@ -745,7 +760,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             if !(isValidETCO2 && isValidRR) && Breathe && !isPlayingAlaram {
                 isPlayingAlaram = true
                 playAudio()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 14) {
                     self.isPlayingAlaram = false
                 }
             }

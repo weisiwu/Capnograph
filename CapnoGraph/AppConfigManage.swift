@@ -196,13 +196,12 @@ class AppConfigManage: ObservableObject {
     init() {
         // 设置默认值
         UserDefaults.standard.register(defaults: [
-            "airPressure": 103,
-            "asphyxiationTime": 30,
-            "oxygenCompensation": 20,
-            "etCo2Lower": 0,
-            "etCo2Upper":50,
-            "rrLower": 20,
-            "rrUpper": 50,
+            "asphyxiationTime": 20,
+            "oxygenCompensation": 16,
+            "etCo2Lower": 25,
+            "etCo2Upper":30,
+            "rrLower": 5,
+            "rrUpper": 30,
             "CO2Scale": CO2ScaleEnum.mmHg_Small.rawValue,
             "CO2Unit": CO2UnitType.mmHg.rawValue
         ])
