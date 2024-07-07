@@ -567,12 +567,20 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             let data2 = convertToData(from: sendArray)
             peripheral.writeValue(data2, for: characteristic, type: .withResponse)
             resetSendData()
+
+            // 将所有数据都重置为空
+            receivedCO2WavedData = Array(repeating: DataPoint(value: unRealValue), count: maxXPoints)
         }
         cb()
     }
 
     // 调整ETCO2/RR的报警范围
-    func updateAlertRange() {
+    func updateAlertRange() -> Bool {
+        // 如果范围有问题，不更新
+        if etCo2Upper <= etCo2Lower || rrUpper <= rrLower {
+            return false
+        }
+
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             sendArray.append(SensorCommand.Expand.rawValue)
             let _etCo2Upper = Int(round(etCo2Upper) * 10)
@@ -593,7 +601,9 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             let data = convertToData(from: sendArray)
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             resetSendData()
+            return true
         }
+        return false
     }
 
     // 设置模块参数: 窒息时间、氧气补偿

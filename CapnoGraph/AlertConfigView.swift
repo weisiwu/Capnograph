@@ -39,7 +39,7 @@ struct RangeSlider: View {
     func calculateOffsetX(for value: CGFloat, in geometry: GeometryProxy, with valueRange: CGFloat, minV minimumValue: Float) -> CGFloat {
         let offsetPercent = (value - CGFloat(minimumValue)) / valueRange
         let fullWidth = geometry.size.width
-        let centeredX = offsetPercent * fullWidth - 30 * offsetPercent
+        let centeredX = offsetPercent * fullWidth - 15 * offsetPercent
         return centeredX
     }
     
@@ -61,7 +61,8 @@ struct RangeSlider: View {
                 .foregroundColor(Color(red: 0, green: 206/255, blue: 201/255))
             
             // 最小值
-            Text(Double(lowerValue).formatted(.number.precision(.fractionLength(0...0))) + unit)
+            // Text(Double(lowerValue).formatted(.number.precision(.fractionLength(0...0))) + unit)
+            Text(Double(lowerValue).formatted(.number.precision(.fractionLength(0...0))))
                 .offset(
                     x: calculateOffsetX(for: CGFloat(lowerValue), in: geometry, with: currentRange, minV: Float(range.lowerBound)),
                     y: -30
@@ -91,7 +92,8 @@ struct RangeSlider: View {
                 .offset(x: lowerKnobPosition)
             
             // 最大值
-            Text(Double(upperValue).formatted(.number.precision(.fractionLength(0...0))) + unit)
+            // Text(Double(upperValue).formatted(.number.precision(.fractionLength(0...0))) + unit)
+            Text(Double(upperValue).formatted(.number.precision(.fractionLength(0...0))))
                 .offset(
                     x: calculateOffsetX(for: CGFloat(upperValue), in: geometry, with: currentRange, minV: Float(range.lowerBound)),
                     y: -30
@@ -166,10 +168,11 @@ struct AlertConfigView: View {
                         UserDefaults.standard.set(bluetoothManager.rrUpper, forKey: "rrUpper")
                         UserDefaults.standard.synchronize()
                         // 修改报警范围
-                        bluetoothManager.updateAlertRange()
+                        let isSuccess = bluetoothManager.updateAlertRange()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             appConfigManage.loadingMessage = ""
-                            appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
+                            appConfigManage.toastMessage = isSuccess ? appConfigManage.getTextByKey(key: "UpdateSettingFinished") : appConfigManage.getTextByKey(key: "UpdateSettingFail")
+                            appConfigManage.toastType = isSuccess ? .SUCCESS : .FAIL
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                 appConfigManage.toastMessage = ""
                             }
