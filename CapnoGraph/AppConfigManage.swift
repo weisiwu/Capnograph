@@ -106,6 +106,10 @@ enum AppTextsChinese: String {
     case NoDeviceTitle = "未连接设备"
     case NoDeviceMessage = "需要先链接设备才能设置功能"
     case NoDeviceJump = "跳转"
+    // 关机二次确认提醒
+    case ShutDownConfirmTitle = "是否关闭设备"
+    case ShutDownConfirmMessage = "请谨慎操作，确认将关闭设备"
+    case ShutDownConfirmJump = "关闭"
 }
 
 //App英文
@@ -184,6 +188,10 @@ enum AppTextsEnglish: String {
     case NoDeviceTitle = "Device Not Connected"
     case NoDeviceMessage = "You need to connect the device first to enable this feature."
     case NoDeviceJump = "Jump"
+    // 关机二次确认提醒
+    case ShutDownConfirmTitle = "Should the device be turned off?"
+    case ShutDownConfirmMessage = "Please proceed with caution, as you are about to turn off the device."
+    case ShutDownConfirmJump = "Turn Off"
 }
 
 enum LocalizedText {
@@ -364,6 +372,13 @@ class AppConfigManage: ObservableObject {
                     return AppTextsChinese.NoDeviceMessage.rawValue
                 case "NoDeviceJump":
                     return AppTextsChinese.NoDeviceJump.rawValue
+                // 关机二次确认提醒
+                case "ShutDownConfirmTitle":
+                    return AppTextsChinese.ShutDownConfirmTitle.rawValue
+                case "ShutDownConfirmMessage":
+                    return AppTextsChinese.ShutDownConfirmMessage.rawValue
+                case "ShutDownConfirmJump":
+                    return AppTextsChinese.ShutDownConfirmJump.rawValue
                 default:
                     return ""
             }
@@ -499,11 +514,18 @@ class AppConfigManage: ObservableObject {
                     return AppTextsEnglish.UpdateSettingFail.rawValue
                 // 无设备提示
                 case "NoDeviceTitle":
-                    return AppTextsChinese.NoDeviceTitle.rawValue
+                    return AppTextsEnglish.NoDeviceTitle.rawValue
                 case "NoDeviceMessage":
-                    return AppTextsChinese.NoDeviceMessage.rawValue
+                    return AppTextsEnglish.NoDeviceMessage.rawValue
                 case "NoDeviceJump":
-                    return AppTextsChinese.NoDeviceJump.rawValue
+                    return AppTextsEnglish.NoDeviceJump.rawValue
+                // 关机二次确认提醒
+                case "ShutDownConfirmTitle":
+                    return AppTextsEnglish.ShutDownConfirmTitle.rawValue
+                case "ShutDownConfirmMessage":
+                    return AppTextsEnglish.ShutDownConfirmMessage.rawValue
+                case "ShutDownConfirmJump":
+                    return AppTextsEnglish.ShutDownConfirmJump.rawValue
                 default:
                     return ""
             }
@@ -524,4 +546,27 @@ class AppConfigManage: ObservableObject {
             }
             .store(in: &cancellables)
     }
+    
+    @Published var showAlert: Bool = false
+    @Published var showNoDeviceAlert: Bool = false {
+        didSet {
+            if showNoDeviceAlert {
+                showAlert = true
+            } else {
+                showAlert = showConfirmShutDownAlert
+            }
+        }
+    }
+    @Published var showConfirmShutDownAlert: Bool = false {
+        didSet {
+            if showConfirmShutDownAlert {
+                showAlert = true
+            } else {
+                showAlert = showNoDeviceAlert
+            }
+        }
+    }
+    @Published var alertTitle: String = ""
+    @Published var alertMessage: String = ""
+    @Published var alertConfirmBtn: String = ""
 }

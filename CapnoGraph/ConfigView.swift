@@ -47,19 +47,13 @@ struct ConfigItem: View {
     var icon: String
     var configType: ConfigItemTypes
     @Binding var currentConfigType: Int?
-    var handleTapGesture: ((Bool, String?) -> Bool)?
+    var handleTapGesture: ((String?) -> Bool)?
     var isLink: Bool {
         get {
             return [ConfigItemTypes.Alert, ConfigItemTypes.Display, ConfigItemTypes.Module, ConfigItemTypes.System].contains(configType)
         }
     }
     @State var isActive: Bool = false
-
-    // 处理点击
-    func _handleTapGesture(show: Bool, text: String? = nil) -> Bool? {
-        return handleTapGesture?(true, text)
-    }
-
     
     var body: some View {
         if isLink {
@@ -111,7 +105,7 @@ struct ConfigItem: View {
             }
             .frame(height: 40)
             .contentShape(Rectangle())
-            .onTapGesture { _handleTapGesture(show: true, text: text) }
+            .onTapGesture { handleTapGesture?(text) }
         }
     }
 }
@@ -119,17 +113,18 @@ struct ConfigItem: View {
 // 一级配置View
 struct ConfigView: View {
     @State var currentConfigType: Int?
-    @State var showAlert: Bool = false
     @Binding var selectedTabIndex: Int
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
-    
-     func handleShutdown() {
+
+    func handleShutdown() {
         appConfigManage.loadingMessage = ""
         appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "ToastShutDownComplete")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             appConfigManage.toastMessage = ""
         }
+        // 关机后，重置检查位，下次关机继续检查
+        appConfigManage.showConfirmShutDownAlert = false
     }
 
     func handleSetZero() {
@@ -150,18 +145,33 @@ struct ConfigView: View {
         }
     }
 
-    func handleTapGesture(show: Bool, text: String?) -> Bool {
+    func handleTapGesture(text: String?) -> Bool {
         var loadingText = ""
-
-        // 如果没有链接设备，直接出alert，让用户前往链接设备
-        if let connectedPeripheral = bluetoothManager.connectedPeripheral {
-            showAlert = false
-        } else {
-            showAlert = true
+        guard let textStr = text else {
             return false
         }
 
-        switch text {
+        // 如果没有链接设备，直接出alert，让用户前往链接设备
+        if let connectedPeripheral = bluetoothManager.connectedPeripheral {
+            appConfigManage.showNoDeviceAlert = false
+        } else {
+            appConfigManage.alertTitle = appConfigManage.getTextByKey(key: "NoDeviceTitle")
+            appConfigManage.alertMessage = appConfigManage.getTextByKey(key: "NoDeviceMessage")
+            appConfigManage.alertConfirmBtn = appConfigManage.getTextByKey(key: "NoDeviceJump")
+            appConfigManage.showNoDeviceAlert = true
+            return false
+        }
+
+        // 是否已经确认过关机
+        if !appConfigManage.showConfirmShutDownAlert {
+            appConfigManage.alertTitle = appConfigManage.getTextByKey(key: "ShutDownConfirmTitle")
+            appConfigManage.alertMessage = appConfigManage.getTextByKey(key: "ShutDownConfirmMessage")
+            appConfigManage.alertConfirmBtn = appConfigManage.getTextByKey(key: "ShutDownConfirmJump")
+            appConfigManage.showConfirmShutDownAlert = true
+            return false
+        }
+
+        switch textStr {
             // 校零
             case AppTextsChinese.SettingReset.rawValue:
                 loadingText = AppTextsChinese.ToastZeroing.rawValue
@@ -183,7 +193,7 @@ struct ConfigView: View {
 
         appConfigManage.loadingMessage = loadingText
         
-        switch text {
+        switch textStr {
             // 校零
             case AppTextsChinese.SettingReset.rawValue, AppTextsEnglish.SettingReset.rawValue:
                 bluetoothManager.correctZero(cb: handleSetZero)
@@ -214,12 +224,6 @@ struct ConfigView: View {
                     ModuleConfigView()
                 default:
                     List {
-                        // ConfigItem(
-                        //     text: appConfigManage.getTextByKey(key: "SettingBLConnect"),
-                        //     icon: "setting_icon_bluetooth",
-                        //     configType: ConfigItemTypes.ConnectBlueTooth,
-                        //     currentConfigType: $currentConfigType
-                        // )
                         ConfigItem(
                             text: appConfigManage.getTextByKey(key: "SettingReset"),
                             icon: "setting_icon_reset",
@@ -269,13 +273,20 @@ struct ConfigView: View {
                     .background(Color.white)
                     .listStyle(PlainListStyle())
                     .padding(.bottom, 48)
-                    .alert(isPresented: $showAlert) {
+                    .alert(isPresented: $appConfigManage.showAlert) {
                         Alert(
-                            title: Text(appConfigManage.getTextByKey(key: "NoDeviceTitle")),
-                            message: Text(appConfigManage.getTextByKey(key: "NoDeviceMessage")),
-                            primaryButton: .default(Text(appConfigManage.getTextByKey(key: "NoDeviceJump")), action: {
-                                selectedTabIndex = PageTypes.SearchDeviceList.rawValue
-                            }),
+                            title: Text(appConfigManage.alertTitle),
+                            message: Text(appConfigManage.alertMessage),
+                            primaryButton: .default(
+                                Text(appConfigManage.alertConfirmBtn),
+                                action: {
+                                    if appConfigManage.showConfirmShutDownAlert {
+                                        handleTapGesture(text: appConfigManage.getTextByKey(key: "SettingShutDown"))
+                                    } else {
+                                        selectedTabIndex = PageTypes.SearchDeviceList.rawValue
+                                    }
+                                }
+                            ),
                             secondaryButton: .default(Text(appConfigManage.getTextByKey(key: "SearchConfirmNo")))
                         )
                     }
