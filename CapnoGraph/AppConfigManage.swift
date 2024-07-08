@@ -112,6 +112,7 @@ enum AppTextsChinese: String {
     case ShutDownConfirmJump = "关闭"
     // 警示文案
     case AsphyxiationWarning = "窒息"
+    case BluetoothDisconnected = "蓝牙关闭，已重设"
 }
 
 //App英文
@@ -196,6 +197,7 @@ enum AppTextsEnglish: String {
     case ShutDownConfirmJump = "Turn Off"
     // 警示文案
     case AsphyxiationWarning = "Asphyxiation"
+    case BluetoothDisconnected = "Bluetooth is turned off and has been reset"
 }
 
 enum LocalizedText {
@@ -386,6 +388,8 @@ class AppConfigManage: ObservableObject {
                 // 警示文案
                 case "AsphyxiationWarning":
                     return AppTextsChinese.AsphyxiationWarning.rawValue
+                case "BluetoothDisconnected":
+                    return AppTextsChinese.BluetoothDisconnected.rawValue
                 default:
                     return ""
             }
@@ -536,6 +540,8 @@ class AppConfigManage: ObservableObject {
                 // 警示文案
                 case "AsphyxiationWarning":
                     return AppTextsEnglish.AsphyxiationWarning.rawValue
+                case "BluetoothDisconnected":
+                    return AppTextsEnglish.BluetoothDisconnected.rawValue
                 default:
                     return ""
             }
@@ -548,8 +554,7 @@ class AppConfigManage: ObservableObject {
     func listenToBluetoothManager(bluetoothManager: BluetoothManager) {
         bluetoothManager.bluetootheStateChanged
             .sink { [weak self] in
-                // TODO: 这里要挪走
-                self?.toastMessage = "蓝牙关闭，已重设"
+                self?.toastMessage = getTextByKey(key: "BluetoothDisconnected")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     self?.toastMessage = ""
                 }
