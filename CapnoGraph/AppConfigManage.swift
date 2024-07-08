@@ -554,7 +554,7 @@ class AppConfigManage: ObservableObject {
     func listenToBluetoothManager(bluetoothManager: BluetoothManager) {
         bluetoothManager.bluetootheStateChanged
             .sink { [weak self] in
-                self?.toastMessage = getTextByKey(key: "BluetoothDisconnected")
+                self?.toastMessage = self?.getTextByKey(key: "BluetoothDisconnected") ?? ""
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     self?.toastMessage = ""
                 }

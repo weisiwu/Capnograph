@@ -10,7 +10,7 @@ struct SearchDeviceListView: View {
     let systemHeight:CGFloat = UIScreen.main.bounds.height - 200
     
     var body: some View {
-        NavigationView() {
+        NavigationStack() {
             VStack(spacing: 0) {
                 if !bluetoothManager.discoveredPeripherals.isEmpty {
                     List(bluetoothManager.discoveredPeripherals, id: \.identifier) { peripheral in

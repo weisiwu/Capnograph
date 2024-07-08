@@ -23,11 +23,6 @@ struct CapnoGraphApp: App {
 
     // init() {
     //     FirebaseApp.configure()
-    //     bluetoothManager.$isBluetoothClose
-    //         .sink { newValue in
-    //             print("蓝牙状态发生改变为 \(newValue)")
-    //         }
-    //         .store(in: &cancellables)
     // }
     
     var body: some Scene {

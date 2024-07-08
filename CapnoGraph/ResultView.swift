@@ -119,8 +119,10 @@ struct ResultView: View {
     
     let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
 
+    // 为什么用NavigationStack而不是NavigationView
+    // https://stackoverflow.com/questions/57425921/swiftui-unwanted-split-view-on-ipad
     var body: some View {
-        NavigationView() {
+        NavigationStack() {
             VStack(spacing: 0){
                 LineChartView()
                 if bluetoothManager.isAsphyxiation {
