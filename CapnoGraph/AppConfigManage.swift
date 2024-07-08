@@ -89,7 +89,7 @@ enum AppTextsChinese: String {
     case DisplayCO2Scale = "CO2 Scale"
     case DisplayWFSpeed = "WF Speed"
     // 报警设置页
-    case AlertETCO2 = "ETCO2范围(mmHg)"
+    case AlertETCO2 = "ETCO2范围"
     case AlertRR = "RR范围(bmp)"
     // Toast相关文案
     case ToastZeroing = "正在校零"

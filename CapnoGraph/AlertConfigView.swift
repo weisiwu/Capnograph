@@ -7,7 +7,7 @@ struct RangeSlider: View {
     @Binding var lowerValue: CGFloat // 最小值
     @Binding var upperValue: CGFloat // 最大值
     var range: ClosedRange<CGFloat> // 可选值范围
-    var unit: String = "S"
+    var unit: String
     var btnSize: CGFloat = 30
     // 当前选中范围
     var currentRange: CGFloat {
@@ -135,15 +135,15 @@ struct AlertConfigView: View {
         BaseConfigContainerView(configType: ConfigItemTypes.Alert) {
             VStack(alignment: .leading) {
                 RangeSlider(
-                    title: appConfigManage.getTextByKey(key: "AlertETCO2"),
+                    title: "\(appConfigManage.getTextByKey(key: "AlertETCO2"))(\(bluetoothManager.CO2Unit.rawValue))",
                     lowerValue: $bluetoothManager.etCo2Lower,
                     upperValue: $bluetoothManager.etCo2Upper,
                     range: bluetoothManager.etco2Min...bluetoothManager.etco2Max,
-                    unit: "mmHg"
+                    unit: bluetoothManager.CO2Unit.rawValue
                 )
                 
                 RangeSlider(
-                    title: appConfigManage.getTextByKey(key: "AlertRR"),
+                    title: "\(appConfigManage.getTextByKey(key: "AlertRR"))(bmp)",
                     lowerValue: $bluetoothManager.rrLower,
                     upperValue: $bluetoothManager.rrUpper,
                     range: bluetoothManager.rrMin...bluetoothManager.rrMax,
@@ -154,14 +154,17 @@ struct AlertConfigView: View {
                 HStack {
                     Spacer()
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
+                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
                         if let isPass = bluetoothManager.checkBluetoothStatus(), !isPass {
-                            appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                appConfigManage.toastMessage = ""
+                                appConfigManage.loadingMessage = ""
+                                appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                    appConfigManage.toastMessage = ""
+                                }
                             }
                             return
                         }
-                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
                         UserDefaults.standard.set(bluetoothManager.etCo2Lower, forKey: "etCo2Lower")
                         UserDefaults.standard.set(bluetoothManager.etCo2Upper, forKey: "etCo2Upper")
                         UserDefaults.standard.set(bluetoothManager.rrLower, forKey: "rrLower")
