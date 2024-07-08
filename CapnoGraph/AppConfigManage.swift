@@ -110,6 +110,8 @@ enum AppTextsChinese: String {
     case ShutDownConfirmTitle = "是否关闭设备"
     case ShutDownConfirmMessage = "请谨慎操作，确认将关闭设备"
     case ShutDownConfirmJump = "关闭"
+    // 警示文案
+    case AsphyxiationWarning = "窒息"
 }
 
 //App英文
@@ -192,6 +194,8 @@ enum AppTextsEnglish: String {
     case ShutDownConfirmTitle = "Should the device be turned off?"
     case ShutDownConfirmMessage = "Please proceed with caution, as you are about to turn off the device."
     case ShutDownConfirmJump = "Turn Off"
+    // 警示文案
+    case AsphyxiationWarning = "Asphyxiation"
 }
 
 enum LocalizedText {
@@ -379,6 +383,9 @@ class AppConfigManage: ObservableObject {
                     return AppTextsChinese.ShutDownConfirmMessage.rawValue
                 case "ShutDownConfirmJump":
                     return AppTextsChinese.ShutDownConfirmJump.rawValue
+                // 警示文案
+                case "AsphyxiationWarning":
+                    return AppTextsChinese.AsphyxiationWarning.rawValue
                 default:
                     return ""
             }
@@ -526,6 +533,9 @@ class AppConfigManage: ObservableObject {
                     return AppTextsEnglish.ShutDownConfirmMessage.rawValue
                 case "ShutDownConfirmJump":
                     return AppTextsEnglish.ShutDownConfirmJump.rawValue
+                // 警示文案
+                case "AsphyxiationWarning":
+                    return AppTextsEnglish.AsphyxiationWarning.rawValue
                 default:
                     return ""
             }

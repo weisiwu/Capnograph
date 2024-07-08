@@ -145,9 +145,10 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     @Published var RespiratoryRate: Int = 0
     var FiCO2: Int = 0
     var Breathe: Bool = false
+    var isAsphyxiation: Bool = false
     var isCorrectZero: Bool = false
     var barometricPressure: Int = 0
-    var NoBreaths: Bool = false
+    var NoBreaths: Int = 20
     var O2Compensation: Int = 0
     var deviceName: String = ""
     var sHardwareVersion: String = ""
@@ -738,7 +739,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         if NBFM > 4 {
             switch DPIM {
             case ISBState80H.CO2WorkStatus.rawValue:
-               handleSetZero(data: data, NBFM: NBFM)
+               handleCO2Status(data: data, NBFM: NBFM)
             case ISBState80H.ETCO2Value.rawValue:
                 ETCO2 = Float(Int(data[6]) * 128 + Int(data[7])) / 10;
             case ISBState80H.RRValue.rawValue:
@@ -775,7 +776,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
 
     // 处理校零，校零结果会在80h中获取，DPI=1
-    func handleSetZero(data: UnsafeBufferPointer<UInt8>, NBFM: Int) {
+    func handleCO2Status(data: UnsafeBufferPointer<UInt8>, NBFM: Int) {
         if NBFM <= 1 {
             return
         }
@@ -795,6 +796,9 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         default:
             isCorrectZero = false;
         }
+
+        // 获取是否窒息状态: 取DB1，第7位，判断是否被置位
+        isAsphyxiation = Int(data[6] & 64) == 1
     }
     
     // 处理设置
@@ -803,7 +807,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             case ISBState84H.AirPressure.rawValue:
                 barometricPressure = 128 * Int(data[3]) + Int(data[4]);
             case ISBState84H.NoBreaths.rawValue:
-                NoBreaths = Int(data[3]) != 0;
+                NoBreaths = Int(data[3]);
             case ISBState84H.GetSensorPartNumber.rawValue:
                 deviceName = ""
                 for i in 0..<10 {
@@ -1005,9 +1009,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         RespiratoryRate = 0
         FiCO2 = 0
         Breathe = false
+        isAsphyxiation = false
         isCorrectZero = false
         barometricPressure = 0
-        NoBreaths = false
+        // 默认无呼吸间隔
+        NoBreaths = 20
         O2Compensation = 0
         deviceName = ""
         sHardwareVersion = ""

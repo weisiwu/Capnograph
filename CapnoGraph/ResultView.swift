@@ -114,11 +114,30 @@ struct TableView: View {
 
 struct ResultView: View {
     @EnvironmentObject var bluetoothManager: BluetoothManager
+    @EnvironmentObject var appConfigManage: AppConfigManage
+    @State private var isVisible = true
+    
+    let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         NavigationView() {
             VStack(spacing: 0){
                 LineChartView()
+                if bluetoothManager.isAsphyxiation {
+                    Text(appConfigManage.getTextByKey(key: "AsphyxiationWarning"))
+                        .foregroundColor(.red)
+                        .font(.system(size: 16))
+                        .fontWeight(.bold)
+                        .opacity(isVisible ? 1 : 0)
+                        .onReceive(timer) { _ in
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                self.isVisible.toggle()
+                            }
+                        }
+                        .onDisappear() {
+                            self.timer.upstream.connect().cancel()
+                        }
+                }
                 TableView()
                 Spacer()
             }
