@@ -42,12 +42,14 @@ struct DisplayConfigView: View {
                     Spacer()
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
                         appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
-                        if let isPass = bluetoothManager.checkBluetoothStatus(), !isPass {
+                        if let isPass = bluetoothManager.checkBluetoothStatus(),
+                            bluetoothManager.connectedPeripheral == nil,
+                            !isPass {
                             bluetoothManager.updateCO2Unit {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                     appConfigManage.loadingMessage = ""
                                     appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                         appConfigManage.toastMessage = ""
                                     }
                                 }
@@ -60,7 +62,7 @@ struct DisplayConfigView: View {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 appConfigManage.loadingMessage = ""
                                 appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                     appConfigManage.toastMessage = ""
                                 }
                             }

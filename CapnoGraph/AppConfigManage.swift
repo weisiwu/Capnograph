@@ -54,6 +54,7 @@ enum AppTextsChinese: String {
     case SearchConnected = "链接成功"
     case SearchSearching = "搜索设备中"
     case SearchDevicePrefix = "设备名"
+    case SearchFail = "搜索失败"
     // 主页
     case MainDeviceName = "设备名称"
     case MainDeviceID = "设备ID"
@@ -139,6 +140,7 @@ enum AppTextsEnglish: String {
     case SearchConnected = "Link Successful"
     case SearchSearching = "Searching for Devices"
     case SearchDevicePrefix = "Name"
+    case SearchFail = "Fail to Search"
     // 主页
     case MainDeviceName = "Device Name"
     case MainDeviceID = "Device ID"
@@ -284,6 +286,8 @@ class AppConfigManage: ObservableObject {
                     return AppTextsChinese.SearchSearching.rawValue
                 case "SearchDevicePrefix":
                     return AppTextsChinese.SearchDevicePrefix.rawValue
+                case "SearchFail":
+                    return AppTextsChinese.SearchFail.rawValue
                 // 主页
                 case "MainDeviceName":
                     return AppTextsChinese.MainDeviceName.rawValue
@@ -436,6 +440,8 @@ class AppConfigManage: ObservableObject {
                     return AppTextsEnglish.SearchSearching.rawValue
                 case "SearchDevicePrefix":
                     return AppTextsEnglish.SearchDevicePrefix.rawValue
+                case "SearchFail":
+                    return AppTextsEnglish.SearchFail.rawValue
                 // 主页
                 case "MainDeviceName":
                     return AppTextsEnglish.MainDeviceName.rawValue

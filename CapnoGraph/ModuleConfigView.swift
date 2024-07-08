@@ -132,14 +132,17 @@ struct ModuleConfigView: View {
                 HStack {
                     Spacer()
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
+                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
                         if let isPass = bluetoothManager.checkBluetoothStatus(), !isPass {
-                            appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                appConfigManage.toastMessage = ""
+                                appConfigManage.loadingMessage = ""
+                                appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                    appConfigManage.toastMessage = ""
+                                }
                             }
                             return
                         }
-                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
                         UserDefaults.standard.set(bluetoothManager.asphyxiationTime, forKey: "asphyxiationTime")
                         UserDefaults.standard.set(bluetoothManager.oxygenCompensation, forKey: "oxygenCompensation")
                         UserDefaults.standard.synchronize()

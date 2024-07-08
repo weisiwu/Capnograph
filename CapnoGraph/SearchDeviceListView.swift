@@ -83,6 +83,13 @@ struct SearchDeviceListView: View {
                         bluetoothManager.startScanning() {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 appConfigManage.loadingMessage = ""
+                                if bluetoothManager.discoveredPeripherals.count > 0 {
+                                    return
+                                }
+                                appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "SearchFail")
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                    appConfigManage.toastMessage = ""
+                                }
                             }
                         }
                     }
