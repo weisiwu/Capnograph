@@ -87,7 +87,7 @@ struct TableView: View {
                 .font(.system(size: 16))
                 .fontWeight(.bold)
             Spacer()
-            Text(bluetoothManager.RespiratoryRate == 0 ? "--bmp/min" : "\(bluetoothManager.RespiratoryRate)bmp/min")
+            Text(bluetoothManager.RespiratoryRate == 0 ? "--bpm/min" : "\(bluetoothManager.RespiratoryRate)bpm/min")
                 .font(.system(size: 16))
                 .fontWeight(.thin)
                 .foregroundColor(Color(red: 29/255, green: 33/255, blue: 41/255))

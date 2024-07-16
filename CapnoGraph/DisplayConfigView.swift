@@ -62,16 +62,17 @@ struct DisplayConfigView: View {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 appConfigManage.loadingMessage = ""
                                 appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
+                                appConfigManage.toastType = .SUCCESS
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                     appConfigManage.toastMessage = ""
                                 }
                             }
                         }
                     }
-                        .frame(width: 68, height: 43)
+                        .frame(width: 120, height: 40)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
-                        .cornerRadius(22)
+                        .cornerRadius(20)
                     Spacer()
                 }
                 .padding(.bottom, 20)
