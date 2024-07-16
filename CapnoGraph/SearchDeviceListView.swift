@@ -46,6 +46,7 @@ struct SearchDeviceListView: View {
                                                     withAnimation {
                                                         appConfigManage.loadingMessage = ""
                                                         appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "SearchConnected")
+                                                        appConfigManage.toastType = .SUCCESS
                                                         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                                             selectedTabIndex = PageTypes.Result.rawValue
                                                             appConfigManage.toastMessage = ""

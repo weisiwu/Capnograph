@@ -58,7 +58,7 @@ enum AppTextsChinese: String {
     // 主页
     case MainDeviceName = "设备名称"
     case MainDeviceID = "设备ID"
-    case MainPR = "PR/呼吸率"
+    case MainPR = "RR/呼吸率"
     case MainETCO2 = "ETCO2"
     case MainUnknownName = "未知设备"
     case MainLineCharUnit = "秒"
@@ -87,11 +87,11 @@ enum AppTextsChinese: String {
     case CommonUpdateBtn = "更新"
     // 展示设置页
     case DisplayCO2Unit = "CO2单位"
-    case DisplayCO2Scale = "CO2 Scale"
+    case DisplayCO2Scale = "CO2 刻度"
     case DisplayWFSpeed = "WF Speed"
     // 报警设置页
     case AlertETCO2 = "ETCO2范围"
-    case AlertRR = "RR范围(bmp)"
+    case AlertRR = "RR范围"
     // Toast相关文案
     case ToastZeroing = "正在校零"
     case ToastZeroComplete = "校零结束"
@@ -144,7 +144,7 @@ enum AppTextsEnglish: String {
     // 主页
     case MainDeviceName = "Device Name"
     case MainDeviceID = "Device ID"
-    case MainPR = "PR/Respiratory Rate"
+    case MainPR = "RR/Respiratory Rate"
     case MainETCO2 = "ETCO2"
     case MainUnknownName = "Unknown Device"
     case MainLineCharUnit = "S"
@@ -176,8 +176,8 @@ enum AppTextsEnglish: String {
     case DisplayCO2Scale = "CO2 Scale"
     case DisplayWFSpeed = "WF Speed"
     // 报警设置页
-    case AlertETCO2 = "ETCO2 Range(mmHg)"
-    case AlertRR = "Respiratory Rate Range(bmp)"
+    case AlertETCO2 = "ETCO2 Range"
+    case AlertRR = "Respiratory Rate Range"
     // Toast相关文案
     case ToastZeroing = "Zeroing"
     case ToastZeroComplete = "Zero Calibration Finished"

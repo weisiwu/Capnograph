@@ -150,6 +150,7 @@ struct ModuleConfigView: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             appConfigManage.loadingMessage = ""
                             appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
+                            appConfigManage.toastType = .SUCCESS
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                 appConfigManage.toastMessage = ""
                             }

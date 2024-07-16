@@ -7,7 +7,7 @@ struct RangeSlider: View {
     @Binding var lowerValue: CGFloat // 最小值
     @Binding var upperValue: CGFloat // 最大值
     var range: ClosedRange<CGFloat> // 可选值范围
-    var unit: String
+    var unit: String = ""
     var btnSize: CGFloat = 30
     // 当前选中范围
     var currentRange: CGFloat {
@@ -61,7 +61,6 @@ struct RangeSlider: View {
                 .foregroundColor(Color(red: 0, green: 206/255, blue: 201/255))
             
             // 最小值
-            // Text(Double(lowerValue).formatted(.number.precision(.fractionLength(0...0))) + unit)
             Text(Double(lowerValue).formatted(.number.precision(.fractionLength(0...0))))
                 .offset(
                     x: calculateOffsetX(for: CGFloat(lowerValue), in: geometry, with: currentRange, minV: Float(range.lowerBound)),
@@ -92,7 +91,6 @@ struct RangeSlider: View {
                 .offset(x: lowerKnobPosition)
             
             // 最大值
-            // Text(Double(upperValue).formatted(.number.precision(.fractionLength(0...0))) + unit)
             Text(Double(upperValue).formatted(.number.precision(.fractionLength(0...0))))
                 .offset(
                     x: calculateOffsetX(for: CGFloat(upperValue), in: geometry, with: currentRange, minV: Float(range.lowerBound)),
@@ -143,11 +141,10 @@ struct AlertConfigView: View {
                 )
                 
                 RangeSlider(
-                    title: "\(appConfigManage.getTextByKey(key: "AlertRR"))(bmp)",
+                    title: "\(appConfigManage.getTextByKey(key: "AlertRR"))(bpm)",
                     lowerValue: $bluetoothManager.rrLower,
                     upperValue: $bluetoothManager.rrUpper,
-                    range: bluetoothManager.rrMin...bluetoothManager.rrMax,
-                    unit: "bmp"
+                    range: bluetoothManager.rrMin...bluetoothManager.rrMax
                 )
 
                 Spacer()
