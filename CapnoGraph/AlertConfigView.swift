@@ -178,10 +178,10 @@ struct AlertConfigView: View {
                             }
                         }
                     }
-                        .frame(width: 68, height: 43)
+                        .frame(width: 120, height: 40)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
-                        .cornerRadius(22)
+                        .cornerRadius(20)
                      Spacer()
                 }
                 .padding(.bottom, 20)

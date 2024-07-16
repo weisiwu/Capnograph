@@ -72,15 +72,15 @@ struct SearchDeviceListView: View {
                         .padding(.bottom, 48)
                 }
                 Text(appConfigManage.getTextByKey(key: "SearchBtn"))
-                    .frame(width: 105, height: 35)
+                    .frame(width: 120, height: 40)
                     .font(.system(size: 16))
                     .background(Color(red: 232/255, green: 243/255, blue: 1))
                     .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
-                    .cornerRadius(16)
+                    .cornerRadius(20)
                     .padding(.bottom, 32)
                     .onTapGesture {
                         appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "SearchSearching")
-                        // 开启搜索后，会不停的搜搜外设
+                        // 开启搜索后，会不停的搜索外设
                         bluetoothManager.startScanning() {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 appConfigManage.loadingMessage = ""
