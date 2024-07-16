@@ -540,12 +540,19 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             sendArray.append(SensorCommand.Settings.rawValue)
             sendArray.append(0x03)
             sendArray.append(UInt8(ISBState84H.SetCO2Unit.rawValue))
+            // 同步修改报警范围
             if CO2Unit == CO2UnitType.mmHg {
                 sendArray.append(0x00)
+                etCo2Lower = 25
+                etCo2Upper = 50
             } else if CO2Unit == CO2UnitType.KPa {
                 sendArray.append(0x01)
+                etCo2Lower = 3.3
+                etCo2Upper = 6.6
             } else if CO2Unit == CO2UnitType.Percentage {
                 sendArray.append(0x02)
+                etCo2Lower = 3.2
+                etCo2Upper = 6.5
             }
             appendCKS()
             let data = convertToData(from: sendArray)
