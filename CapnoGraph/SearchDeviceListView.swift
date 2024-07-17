@@ -36,27 +36,33 @@ struct SearchDeviceListView: View {
                                     .background(Color(red: 232/255, green: 243/255, blue: 1))
                                     .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                                     .cornerRadius(16)
-                                    .alert(isPresented: $showAlert) {
-                                        Alert(
-                                            title: Text(appConfigManage.getTextByKey(key: "MainUnknownName")),
-                                            message: Text("\(appConfigManage.getTextByKey(key: "SearchDevicePrefix")): \(selectedPeripheral?.name ?? appConfigManage.getTextByKey(key: "SearchConfirmTitle"))"),
-                                            primaryButton: .default(Text(appConfigManage.getTextByKey(key: "SearchConfirmYes")), action: {
-                                                appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "SearchConnecting")
-                                                bluetoothManager.connect(to: selectedPeripheral) {
-                                                    withAnimation {
-                                                        appConfigManage.loadingMessage = ""
-                                                        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "SearchConnected")
-                                                        appConfigManage.toastType = .SUCCESS
-                                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                                                            selectedTabIndex = PageTypes.Result.rawValue
-                                                            appConfigManage.toastMessage = ""
-                                                        }
-                                                    }
-                                                }
-                                            }),
-                                            secondaryButton: .default(Text(appConfigManage.getTextByKey(key: "SearchConfirmNo")))
-                                        )
-                                    }
+                            }
+                            .alert(isPresented: $showAlert) {
+                                 Alert(
+                                     title: Text(appConfigManage.getTextByKey(key: "MainUnknownName")),
+                                     message: Text("\(appConfigManage.getTextByKey(key: "SearchDevicePrefix")): \(selectedPeripheral?.name ?? appConfigManage.getTextByKey(key: "SearchConfirmTitle"))"),
+                                     primaryButton: .default(Text(appConfigManage.getTextByKey(key: "SearchConfirmYes")), action: {
+                                         // print("触发链接事件1")
+                                         appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "SearchConnecting")
+                                         // print("触发链接事件2")
+                                         bluetoothManager.connect(to: selectedPeripheral) { isConnectSuccess in
+                                             // print("触发链接事件3 \(isConnectSuccess)")
+                                             withAnimation {
+                                                 appConfigManage.loadingMessage = ""
+                                                 appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "SearchConnected")
+                                                 appConfigManage.toastType = .SUCCESS
+                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                                     selectedTabIndex = PageTypes.Result.rawValue
+                                                     appConfigManage.toastMessage = ""
+                                                 }
+                                             }
+                                         }
+                                     }),
+                                     secondaryButton: .default(Text(appConfigManage.getTextByKey(key: "SearchConfirmNo")), action: {
+                                         // print("触发取消事件1")
+                                         showAlert = false
+                                     })
+                                 )
                             }
                         }
                         .frame(maxHeight: .infinity)
@@ -85,8 +91,10 @@ struct SearchDeviceListView: View {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 appConfigManage.loadingMessage = ""
                                 if bluetoothManager.discoveredPeripherals.count > 0 {
+                                    bluetoothManager.isScanning = false
                                     return
                                 }
+                                bluetoothManager.isScanning = false
                                 appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "SearchFail")
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                     appConfigManage.toastMessage = ""

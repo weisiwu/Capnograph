@@ -137,7 +137,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     @Published var receivedCO2WavedData: [DataPoint] = Array(repeating: DataPoint(value: unRealValue), count: maxXPoints)
     var isScanning: Bool = false
     var startScanningCallback: (() -> Void)?
-    var connectedCallback: (() -> Void)?
+    var connectedCallback: ((Bool) -> Void)?
     var sendArray: [UInt8] = []
     var receivedArray: [UInt8] = []
     var currentCO2: Float = 0
@@ -540,12 +540,19 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             sendArray.append(SensorCommand.Settings.rawValue)
             sendArray.append(0x03)
             sendArray.append(UInt8(ISBState84H.SetCO2Unit.rawValue))
+            // 同步修改报警范围
             if CO2Unit == CO2UnitType.mmHg {
                 sendArray.append(0x00)
+                etCo2Lower = 25
+                etCo2Upper = 50
             } else if CO2Unit == CO2UnitType.KPa {
                 sendArray.append(0x01)
+                etCo2Lower = 3.3
+                etCo2Upper = 6.6
             } else if CO2Unit == CO2UnitType.Percentage {
                 sendArray.append(0x02)
+                etCo2Lower = 3.2
+                etCo2Upper = 6.5
             }
             appendCKS()
             let data = convertToData(from: sendArray)
@@ -941,7 +948,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     
     // 连接成功后显示 Toast
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        connectedCallback?()
+        connectedCallback?(true)
         // 给外设添加事件管理函数
         peripheral.delegate = self
         peripheral.discoverServices(nil)
@@ -951,6 +958,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     // 链接失败
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         print("链接失败")
+        connectedCallback?(false)
     }
 
     // 设备断开链接后
@@ -1088,7 +1096,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
         // 检查状态
         guard let isPass = checkBluetoothStatus(), !isPass else {
-            print("扫描设备到这里了")
             discoveredPeripherals.removeAll()
             centralManager.scanForPeripherals(withServices: nil, options: nil)
             isScanning = true
@@ -1105,7 +1112,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
     
     // 链接蓝牙外设
-    func connect(to peripheral: CBPeripheral?, callback: (() -> Void)?) {
+    func connect(to peripheral: CBPeripheral?, callback: ((Bool) -> Void)?) {
         if let peripheral {
             centralManager.stopScan()
             connectedPeripheral = peripheral

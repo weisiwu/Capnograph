@@ -148,26 +148,20 @@ struct ConfigView: View {
     func handleTapGesture(text: String?) -> Bool {
         var loadingText = ""
         guard let textStr = text else {
+            print("关机0")
             return false
         }
 
         // 如果没有链接设备，直接出alert，让用户前往链接设备
         if let connectedPeripheral = bluetoothManager.connectedPeripheral {
+            print("关机1")
             appConfigManage.showNoDeviceAlert = false
         } else {
+            print("关机2")
             appConfigManage.alertTitle = appConfigManage.getTextByKey(key: "NoDeviceTitle")
             appConfigManage.alertMessage = appConfigManage.getTextByKey(key: "NoDeviceMessage")
             appConfigManage.alertConfirmBtn = appConfigManage.getTextByKey(key: "NoDeviceJump")
             appConfigManage.showNoDeviceAlert = true
-            return false
-        }
-
-        // 是否已经确认过关机
-        if !appConfigManage.showConfirmShutDownAlert {
-            appConfigManage.alertTitle = appConfigManage.getTextByKey(key: "ShutDownConfirmTitle")
-            appConfigManage.alertMessage = appConfigManage.getTextByKey(key: "ShutDownConfirmMessage")
-            appConfigManage.alertConfirmBtn = appConfigManage.getTextByKey(key: "ShutDownConfirmJump")
-            appConfigManage.showConfirmShutDownAlert = true
             return false
         }
 
@@ -199,7 +193,16 @@ struct ConfigView: View {
                 bluetoothManager.correctZero(cb: handleSetZero)
             // 关机
             case AppTextsChinese.SettingShutDown.rawValue, AppTextsEnglish.SettingShutDown.rawValue:
-                bluetoothManager.shutdown(cb: handleShutdown)
+                if !appConfigManage.showConfirmShutDownAlert {
+                    print("关机3")
+                    appConfigManage.alertTitle = appConfigManage.getTextByKey(key: "ShutDownConfirmTitle")
+                    appConfigManage.alertMessage = appConfigManage.getTextByKey(key: "ShutDownConfirmMessage")
+                    appConfigManage.alertConfirmBtn = appConfigManage.getTextByKey(key: "ShutDownConfirmJump")
+                    appConfigManage.showConfirmShutDownAlert = true
+                } else {
+                    print("关机4")
+                    bluetoothManager.shutdown(cb: handleShutdown)
+                }
             // 屏幕常亮
             case AppTextsChinese.SettingLighter.rawValue, AppTextsEnglish.SettingLighter.rawValue:
                 bluetoothManager.keepScreenOn(cb: handleKeepScreenOn)
@@ -278,16 +281,23 @@ struct ConfigView: View {
                             title: Text(appConfigManage.alertTitle),
                             message: Text(appConfigManage.alertMessage),
                             primaryButton: .default(
-                                Text(appConfigManage.alertConfirmBtn),
-                                action: {
-                                    if appConfigManage.showConfirmShutDownAlert {
-                                        handleTapGesture(text: appConfigManage.getTextByKey(key: "SettingShutDown"))
-                                    } else {
-                                        selectedTabIndex = PageTypes.SearchDeviceList.rawValue
-                                    }
+                                Text(appConfigManage.alertConfirmBtn)
+                            ) {
+                                if appConfigManage.showConfirmShutDownAlert {
+                                    print("确认点击1")
+                                    handleTapGesture(text: appConfigManage.getTextByKey(key: "SettingShutDown"))
+                                } else {
+                                    print("确认点击2")
+                                    selectedTabIndex = PageTypes.SearchDeviceList.rawValue
                                 }
-                            ),
-                            secondaryButton: .default(Text(appConfigManage.getTextByKey(key: "SearchConfirmNo")))
+                                appConfigManage.showAlert = false
+                            },
+                            secondaryButton: .default(
+                                Text(appConfigManage.getTextByKey(key: "SearchConfirmNo"))
+                            ) {
+                                print("取消点击1")
+                                appConfigManage.showAlert = false
+                            }
                         )
                     }
                 }
