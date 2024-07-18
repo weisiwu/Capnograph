@@ -145,7 +145,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     @Published var RespiratoryRate: Int = 0
     var FiCO2: Int = 0
     var Breathe: Bool = false
-    var isAsphyxiation: Bool = false
+    @Published var isAsphyxiation: Bool = false
     var isCorrectZero: Bool = false
     var barometricPressure: Int = 0
     var NoBreaths: Int = 20
@@ -813,7 +813,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
 
         // 获取是否窒息状态: 取DB1，第7位，判断是否被置位
-        isAsphyxiation = Int(data[6] & 64) == 1
+        isAsphyxiation = Breathe && (Int(data[6] & 0x40) == 0x40)
     }
     
     // 处理设置
