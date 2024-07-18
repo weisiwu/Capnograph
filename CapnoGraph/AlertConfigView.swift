@@ -152,9 +152,24 @@ struct AlertConfigView: View {
                     Spacer()
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
                         appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
+
+                        let isRangeValid = bluetoothManager.checkAlertRangeValid()
+                        if !isRangeValid {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                appConfigManage.loadingMessage = ""
+                                appConfigManage.toastType = .FAIL
+                                appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingException")
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                    appConfigManage.toastMessage = ""
+                                }
+                            }
+                            return
+                        }
+                        
                         if let isPass = bluetoothManager.checkBluetoothStatus(), !isPass {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 appConfigManage.loadingMessage = ""
+                                appConfigManage.toastType = .FAIL
                                 appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                     appConfigManage.toastMessage = ""
@@ -171,7 +186,9 @@ struct AlertConfigView: View {
                         let isSuccess = bluetoothManager.updateAlertRange()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             appConfigManage.loadingMessage = ""
-                            appConfigManage.toastMessage = isSuccess ? appConfigManage.getTextByKey(key: "UpdateSettingFinished") : appConfigManage.getTextByKey(key: "UpdateSettingFail")
+                            appConfigManage.toastMessage = isSuccess
+                                ? appConfigManage.getTextByKey(key: "UpdateSettingFinished")
+                                : appConfigManage.getTextByKey(key: "UpdateSettingFail")
                             appConfigManage.toastType = isSuccess ? .SUCCESS : .FAIL
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                 appConfigManage.toastMessage = ""

@@ -582,13 +582,21 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         cb()
     }
 
-    // 调整ETCO2/RR的报警范围
-    func updateAlertRange() -> Bool {
+    // 检查设置的报警范围是否合法
+    func checkAlertRangeValid() -> Bool {
         // 如果范围有问题，不更新
         if etCo2Upper <= etCo2Lower || rrUpper <= rrLower {
             return false
         }
-
+        return true
+    }
+    
+    // 调整ETCO2/RR的报警范围
+    func updateAlertRange() -> Bool {
+        if !checkAlertRangeValid() {
+            return false
+        }
+        
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             sendArray.append(SensorCommand.Expand.rawValue)
             let _etCo2Upper = Int(round(etCo2Upper) * 10)
