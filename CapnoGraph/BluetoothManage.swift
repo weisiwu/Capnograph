@@ -913,6 +913,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             let defaultUnit: CO2UnitType = CO2UnitType(rawValue: defaultUnitStr) {
             CO2Unit = defaultUnit
         }
+
         let defaultScaleStr: Double = UserDefaults.standard.double(forKey: "CO2Scale")
         if let defaultScale: CO2ScaleEnum = CO2ScaleEnum(rawValue: defaultScaleStr) {
             CO2Scale = defaultScale

@@ -41,11 +41,35 @@ struct LineChartView: View {
             AxisMarks(
                 preset: .aligned,
                 position: .leading,
-                values: Array(stride(from: 0.0, through: ceil(bluetoothManager.CO2Scale.rawValue / 10) * 10, by: floor(bluetoothManager.CO2ScaleStep)))
+                values: generateYAxis(scale: bluetoothManager.CO2Scale)
             )
         }
         .frame(height: 300)
         .padding()
+    }
+}
+
+// 根据最大刻度，生成y轴坐标
+func generateYAxis(scale: CO2ScaleEnum) -> [Double] {
+    switch scale {
+        case .mmHg_Small:
+            return [0, 10, 20, 30, 40, 50]
+        case .mmHg_Middle:
+            return [0, 10, 20, 30, 40, 50, 60]
+        case .mmHg_Large:
+            return [0, 10, 20, 30, 40, 50, 60, 70, 75]
+        case .KPa_Small:
+            return [0, 1, 2, 3, 4, 5, 6, 6.7]
+        case .KPa_Middle:
+            return [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        case .KPa_Large:
+            return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        case .percentage_Small:
+            return [0, 1, 2, 3, 4, 5, 6, 6.6]
+        case .percentage_Middle:
+            return [0, 1, 2, 3, 4, 5, 6, 7, 7.9]
+        case .percentage_Large:
+            return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9.9]
     }
 }
 
