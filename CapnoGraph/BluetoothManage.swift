@@ -145,7 +145,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     @Published var RespiratoryRate: Int = 0
     var FiCO2: Int = 0
     var Breathe: Bool = false
-    var isAsphyxiation: Bool = false
+    @Published var isAsphyxiation: Bool = false
     var isCorrectZero: Bool = false
     var barometricPressure: Int = 0
     var NoBreaths: Int = 20
@@ -582,13 +582,21 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         cb()
     }
 
-    // 调整ETCO2/RR的报警范围
-    func updateAlertRange() -> Bool {
+    // 检查设置的报警范围是否合法
+    func checkAlertRangeValid() -> Bool {
         // 如果范围有问题，不更新
         if etCo2Upper <= etCo2Lower || rrUpper <= rrLower {
             return false
         }
-
+        return true
+    }
+    
+    // 调整ETCO2/RR的报警范围
+    func updateAlertRange() -> Bool {
+        if !checkAlertRangeValid() {
+            return false
+        }
+        
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             sendArray.append(SensorCommand.Expand.rawValue)
             let _etCo2Upper = Int(round(etCo2Upper) * 10)
@@ -805,7 +813,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
 
         // 获取是否窒息状态: 取DB1，第7位，判断是否被置位
-        isAsphyxiation = Int(data[6] & 64) == 1
+        isAsphyxiation = Breathe && (Int(data[6] & 0x40) == 0x40)
     }
     
     // 处理设置
@@ -905,6 +913,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             let defaultUnit: CO2UnitType = CO2UnitType(rawValue: defaultUnitStr) {
             CO2Unit = defaultUnit
         }
+
         let defaultScaleStr: Double = UserDefaults.standard.double(forKey: "CO2Scale")
         if let defaultScale: CO2ScaleEnum = CO2ScaleEnum(rawValue: defaultScaleStr) {
             CO2Scale = defaultScale
