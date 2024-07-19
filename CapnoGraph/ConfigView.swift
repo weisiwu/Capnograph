@@ -194,13 +194,11 @@ struct ConfigView: View {
             // 关机
             case AppTextsChinese.SettingShutDown.rawValue, AppTextsEnglish.SettingShutDown.rawValue:
                 if !appConfigManage.showConfirmShutDownAlert {
-                    print("关机3")
                     appConfigManage.alertTitle = appConfigManage.getTextByKey(key: "ShutDownConfirmTitle")
                     appConfigManage.alertMessage = appConfigManage.getTextByKey(key: "ShutDownConfirmMessage")
                     appConfigManage.alertConfirmBtn = appConfigManage.getTextByKey(key: "ShutDownConfirmJump")
                     appConfigManage.showConfirmShutDownAlert = true
                 } else {
-                    print("关机4")
                     bluetoothManager.shutdown(cb: handleShutdown)
                 }
             // 屏幕常亮
