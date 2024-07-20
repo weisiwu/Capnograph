@@ -966,7 +966,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     
     // 链接失败
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        print("链接失败")
         connectedCallback?(false)
     }
 
@@ -1120,9 +1119,18 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         isScanning = false
     }
     
+    func disconnect() {
+        if let peripheral = connectedPeripheral {
+            centralManager.cancelPeripheralConnection(peripheral)
+            connectedPeripheral = nil
+        }
+    }
+    
     // 链接蓝牙外设
     func connect(to peripheral: CBPeripheral?, callback: ((Bool) -> Void)?) {
         if let peripheral {
+            // 开始链接之前，先将已经链接的设备断开连接
+            disconnect()
             centralManager.stopScan()
             connectedPeripheral = peripheral
             connectedPeripheral?.delegate = self
