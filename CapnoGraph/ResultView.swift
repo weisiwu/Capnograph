@@ -139,6 +139,7 @@ struct TableView: View {
 struct ResultView: View {
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
+    @State private var hasAppeared = false
     @State private var isVisible = true
     
     let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
@@ -173,7 +174,10 @@ struct ResultView: View {
         }
         .onAppear {            
             // 启动后，将所有本地保存的设置都同步到设备上。
-            bluetoothManager.initDevice()
+            if !hasAppeared {
+                bluetoothManager.initDevice()
+                hasAppeared = true
+            }
         }
     }
 }
