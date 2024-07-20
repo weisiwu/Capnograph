@@ -236,8 +236,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     @Published var rrUpper: CGFloat = CGFloat(UserDefaults.standard.float(forKey: "rrUpper"))
 
     // 报警参数范围
-    let etco2Min: CGFloat = 0
-    let etco2Max: CGFloat = 99
+    @Published var etco2Min: CGFloat = 0
+    @Published var etco2Max: CGFloat = 99
     let rrMin: CGFloat = 3
     let rrMax: CGFloat = 150
 
@@ -545,14 +545,20 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 sendArray.append(0x00)
                 etCo2Lower = 25
                 etCo2Upper = 50
+                etco2Min = 0
+                etco2Max = 99
             } else if CO2Unit == CO2UnitType.KPa {
                 sendArray.append(0x01)
                 etCo2Lower = 3.3
                 etCo2Upper = 6.6
+                etco2Min = 0.0
+                etco2Max = 9.9
             } else if CO2Unit == CO2UnitType.Percentage {
                 sendArray.append(0x02)
                 etCo2Lower = 3.2
                 etCo2Upper = 6.5
+                etco2Min = 0.0
+                etco2Max = 9.9
             }
             appendCKS()
             let data = convertToData(from: sendArray)

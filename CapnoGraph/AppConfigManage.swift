@@ -560,7 +560,6 @@ class AppConfigManage: ObservableObject {
         }
     }
 
-    // TODO:(wsw) 好好看看，两个manage之间互相调用
     private var cancellables = Set<AnyCancellable>()
     
     func listenToBluetoothManager(bluetoothManager: BluetoothManager) {
