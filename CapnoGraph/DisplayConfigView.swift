@@ -1,30 +1,5 @@
 import SwiftUI
 
-struct CustomEnvironmentReader<Content: View>: View {
-    @EnvironmentObject var bluetoothManager: BluetoothManager
-    @State private var cachedProperty: String = ""
-    let content: (String) -> Content
-
-    var body: some View {
-        content(cachedProperty)
-            .onAppear {
-                cachedProperty = appConfigManage.someProperty
-            }
-            .onChange(of: appConfigManage.someProperty) { newValue in
-                // 你可以在这里添加条件判断，只在满足条件时更新 cachedProperty
-                if shouldUpdate(newValue) {
-                    cachedProperty = newValue
-                }
-            }
-    }
-
-    private func shouldUpdate(_ newValue: String) -> Bool {
-        // 根据你的需求添加条件判断
-        return true
-    }
-}
-
-
 struct DisplayConfigView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appConfigManage: AppConfigManage
@@ -35,8 +10,7 @@ struct DisplayConfigView: View {
     var body: some View {
         print("ContentView body updated")
 
-        return CustomEnvironmentReader { CO2Scale, CO2Unit in
-            BaseConfigContainerView(configType: ConfigItemTypes.System) {
+        return BaseConfigContainerView(configType: ConfigItemTypes.System) {
                 VStack(alignment: .leading) {
                     Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
                     Text(appConfigManage.getTextByKey(key: "DisplayCO2Unit")).font(.system(size: 18)).fontWeight(.bold).padding(0)
@@ -113,6 +87,5 @@ struct DisplayConfigView: View {
             .onDisappear {
                 presentationMode.wrappedValue.dismiss()
             }
-        }
     }
 }
