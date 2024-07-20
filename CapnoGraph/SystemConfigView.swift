@@ -68,7 +68,6 @@ struct SystemConfigView: View {
     @EnvironmentObject var appConfigManage: AppConfigManage
     @EnvironmentObject var bluetoothManager: BluetoothManager
     
-    // TODO:(wsw) 后续移动到蓝牙中去
     func getSettingInfoCallback(value: String, type: ISBState) {
         if type == ISBState.CMD_84H(.GetSensorPartNumber) {
             appConfigManage.ModuleName = value

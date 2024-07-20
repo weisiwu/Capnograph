@@ -179,6 +179,8 @@ struct ResultView: View {
             if !hasAppeared {
                 bluetoothManager.initDevice()
                 hasAppeared = true
+            } else {
+                bluetoothManager.sendContinuous()
             }
         }
     }

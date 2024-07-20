@@ -1,5 +1,30 @@
 import SwiftUI
 
+struct CustomEnvironmentReader<Content: View>: View {
+    @EnvironmentObject var bluetoothManager: BluetoothManager
+    @State private var cachedProperty: String = ""
+    let content: (String) -> Content
+
+    var body: some View {
+        content(cachedProperty)
+            .onAppear {
+                cachedProperty = appConfigManage.someProperty
+            }
+            .onChange(of: appConfigManage.someProperty) { newValue in
+                // 你可以在这里添加条件判断，只在满足条件时更新 cachedProperty
+                if shouldUpdate(newValue) {
+                    cachedProperty = newValue
+                }
+            }
+    }
+
+    private func shouldUpdate(_ newValue: String) -> Bool {
+        // 根据你的需求添加条件判断
+        return true
+    }
+}
+
+
 struct DisplayConfigView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appConfigManage: AppConfigManage
@@ -8,83 +33,86 @@ struct DisplayConfigView: View {
     let WFSpeeds: [WFSpeedEnum] = [.One, .Two, .Four]
 
     var body: some View {
-        BaseConfigContainerView(configType: ConfigItemTypes.System) {
-            VStack(alignment: .leading) {
-                Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
-                Text(appConfigManage.getTextByKey(key: "DisplayCO2Unit")).font(.system(size: 18)).fontWeight(.bold).padding(0)
+        print("ContentView body updated")
 
-                Picker(appConfigManage.getTextByKey(key: "DisplayCO2Unit"), selection: $bluetoothManager.CO2Unit) {
-                    ForEach(CO2Units, id: \.self) { unit in
-                        Text(unit.rawValue)
-                            .frame(height: 30)
-                            .font(.system(size: 14))
+        return CustomEnvironmentReader { CO2Scale, CO2Unit in
+            BaseConfigContainerView(configType: ConfigItemTypes.System) {
+                VStack(alignment: .leading) {
+                    Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
+                    Text(appConfigManage.getTextByKey(key: "DisplayCO2Unit")).font(.system(size: 18)).fontWeight(.bold).padding(0)
+
+                    Picker(appConfigManage.getTextByKey(key: "DisplayCO2Unit"), selection: $bluetoothManager.CO2Unit) {
+                        ForEach(CO2Units, id: \.self) { unit in
+                            Text(unit.rawValue)
+                                .frame(height: 30)
+                                .font(.system(size: 14))
+                        }
                     }
-                }
-                    .pickerStyle(WheelPickerStyle())
-                    .frame(height: 110)
+                    .pickerStyle(.wheel)
                     .frame(height: 110)
 
-                Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
-                Text(appConfigManage.getTextByKey(key: "DisplayCO2Scale")).font(.system(size: 18)).fontWeight(.bold)
+                    Divider().frame(height: 2).background(Color(red: 0, green: 0, blue: 0).opacity(0.1)).padding(.bottom, 14)
+                    Text(appConfigManage.getTextByKey(key: "DisplayCO2Scale")).font(.system(size: 18)).fontWeight(.bold)
 
-                Picker(appConfigManage.getTextByKey(key: "DisplayCO2Scale"), selection: $bluetoothManager.CO2Scale) {
-                    ForEach(bluetoothManager.CO2Scales, id: \.self) { scale in
-                        Text(scale.rawValue.formatted(.number.precision(.fractionLength(0...2))))
-                            .frame(height: 30)
-                            .font(.system(size: 14))
+                    Picker(appConfigManage.getTextByKey(key: "DisplayCO2Scale"), selection: $bluetoothManager.CO2Scale) {
+                        ForEach(bluetoothManager.CO2Scales, id: \.self) { scale in
+                            Text(scale.rawValue.formatted(.number.precision(.fractionLength(0...2))))
+                                .frame(height: 30)
+                                .font(.system(size: 14))
+                        }
                     }
-                }
-                    .pickerStyle(WheelPickerStyle())
+                    .pickerStyle(.wheel)
                     .frame(height: 110)
-                
-                Spacer()
-                HStack {
+                    
                     Spacer()
-                    Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
-                        appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
-                        if let isPass = bluetoothManager.checkBluetoothStatus(),
-                            bluetoothManager.connectedPeripheral == nil,
-                            !isPass {
+                    HStack {
+                        Spacer()
+                        Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
+                            appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
+                            if let isPass = bluetoothManager.checkBluetoothStatus(),
+                                bluetoothManager.connectedPeripheral == nil,
+                                !isPass {
+                                bluetoothManager.updateCO2Unit {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                        appConfigManage.loadingMessage = ""
+                                        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                            appConfigManage.toastMessage = ""
+                                        }
+                                    }
+                                }
+                                return
+                            }
+                            UserDefaults.standard.set(bluetoothManager.CO2Unit.rawValue, forKey: "CO2Unit")
+                            UserDefaults.standard.set(bluetoothManager.CO2Scale.rawValue, forKey: "CO2Scale")
                             bluetoothManager.updateCO2Unit {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                     appConfigManage.loadingMessage = ""
-                                    appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
+                                    appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
+                                    appConfigManage.toastType = .SUCCESS
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                         appConfigManage.toastMessage = ""
                                     }
                                 }
                             }
-                            return
                         }
-                        UserDefaults.standard.set(bluetoothManager.CO2Unit.rawValue, forKey: "CO2Unit")
-                        UserDefaults.standard.set(bluetoothManager.CO2Scale.rawValue, forKey: "CO2Scale")
-                        bluetoothManager.updateCO2Unit {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                appConfigManage.loadingMessage = ""
-                                appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
-                                appConfigManage.toastType = .SUCCESS
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                                    appConfigManage.toastMessage = ""
-                                }
-                            }
-                        }
-                    }
                         .frame(width: 120, height: 40)
                         .background(Color(red: 224/255, green: 234/255, blue: 1))
                         .foregroundColor(Color(red: 22/255, green: 93/255, blue: 1))
                         .cornerRadius(20)
-                    Spacer()
+                        Spacer()
+                    }
+                    .padding(.bottom, 20)
                 }
-                .padding(.bottom, 20)
+                .padding()
             }
+            .background(Color.white)
+            .listStyle(PlainListStyle())
             .padding()
-        }
-        .background(Color.white)
-        .listStyle(PlainListStyle())
-        .padding()
-        .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleDisplayConfig"))")
-        .onDisappear {
-            presentationMode.wrappedValue.dismiss()
+            .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleDisplayConfig"))")
+            .onDisappear {
+                presentationMode.wrappedValue.dismiss()
+            }
         }
     }
 }

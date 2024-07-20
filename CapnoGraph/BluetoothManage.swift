@@ -114,8 +114,7 @@ enum ISBStateF2H: Int {
     case CO2Scale = 0x2C //
 }
 
-// 【ISB】获取软件信息指令
-// TODO:(wsw) 这里待确认ISB值是否正确
+// 【ISB】获取软件信息指令 这是ISB只是用来区分场景，并非真实的设备ISB值
 enum ISBStateCAH: Int {
     case GetSoftWareRevision = 99 // 获取软件版本
     case GetProductionDate = 98 // 生产日期
@@ -859,7 +858,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
 
-    // TODO:(wsw) 这里逻辑不太了解
     func handleSofrWareVersion(data: UnsafeBufferPointer<UInt8>) {
         let NBFM = Int(data[1])
         sSoftwareVersion = ""
