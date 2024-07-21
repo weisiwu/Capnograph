@@ -255,7 +255,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         // 中央设备管理器
         centralManager = CBCentralManager(delegate: self, queue: .main)
     }
-    
+
     /**------  发送指令，相关函数 ------*/
     
     // 对指定UUID的服务进行注册
@@ -1143,6 +1143,12 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
     
+    // 在展示页面用于更新参数
+    func updateDisplayParams(newCO2Unit: CO2UnitType, newCO2Scale: CO2ScaleEnum) {
+        CO2Unit = newCO2Unit
+        CO2Scale = newCO2Scale
+    }
+
     // 判断蓝牙状态
     // unknown：正在初始化
     // resetting：蓝牙硬件暂时不可用

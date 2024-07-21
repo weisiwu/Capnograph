@@ -12,7 +12,7 @@ enum ConfigItemTypes: Int {
     case Lighter = 7 // 屏幕常亮
 }
 
-//二级配置页View
+// 二级配置页View
 struct BaseConfigContainerView<Content: View>: View {
     let content: Content
     @State private var selectedTabIndex: Int = PageTypes.Config.rawValue
@@ -41,7 +41,7 @@ struct BaseConfigContainerView<Content: View>: View {
     }
 }
 
-//一级配置View中的配置项目View
+// 一级配置View中的配置项目View
 struct ConfigItem: View {
     var text: String
     var icon: String
@@ -211,7 +211,15 @@ struct ConfigView: View {
                 case ConfigItemTypes.Alert.rawValue:
                     AlertConfigView()
                 case ConfigItemTypes.Display.rawValue:
-                    DisplayConfigView()
+                    DisplayConfigView (
+                        CO2Unit: bluetoothManager.CO2Unit,
+                        CO2Scale: bluetoothManager.CO2Scale,
+                        CO2Scales: bluetoothManager.CO2Scales,
+                        connectedPeripheral: bluetoothManager.connectedPeripheral,
+                        checkBluetoothStatus: bluetoothManager.checkBluetoothStatus,
+                        updateCO2Unit: bluetoothManager.updateCO2Unit, 
+                        updateDisplayParams: bluetoothManager.updateDisplayParams
+                    )
                 case ConfigItemTypes.System.rawValue:
                     SystemConfigView()
                 case ConfigItemTypes.Module.rawValue:
@@ -300,6 +308,7 @@ struct ConfigView: View {
 
 struct SubConfigContainerView: View {
     var configType: Int?
+    @EnvironmentObject var bluetoothManager: BluetoothManager
     
     var body: some View {
         switch configType {
@@ -310,7 +319,15 @@ struct SubConfigContainerView: View {
         case ConfigItemTypes.Module.rawValue:
             ModuleConfigView()
         case ConfigItemTypes.Display.rawValue:
-            DisplayConfigView()
+            DisplayConfigView(
+                CO2Unit: bluetoothManager.CO2Unit,
+                CO2Scale: bluetoothManager.CO2Scale,
+                CO2Scales: bluetoothManager.CO2Scales,
+                connectedPeripheral: bluetoothManager.connectedPeripheral,
+                checkBluetoothStatus: bluetoothManager.checkBluetoothStatus,
+                updateCO2Unit: bluetoothManager.updateCO2Unit,
+                updateDisplayParams: bluetoothManager.updateDisplayParams
+            )
         default:
             EmptyView()
         }
