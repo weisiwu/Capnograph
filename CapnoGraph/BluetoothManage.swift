@@ -145,6 +145,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var FiCO2: Int = 0
     var Breathe: Bool = false
     @Published var isAsphyxiation: Bool = false
+    @Published var isKeepScreenOn: Bool = false
     var isCorrectZero: Bool = false
     var barometricPressure: Int = 0
     var NoBreaths: Int = 20
@@ -657,7 +658,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
     // 保持屏幕常亮
     func keepScreenOn(cb: @escaping () -> Void) {
-        UIApplication.shared.isIdleTimerDisabled = !UIApplication.shared.isIdleTimerDisabled
+        isKeepScreenOn = true
         cb()
     }
 

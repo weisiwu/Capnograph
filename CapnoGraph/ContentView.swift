@@ -128,7 +128,7 @@ struct BasePageView<Content: View>: View {
     }
     
     var body: some View {
-        ZStack {
+        return ZStack {
             VStack {
                 Color.white.edgesIgnoringSafeArea(.all)
                     .frame(height: 0)
@@ -145,6 +145,16 @@ struct BasePageView<Content: View>: View {
                 }
                 .animation(.easeInOut, value: true)
             }
+        }
+        .onAppear {
+            UIApplication.shared.isIdleTimerDisabled = false
+        }
+        .onChange(of: bluetoothManager.isKeepScreenOn) {
+           print("更新了屏幕常亮设置 \(bluetoothManager.isKeepScreenOn)")
+            UIApplication.shared.isIdleTimerDisabled = bluetoothManager.isKeepScreenOn
+        }
+        .onDisappear {
+            UIApplication.shared.isIdleTimerDisabled = false
         }
     }
 }
