@@ -150,7 +150,6 @@ struct BasePageView<Content: View>: View {
             UIApplication.shared.isIdleTimerDisabled = false
         }
         .onChange(of: bluetoothManager.isKeepScreenOn) {
-           print("更新了屏幕常亮设置 \(bluetoothManager.isKeepScreenOn)")
             UIApplication.shared.isIdleTimerDisabled = bluetoothManager.isKeepScreenOn
         }
         .onDisappear {
