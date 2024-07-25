@@ -280,17 +280,17 @@ struct ConfigView: View {
                         isPresented: $appConfigManage.showAlert
                     ) {
                         Button(appConfigManage.alertConfirmBtn) {
+                            appConfigManage.loadingMessage = ""
                             if appConfigManage.showConfirmShutDownAlert {
                                 bluetoothManager.shutdown(cb: handleShutdown)
                             } else {
                                 selectedTabIndex = PageTypes.SearchDeviceList.rawValue
                             }
                             appConfigManage.showAlert = false
-                            appConfigManage.loadingMessage = ""
                         }
                         Button(appConfigManage.getTextByKey(key: "SearchConfirmNo")) {
-                            appConfigManage.showAlert = false
                             appConfigManage.loadingMessage = ""
+                            appConfigManage.showAlert = false
                         }
                     } message: {
                         Text(appConfigManage.alertMessage)

@@ -10,7 +10,7 @@ struct Toast: View {
     var type: ToastType = ToastType.SUCCESS
     
     var body: some View {
-        VStack {
+        return VStack {
             Spacer()
             HStack {
                 Image(type == ToastType.SUCCESS ? "toast_success" : "toast_fail")

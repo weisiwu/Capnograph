@@ -587,6 +587,8 @@ class AppConfigManage: ObservableObject {
         didSet {
             if showConfirmShutDownAlert {
                 showAlert = true
+                // 当alert出来时，loadig可以取消掉
+                loadingMessage = ""
             } else {
                 showAlert = showNoDeviceAlert
             }
