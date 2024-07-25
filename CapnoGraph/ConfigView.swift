@@ -155,9 +155,6 @@ struct ConfigView: View {
         if let connectedPeripheral = bluetoothManager.connectedPeripheral {
             appConfigManage.showNoDeviceAlert = false
         } else {
-            appConfigManage.alertTitle = appConfigManage.getTextByKey(key: "NoDeviceTitle")
-            appConfigManage.alertMessage = appConfigManage.getTextByKey(key: "NoDeviceMessage")
-            appConfigManage.alertConfirmBtn = appConfigManage.getTextByKey(key: "NoDeviceJump")
             appConfigManage.showNoDeviceAlert = true
             return false
         }
@@ -184,18 +181,22 @@ struct ConfigView: View {
 
         appConfigManage.loadingMessage = loadingText
         
+        print("所有状态====")
+        print("\(appConfigManage.showAlert) == \(appConfigManage.showConfirmShutDownAlert) == \(appConfigManage.showNoDeviceAlert)")
         switch textStr {
             // 校零
             case AppTextsChinese.SettingReset.rawValue, AppTextsEnglish.SettingReset.rawValue:
+                appConfigManage.showNoDeviceAlert = false
+                appConfigManage.showConfirmShutDownAlert = false
                 bluetoothManager.correctZero(cb: handleSetZero)
             // 关机
             case AppTextsChinese.SettingShutDown.rawValue, AppTextsEnglish.SettingShutDown.rawValue:
-                appConfigManage.alertTitle = appConfigManage.getTextByKey(key: "ShutDownConfirmTitle")
-                appConfigManage.alertMessage = appConfigManage.getTextByKey(key: "ShutDownConfirmMessage")
-                appConfigManage.alertConfirmBtn = appConfigManage.getTextByKey(key: "ShutDownConfirmJump")
+                appConfigManage.showNoDeviceAlert = false
                 appConfigManage.showConfirmShutDownAlert = true
             // 屏幕常亮
             case AppTextsChinese.SettingLighter.rawValue, AppTextsEnglish.SettingLighter.rawValue:
+                appConfigManage.showNoDeviceAlert = false
+                appConfigManage.showConfirmShutDownAlert = false
                 bluetoothManager.keepScreenOn(cb: handleKeepScreenOn)
             default:
                 print("No Action when Click In System Config Page")

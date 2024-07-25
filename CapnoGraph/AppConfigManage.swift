@@ -578,8 +578,11 @@ class AppConfigManage: ObservableObject {
         didSet {
             if showNoDeviceAlert {
                 showAlert = true
-            } else {
-                showAlert = showConfirmShutDownAlert
+                alertTitle = getTextByKey(key: "ShutDownConfirmTitle")
+                alertMessage = getTextByKey(key: "ShutDownConfirmMessage")
+                alertConfirmBtn = getTextByKey(key: "ShutDownConfirmJump")
+                // 当alert出来时，loadig可以取消掉
+//                loadingMessage = ""
             }
         }
     }
@@ -587,10 +590,11 @@ class AppConfigManage: ObservableObject {
         didSet {
             if showConfirmShutDownAlert {
                 showAlert = true
+                alertTitle = getTextByKey(key: "NoDeviceTitle")
+                alertMessage = getTextByKey(key: "NoDeviceMessage")
+                alertConfirmBtn = getTextByKey(key: "NoDeviceJump")
                 // 当alert出来时，loadig可以取消掉
-                loadingMessage = ""
-            } else {
-                showAlert = showNoDeviceAlert
+//                loadingMessage = ""
             }
         }
     }
