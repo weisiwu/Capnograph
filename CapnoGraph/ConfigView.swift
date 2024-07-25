@@ -134,6 +134,11 @@ struct ConfigView: View {
             appConfigManage.toastMessage = ""
         }
     }
+    
+    func handleSetZeroFail() {
+        appConfigManage.loadingMessage = ""
+        appConfigManage.showNoDeviceAlert = true
+    }
 
     func handleKeepScreenOn() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -152,7 +157,7 @@ struct ConfigView: View {
         }
 
         // 如果没有链接设备，直接出alert，让用户前往链接设备
-        if let connectedPeripheral = bluetoothManager.connectedPeripheral {
+        if let connectedPeripheral = bluetoothManager.connectedPeripheral, bluetoothManager.receivedArray.count > 0 {
             appConfigManage.showNoDeviceAlert = false
         } else {
             appConfigManage.showNoDeviceAlert = true
@@ -181,14 +186,12 @@ struct ConfigView: View {
 
         appConfigManage.loadingMessage = loadingText
         
-        print("所有状态====")
-        print("\(appConfigManage.showAlert) == \(appConfigManage.showConfirmShutDownAlert) == \(appConfigManage.showNoDeviceAlert)")
         switch textStr {
             // 校零
             case AppTextsChinese.SettingReset.rawValue, AppTextsEnglish.SettingReset.rawValue:
                 appConfigManage.showNoDeviceAlert = false
                 appConfigManage.showConfirmShutDownAlert = false
-                bluetoothManager.correctZero(cb: handleSetZero)
+                bluetoothManager.correctZero(cb: handleSetZero, fail: handleSetZeroFail)
             // 关机
             case AppTextsChinese.SettingShutDown.rawValue, AppTextsEnglish.SettingShutDown.rawValue:
                 appConfigManage.showNoDeviceAlert = false

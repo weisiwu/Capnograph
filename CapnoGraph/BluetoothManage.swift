@@ -520,7 +520,13 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
 
     // 发送校零指令
-    func correctZero(cb: @escaping () -> Void) {
+    func correctZero(cb: @escaping () -> Void, fail: @escaping () -> Void) {
+        // 先判断是否接受到数据，如果链接了，肯定回接受到数据
+        if receivedArray.count <= 0 {
+            fail()
+            return
+        }
+        
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             sendArray.append(SensorCommand.Zero.rawValue)
             sendArray.append(0x01)

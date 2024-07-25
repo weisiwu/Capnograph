@@ -68,11 +68,17 @@ struct SearchDeviceListView: View {
                         Text("\(appConfigManage.getTextByKey(key: "SearchDevicePrefix")): \(selectedPeripheral?.name ?? appConfigManage.getTextByKey(key: "SearchConfirmTitle"))")
                     }
                 } else {
-                    Image("device_empty_list")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 500)
-                        .padding(.bottom, 48)
+                        Image("device_empty_list")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 500)
+                            .padding(.bottom, 48)
+                    GeometryReader { geometry in
+                        Text(appConfigManage.getTextByKey(key: "SearchNoResult"))
+                            .font(.system(size: 24))
+                            .foregroundColor(Color(red: 104/255, green: 115/255, blue: 113/255))
+                            .position(x: geometry.size.width / 2, y: -geometry.size.width * 224 / 267 * 0.6)
+                    }
                 }
                 Text(appConfigManage.getTextByKey(key: "SearchBtn"))
                     .frame(width: 120, height: 40)
