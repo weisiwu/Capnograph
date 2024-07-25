@@ -212,8 +212,8 @@ struct ConfigView: View {
                     AlertConfigView()
                 case ConfigItemTypes.Display.rawValue:
                     DisplayConfigView (
-                        CO2Unit: bluetoothManager.CO2Unit,
-                        CO2Scale: bluetoothManager.CO2Scale,
+                        initCO2Unit: bluetoothManager.CO2Unit,
+                        initCO2Scale: bluetoothManager.CO2Scale,
                         CO2Scales: bluetoothManager.CO2Scales,
                         connectedPeripheral: bluetoothManager.connectedPeripheral,
                         checkBluetoothStatus: bluetoothManager.checkBluetoothStatus,
@@ -320,8 +320,8 @@ struct SubConfigContainerView: View {
             ModuleConfigView()
         case ConfigItemTypes.Display.rawValue:
             DisplayConfigView(
-                CO2Unit: bluetoothManager.CO2Unit,
-                CO2Scale: bluetoothManager.CO2Scale,
+                initCO2Unit: bluetoothManager.CO2Unit,
+                initCO2Scale: bluetoothManager.CO2Scale,
                 CO2Scales: bluetoothManager.CO2Scales,
                 connectedPeripheral: bluetoothManager.connectedPeripheral,
                 checkBluetoothStatus: bluetoothManager.checkBluetoothStatus,
