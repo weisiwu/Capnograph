@@ -203,6 +203,10 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
     
+    func stopAudio() {
+        audioPlayer?.stop()
+    }
+    
     // 图标展示的实时单位、范围、速度
     @Published var CO2Unit: CO2UnitType = .mmHg {
         didSet {
@@ -526,6 +530,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             resetSendData()
+            stopAudio()
             correctZeroCallback = cb
         }
     }
