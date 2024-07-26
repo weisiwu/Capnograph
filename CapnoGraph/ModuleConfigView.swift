@@ -101,6 +101,8 @@ struct ModuleConfigView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
+    @State var asphyxiationTime: Int = 0
+    @State var oxygenCompensation: Double = 0
     
     var body: some View {
         BaseConfigContainerView(configType: ConfigItemTypes.Alert) {
@@ -112,10 +114,10 @@ struct ModuleConfigView: View {
                     maximumValue: Float(bluetoothManager.asphyxiationTimeMax),
                     value: Binding(
                         get: {
-                            Double(bluetoothManager.asphyxiationTime)
+                            Double(asphyxiationTime)
                         },
                         set: { newValue in
-                            bluetoothManager.asphyxiationTime = Int(newValue)
+                            asphyxiationTime = Int(newValue)
                         }
                     )
                 )
@@ -125,7 +127,7 @@ struct ModuleConfigView: View {
                     minimumValue: Float(bluetoothManager.oxygenCompensationMin),
                     maximumValue: Float(bluetoothManager.oxygenCompensationMax),
                     unit: "%",
-                    value: $bluetoothManager.oxygenCompensation
+                    value: $oxygenCompensation
                 )
                 
                 Spacer()
@@ -143,10 +145,13 @@ struct ModuleConfigView: View {
                             }
                             return
                         }
-                        UserDefaults.standard.set(bluetoothManager.asphyxiationTime, forKey: "asphyxiationTime")
-                        UserDefaults.standard.set(bluetoothManager.oxygenCompensation, forKey: "oxygenCompensation")
+                        UserDefaults.standard.set(asphyxiationTime, forKey: "asphyxiationTime")
+                        UserDefaults.standard.set(oxygenCompensation, forKey: "oxygenCompensation")
                         UserDefaults.standard.synchronize()
-                        bluetoothManager.updateNoBreathAndGasCompensation()
+                        bluetoothManager.updateNoBreathAndGasCompensation(
+                            newAsphyxiationTime: asphyxiationTime,
+                            newOxygenCompensation: oxygenCompensation
+                        )
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             appConfigManage.loadingMessage = ""
                             appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
@@ -170,6 +175,10 @@ struct ModuleConfigView: View {
         .listStyle(PlainListStyle())
         .padding()
         .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleModuleConfig"))")
+        .onAppear {
+            asphyxiationTime = bluetoothManager.asphyxiationTime
+            oxygenCompensation = bluetoothManager.oxygenCompensation
+        }
         .onDisappear {
             presentationMode.wrappedValue.dismiss()
         }

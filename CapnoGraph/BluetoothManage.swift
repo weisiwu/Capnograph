@@ -647,8 +647,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
 
     // 设置模块参数: 窒息时间、氧气补偿
-    func updateNoBreathAndGasCompensation() {
+    func updateNoBreathAndGasCompensation(newAsphyxiationTime: Int, newOxygenCompensation: Double) {
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            asphyxiationTime = newAsphyxiationTime
+            oxygenCompensation = newOxygenCompensation
+
             // 设置窒息时间
             sendArray.append(SensorCommand.Settings.rawValue)
             sendArray.append(0x03)
@@ -948,7 +951,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
         func silent() {}
         updateCO2Unit(cb: silent) // 显示设置
-        updateNoBreathAndGasCompensation() // 模块设置
+        // 模块设置
+        updateNoBreathAndGasCompensation(
+            newAsphyxiationTime: asphyxiationTime,
+            newOxygenCompensation: oxygenCompensation
+        )
         // 报警设置
         updateAlertRange(
             co2Low: etCo2Lower,
