@@ -170,11 +170,6 @@ struct ConfigView: View {
                 loadingText = AppTextsChinese.ToastZeroing.rawValue
             case AppTextsEnglish.SettingReset.rawValue:
                 loadingText = AppTextsEnglish.ToastZeroing.rawValue
-            // 关机
-            case AppTextsChinese.SettingShutDown.rawValue:
-                loadingText = AppTextsChinese.ToastShutDown.rawValue
-            case AppTextsEnglish.SettingShutDown.rawValue:
-                loadingText = AppTextsEnglish.ToastShutDown.rawValue
             // 屏幕常量
             case AppTextsChinese.SettingLighter.rawValue:
                 loadingText = AppTextsChinese.ToastLighting.rawValue
@@ -268,6 +263,11 @@ struct ConfigView: View {
                     Button(appConfigManage.alertConfirmBtn) {
                         appConfigManage.loadingMessage = ""
                         if appConfigManage.showConfirmShutDownAlert {
+                            if appConfigManage.language == Languages.Chinese {
+                                appConfigManage.loadingMessage = AppTextsChinese.ToastShutDown.rawValue
+                            } else {
+                                appConfigManage.loadingMessage = AppTextsEnglish.ToastShutDown.rawValue
+                            }
                             bluetoothManager.shutdown(cb: handleShutdown)
                         } else {
                             selectedTabIndex = PageTypes.SearchDeviceList.rawValue
