@@ -609,12 +609,19 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
     
     // 调整ETCO2/RR的报警范围
-    func updateAlertRange() -> Bool {
+    func updateAlertRange(co2Low: CGFloat, co2Up: CGFloat, rrLow: CGFloat, rrUp: CGFloat) -> Bool {
         if !checkAlertRangeValid() {
             return false
         }
-        
+
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
+            // 通过检查，开始更新值
+            etCo2Lower = co2Low
+            etCo2Upper = co2Up
+            rrLower = rrLow
+            rrUpper = rrUp
+            
+            // 准备发送数据到蓝牙设备上
             sendArray.append(SensorCommand.Expand.rawValue)
             let _etCo2Upper = Int(round(etCo2Upper) * 10)
             let _etCo2Lower = Int(round(etCo2Lower) * 10)
@@ -942,7 +949,13 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         func silent() {}
         updateCO2Unit(cb: silent) // 显示设置
         updateNoBreathAndGasCompensation() // 模块设置
-        updateAlertRange() // 报警设置
+        // 报警设置
+        updateAlertRange(
+            co2Low: etCo2Lower,
+            co2Up: etCo2Upper,
+            rrLow: rrLower,
+            rrUp: rrUpper
+        )
 
         // 设置节后后，开始尝试接受数据
         sendContinuous()

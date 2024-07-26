@@ -211,94 +211,75 @@ struct ConfigView: View {
     var body: some View {
         NavigationStack() {
             VStack(spacing: 0) {
-                switch currentConfigType {
-                case ConfigItemTypes.Alert.rawValue:
-                    AlertConfigView()
-                case ConfigItemTypes.Display.rawValue:
-                    DisplayConfigView (
-                        initCO2Unit: bluetoothManager.CO2Unit,
-                        initCO2Scale: bluetoothManager.CO2Scale,
-                        CO2Scales: bluetoothManager.CO2Scales,
-                        connectedPeripheral: bluetoothManager.connectedPeripheral,
-                        checkBluetoothStatus: bluetoothManager.checkBluetoothStatus,
-                        updateCO2Unit: bluetoothManager.updateCO2Unit, 
-                        updateDisplayParams: bluetoothManager.updateDisplayParams
+                List {
+                    ConfigItem(
+                        text: appConfigManage.getTextByKey(key: "SettingReset"),
+                        icon: "setting_icon_reset",
+                        configType: ConfigItemTypes.CorrectZero,
+                        currentConfigType: $currentConfigType,
+                        handleTapGesture: handleTapGesture
                     )
-                case ConfigItemTypes.System.rawValue:
-                    SystemConfigView()
-                case ConfigItemTypes.Module.rawValue:
-                    ModuleConfigView()
-                default:
-                    List {
-                        ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingReset"),
-                            icon: "setting_icon_reset",
-                            configType: ConfigItemTypes.CorrectZero,
-                            currentConfigType: $currentConfigType,
-                            handleTapGesture: handleTapGesture
-                        )
-                        ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingAlertParams"),
-                            icon: "setting_icon_back",
-                            configType: ConfigItemTypes.Alert,
-                            currentConfigType: $currentConfigType
-                        )
-                        ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingDisplayParams"),
-                            icon: "setting_icon_back",
-                            configType: ConfigItemTypes.Display,
-                            currentConfigType: $currentConfigType
-                        )
-                        ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingModuleParams"),
-                            icon: "setting_icon_back",
-                            configType: ConfigItemTypes.Module,
-                            currentConfigType: $currentConfigType
-                        )
-                        ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingSystem"),
-                            icon: "setting_icon_back",
-                            configType: ConfigItemTypes.System,
-                            currentConfigType: $currentConfigType
-                        )
-                        ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingShutDown"),
-                            icon: "setting_icon_shutdown",
-                            configType: ConfigItemTypes.Showdown,
-                            currentConfigType: $currentConfigType,
-                            handleTapGesture: handleTapGesture
-                        )
-                        ConfigItem(
-                            text: appConfigManage.getTextByKey(key: "SettingLighter"),
-                            icon: "setting_icon_lighter",
-                            configType: ConfigItemTypes.Lighter,
-                            currentConfigType: $currentConfigType,
-                            handleTapGesture: handleTapGesture
-                        )
-                    }
-                    .background(Color.white)
-                    .listStyle(PlainListStyle())
-                    .padding(.bottom, 48)
-                    .alert(
-                        Text(appConfigManage.alertTitle),
-                        isPresented: $appConfigManage.showAlert
-                    ) {
-                        Button(appConfigManage.alertConfirmBtn) {
-                            appConfigManage.loadingMessage = ""
-                            if appConfigManage.showConfirmShutDownAlert {
-                                bluetoothManager.shutdown(cb: handleShutdown)
-                            } else {
-                                selectedTabIndex = PageTypes.SearchDeviceList.rawValue
-                            }
-                            appConfigManage.showAlert = false
+                    ConfigItem(
+                        text: appConfigManage.getTextByKey(key: "SettingAlertParams"),
+                        icon: "setting_icon_back",
+                        configType: ConfigItemTypes.Alert,
+                        currentConfigType: $currentConfigType
+                    )
+                    ConfigItem(
+                        text: appConfigManage.getTextByKey(key: "SettingDisplayParams"),
+                        icon: "setting_icon_back",
+                        configType: ConfigItemTypes.Display,
+                        currentConfigType: $currentConfigType
+                    )
+                    ConfigItem(
+                        text: appConfigManage.getTextByKey(key: "SettingModuleParams"),
+                        icon: "setting_icon_back",
+                        configType: ConfigItemTypes.Module,
+                        currentConfigType: $currentConfigType
+                    )
+                    ConfigItem(
+                        text: appConfigManage.getTextByKey(key: "SettingSystem"),
+                        icon: "setting_icon_back",
+                        configType: ConfigItemTypes.System,
+                        currentConfigType: $currentConfigType
+                    )
+                    ConfigItem(
+                        text: appConfigManage.getTextByKey(key: "SettingShutDown"),
+                        icon: "setting_icon_shutdown",
+                        configType: ConfigItemTypes.Showdown,
+                        currentConfigType: $currentConfigType,
+                        handleTapGesture: handleTapGesture
+                    )
+                    ConfigItem(
+                        text: appConfigManage.getTextByKey(key: "SettingLighter"),
+                        icon: "setting_icon_lighter",
+                        configType: ConfigItemTypes.Lighter,
+                        currentConfigType: $currentConfigType,
+                        handleTapGesture: handleTapGesture
+                    )
+                }
+                .background(Color.white)
+                .listStyle(PlainListStyle())
+                .padding(.bottom, 48)
+                .alert(
+                    Text(appConfigManage.alertTitle),
+                    isPresented: $appConfigManage.showAlert
+                ) {
+                    Button(appConfigManage.alertConfirmBtn) {
+                        appConfigManage.loadingMessage = ""
+                        if appConfigManage.showConfirmShutDownAlert {
+                            bluetoothManager.shutdown(cb: handleShutdown)
+                        } else {
+                            selectedTabIndex = PageTypes.SearchDeviceList.rawValue
                         }
-                        Button(appConfigManage.getTextByKey(key: "SearchConfirmNo")) {
-                            appConfigManage.loadingMessage = ""
-                            appConfigManage.showAlert = false
-                        }
-                    } message: {
-                        Text(appConfigManage.alertMessage)
+                        appConfigManage.showAlert = false
                     }
+                    Button(appConfigManage.getTextByKey(key: "SearchConfirmNo")) {
+                        appConfigManage.loadingMessage = ""
+                        appConfigManage.showAlert = false
+                    }
+                } message: {
+                    Text(appConfigManage.alertMessage)
                 }
             }
             .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleSetting"))")

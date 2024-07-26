@@ -1,7 +1,7 @@
 import SwiftUI
 
 // TODO: 两个滑块的字太近，会导致互相遮盖
-//TODO: 右滑块能滑动到左滑块左边，需要限制位置
+// TODO: 右滑块能滑动到左滑块左边，需要限制位置
 struct RangeSlider: View {
     var title: String
     @Binding var lowerValue: CGFloat // 最小值
@@ -128,22 +128,26 @@ struct AlertConfigView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appConfigManage: AppConfigManage
     @EnvironmentObject var bluetoothManager: BluetoothManager
-
+    @State var etCo2Lower: CGFloat = 0
+    @State var etCo2Upper: CGFloat = 0
+    @State var rrLower: CGFloat = 0
+    @State var rrUpper: CGFloat = 0
+    
     var body: some View {
-        BaseConfigContainerView(configType: ConfigItemTypes.Alert) {
+        return BaseConfigContainerView(configType: ConfigItemTypes.Alert) {
             VStack(alignment: .leading) {
                 RangeSlider(
                     title: "\(appConfigManage.getTextByKey(key: "AlertETCO2"))(\(bluetoothManager.CO2Unit.rawValue))",
-                    lowerValue: $bluetoothManager.etCo2Lower,
-                    upperValue: $bluetoothManager.etCo2Upper,
+                    lowerValue: $etCo2Lower,
+                    upperValue: $etCo2Upper,
                     range: bluetoothManager.etco2Min...bluetoothManager.etco2Max,
                     unit: bluetoothManager.CO2Unit.rawValue
                 )
                 
                 RangeSlider(
                     title: "\(appConfigManage.getTextByKey(key: "AlertRR"))(bpm)",
-                    lowerValue: $bluetoothManager.rrLower,
-                    upperValue: $bluetoothManager.rrUpper,
+                    lowerValue: $rrLower,
+                    upperValue: $rrUpper,
                     range: bluetoothManager.rrMin...bluetoothManager.rrMax
                 )
 
@@ -177,13 +181,18 @@ struct AlertConfigView: View {
                             }
                             return
                         }
-                        UserDefaults.standard.set(bluetoothManager.etCo2Lower, forKey: "etCo2Lower")
-                        UserDefaults.standard.set(bluetoothManager.etCo2Upper, forKey: "etCo2Upper")
-                        UserDefaults.standard.set(bluetoothManager.rrLower, forKey: "rrLower")
-                        UserDefaults.standard.set(bluetoothManager.rrUpper, forKey: "rrUpper")
+                        UserDefaults.standard.set(etCo2Lower, forKey: "etCo2Lower")
+                        UserDefaults.standard.set(etCo2Upper, forKey: "etCo2Upper")
+                        UserDefaults.standard.set(rrLower, forKey: "rrLower")
+                        UserDefaults.standard.set(rrUpper, forKey: "rrUpper")
                         UserDefaults.standard.synchronize()
                         // 修改报警范围
-                        let isSuccess = bluetoothManager.updateAlertRange()
+                        let isSuccess = bluetoothManager.updateAlertRange(
+                            co2Low: etCo2Lower,
+                            co2Up: etCo2Upper,
+                            rrLow: rrLower,
+                            rrUp: rrUpper
+                        )
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             appConfigManage.loadingMessage = ""
                             appConfigManage.toastMessage = isSuccess
@@ -209,6 +218,12 @@ struct AlertConfigView: View {
         .listStyle(PlainListStyle())
         .padding()
         .navigationTitle("CapnoGraph\(appConfigManage.getTextByKey(key: "TitleAlertParams"))")
+        .onAppear {
+            etCo2Lower = bluetoothManager.etCo2Lower
+            etCo2Upper = bluetoothManager.etCo2Upper
+            rrLower = bluetoothManager.rrLower
+            rrUpper = bluetoothManager.rrUpper
+        }
         .onDisappear {
             presentationMode.wrappedValue.dismiss()
         }
