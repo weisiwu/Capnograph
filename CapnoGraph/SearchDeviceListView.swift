@@ -71,13 +71,12 @@ struct SearchDeviceListView: View {
                         Image("device_empty_list")
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 500)
-                            .padding(.bottom, 48)
+                            .frame(width: 500, height: 420)
                     GeometryReader { geometry in
                         Text(appConfigManage.getTextByKey(key: "SearchNoResult"))
-                            .font(.system(size: 24))
+                            .font(.system(size: 20))
                             .foregroundColor(Color(red: 104/255, green: 115/255, blue: 113/255))
-                            .position(x: geometry.size.width / 2, y: -geometry.size.width * 224 / 267 * 0.6)
+                            .position(x: geometry.size.width / 2, y: -100)
                     }
                 }
                 Text(appConfigManage.getTextByKey(key: "SearchBtn"))
