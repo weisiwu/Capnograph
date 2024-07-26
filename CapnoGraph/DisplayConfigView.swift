@@ -26,6 +26,7 @@ struct DisplayConfigView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appConfigManage: AppConfigManage
     @StateObject var paramsModel: CO2DisplayParamModel
+    @State var isAppeared: Bool = false
     
     init(
         initCO2Unit: CO2UnitType,
@@ -80,20 +81,21 @@ struct DisplayConfigView: View {
                         Spacer()
                         Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
                             appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
-                            if let isPass = checkBluetoothStatus(),
-                                connectedPeripheral == nil,
-                                !isPass {
-                                updateCO2Unit {
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                        appConfigManage.loadingMessage = ""
-                                        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                                            appConfigManage.toastMessage = ""
-                                        }
-                                    }
-                                }
-                                return
-                            }
+//                            TODO: 临时删除
+//                            if let isPass = checkBluetoothStatus(),
+//                                connectedPeripheral == nil,
+//                                !isPass {
+//                                updateCO2Unit {
+//                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+//                                        appConfigManage.loadingMessage = ""
+//                                        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
+//                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+//                                            appConfigManage.toastMessage = ""
+//                                        }
+//                                    }
+//                                }
+//                                return
+//                            }
                             UserDefaults.standard.set(paramsModel.CO2Unit.rawValue, forKey: "CO2Unit")
                             UserDefaults.standard.set(paramsModel.CO2Scale.rawValue, forKey: "CO2Scale")
                             updateDisplayParams(paramsModel.CO2Unit, paramsModel.CO2Scale)
@@ -126,8 +128,12 @@ struct DisplayConfigView: View {
                 presentationMode.wrappedValue.dismiss()
             }
             .onReceive(paramsModel.$CO2Unit) { newValue in
+                if !isAppeared {
+                    return
+                }
                 switch newValue {
                     case .mmHg:
+                        print("触发了初始化后，刻度重设")
                         paramsModel.CO2Scale = .mmHg_Small
                         CO2Scales = [.mmHg_Small, .mmHg_Middle, .mmHg_Large]
                     case .Percentage:
@@ -137,6 +143,12 @@ struct DisplayConfigView: View {
                         paramsModel.CO2Scale = .KPa_Small
                         CO2Scales = [.KPa_Small, .KPa_Middle, .KPa_Large]
                 }
+            }
+            .onAppear {
+                isAppeared = true
+            }
+            .onDisappear {
+                isAppeared = false
             }
     }
 }

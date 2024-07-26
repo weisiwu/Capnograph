@@ -1157,6 +1157,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     
     // 在展示页面用于更新参数
     func updateDisplayParams(newCO2Unit: CO2UnitType, newCO2Scale: CO2ScaleEnum) {
+        print("显示参数更新 \(newCO2Unit.rawValue) === \(newCO2Scale.rawValue)")
         CO2Unit = newCO2Unit
         CO2Scale = newCO2Scale
     }
