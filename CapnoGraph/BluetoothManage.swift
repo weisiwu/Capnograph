@@ -225,10 +225,14 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     @Published var isBluetoothClose: Bool? = nil
     // 蓝牙状态发生变化
     let bluetootheStateChanged = PassthroughSubject<Void, Never>()
+    // CO2单位是否被修改（展示参数）
+    var isCO2UnitChange: Bool = false
         
     // 图标展示的实时单位、范围、速度
     @Published var CO2Unit: CO2UnitType = .mmHg {
         didSet {
+            // 如果前后值相等
+            isCO2UnitChange = CO2Unit != oldValue
             switch CO2Unit {
                 case .mmHg:
                     CO2Scale = .mmHg_Small
@@ -574,22 +578,28 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             // 同步修改报警范围
             if CO2Unit == CO2UnitType.mmHg {
                 sendArray.append(0x00)
-                etCo2Lower = 25
-                etCo2Upper = 50
-                etco2Min = 0
-                etco2Max = 99
+                if isCO2UnitChange {
+                    etCo2Lower = 25
+                    etCo2Upper = 50
+                    etco2Min = 0
+                    etco2Max = 99
+                }
             } else if CO2Unit == CO2UnitType.KPa {
                 sendArray.append(0x01)
-                etCo2Lower = 3.3
-                etCo2Upper = 6.6
-                etco2Min = 0.0
-                etco2Max = 9.9
+                if isCO2UnitChange {
+                    etCo2Lower = 3.3
+                    etCo2Upper = 6.6
+                    etco2Min = 0.0
+                    etco2Max = 9.9
+                }
             } else if CO2Unit == CO2UnitType.Percentage {
                 sendArray.append(0x02)
-                etCo2Lower = 3.2
-                etCo2Upper = 6.5
-                etco2Min = 0.0
-                etco2Max = 9.9
+                if isCO2UnitChange {
+                    etCo2Lower = 3.2
+                    etCo2Upper = 6.5
+                    etco2Min = 0.0
+                    etco2Max = 9.9
+                }
             }
             appendCKS()
             let data = convertToData(from: sendArray)
@@ -1194,7 +1204,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     
     // 在展示页面用于更新参数
     func updateDisplayParams(newCO2Unit: CO2UnitType, newCO2Scale: CO2ScaleEnum) {
-        print("显示参数更新 \(newCO2Unit.rawValue) === \(newCO2Scale.rawValue)")
         CO2Unit = newCO2Unit
         CO2Scale = newCO2Scale
     }

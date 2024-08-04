@@ -84,13 +84,11 @@ struct DisplayConfigView: View {
                             if let isPass = checkBluetoothStatus(),
                                 connectedPeripheral == nil,
                                 !isPass {
-                                updateCO2Unit {
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                        appConfigManage.loadingMessage = ""
-                                        appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                                            appConfigManage.toastMessage = ""
-                                        }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    appConfigManage.loadingMessage = ""
+                                    appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFail")
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                        appConfigManage.toastMessage = ""
                                     }
                                 }
                                 return
