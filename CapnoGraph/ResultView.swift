@@ -149,11 +149,21 @@ struct ResultView: View {
     // 为什么用NavigationStack而不是NavigationView
     // https://stackoverflow.com/questions/57425921/swiftui-unwanted-split-view-on-ipad
     var body: some View {
-        NavigationStack() {
+        let warningText: String?
+        if bluetoothManager.isAsphyxiation {
+            warningText = appConfigManage.getTextByKey(key: "AsphyxiationWarning")
+        } else if !bluetoothManager.isValidETCO2 {
+            warningText = appConfigManage.getTextByKey(key: "ETCO2InvalidWarning")
+        } else if !bluetoothManager.isValidRR {
+            warningText = appConfigManage.getTextByKey(key: "RRInvalidWarning")
+        } else {
+            warningText = nil
+        }
+        return NavigationStack() {
             VStack(spacing: 0){
                 LineChartView()
-                if bluetoothManager.isAsphyxiation {
-                    Text(appConfigManage.getTextByKey(key: "AsphyxiationWarning"))
+                if warningText != nil {
+                    Text(warningText!)
                         .foregroundColor(.red)
                         .font(.system(size: 16))
                         .fontWeight(.bold)

@@ -129,6 +129,41 @@ enum ISBState: Equatable {
     case CMD_F2H(ISBStateF2H)
 }
 
+class AudioPlayer {
+    var audioPlayer: AVAudioPlayer?
+    var isReady: Bool = true
+    
+    func playAudio() {
+        guard let url = Bundle.main.url(forResource: "Medium", withExtension: "wav") else {
+            print("找不到音频文件")
+            return
+        }
+
+        if !isReady {
+            return
+        }
+
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.prepareToPlay()
+            audioPlayer?.play()
+            isReady = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 14) {
+                self.isReady = true
+            }
+        } catch {
+            print("无法播放音频文件: \(error.localizedDescription)")
+        }
+    }
+    
+    func stopAudio() {
+        audioPlayer?.stop()
+    }
+}
+
 class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private var centralManager: CBCentralManager!
     @Published var discoveredPeripherals = [CBPeripheral]() // 周围设备列表，创建了一个指定类型的空列表
@@ -145,6 +180,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var FiCO2: Int = 0
     var Breathe: Bool = false
     @Published var isAsphyxiation: Bool = false
+    @Published var isValidETCO2: Bool = true
+    @Published var isValidRR: Bool = true
     @Published var isKeepScreenOn: Bool = false
     var isCorrectZero: Bool = false
     var barometricPressure: Int = 0
@@ -182,31 +219,13 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     ]
     let savedPeripheralIdentifierKey = "SavedPeripheralIdentifier"
     // 音频播放器
-    var audioPlayer: AVAudioPlayer?
+    var audioIns = AudioPlayer()
     var isPlayingAlaram: Bool = false
     // 蓝牙是否关闭,初始化为nil
     @Published var isBluetoothClose: Bool? = nil
     // 蓝牙状态发生变化
     let bluetootheStateChanged = PassthroughSubject<Void, Never>()
-
-    func playAudio() {
-        guard let url = Bundle.main.url(forResource: "Medium", withExtension: "wav") else {
-            print("找不到音频文件")
-            return
-        }
-
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.play()
-        } catch {
-            print("无法播放音频文件: \(error.localizedDescription)")
-        }
-    }
-    
-    func stopAudio() {
-        audioPlayer?.stop()
-    }
-    
+        
     // 图标展示的实时单位、范围、速度
     @Published var CO2Unit: CO2UnitType = .mmHg {
         didSet {
@@ -536,7 +555,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             resetSendData()
-            stopAudio()
+            audioIns.stopAudio()
+            isPlayingAlaram = false
             correctZeroCallback = cb
         }
     }
@@ -794,20 +814,14 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 print("CO2Waveform DPI 不匹配")
             }
 
+            isValidETCO2 = CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower;
+            isValidRR = CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower;
+
             // 检查是否需要报警
-            // 1、已经检测到呼吸
-            // 2、ETCO2是否超过范围
-            // 3、RR是否超过范围
-            // 4、未正在播放报警提示
-            let isValidETCO2 = CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower;
-            let isValidRR = CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower;
-            
-            if !(isValidETCO2 && isValidRR) && Breathe && !isPlayingAlaram {
+            // 1、是否窒息 或者 ETCO2是否超过范围、RR是否超过范围
+            if !(isValidETCO2 && isValidRR) || isAsphyxiation {
+                audioIns.playAudio()
                 isPlayingAlaram = true
-                playAudio()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 14) {
-                    self.isPlayingAlaram = false
-                }
             }
         }
         // 将受到的数据绘制到曲线图上
@@ -840,7 +854,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
 
         // 获取是否窒息状态: 取DB1，第7位，判断是否被置位
-        isAsphyxiation = Breathe && (Int(data[6] & 0x40) == 0x40)
+        // 这里修改为，如果接受到的就是窒息，那么不用判断是否检测到呼吸（呼吸位是本地保存的，和设备不同步）
+        isAsphyxiation = (Int(data[6] & 0x40) == 0x40)
     }
     
     // 处理设置
@@ -1062,6 +1077,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         FiCO2 = 0
         Breathe = false
         isAsphyxiation = false
+        isValidETCO2 = false
+        isValidRR = false
         isCorrectZero = false
         barometricPressure = 0
         // 默认无呼吸间隔
@@ -1092,7 +1109,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         updateCO2ScaleCallback = nil
         getSettingInfoCallback = nil
         // 音频播放器
-        audioPlayer = nil
+        audioIns = AudioPlayer()
         isPlayingAlaram = false
     }
 

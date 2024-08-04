@@ -114,6 +114,8 @@ enum AppTextsChinese: String {
     case ShutDownConfirmJump = "关闭"
     // 警示文案
     case AsphyxiationWarning = "窒息"
+    case ETCO2InvalidWarning = "ETCO2异常"
+    case RRInvalidWarning = "呼吸率异常"
     case BluetoothDisconnected = "蓝牙关闭，已重设"
 }
 
@@ -201,6 +203,8 @@ enum AppTextsEnglish: String {
     case ShutDownConfirmJump = "Turn Off"
     // 警示文案
     case AsphyxiationWarning = "Asphyxiation"
+    case ETCO2InvalidWarning = "EtCO2 abnormality"
+    case RRInvalidWarning = "Abnormal Respiratory Rate"
     case BluetoothDisconnected = "Bluetooth is turned off and has been reset"
 }
 
@@ -396,6 +400,10 @@ class AppConfigManage: ObservableObject {
                 // 警示文案
                 case "AsphyxiationWarning":
                     return AppTextsChinese.AsphyxiationWarning.rawValue
+                case "ETCO2InvalidWarning":
+                    return AppTextsChinese.ETCO2InvalidWarning.rawValue
+                case "RRInvalidWarning":
+                    return AppTextsChinese.RRInvalidWarning.rawValue
                 case "BluetoothDisconnected":
                     return AppTextsChinese.BluetoothDisconnected.rawValue
                 default:
@@ -552,6 +560,10 @@ class AppConfigManage: ObservableObject {
                 // 警示文案
                 case "AsphyxiationWarning":
                     return AppTextsEnglish.AsphyxiationWarning.rawValue
+                case "ETCO2InvalidWarning":
+                    return AppTextsChinese.ETCO2InvalidWarning.rawValue
+                case "RRInvalidWarning":
+                    return AppTextsChinese.RRInvalidWarning.rawValue
                 case "BluetoothDisconnected":
                     return AppTextsEnglish.BluetoothDisconnected.rawValue
                 default:
