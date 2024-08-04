@@ -645,9 +645,9 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
 
     // 检查设置的报警范围是否合法
-    func checkAlertRangeValid() -> Bool {
+    func checkAlertRangeValid(co2Low: CGFloat, co2Up: CGFloat, rrLow: CGFloat, rrUp: CGFloat) -> Bool {
         // 如果范围有问题，不更新
-        if etCo2Upper <= etCo2Lower || rrUpper <= rrLower {
+        if co2Up <= co2Low || rrUp <= rrLow {
             return false
         }
         return true
@@ -655,7 +655,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     
     // 调整ETCO2/RR的报警范围
     func updateAlertRange(co2Low: CGFloat, co2Up: CGFloat, rrLow: CGFloat, rrUp: CGFloat) -> Bool {
-        if !checkAlertRangeValid() {
+        if !checkAlertRangeValid(co2Low: co2Low, co2Up: co2Up, rrLow: rrLow, rrUp: rrUp) {
             return false
         }
 

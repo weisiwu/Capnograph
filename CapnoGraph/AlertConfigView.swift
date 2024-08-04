@@ -157,7 +157,12 @@ struct AlertConfigView: View {
                     Button(appConfigManage.getTextByKey(key: "CommonUpdateBtn")) {
                         appConfigManage.loadingMessage = appConfigManage.getTextByKey(key: "UpdateSetting")
 
-                        let isRangeValid = bluetoothManager.checkAlertRangeValid()
+                        let isRangeValid = bluetoothManager.checkAlertRangeValid(
+                            co2Low: etCo2Lower,
+                            co2Up: etCo2Upper,
+                            rrLow: rrLower,
+                            rrUp: rrUpper
+                        )
                         if !isRangeValid {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 appConfigManage.loadingMessage = ""
