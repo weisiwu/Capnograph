@@ -159,7 +159,12 @@ class AudioPlayer {
         }
     }
     
+    func resumePlayAudio() {
+        isReady = true
+    }
+    
     func stopAudio() {
+        isReady = false
         audioPlayer?.stop()
     }
 }
@@ -625,6 +630,16 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
             // 将所有数据都重置为空
             receivedCO2WavedData = Array(repeating: DataPoint(value: unRealValue), count: maxXPoints)
+            
+            // 单位变化，同步修改报警范围
+            if isCO2UnitChange {
+                updateAlertRange(
+                    co2Low: etCo2Lower,
+                    co2Up: etCo2Upper,
+                    rrLow: rrLower,
+                    rrUp: rrUpper
+                )
+            }
         }
         cb()
     }
@@ -829,7 +844,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
             // 检查是否需要报警
             // 1、是否窒息 或者 ETCO2是否超过范围、RR是否超过范围
-            if !(isValidETCO2 && isValidRR) || isAsphyxiation {
+            if isAsphyxiation {
                 audioIns.playAudio()
                 isPlayingAlaram = true
             }
@@ -852,6 +867,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         case ZSBState.Start.rawValue:
             // 如果重新恢复到0，前面又是正在检测中，说明校零成功
             if isCorrectZero {
+                audioIns.resumePlayAudio()
                 correctZeroCallback?()
                 isCorrectZero = false
             }
@@ -1087,8 +1103,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         FiCO2 = 0
         Breathe = false
         isAsphyxiation = false
-        isValidETCO2 = false
-        isValidRR = false
+        isValidETCO2 = true
+        isValidRR = true
         isCorrectZero = false
         barometricPressure = 0
         // 默认无呼吸间隔
@@ -1119,7 +1135,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         updateCO2ScaleCallback = nil
         getSettingInfoCallback = nil
         // 音频播放器
-        audioIns = AudioPlayer()
+        audioIns.resumePlayAudio()
         isPlayingAlaram = false
     }
 

@@ -151,9 +151,9 @@ struct ResultView: View {
         let warningText: String?
         if bluetoothManager.isAsphyxiation {
             warningText = appConfigManage.getTextByKey(key: "AsphyxiationWarning")
-        } else if !bluetoothManager.isValidETCO2 {
+        } else if bluetoothManager.Breathe && !bluetoothManager.isValidETCO2 {
             warningText = appConfigManage.getTextByKey(key: "ETCO2InvalidWarning")
-        } else if !bluetoothManager.isValidRR {
+        } else if bluetoothManager.Breathe && !bluetoothManager.isValidRR {
             warningText = appConfigManage.getTextByKey(key: "RRInvalidWarning")
         } else {
             warningText = nil

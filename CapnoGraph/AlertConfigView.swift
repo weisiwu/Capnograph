@@ -61,7 +61,7 @@ struct RangeSlider: View {
                 .foregroundColor(Color(red: 0, green: 206/255, blue: 201/255))
             
             // 最小值
-            Text(Double(lowerValue).formatted(.number.precision(.fractionLength(0...0))))
+            Text(round(Double(lowerValue)).formatted(.number.precision(.fractionLength(0))))
                 .offset(
                     x: calculateOffsetX(for: CGFloat(lowerValue), in: geometry, with: currentRange, minV: Float(range.lowerBound)),
                     y: -30
@@ -91,7 +91,7 @@ struct RangeSlider: View {
                 .offset(x: lowerKnobPosition)
             
             // 最大值
-            Text(Double(upperValue).formatted(.number.precision(.fractionLength(0...0))))
+            Text(round(Double(upperValue)).formatted(.number.precision(.fractionLength(0))))
                 .offset(
                     x: calculateOffsetX(for: CGFloat(upperValue), in: geometry, with: currentRange, minV: Float(range.lowerBound)),
                     y: -30

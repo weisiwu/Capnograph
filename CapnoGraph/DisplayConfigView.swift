@@ -96,7 +96,7 @@ struct DisplayConfigView: View {
                             UserDefaults.standard.set(paramsModel.CO2Unit.rawValue, forKey: "CO2Unit")
                             UserDefaults.standard.set(paramsModel.CO2Scale.rawValue, forKey: "CO2Scale")
                             updateDisplayParams(paramsModel.CO2Unit, paramsModel.CO2Scale)
-                            updateCO2Unit {
+                            updateCO2Unit{
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                     appConfigManage.loadingMessage = ""
                                     appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
