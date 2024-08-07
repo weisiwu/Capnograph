@@ -54,14 +54,18 @@ func saveToLocal(type: SaveTypes = SaveTypes.PDF, pdfData: PDFData) {
 
 class PDFData {
     // 波形数据记录日期
-    let recordDate: String
+    let recordDate: Date
+    let recordDateStr: String
+    let dateFormatter = DateFormatter()
     // 波形数据起始时间
     let startTime: String
     // 波形数据结束时间
     let stopTime: String
     
     init() {
-        self.recordDate = ""
+        self.recordDate = Date()
+        self.recordDateStr = dateFormatter.string(from: recordDate)
+        dateFormatter.dateFormat = "yyyyMMDD"
         self.stopTime = ""
         self.startTime = ""
     }
