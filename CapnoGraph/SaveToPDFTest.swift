@@ -1,5 +1,5 @@
 //https://pspdfkit.com/blog/2019/how-to-show-a-pdf-in-swiftui/
-//https://developer.apple.com/documentation/swiftui
+//https://pspdfkit.com/blog/2019/how-to-show-a-pdf-in-swiftui/
 
 //import SwiftUI
 //import PDFKit
