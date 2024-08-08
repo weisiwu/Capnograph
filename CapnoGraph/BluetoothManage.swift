@@ -180,6 +180,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var sendArray: [UInt8] = []
     var receivedArray: [UInt8] = []
     var currentCO2: Float = 0
+    @Published var currentWavePointData: CO2WavePointData
     @Published var ETCO2: Float = 0
     @Published var RespiratoryRate: Int = 0
     var FiCO2: Int = 0
@@ -838,7 +839,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             default:
                 print("CO2Waveform DPI 不匹配")
             }
-
+            // 更新数据到CO2
+            currentWavePointData = CO2WavePointData(RR: RespiratoryRate, ETCO2: ETCO2, FiCO2: FiCO2)
             isValidETCO2 = CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower;
             isValidRR = CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower;
 
