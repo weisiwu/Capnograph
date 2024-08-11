@@ -6,6 +6,7 @@ struct CapnoGraphApp: App {
     @State var isSplashFinish: Bool = false
     @StateObject private var bluetoothManager = BluetoothManager()
     @StateObject private var appConfigManage = AppConfigManage()
+    @StateObject private var historyDataManage = HistoryDataManage()
     @State private var cancellables = Set<AnyCancellable>()
     
     var body: some Scene {
@@ -14,8 +15,10 @@ struct CapnoGraphApp: App {
                 ContentView()
                     .environmentObject(bluetoothManager)
                     .environmentObject(appConfigManage)
+                    .environmentObject(historyDataManage)
                     .onAppear {
                         appConfigManage.listenToBluetoothManager(bluetoothManager: bluetoothManager)
+                        historyDataManage.listenToBluetoothManager(bluetoothManager: bluetoothManager)
                     }
             } else {
                 SplashView()

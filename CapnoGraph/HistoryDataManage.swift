@@ -1,5 +1,8 @@
+import UIKit
+import SwiftUI
 import Combine
 import Foundation
+import PDFKit
 
 // 支持的保存类型
 enum SaveTypes: String {
@@ -77,7 +80,7 @@ class HistoryData {
         CO2WavePoints: [CO2WavePointData]
     ) {
         // 记录的时间信息
-        dateFormatter.dateFormat = "yyyyMMDD HH:mm:SS"
+        dateFormatter.dateFormat = "yyyyMMDDHHmmSS"
         self.recordStartDate = Date()
         self.recordStartDateStr = dateFormatter.string(from: recordStartDate)
         // 初始化辅助数据，这些数据并不参加渲染pdf，而是由于后续支持pdf数据细节渲染
@@ -108,29 +111,31 @@ class HistoryData {
 * 1. 初始化时，绑定BLM(BlutoothManager),对BLM的绘图数据绑定监听，并根据BLM的状态,更新历史波形数据
 * 2. 用户界面点击导出时，停止保存，将数据转化为pdf数据，保存到本地
 */
-class HistoryDataManage {
+class HistoryDataManage: ObservableObject {
     var data: HistoryData?
-    let blm: BluetoothManager
+    var blm: BluetoothManager?
     // 监听波形数据是否发生变化
     var CO2WavePointWatcher: AnyCancellable?
+    @Published var pdfURL: URL?
 
-    init(blm: BluetoothManager) {
+    // 将蓝牙管理实例注入历史数据中
+    func listenToBluetoothManager(bluetoothManager: BluetoothManager) {
         self.data = HistoryData(
-            minRR: blm.rrLower,
-            maxRR: blm.rrUpper,
-            minETCO2: blm.etCo2Lower,
-            maxETCO2: blm.etCo2Upper,
+            minRR: bluetoothManager.rrLower,
+            maxRR: bluetoothManager.rrUpper,
+            minETCO2: bluetoothManager.etCo2Lower,
+            maxETCO2: bluetoothManager.etCo2Upper,
             CO2WavePoints: []
         )
-        self.blm = blm
-        self.CO2WavePointWatcher = blm.$currentWavePointData.sink { newValue in
+        self.blm = bluetoothManager
+        self.CO2WavePointWatcher = bluetoothManager.$currentWavePointData.sink { newValue in
             print("[pdf]接收到新波形值===> \(newValue)")
             if let historyData = self.data {
                 historyData.updateWavePoints(newPoint: newValue)
             }
         }
     }
-    
+
     /**
     * 清空记录
     */
@@ -145,9 +150,59 @@ class HistoryDataManage {
     * @return SaveResultTypes
     */
     private func _savePDFToLocal(fileUrl: URL) -> SaveResultTypes {
+        print("开始保存PDF数据===> \(self.data)")
+        // 保存到PDF中
+        // PDFKitView(pdfData: PDFDocument(data: "测试文案==测试文案".data(using: .utf8)))
+//        let pdfData = PDFDocument(data: "测试文案==测试文案".data(using: .utf8)!)
+//        let url = Bundle.main.url(forResource: "sample", withExtension: "pdf")!
+
+//        do {
+//            try pdfData!.write(to: fileUrl)
+//            print("PDF saved at: \(fileUrl)")
+//        } catch {
+//            print("Error saving PDF: \(error.localizedDescription)")
+//        }
+        // 分享文件数据
+        // 思路参考: https://www.cnblogs.com/qqcc1388/p/17586849.html
+
         return SaveResultTypes.Success
     }
 
+    private func createSampleFile() {
+        let fileURL = pdfURL
+        
+        let pdfMetaData = [
+            kCGPDFContextCreator: "MyApp",
+            kCGPDFContextAuthor: "MyCompany",
+            kCGPDFContextTitle: "Sample Document"
+        ]
+        
+        let format = UIGraphicsPDFRendererFormat()
+        format.documentInfo = pdfMetaData as [String: Any]
+        
+        let pageWidth = 8.5 * 72.0
+        let pageHeight = 11.0 * 72.0
+        let pageSize = CGSize(width: pageWidth, height: pageHeight)
+        
+        let renderer = UIGraphicsPDFRenderer(bounds: CGRect(origin: .zero, size: pageSize), format: format)
+        
+        let pdfData = renderer.pdfData { context in
+            context.beginPage()
+            let text = "This is a sample PDF document."
+            let attributes: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 24)]
+            let textRect = CGRect(x: 20, y: 20, width: pageWidth - 40, height: pageHeight - 40)
+            text.draw(in: textRect, withAttributes: attributes)
+        }
+        
+        do {
+            try pdfData.write(to: fileURL!)
+            print("File created at: \(fileURL!)") // 确认文件路径
+        } catch {
+            print("Could not create file: \(error)")
+        }
+    }
+
+    
     /**
     * 保存波形图数据到本地，后续扩展支持多种形式
     * @params type: 波形数据保存的文件类型
@@ -170,15 +225,16 @@ class HistoryDataManage {
         // 文件名称格式: 20240501182530_20240502192544.pdf 每部分含义如下
         // 第一部分: 波形数据起始时间: 2024年5月1日18点25分30秒
         // 第二部分: 波形数据结束时间: 2024年5月2日19点25分44秒
-        let localFileName = "\(data!.recordStartDateStr)_\(data!.recordEndDateStr)"
+        let localFileName = "\(data!.recordStartDateStr)-\(data!.recordEndDateStr)"
 
         // 创建完整的文件路径
-        let fileURL: URL = documentsDirectory.appendingPathComponent("\(localFileName).\(type.rawValue)")
-        print("保存的文件url \(fileURL)")
+        pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(type.rawValue)")
+        
+        createSampleFile() // 创建一个示例文件
         
         switch type {
             case SaveTypes.PDF:
-                return _savePDFToLocal(fileUrl: fileURL)
+                return _savePDFToLocal(fileUrl: pdfURL!)
             default:
                 throw SaveErrorTypes.UnSupportFileType
         }
@@ -212,9 +268,7 @@ class HistoryDataManage {
     /**
     * 外部调用使用
     */
-    func saveToLocal(args: SaveTypes) {
+    func saveToLocal(args: SaveTypes = SaveTypes.PDF) {
         wrapLogger(_saveToLocal, args: args)
     }
 }
-
-// TODO:(wsw) 测试

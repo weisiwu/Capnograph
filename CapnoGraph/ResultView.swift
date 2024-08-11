@@ -1,6 +1,8 @@
 import SwiftUI
+import UIKit
 import Charts
 import Foundation
+import PDFKit
 
 // 最多展示的横向点数量，每10ms接收到一帧数据，横坐标展示20s的波形图，则共1000个横坐标
 let maxXPoints: Int = 400
@@ -137,9 +139,29 @@ struct TableView: View {
     }
 }
 
+// TODO:(wsw) 测试
+struct ActivityViewController: UIViewControllerRepresentable {
+    let activityItems: [Any] // 需要分享的内容
+    
+    func makeUIViewController(context: Context) -> UIViewController {
+        let viewController = UIViewController()
+        let activityViewController = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+        activityViewController.modalPresentationStyle = .popover
+        activityViewController.popoverPresentationController?.sourceView = viewController.view
+        viewController.present(activityViewController, animated: true, completion: nil)
+        return viewController
+    }
+    
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+}
+
+// TODO:(wsw) 结束
+
 struct BottomSheetView: View {
     @Binding var showModal: Bool;
     @EnvironmentObject var appConfigManage: AppConfigManage
+    @EnvironmentObject var historyDataManage: HistoryDataManage
+    @Binding var isPDFGenerated: Bool
 
     var body: some View {
         VStack {
@@ -162,9 +184,27 @@ struct BottomSheetView: View {
                     Spacer()
                 }
                 .onTapGesture {
-                    print("被点击，准备导出pdf文件")
+                    // 生成导出文件，需要放在另外的线程
+                    // DispatchQueue.global(qos: .userInitiated).async {
+                    // }
+                    // 成功生成导出文件后，出现确定弹框，用户点击分享后，唤起分享面板
+                    historyDataManage.saveToLocal()
+                    showModal = false
+                    isPDFGenerated = true
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+//                        isPDFGenerated = true
+//                    }
                 }
                 .padding(.leading, 20)
+                .alert(isPresented: $isPDFGenerated) {
+                    Alert(
+                        title: Text("成功生成PDF"),
+                        message: Text("This alert has a custom action."),
+                        dismissButton: .default(Text("分享")) {
+                            print("OK button tapped")
+                        }
+                    )
+                }
                 Spacer()
             }
             Divider()
@@ -188,9 +228,11 @@ struct BottomSheetView: View {
 struct ResultView: View {
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
+    @EnvironmentObject var historyDataManage: HistoryDataManage
     @State private var hasAppeared = false
     @State private var isVisible = true
     @State private var showModal = false
+    @State private var isPDFGenerated: Bool =  false
     
     let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
 
@@ -210,7 +252,7 @@ struct ResultView: View {
         return NavigationStack() {
             ZStack {
                 VStack(spacing: 0){
-                    LineChartView()
+                     LineChartView()
                     if warningText != nil {
                         Text(warningText!)
                             .foregroundColor(.red)
@@ -249,6 +291,13 @@ struct ResultView: View {
                         .edgesIgnoringSafeArea(.all)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+
+                if let pdfURL = historyDataManage.pdfURL {
+//                    Text("pdfURL")
+//                    ActivityViewController(activityItems: [pdfURL])
+//                    ShareLink(item: URL(string: "https://developer.apple.com/xcode/swiftui/")!)
+//                    ActivityViewController(activityItems: [URL(string: "https://itunes.apple.com/cn/app/id444934666")])
+                }
             }
         }
         .onAppear {
@@ -261,8 +310,9 @@ struct ResultView: View {
             }
         }
         .sheet(isPresented: $showModal) {
-            BottomSheetView(showModal: $showModal)
+            BottomSheetView(showModal: $showModal, isPDFGenerated: $isPDFGenerated)
                 .presentationDetents([.height(240)])
         }
+
     }
 }
