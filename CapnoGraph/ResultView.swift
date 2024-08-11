@@ -137,11 +137,60 @@ struct TableView: View {
     }
 }
 
+struct BottomSheetView: View {
+    @Binding var showModal: Bool;
+    @EnvironmentObject var appConfigManage: AppConfigManage
+
+    var body: some View {
+        VStack {
+            Text(appConfigManage.getTextByKey(key: "ShareBtn"))
+                .font(.system(size: 18))
+                .fontWeight(.bold)
+                .frame(height: 54, alignment: .center)
+            Spacer()
+            HStack {
+                VStack {
+                    Image("pdf_icon")
+                        .resizable()
+                        .frame(width: 50, height: 50)
+                        .scaledToFill()
+                        .clipped()
+                        .padding(.bottom, 8)
+                    Text(appConfigManage.getTextByKey(key: "ExportPDF"))
+                        .foregroundColor(Color(red: 133/255, green: 144/255, blue: 156/255))
+                        .font(.system(size: 12))
+                    Spacer()
+                }
+                .onTapGesture {
+                    print("被点击，准备导出pdf文件")
+                }
+                .padding(.leading, 20)
+                Spacer()
+            }
+            Divider()
+                .frame(height: 0.5)
+                .background(Color(red: 133/255, green: 144/255, blue: 156/255))
+                .opacity(0.2)
+            Button(action: {
+                showModal.toggle()
+            }) {
+                Text(appConfigManage.getTextByKey(key: "SearchConfirmNo"))
+                    .font(.system(size: 18))
+                    .frame(height: 54, alignment: .center)
+            }
+        }
+        .padding(0)
+        .padding(.bottom, 20)
+        .edgesIgnoringSafeArea(.bottom)  // 忽略底部安全区域以减少间距
+    }
+}
+
 struct ResultView: View {
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
     @State private var hasAppeared = false
     @State private var isVisible = true
+    @State private var showModal = false
     
     let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
 
@@ -159,31 +208,50 @@ struct ResultView: View {
             warningText = nil
         }
         return NavigationStack() {
-            VStack(spacing: 0){
-                LineChartView()
-                if warningText != nil {
-                    Text(warningText!)
-                        .foregroundColor(.red)
-                        .font(.system(size: 16))
-                        .fontWeight(.bold)
-                        .opacity(isVisible ? 1 : 0)
-                        .onReceive(timer) { _ in
-                            withAnimation(.easeInOut(duration: 0.5)) {
-                                self.isVisible.toggle()
+            ZStack {
+                VStack(spacing: 0){
+                    LineChartView()
+                    if warningText != nil {
+                        Text(warningText!)
+                            .foregroundColor(.red)
+                            .font(.system(size: 16))
+                            .fontWeight(.bold)
+                            .opacity(isVisible ? 1 : 0)
+                            .onReceive(timer) { _ in
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    self.isVisible.toggle()
+                                }
                             }
-                        }
-                        .onDisappear() {
-                            self.timer.upstream.connect().cancel()
-                        }
+                            .onDisappear() {
+                                self.timer.upstream.connect().cancel()
+                            }
+                    }
+                    TableView()
+                    Spacer()
                 }
-                TableView()
-                Spacer()
+                .navigationTitle("CapnoGraph")
+                .navigationBarItems(
+                    trailing: Button(action: {
+                        showModal.toggle()
+                    }) {
+                        Image("home_more_btn")
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                            .scaledToFill()
+                            .clipped()
+                    }
+                )
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarBackButtonHidden(false)
+
+                if showModal {
+                    Color.black.opacity(0.4)
+                        .edgesIgnoringSafeArea(.all)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             }
-            .navigationTitle("CapnoGraph")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(false)
         }
-        .onAppear {            
+        .onAppear {
             // 启动后，将所有本地保存的设置都同步到设备上。
             if !hasAppeared {
                 bluetoothManager.initDevice()
@@ -191,6 +259,10 @@ struct ResultView: View {
             } else {
                 bluetoothManager.sendContinuous()
             }
+        }
+        .sheet(isPresented: $showModal) {
+            BottomSheetView(showModal: $showModal)
+                .presentationDetents([.height(240)])
         }
     }
 }

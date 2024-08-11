@@ -180,7 +180,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var sendArray: [UInt8] = []
     var receivedArray: [UInt8] = []
     var currentCO2: Float = 0
-    @Published var currentWavePointData: CO2WavePointData
+    @Published var currentWavePointData: CO2WavePointData = CO2WavePointData(RR:0,ETCO2: 0,FiCO2: 0)
     @Published var ETCO2: Float = 0
     @Published var RespiratoryRate: Int = 0
     var FiCO2: Int = 0

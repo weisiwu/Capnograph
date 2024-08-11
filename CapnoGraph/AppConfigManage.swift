@@ -117,6 +117,9 @@ enum AppTextsChinese: String {
     case ETCO2InvalidWarning = "ETCO2异常"
     case RRInvalidWarning = "呼吸率异常"
     case BluetoothDisconnected = "蓝牙关闭，已重设"
+    // 分享导出相关
+    case ShareBtn = "分享"
+    case ExportPDF = "导出PDF"
 }
 
 //App英文
@@ -206,6 +209,9 @@ enum AppTextsEnglish: String {
     case ETCO2InvalidWarning = "EtCO2 abnormality"
     case RRInvalidWarning = "Abnormal Respiratory Rate"
     case BluetoothDisconnected = "Bluetooth is turned off and has been reset"
+    // 分享导出相关
+    case ShareBtn = "share"
+    case ExportPDF = "Export PDF"
 }
 
 enum LocalizedText {
@@ -406,6 +412,11 @@ class AppConfigManage: ObservableObject {
                     return AppTextsChinese.RRInvalidWarning.rawValue
                 case "BluetoothDisconnected":
                     return AppTextsChinese.BluetoothDisconnected.rawValue
+                // 分享导出相关
+                case "ShareBtn":
+                    return AppTextsChinese.ShareBtn.rawValue
+                case "ExportPDF":
+                    return AppTextsChinese.ExportPDF.rawValue
                 default:
                     return ""
             }
@@ -561,11 +572,16 @@ class AppConfigManage: ObservableObject {
                 case "AsphyxiationWarning":
                     return AppTextsEnglish.AsphyxiationWarning.rawValue
                 case "ETCO2InvalidWarning":
-                    return AppTextsChinese.ETCO2InvalidWarning.rawValue
+                    return AppTextsEnglish.ETCO2InvalidWarning.rawValue
                 case "RRInvalidWarning":
-                    return AppTextsChinese.RRInvalidWarning.rawValue
+                    return AppTextsEnglish.RRInvalidWarning.rawValue
                 case "BluetoothDisconnected":
                     return AppTextsEnglish.BluetoothDisconnected.rawValue
+                // 分享导出相关
+                case "ShareBtn":
+                    return AppTextsEnglish.ShareBtn.rawValue
+                case "ExportPDF":
+                    return AppTextsEnglish.ExportPDF.rawValue
                 default:
                     return ""
             }
