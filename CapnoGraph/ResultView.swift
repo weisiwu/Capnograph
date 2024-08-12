@@ -139,24 +139,6 @@ struct TableView: View {
     }
 }
 
-// TODO:(wsw) 测试
-struct ActivityViewController: UIViewControllerRepresentable {
-    let activityItems: [Any] // 需要分享的内容
-    
-    func makeUIViewController(context: Context) -> UIViewController {
-        let viewController = UIViewController()
-        let activityViewController = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-        activityViewController.modalPresentationStyle = .popover
-        activityViewController.popoverPresentationController?.sourceView = viewController.view
-        viewController.present(activityViewController, animated: true, completion: nil)
-        return viewController
-    }
-    
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
-}
-
-// TODO:(wsw) 结束
-
 struct BottomSheetView: View {
     @Binding var showModal: Bool;
     @EnvironmentObject var appConfigManage: AppConfigManage
@@ -171,17 +153,19 @@ struct BottomSheetView: View {
                 .frame(height: 54, alignment: .center)
             Spacer()
             HStack {
-                VStack {
-                    Image("pdf_icon")
-                        .resizable()
-                        .frame(width: 50, height: 50)
-                        .scaledToFill()
-                        .clipped()
-                        .padding(.bottom, 8)
-                    Text(appConfigManage.getTextByKey(key: "ExportPDF"))
-                        .foregroundColor(Color(red: 133/255, green: 144/255, blue: 156/255))
-                        .font(.system(size: 12))
-                    Spacer()
+                ShareLink(item: URL(string: "https://developer.apple.com/xcode/swiftui/")!) {
+                    VStack {
+                        Image("pdf_icon")
+                            .resizable()
+                            .frame(width: 50, height: 50)
+                            .scaledToFill()
+                            .clipped()
+                            .padding(.bottom, 8)
+                        Text(appConfigManage.getTextByKey(key: "ExportPDF"))
+                            .foregroundColor(Color(red: 133/255, green: 144/255, blue: 156/255))
+                            .font(.system(size: 12))
+                        Spacer()
+                    }
                 }
                 .onTapGesture {
                     // 生成导出文件，需要放在另外的线程
@@ -191,20 +175,8 @@ struct BottomSheetView: View {
                     historyDataManage.saveToLocal()
                     showModal = false
                     isPDFGenerated = true
-//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                        isPDFGenerated = true
-//                    }
                 }
                 .padding(.leading, 20)
-                .alert(isPresented: $isPDFGenerated) {
-                    Alert(
-                        title: Text("成功生成PDF"),
-                        message: Text("This alert has a custom action."),
-                        dismissButton: .default(Text("分享")) {
-                            print("OK button tapped")
-                        }
-                    )
-                }
                 Spacer()
             }
             Divider()
@@ -291,13 +263,6 @@ struct ResultView: View {
                         .edgesIgnoringSafeArea(.all)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-
-                if let pdfURL = historyDataManage.pdfURL {
-//                    Text("pdfURL")
-//                    ActivityViewController(activityItems: [pdfURL])
-//                    ShareLink(item: URL(string: "https://developer.apple.com/xcode/swiftui/")!)
-//                    ActivityViewController(activityItems: [URL(string: "https://itunes.apple.com/cn/app/id444934666")])
-                }
             }
         }
         .onAppear {
@@ -313,6 +278,5 @@ struct ResultView: View {
             BottomSheetView(showModal: $showModal, isPDFGenerated: $isPDFGenerated)
                 .presentationDetents([.height(240)])
         }
-
     }
 }
