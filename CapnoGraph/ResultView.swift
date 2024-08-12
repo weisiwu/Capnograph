@@ -143,7 +143,6 @@ struct BottomSheetView: View {
     @Binding var showModal: Bool;
     @EnvironmentObject var appConfigManage: AppConfigManage
     @EnvironmentObject var historyDataManage: HistoryDataManage
-    @Binding var isPDFGenerated: Bool
 
     var body: some View {
         VStack {
@@ -153,7 +152,7 @@ struct BottomSheetView: View {
                 .frame(height: 54, alignment: .center)
             Spacer()
             HStack {
-                ShareLink(item: URL(string: "https://developer.apple.com/xcode/swiftui/")!) {
+                ShareLink(item: URL(string: "https://www.hackingwithswift.com")!) {
                     VStack {
                         Image("pdf_icon")
                             .resizable()
@@ -167,14 +166,35 @@ struct BottomSheetView: View {
                         Spacer()
                     }
                 }
+//                if let pdfUrl = historyDataManage.pdfURL {
+//                    ShareLink(item: pdfUrl)
+//                        .opacity(0)
+//                        .frame(width: 0, height: 0)
+//                }
+//                VStack {
+//                    Image("pdf_icon")
+//                        .resizable()
+//                        .frame(width: 50, height: 50)
+//                        .scaledToFill()
+//                        .clipped()
+//                        .padding(.bottom, 8)
+//                    Text(appConfigManage.getTextByKey(key: "ExportPDF"))
+//                        .foregroundColor(Color(red: 133/255, green: 144/255, blue: 156/255))
+//                        .font(.system(size: 12))
+//                    Spacer()
+//                }
                 .onTapGesture {
                     // 生成导出文件，需要放在另外的线程
                     // DispatchQueue.global(qos: .userInitiated).async {
                     // }
                     // 成功生成导出文件后，出现确定弹框，用户点击分享后，唤起分享面板
                     historyDataManage.saveToLocal()
-                    showModal = false
-                    isPDFGenerated = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        showModal = false
+//                        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+//                            windowScene.windows.first?.rootViewController?.view?.findShareButton()?.sendActions(for: .touchUpInside)
+//                        }
+                    }
                 }
                 .padding(.leading, 20)
                 Spacer()
@@ -203,8 +223,8 @@ struct ResultView: View {
     @EnvironmentObject var historyDataManage: HistoryDataManage
     @State private var hasAppeared = false
     @State private var isVisible = true
+    // 更多面板
     @State private var showModal = false
-    @State private var isPDFGenerated: Bool =  false
     
     let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
 
@@ -275,7 +295,7 @@ struct ResultView: View {
             }
         }
         .sheet(isPresented: $showModal) {
-            BottomSheetView(showModal: $showModal, isPDFGenerated: $isPDFGenerated)
+            BottomSheetView(showModal: $showModal)
                 .presentationDetents([.height(240)])
         }
     }
