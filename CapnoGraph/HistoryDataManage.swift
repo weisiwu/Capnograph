@@ -228,9 +228,32 @@ class HistoryDataManage: ObservableObject {
         let localFileName = "\(data!.recordStartDateStr)-\(data!.recordEndDateStr)"
 
         // 创建完整的文件路径
-        pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(type.rawValue)")
+//         todo 临时注释
+//        pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(type.rawValue)")
         
-        createSampleFile() // 创建一个示例文件
+        // TODO:(wsw) 生成demo pdf 并保存
+        let pdfView = PDFView()
+        let pdfDocument = PDFDocument()
+        
+        // Add content to the PDF document
+        let page = PDFPage(image: UIImage(named: "example_image")!)
+        pdfDocument.insert(page!, at: 0)
+        
+        // Save the PDF document to the Documents directory
+        if let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            let fileURL = documentsDirectory.appendingPathComponent("example.pdf")
+            pdfDocument.write(to: fileURL)
+            print("PDF saved to: \(fileURL)")
+//            self.pdfURL = fileURL
+//            todo: 模拟异步操作
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self.pdfURL = fileURL
+            }
+        }
+        // TODO: demo结束
+        
+//    todo:  临时注释掉
+//        createSampleFile() // 创建一个示例文件
         
         switch type {
             case SaveTypes.PDF:

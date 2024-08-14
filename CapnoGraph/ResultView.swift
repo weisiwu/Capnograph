@@ -140,64 +140,60 @@ struct TableView: View {
 }
 
 struct BottomSheetView: View {
-    @Binding var showModal: Bool;
+    @Binding var showModal: Bool
     @EnvironmentObject var appConfigManage: AppConfigManage
     @EnvironmentObject var historyDataManage: HistoryDataManage
+    @State private var degrees = 0.0
 
     var body: some View {
-        VStack {
+        print("是否有这个pdfUrl===> \(historyDataManage.pdfURL)")
+        return VStack {
             Text(appConfigManage.getTextByKey(key: "ShareBtn"))
                 .font(.system(size: 18))
                 .fontWeight(.bold)
                 .frame(height: 54, alignment: .center)
             Spacer()
             HStack {
-                ShareLink(item: URL(string: "https://www.hackingwithswift.com")!) {
-                    VStack {
-                        Image("pdf_icon")
-                            .resizable()
-                            .frame(width: 50, height: 50)
-                            .scaledToFill()
-                            .clipped()
-                            .padding(.bottom, 8)
-                        Text(appConfigManage.getTextByKey(key: "ExportPDF"))
-                            .foregroundColor(Color(red: 133/255, green: 144/255, blue: 156/255))
-                            .font(.system(size: 12))
-                        Spacer()
+                if let pdfURL = historyDataManage.pdfURL {
+                    ShareLink(item: pdfURL) {
+                        VStack {
+                            ZStack {
+                                Image("pdf_icon")
+                                    .resizable()
+                                    .frame(width: 50, height: 50)
+                                    .scaledToFill()
+                                    .clipped()
+                                // 这里只是显示loading，并不代表是否可以导出。
+                                if historyDataManage.pdfURL == nil {
+                                    Color.black.frame(width: 58, height: 70).opacity(0.3).cornerRadius(5)
+                                    Image("pdf_icon_loading")
+                                        .resizable()
+                                        .frame(width: 40, height: 40)
+                                        .scaledToFill()
+                                        .clipped()
+                                        .opacity(0.8)
+                                        .rotationEffect(Angle(degrees: degrees), anchor: UnitPoint(x: 0.5, y: 0.5))
+                                        .animation(Animation.linear(duration: 1.5).repeatForever(autoreverses: false), value: self.degrees == 360.0)
+                                        .onAppear {
+                                            self.degrees = 360.0
+                                        }
+                                }
+                            }
+                            Text(appConfigManage.getTextByKey(key: "ExportPDF"))
+                                .foregroundColor(Color(red: 133/255, green: 144/255, blue: 156/255))
+                                .font(.system(size: 12))
+                            Spacer()
+                        }
                     }
-                }
-//                if let pdfUrl = historyDataManage.pdfURL {
-//                    ShareLink(item: pdfUrl)
-//                        .opacity(0)
-//                        .frame(width: 0, height: 0)
-//                }
-//                VStack {
-//                    Image("pdf_icon")
-//                        .resizable()
-//                        .frame(width: 50, height: 50)
-//                        .scaledToFill()
-//                        .clipped()
-//                        .padding(.bottom, 8)
-//                    Text(appConfigManage.getTextByKey(key: "ExportPDF"))
-//                        .foregroundColor(Color(red: 133/255, green: 144/255, blue: 156/255))
-//                        .font(.system(size: 12))
-//                    Spacer()
-//                }
-                .onTapGesture {
-                    // 生成导出文件，需要放在另外的线程
-                    // DispatchQueue.global(qos: .userInitiated).async {
-                    // }
-                    // 成功生成导出文件后，出现确定弹框，用户点击分享后，唤起分享面板
-                    historyDataManage.saveToLocal()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        showModal = false
-//                        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-//                            windowScene.windows.first?.rootViewController?.view?.findShareButton()?.sendActions(for: .touchUpInside)
-//                        }
+                    .onTapGesture {
+                        // 成功生成导出文件后，出现确定弹框，用户点击分享后，唤起分享面板
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            showModal = false
+                        }
                     }
+                    .padding(.leading, 20)
+                    Spacer()
                 }
-                .padding(.leading, 20)
-                Spacer()
             }
             Divider()
                 .frame(height: 0.5)
@@ -267,6 +263,7 @@ struct ResultView: View {
                 .navigationBarItems(
                     trailing: Button(action: {
                         showModal.toggle()
+                        historyDataManage.saveToLocal()
                     }) {
                         Image("home_more_btn")
                             .resizable()
@@ -294,9 +291,9 @@ struct ResultView: View {
                 bluetoothManager.sendContinuous()
             }
         }
-        .sheet(isPresented: $showModal) {
-            BottomSheetView(showModal: $showModal)
-                .presentationDetents([.height(240)])
-        }
+         .sheet(isPresented: $showModal) {
+             BottomSheetView(showModal: $showModal)
+                 .presentationDetents([.height(240)])
+         }
     }
 }
