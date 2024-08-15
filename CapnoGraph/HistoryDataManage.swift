@@ -1,8 +1,9 @@
-import UIKit
 import SwiftUI
+import UIKit
 import Combine
 import Foundation
 import PDFKit
+import Charts
 
 // 支持的保存类型
 enum SaveTypes: String {
@@ -14,6 +15,7 @@ enum SaveErrorTypes: Error {
     case NoData // 无保存数据
     case InvalidDirectory // 无法获取文档目录
     case UnSupportFileType // 不支持的导出类型
+    case SaveFailed // 保存失败
 }
 
 protocol SuccessProtocol {
@@ -105,6 +107,67 @@ class HistoryData {
 }
 
 /**
+ * 折线图，用于生成pdf中image使用
+ * 和ResultView中的LineChartView类似，只是为了生成图片做了必要的删减
+ */
+struct LineChartViewForImage: View {
+    var data: HistoryData
+    var blm: BluetoothManager
+    @EnvironmentObject var appConfigManage: AppConfigManage
+
+    var body: some View {
+        return Chart {
+            ForEach(Array(data.CO2WavePoints.enumerated()), id: \.offset) { index, point in
+                LineMark(
+                    x: .value("Index", index),
+                    y: .value("Value", point.ETCO2)
+                )
+                .interpolationMethod(.cardinal)
+            }
+        }
+        .chartXAxis {
+            AxisMarks(preset: .aligned, values: Array(stride(from: 0, through: maxXPoints, by: xPointStep))) { value in
+                AxisValueLabel {
+                    if let intValue = value.as(Int.self) {
+                        Text("\(intValue / 100)S")
+                    }
+                }
+            }
+        }
+        .chartYScale(domain: 0...Double(blm.CO2Scale.rawValue))
+        .chartYAxis {
+            AxisMarks(
+                preset: .aligned,
+                position: .leading,
+                values: generateYAxis(scale: blm.CO2Scale)
+            )
+        }
+        .frame(height: 300)
+        .padding()
+    }
+}
+
+/**
+ * asImage 修饰符
+ * SwiftUI View 导出Image
+ */
+extension View {
+    func asImage() -> UIImage {
+        let controller = UIHostingController(rootView: self)
+        // 确保视图大小合适
+        controller.view.frame = CGRect(x: 0, y: 0, width: 612, height: 792) // A4 页面大小
+        let targetSize = controller.view.intrinsicContentSize
+        controller.view.bounds = CGRect(origin: .zero, size: targetSize)
+        controller.view.backgroundColor = .clear
+
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        return renderer.image { _ in
+            controller.view.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
+        }
+    }
+}
+
+/**
 * 历史数据管理类，支持以下
 * 1、历史数据导出为pdf
 * =============
@@ -149,59 +212,91 @@ class HistoryDataManage: ObservableObject {
     * @params fileUrl: 文件保存的路径
     * @return SaveResultTypes
     */
-    private func _savePDFToLocal(fileUrl: URL) -> SaveResultTypes {
+    private func _savePDFToLocal() throws -> SaveResultTypes {
         print("开始保存PDF数据===> \(self.data)")
-        // 保存到PDF中
-        // PDFKitView(pdfData: PDFDocument(data: "测试文案==测试文案".data(using: .utf8)))
-//        let pdfData = PDFDocument(data: "测试文案==测试文案".data(using: .utf8)!)
-//        let url = Bundle.main.url(forResource: "sample", withExtension: "pdf")!
+        // 获取本地文档目录的 URL
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            throw SaveErrorTypes.InvalidDirectory
+        }
+        // 文件名称格式: 20240501182530_20240502192544.pdf 每部分含义如下
+        // 第一部分: 波形数据起始时间: 2024年5月1日18点25分30秒
+        // 第二部分: 波形数据结束时间: 2024年5月2日19点25分44秒
+        let localFileName = "\(data!.recordStartDateStr)-\(data!.recordEndDateStr)"
+        
+        // 如果没有blm或者数据，直接返回无数据异常
+        guard let data = self.data, let blm = self.blm else {
+            return SaveResultTypes.Error(.NoData)
+        }
 
-//        do {
-//            try pdfData!.write(to: fileUrl)
-//            print("PDF saved at: \(fileUrl)")
-//        } catch {
-//            print("Error saving PDF: \(error.localizedDescription)")
+        // 保存到PDF中
+        // TODO: demo开始
+        // 绘制 Chart View
+//        let chartImage = LineChartViewForImage(data: data, blm: blm).asImage()
+//        let pdfPage = PDFPage(image: chartImage)!
+//
+//        // 获取 PDF 上下文
+//        let pdfContext = UIGraphicsGetCurrentContext()!
+//        pdfContext.beginPDFPage(withInfo: nil, for: pdfPage)
+//
+//        // 结束 PDF 页面
+//        pdfContext.endPDFPage()
+//
+//        // 创建 PDF 文档
+//        let pdfDocument = PDFDocument()
+//        pdfDocument.insert(pdfPage, at: 0)
+//
+//        // 保存 PDF 文件
+//        // let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+//        // let fileURL = documentsURL.appendingPathComponent("chart.pdf")
+//
+//        guard let pdfData = pdfDocument.dataRepresentation() else {
+//            print("无法生成 PDF 数据")
+//            return SaveResultTypes.Error(.SaveFailed)
 //        }
-        // 分享文件数据
-        // 思路参考: https://www.cnblogs.com/qqcc1388/p/17586849.html
+
+        // 创建完整的文件路径
+        self.pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(SaveTypes.PDF.rawValue)")
+
+        
+        guard let pdfURL = self.pdfURL,
+              let pdfContext = CGContext(url: pdfURL as CFURL, mediaBox: nil, nil) else {
+            print("无法创建 PDF 上下文")
+            return SaveResultTypes.Error(.SaveFailed)
+        }
+
+        // 绘制 Chart View
+        let chartImage = LineChartViewForImage(data: data, blm: blm).asImage()
+        let pageRect = CGRect(x: 0, y: 0, width: chartImage.size.width, height: chartImage.size.height)
+
+        // 开始 PDF 页面
+        pdfContext.beginPage(pageSize: pageRect.size)
+        
+        // 绘制图片到 PDF
+        chartImage.draw(in: pageRect)
+
+        // 结束 PDF 页面
+        pdfContext.endPage()
+
+        // 关闭 PDF 上下文
+        pdfContext.close()
+//                try pdfData.write(to: pdfURL)
+        print("PDF 文件已保存到：\(pdfURL)")
+        
+        // TODO: demo结束
+
+        // TODO:(wsw) 临时注释测试用demo
+        // let pdfView = PDFView()
+        // let pdfDocument = PDFDocument()
+        // let page = PDFPage(image: UIImage(named: "example_image")!)
+        // pdfDocument.insert(page!, at: 0)
+        // if let _pdfURL = self.pdfURL {
+        //     print("最终写入的路径===> \(_pdfURL)")
+        //     pdfDocument.write(to: _pdfURL)
+        //     self.pdfURL = _pdfURL
+        // }
 
         return SaveResultTypes.Success
     }
-
-    private func createSampleFile() {
-        let fileURL = pdfURL
-        
-        let pdfMetaData = [
-            kCGPDFContextCreator: "MyApp",
-            kCGPDFContextAuthor: "MyCompany",
-            kCGPDFContextTitle: "Sample Document"
-        ]
-        
-        let format = UIGraphicsPDFRendererFormat()
-        format.documentInfo = pdfMetaData as [String: Any]
-        
-        let pageWidth = 8.5 * 72.0
-        let pageHeight = 11.0 * 72.0
-        let pageSize = CGSize(width: pageWidth, height: pageHeight)
-        
-        let renderer = UIGraphicsPDFRenderer(bounds: CGRect(origin: .zero, size: pageSize), format: format)
-        
-        let pdfData = renderer.pdfData { context in
-            context.beginPage()
-            let text = "This is a sample PDF document."
-            let attributes: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 24)]
-            let textRect = CGRect(x: 20, y: 20, width: pageWidth - 40, height: pageHeight - 40)
-            text.draw(in: textRect, withAttributes: attributes)
-        }
-        
-        do {
-            try pdfData.write(to: fileURL!)
-            print("File created at: \(fileURL!)") // 确认文件路径
-        } catch {
-            print("Could not create file: \(error)")
-        }
-    }
-
     
     /**
     * 保存波形图数据到本地，后续扩展支持多种形式
@@ -214,50 +309,12 @@ class HistoryDataManage: ObservableObject {
             throw SaveErrorTypes.NoData
         }
 
-        // 获取本地文档目录的 URL
-        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            throw SaveErrorTypes.InvalidDirectory
-        }
-
         // 标记记录数据结束时间
         data!.markEndTime()
         
-        // 文件名称格式: 20240501182530_20240502192544.pdf 每部分含义如下
-        // 第一部分: 波形数据起始时间: 2024年5月1日18点25分30秒
-        // 第二部分: 波形数据结束时间: 2024年5月2日19点25分44秒
-        let localFileName = "\(data!.recordStartDateStr)-\(data!.recordEndDateStr)"
-
-        // 创建完整的文件路径
-//         todo 临时注释
-//        pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(type.rawValue)")
-        
-        // TODO:(wsw) 生成demo pdf 并保存
-        let pdfView = PDFView()
-        let pdfDocument = PDFDocument()
-        
-        // Add content to the PDF document
-        let page = PDFPage(image: UIImage(named: "example_image")!)
-        pdfDocument.insert(page!, at: 0)
-        
-        // Save the PDF document to the Documents directory
-        if let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-            let fileURL = documentsDirectory.appendingPathComponent("example.pdf")
-            pdfDocument.write(to: fileURL)
-            print("PDF saved to: \(fileURL)")
-//            self.pdfURL = fileURL
-//            todo: 模拟异步操作
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self.pdfURL = fileURL
-            }
-        }
-        // TODO: demo结束
-        
-//    todo:  临时注释掉
-//        createSampleFile() // 创建一个示例文件
-        
         switch type {
             case SaveTypes.PDF:
-                return _savePDFToLocal(fileUrl: pdfURL!)
+                return try _savePDFToLocal()
             default:
                 throw SaveErrorTypes.UnSupportFileType
         }

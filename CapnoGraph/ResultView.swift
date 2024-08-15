@@ -139,6 +139,19 @@ struct TableView: View {
     }
 }
 
+// 扩展view，展示分享链接
+extension View {
+    func shareableView(url: URL?) -> some View {
+        Group {
+            if let _url = url {
+                ShareLink(item: _url) { self }
+            } else {
+                self
+            }
+        }
+    }
+}
+
 struct BottomSheetView: View {
     @Binding var showModal: Bool
     @EnvironmentObject var appConfigManage: AppConfigManage
@@ -146,7 +159,6 @@ struct BottomSheetView: View {
     @State private var degrees = 0.0
 
     var body: some View {
-        print("是否有这个pdfUrl===> \(historyDataManage.pdfURL)")
         return VStack {
             Text(appConfigManage.getTextByKey(key: "ShareBtn"))
                 .font(.system(size: 18))
@@ -154,46 +166,43 @@ struct BottomSheetView: View {
                 .frame(height: 54, alignment: .center)
             Spacer()
             HStack {
-                if let pdfURL = historyDataManage.pdfURL {
-                    ShareLink(item: pdfURL) {
-                        VStack {
-                            ZStack {
-                                Image("pdf_icon")
-                                    .resizable()
-                                    .frame(width: 50, height: 50)
-                                    .scaledToFill()
-                                    .clipped()
-                                // 这里只是显示loading，并不代表是否可以导出。
-                                if historyDataManage.pdfURL == nil {
-                                    Color.black.frame(width: 58, height: 70).opacity(0.3).cornerRadius(5)
-                                    Image("pdf_icon_loading")
-                                        .resizable()
-                                        .frame(width: 40, height: 40)
-                                        .scaledToFill()
-                                        .clipped()
-                                        .opacity(0.8)
-                                        .rotationEffect(Angle(degrees: degrees), anchor: UnitPoint(x: 0.5, y: 0.5))
-                                        .animation(Animation.linear(duration: 1.5).repeatForever(autoreverses: false), value: self.degrees == 360.0)
-                                        .onAppear {
-                                            self.degrees = 360.0
-                                        }
+                VStack {
+                    ZStack {
+                        Image("pdf_icon")
+                            .resizable()
+                            .frame(width: 50, height: 50)
+                            .scaledToFill()
+                            .clipped()
+                        // 这里只是显示loading，并不代表是否可以导出。
+                        if historyDataManage.pdfURL == nil {
+                            Color.black.frame(width: 58, height: 70).opacity(0.3).cornerRadius(5)
+                            Image("pdf_icon_loading")
+                                .resizable()
+                                .frame(width: 40, height: 40)
+                                .scaledToFill()
+                                .clipped()
+                                .opacity(0.8)
+                                .rotationEffect(Angle(degrees: degrees), anchor: UnitPoint(x: 0.5, y: 0.5))
+                                .animation(Animation.linear(duration: 1.5).repeatForever(autoreverses: false), value: self.degrees == 360.0)
+                                .onAppear {
+                                    self.degrees = 360.0
                                 }
-                            }
-                            Text(appConfigManage.getTextByKey(key: "ExportPDF"))
-                                .foregroundColor(Color(red: 133/255, green: 144/255, blue: 156/255))
-                                .font(.system(size: 12))
-                            Spacer()
                         }
                     }
-                    .onTapGesture {
-                        // 成功生成导出文件后，出现确定弹框，用户点击分享后，唤起分享面板
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                            showModal = false
-                        }
-                    }
-                    .padding(.leading, 20)
+                    Text(appConfigManage.getTextByKey(key: "ExportPDF"))
+                        .foregroundColor(Color(red: 133/255, green: 144/255, blue: 156/255))
+                        .font(.system(size: 12))
                     Spacer()
                 }
+                .shareableView(url: historyDataManage.pdfURL)
+                .onTapGesture {
+                    // 成功生成导出文件后，出现确定弹框，用户点击分享后，唤起分享面板
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        showModal = false
+                    }
+                }
+                .padding(.leading, 20)
+                Spacer()
             }
             Divider()
                 .frame(height: 0.5)
