@@ -6,6 +6,8 @@ import PDFKit
 import Charts
 import CoreGraphics
 
+// TODO:(wsw) 参考这个
+// 参考这个: https://www.swiftanytime.com/blog/imagerenderer-in-swiftui
 enum A4Size: Double {
     case width = 595.2
     case height = 841.8
