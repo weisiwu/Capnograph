@@ -180,7 +180,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var sendArray: [UInt8] = []
     var receivedArray: [UInt8] = []
     var currentCO2: Float = 0
-    @Published var currentWavePointData: CO2WavePointData = CO2WavePointData(RR:0,ETCO2: 0,FiCO2: 0)
+    @Published var currentWavePointData: CO2WavePointData = CO2WavePointData(co2: 0, RR:0, ETCO2: 0, FiCO2: 0)
     @Published var ETCO2: Float = 0
     @Published var RespiratoryRate: Int = 0
     var FiCO2: Int = 0
@@ -283,6 +283,9 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     let asphyxiationTimeMax: Int = 60
     let oxygenCompensationMin: Double = 0
     let oxygenCompensationMax: Double = 100
+
+    // 所有历史数据，导出时使用
+    var totalCO2WavedData: [CO2WavePointData] = []
 
     override init() {
         super.init()
@@ -840,7 +843,12 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 print("CO2Waveform DPI 不匹配")
             }
             // 更新数据到CO2
-            currentWavePointData = CO2WavePointData(RR: RespiratoryRate, ETCO2: ETCO2, FiCO2: FiCO2)
+            currentWavePointData = CO2WavePointData(
+                co2: currentCO2,
+                RR: RespiratoryRate,
+                ETCO2: ETCO2,
+                FiCO2: FiCO2
+            )
             isValidETCO2 = CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower;
             isValidRR = CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower;
 
@@ -853,6 +861,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
         // 将受到的数据绘制到曲线图上
         receivedCO2WavedData.append(DataPoint(value: currentCO2))
+        totalCO2WavedData.append(currentWavePointData)
         if receivedCO2WavedData.count > maxXPoints {
             receivedCO2WavedData.removeFirst()
         }

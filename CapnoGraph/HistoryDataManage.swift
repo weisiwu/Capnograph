@@ -4,6 +4,12 @@ import Combine
 import Foundation
 import PDFKit
 import Charts
+import CoreGraphics
+
+enum A4Size: Double {
+    case width = 595.2
+    case height = 841.8
+}
 
 // 支持的保存类型
 enum SaveTypes: String {
@@ -43,6 +49,7 @@ enum SaveResultTypes: SuccessProtocol {
 * 2、ETCO2，无值，置0
 */
 struct CO2WavePointData {
+    let co2: Float
     let RR: Int
     let ETCO2: Float
     let FiCO2: Int
@@ -114,36 +121,61 @@ struct LineChartViewForImage: View {
     var data: HistoryData
     var blm: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
+    var fSize: CGFloat = 14
 
     var body: some View {
         return Chart {
             ForEach(Array(data.CO2WavePoints.enumerated()), id: \.offset) { index, point in
                 LineMark(
-                    x: .value("Index", index),
-                    y: .value("Value", point.ETCO2)
+                    x: .value("Value", point.co2),
+                    y: .value("Index", index)
                 )
                 .interpolationMethod(.cardinal)
             }
         }
+        .chartXScale(domain: 0...Double(blm.CO2Scale.rawValue))
         .chartXAxis {
-            AxisMarks(preset: .aligned, values: Array(stride(from: 0, through: maxXPoints, by: xPointStep))) { value in
+            AxisMarks(
+                preset: .aligned,
+                position: .top,
+                values: generateYAxis(scale: blm.CO2Scale)
+            ) { value in
                 AxisValueLabel {
                     if let intValue = value.as(Int.self) {
-                        Text("\(intValue / 100)S")
+                        Text("\(intValue)")
+                            .font(.system(size: fSize))
+                            .rotationEffect(.degrees(90))
+                            .frame(width: 40)
                     }
                 }
             }
         }
-        .chartYScale(domain: 0...Double(blm.CO2Scale.rawValue))
         .chartYAxis {
             AxisMarks(
-                preset: .aligned,
                 position: .leading,
-                values: generateYAxis(scale: blm.CO2Scale)
-            )
+                values: Array(
+                    stride(
+                        from: 0,
+                        through: data.CO2WavePoints.count,
+                        by: xPointStep
+                    )
+                )
+            ) { value in
+                return AxisValueLabel {
+                    if let intValue = value.as(Int.self) {
+                        Text("\(intValue / 100)S")
+                            .font(.system(size: fSize))
+                            .rotationEffect(.degrees(90))
+                            .frame(width: 40)
+                    }
+                }
+            }
         }
-        .frame(height: 300)
-        .padding()
+        .frame(
+            width: A4Size.width.rawValue, 
+            height: A4Size.height.rawValue
+        )
+        .padding(0)
     }
 }
 
@@ -153,16 +185,52 @@ struct LineChartViewForImage: View {
  */
 extension View {
     func asImage() -> UIImage {
+        let padding: CGFloat = 30.0
+        let a4Size = CGSize(
+            width: A4Size.width.rawValue,
+            height: A4Size.height.rawValue
+        )
+        let viewWidth = A4Size.width.rawValue - 2 * padding
+        let viewHeight = A4Size.height.rawValue - 2 * padding
         let controller = UIHostingController(rootView: self)
         // 确保视图大小合适
-        controller.view.frame = CGRect(x: 0, y: 0, width: 612, height: 792) // A4 页面大小
+        controller.view.frame = CGRect(
+            x: 0, 
+            y: 0, 
+            width: viewWidth, 
+            height: viewHeight
+        )
         let targetSize = controller.view.intrinsicContentSize
+         // 提高分辨率
+        let highResolutionSize = CGSize(
+            width: A4Size.width.rawValue,
+            height: A4Size.height.rawValue
+        )
         controller.view.bounds = CGRect(origin: .zero, size: targetSize)
         controller.view.backgroundColor = .clear
 
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        let renderer = UIGraphicsImageRenderer(size: highResolutionSize)
         return renderer.image { _ in
-            controller.view.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
+            UIColor.white.setFill()
+            UIRectFill(CGRect(origin: .zero, size: a4Size))
+            
+            // 翻转坐标系统
+            let context = UIGraphicsGetCurrentContext()
+            // 抗锯齿
+            context?.setAllowsAntialiasing(true)
+            context?.setShouldAntialias(true)
+            context?.translateBy(x: 0, y: a4Size.height)
+            context?.scaleBy(x: 1, y: -1)
+            
+            controller.view.drawHierarchy(
+                in: CGRect(
+                    x: padding,
+                    y: padding,
+                    width: viewWidth,
+                    height: viewHeight
+                ),
+                afterScreenUpdates: true
+            )
         }
     }
 }
@@ -177,25 +245,32 @@ extension View {
 class HistoryDataManage: ObservableObject {
     var data: HistoryData?
     var blm: BluetoothManager?
-    // 监听波形数据是否发生变化
-    var CO2WavePointWatcher: AnyCancellable?
     @Published var pdfURL: URL?
 
-    // 将蓝牙管理实例注入历史数据中
     func listenToBluetoothManager(bluetoothManager: BluetoothManager) {
+        self.blm = bluetoothManager
+    }
+
+    // 将蓝牙管理实例注入历史数据中
+    func syncBluetoothManagerData() {
+        guard let blm = self.blm else {
+            return
+        }
+
         self.data = HistoryData(
-            minRR: bluetoothManager.rrLower,
-            maxRR: bluetoothManager.rrUpper,
-            minETCO2: bluetoothManager.etCo2Lower,
-            maxETCO2: bluetoothManager.etCo2Upper,
+            minRR: blm.rrLower,
+            maxRR: blm.rrUpper,
+            minETCO2: blm.etCo2Lower,
+            maxETCO2: blm.etCo2Upper,
             CO2WavePoints: []
         )
-        self.blm = bluetoothManager
-        self.CO2WavePointWatcher = bluetoothManager.$currentWavePointData.sink { newValue in
-            print("[pdf]接收到新波形值===> \(newValue)")
-            if let historyData = self.data {
-                historyData.updateWavePoints(newPoint: newValue)
-            }
+
+        guard let historyData = self.data else {
+            return
+        }
+
+        blm.totalCO2WavedData.forEach { point in
+            historyData.updateWavePoints(newPoint: point)
         }
     }
 
@@ -203,7 +278,6 @@ class HistoryDataManage: ObservableObject {
     * 清空记录
     */
     func clearRecord() {
-        self.CO2WavePointWatcher = nil
         self.data = nil
     }
 
@@ -213,7 +287,6 @@ class HistoryDataManage: ObservableObject {
     * @return SaveResultTypes
     */
     private func _savePDFToLocal() throws -> SaveResultTypes {
-        print("开始保存PDF数据===> \(self.data)")
         // 获取本地文档目录的 URL
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             throw SaveErrorTypes.InvalidDirectory
@@ -229,71 +302,31 @@ class HistoryDataManage: ObservableObject {
         }
 
         // 保存到PDF中
-        // TODO: demo开始
-        // 绘制 Chart View
-//        let chartImage = LineChartViewForImage(data: data, blm: blm).asImage()
-//        let pdfPage = PDFPage(image: chartImage)!
-//
-//        // 获取 PDF 上下文
-//        let pdfContext = UIGraphicsGetCurrentContext()!
-//        pdfContext.beginPDFPage(withInfo: nil, for: pdfPage)
-//
-//        // 结束 PDF 页面
-//        pdfContext.endPDFPage()
-//
-//        // 创建 PDF 文档
-//        let pdfDocument = PDFDocument()
-//        pdfDocument.insert(pdfPage, at: 0)
-//
-//        // 保存 PDF 文件
-//        // let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-//        // let fileURL = documentsURL.appendingPathComponent("chart.pdf")
-//
-//        guard let pdfData = pdfDocument.dataRepresentation() else {
-//            print("无法生成 PDF 数据")
-//            return SaveResultTypes.Error(.SaveFailed)
-//        }
-
         // 创建完整的文件路径
         self.pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(SaveTypes.PDF.rawValue)")
-
         
+        // 定义 PDF 页面尺寸与图像尺寸一致
+        var pdfPageBounds = CGRect(x: 0, y: 0, width: A4Size.width.rawValue, height: A4Size.height.rawValue)
+
         guard let pdfURL = self.pdfURL,
-              let pdfContext = CGContext(url: pdfURL as CFURL, mediaBox: nil, nil) else {
+              let pdfContext = CGContext(pdfURL as CFURL, mediaBox: &pdfPageBounds, nil) else {
             print("无法创建 PDF 上下文")
             return SaveResultTypes.Error(.SaveFailed)
         }
-
+        
         // 绘制 Chart View
         let chartImage = LineChartViewForImage(data: data, blm: blm).asImage()
-        let pageRect = CGRect(x: 0, y: 0, width: chartImage.size.width, height: chartImage.size.height)
 
         // 开始 PDF 页面
-        pdfContext.beginPage(pageSize: pageRect.size)
-        
-        // 绘制图片到 PDF
-        chartImage.draw(in: pageRect)
+        pdfContext.beginPDFPage(nil)
+
+        // 将 UIImage 绘制到 PDF 页面
+        UIGraphicsPushContext(pdfContext)
+        chartImage.draw(in: pdfPageBounds)
+        UIGraphicsPopContext()
 
         // 结束 PDF 页面
-        pdfContext.endPage()
-
-        // 关闭 PDF 上下文
-        pdfContext.close()
-//                try pdfData.write(to: pdfURL)
-        print("PDF 文件已保存到：\(pdfURL)")
-        
-        // TODO: demo结束
-
-        // TODO:(wsw) 临时注释测试用demo
-        // let pdfView = PDFView()
-        // let pdfDocument = PDFDocument()
-        // let page = PDFPage(image: UIImage(named: "example_image")!)
-        // pdfDocument.insert(page!, at: 0)
-        // if let _pdfURL = self.pdfURL {
-        //     print("最终写入的路径===> \(_pdfURL)")
-        //     pdfDocument.write(to: _pdfURL)
-        //     self.pdfURL = _pdfURL
-        // }
+        pdfContext.endPDFPage()
 
         return SaveResultTypes.Success
     }
@@ -349,6 +382,8 @@ class HistoryDataManage: ObservableObject {
     * 外部调用使用
     */
     func saveToLocal(args: SaveTypes = SaveTypes.PDF) {
+        // 先同步数据
+        syncBluetoothManagerData()
         wrapLogger(_saveToLocal, args: args)
     }
 }
