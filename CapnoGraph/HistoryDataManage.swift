@@ -6,11 +6,9 @@ import PDFKit
 import Charts
 import CoreGraphics
 
-// TODO:(wsw) 参考这个
-// 参考这个: https://www.swiftanytime.com/blog/imagerenderer-in-swiftui
 enum A4Size: Double {
-    case width = 595.2
-    case height = 841.8
+    case height = 595.2
+    case width = 841.8
 }
 
 // 支持的保存类型
@@ -55,6 +53,7 @@ struct CO2WavePointData {
     let RR: Int
     let ETCO2: Float
     let FiCO2: Int
+    let index: Int
 }
 
 /**
@@ -121,44 +120,38 @@ class HistoryData {
  */
 struct LineChartViewForImage: View {
     var data: HistoryData
-    var blm: BluetoothManager
+    var xStart: Int = 0
+    var xEnd: Int = 0
+//    var blm: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
     var fSize: CGFloat = 14
 
     var body: some View {
+        print("x轴的坐标是===> \(xStart) \(xEnd) \(xPointStep)")
+        print(Array(
+            stride(
+                from: xStart,
+                through: xEnd,
+                by: xPointStep
+            )
+        ))
         return Chart {
             ForEach(Array(data.CO2WavePoints.enumerated()), id: \.offset) { index, point in
                 LineMark(
-                    x: .value("Value", point.co2),
-                    y: .value("Index", index)
+                    x: .value("Index", point.index),
+                    y: .value("Value", point.co2)
                 )
                 .interpolationMethod(.cardinal)
             }
         }
-        .chartXScale(domain: 0...Double(blm.CO2Scale.rawValue))
         .chartXAxis {
             AxisMarks(
                 preset: .aligned,
-                position: .top,
-                values: generateYAxis(scale: blm.CO2Scale)
-            ) { value in
-                AxisValueLabel {
-                    if let intValue = value.as(Int.self) {
-                        Text("\(intValue)")
-                            .font(.system(size: fSize))
-                            .rotationEffect(.degrees(90))
-                            .frame(width: 40)
-                    }
-                }
-            }
-        }
-        .chartYAxis {
-            AxisMarks(
-                position: .leading,
+                position: .bottom,
                 values: Array(
                     stride(
-                        from: 0,
-                        through: data.CO2WavePoints.count,
+                        from: xStart,
+                        through: xEnd,
                         by: xPointStep
                     )
                 )
@@ -167,17 +160,53 @@ struct LineChartViewForImage: View {
                     if let intValue = value.as(Int.self) {
                         Text("\(intValue / 100)S")
                             .font(.system(size: fSize))
-                            .rotationEffect(.degrees(90))
+                            .rotationEffect(.degrees(0))
                             .frame(width: 40)
                     }
                 }
+                AxisTick(stroke: StrokeStyle(lineWidth: 1)).foregroundStyle(Color.gray)
+                AxisGridLine(centered: true).foregroundStyle(.gray)
+            }
+        }
+//    TODO: 测试用
+//        .chartYScale(domain: 0...Double(blm.CO2Scale.rawValue))
+        .chartYScale(domain: 0...Double(CO2ScaleEnum.mmHg_Large.rawValue))
+        .chartYAxis {
+            AxisMarks(
+                position: .leading,
+//                TODO: 测试用
+//                values: generateYAxis(scale: blm.CO2Scale)
+                values: generateYAxis(scale: CO2ScaleEnum.mmHg_Large)
+            ) { value in
+                AxisValueLabel {
+                    if let intValue = value.as(Int.self) {
+                        Text("\(intValue)")
+                            .font(.system(size: fSize))
+                            .rotationEffect(.degrees(0))
+                            .frame(width: 40)
+                    }
+                }
+                AxisTick(stroke: StrokeStyle(lineWidth: 1)).foregroundStyle(Color.gray)
+                AxisGridLine(centered: true).foregroundStyle(.gray)
             }
         }
         .frame(
-            width: A4Size.width.rawValue, 
+            width: A4Size.width.rawValue,
             height: A4Size.height.rawValue
         )
         .padding(0)
+        .rotationEffect(.degrees(-90))
+    }
+}
+
+extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        var chunks: [[Element]] = []
+        for index in stride(from: 0, to: count, by: size) {
+            let chunk = Array(self[index..<Swift.min(index + size, count)])
+            chunks.append(chunk)
+        }
+        return chunks
     }
 }
 
@@ -215,7 +244,7 @@ extension View {
         return renderer.image { _ in
             UIColor.white.setFill()
             UIRectFill(CGRect(origin: .zero, size: a4Size))
-            
+
             // 翻转坐标系统
             let context = UIGraphicsGetCurrentContext()
             // 抗锯齿
@@ -255,7 +284,9 @@ class HistoryDataManage: ObservableObject {
 
     // 将蓝牙管理实例注入历史数据中
     func syncBluetoothManagerData() {
+        print("是否开启注入")
         guard let blm = self.blm else {
+            print("无蓝牙，无法注入")
             return
         }
 
@@ -283,11 +314,62 @@ class HistoryDataManage: ObservableObject {
         self.data = nil
     }
 
+    // TODO:(wsw) 使用CoreGraphics创建PDF
     /**
     * 保存pdf数据到指定路径
     * @params fileUrl: 文件保存的路径
     * @return SaveResultTypes
     */
+    // private func _savePDFToLocal() throws -> SaveResultTypes {
+    //     // 获取本地文档目录的 URL
+    //     guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+    //         throw SaveErrorTypes.InvalidDirectory
+    //     }
+    //     // 文件名称格式: 20240501182530_20240502192544.pdf 每部分含义如下
+    //     // 第一部分: 波形数据起始时间: 2024年5月1日18点25分30秒
+    //     // 第二部分: 波形数据结束时间: 2024年5月2日19点25分44秒
+    //    let localFileName = "\(data!.recordStartDateStr)-\(data!.recordEndDateStr)"
+    //     // TODO: 临时固定名字，方便后续打开查看
+    //     // let localFileName = "sample"
+        
+    //     // 如果没有blm或者数据，直接返回无数据异常
+    //     guard let data = self.data, let blm = self.blm else {
+    //         return SaveResultTypes.Error(.NoData)
+    //     }
+
+    //     // 保存到PDF中
+    //     // 创建完整的文件路径
+    //     self.pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(SaveTypes.PDF.rawValue)")
+    //     //    TODO: 存储地址
+    //     print("pdfURL===> \(pdfURL)")
+        
+    //     // 定义 PDF 页面尺寸与图像尺寸一致
+    //     var pdfPageBounds = CGRect(x: 0, y: 0, width: A4Size.width.rawValue, height: A4Size.height.rawValue)
+
+    //     guard let pdfURL = self.pdfURL,
+    //           let pdfContext = CGContext(pdfURL as CFURL, mediaBox: &pdfPageBounds, nil) else {
+    //         print("无法创建 PDF 上下文")
+    //         return SaveResultTypes.Error(.SaveFailed)
+    //     }
+        
+    //     // 绘制 Chart View
+    //     let chartImage = LineChartViewForImage(data: data, blm: blm).asImage()
+
+    //     // 开始 PDF 页面
+    //     pdfContext.beginPDFPage(nil)
+
+    //     // 将 UIImage 绘制到 PDF 页面
+    //     UIGraphicsPushContext(pdfContext)
+    //     chartImage.draw(in: pdfPageBounds)
+    //     UIGraphicsPopContext()
+
+    //     // 结束 PDF 页面
+    //     pdfContext.endPDFPage()
+
+    //     return SaveResultTypes.Success
+    // }
+
+    // 调试，使用ImageRenderer创建pdf
     private func _savePDFToLocal() throws -> SaveResultTypes {
         // 获取本地文档目录的 URL
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
@@ -296,7 +378,9 @@ class HistoryDataManage: ObservableObject {
         // 文件名称格式: 20240501182530_20240502192544.pdf 每部分含义如下
         // 第一部分: 波形数据起始时间: 2024年5月1日18点25分30秒
         // 第二部分: 波形数据结束时间: 2024年5月2日19点25分44秒
-        let localFileName = "\(data!.recordStartDateStr)-\(data!.recordEndDateStr)"
+        // let localFileName = "\(data!.recordStartDateStr)-\(data!.recordEndDateStr)"
+        // TODO: 临时固定名字，方便后续打开查看
+        let localFileName = "sample"
         
         // 如果没有blm或者数据，直接返回无数据异常
         guard let data = self.data, let blm = self.blm else {
@@ -306,29 +390,8 @@ class HistoryDataManage: ObservableObject {
         // 保存到PDF中
         // 创建完整的文件路径
         self.pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(SaveTypes.PDF.rawValue)")
-        
-        // 定义 PDF 页面尺寸与图像尺寸一致
-        var pdfPageBounds = CGRect(x: 0, y: 0, width: A4Size.width.rawValue, height: A4Size.height.rawValue)
-
-        guard let pdfURL = self.pdfURL,
-              let pdfContext = CGContext(pdfURL as CFURL, mediaBox: &pdfPageBounds, nil) else {
-            print("无法创建 PDF 上下文")
-            return SaveResultTypes.Error(.SaveFailed)
-        }
-        
-        // 绘制 Chart View
-        let chartImage = LineChartViewForImage(data: data, blm: blm).asImage()
-
-        // 开始 PDF 页面
-        pdfContext.beginPDFPage(nil)
-
-        // 将 UIImage 绘制到 PDF 页面
-        UIGraphicsPushContext(pdfContext)
-        chartImage.draw(in: pdfPageBounds)
-        UIGraphicsPopContext()
-
-        // 结束 PDF 页面
-        pdfContext.endPDFPage()
+        //    TODO: 存储地址
+        print("pdfURL===> \(pdfURL)")
 
         return SaveResultTypes.Success
     }

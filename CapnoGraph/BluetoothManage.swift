@@ -180,7 +180,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var sendArray: [UInt8] = []
     var receivedArray: [UInt8] = []
     var currentCO2: Float = 0
-    @Published var currentWavePointData: CO2WavePointData = CO2WavePointData(co2: 0, RR:0, ETCO2: 0, FiCO2: 0)
+    @Published var currentWavePointData: CO2WavePointData = CO2WavePointData(co2: 0, RR:0, ETCO2: 0, FiCO2: 0, index: 0)
     @Published var ETCO2: Float = 0
     @Published var RespiratoryRate: Int = 0
     var FiCO2: Int = 0
@@ -847,7 +847,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 co2: currentCO2,
                 RR: RespiratoryRate,
                 ETCO2: ETCO2,
-                FiCO2: FiCO2
+                FiCO2: FiCO2,
+                index: totalCO2WavedData.count
             )
             isValidETCO2 = CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower;
             isValidRR = CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower;

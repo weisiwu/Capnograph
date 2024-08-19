@@ -141,6 +141,7 @@ struct TableView: View {
 
 // 扩展view，展示分享链接
 extension View {
+    // 根据是否有分享url，决定是否可分享
     func shareableView(url: URL?) -> some View {
         Group {
             if let _url = url {
@@ -230,6 +231,8 @@ struct ResultView: View {
     @State private var isVisible = true
     // 更多面板
     @State private var showModal = false
+    // TODO:(wsw) 临时
+//    @State private var renderedImage: UIImage?
     
     let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
 
@@ -245,6 +248,14 @@ struct ResultView: View {
             warningText = appConfigManage.getTextByKey(key: "RRInvalidWarning")
         } else {
             warningText = nil
+        }
+        //TODO:  测试数据
+        var waveData: [CO2WavePointData] = []
+//        for i in 1...1500 {
+        for i in 1...500 {
+            let co2Value = Float(10 + 5 * sin(Double(i) * 2 * Double.pi / 100))
+            let dataPoint = CO2WavePointData(co2: co2Value, RR: 0, ETCO2: 0, FiCO2: 0, index: i)
+            waveData.append(dataPoint)
         }
         return NavigationStack() {
             ZStack {
@@ -283,6 +294,56 @@ struct ResultView: View {
                 )
                 .navigationBarTitleDisplayMode(.inline)
                 .navigationBarBackButtonHidden(false)
+                
+                // TODO: 调试使用
+                Text("查看pdf")
+                    .task {
+                        // 每页展示500个点位
+                        let pagePointsNumber: Int = 500
+                        let url = FileManager.default
+                            .urls(for: .documentDirectory, in: .userDomainMask)
+                            .first!
+                            .appending(path: "SaleChart.pdf")
+                        print(url)
+
+                        var box = CGRect(x: 0, y: 0, width: A4Size.width.rawValue, height: A4Size.height.rawValue)
+                        if let context = CGContext(url as CFURL, mediaBox: &box, nil) {
+                            let chunks = waveData.chunked(into: pagePointsNumber)
+                            for (index, chunk) in chunks.enumerated() {
+                                let xStart = Swift.max(index * pagePointsNumber, 0)
+                                let xEnd = Swift.min(xStart + pagePointsNumber, waveData.count)
+                                print("当前是第\(index + 1)页,起始是\(xStart)，结束是\(xEnd)")
+                                let renderer = ImageRenderer(
+                                    content: LineChartViewForImage(
+                                        data: HistoryData(
+                                            minRR: 30,
+                                            maxRR: 50,
+                                            minETCO2: 30,
+                                            maxETCO2: 50,
+                                            // TODO: mock数据
+                                            CO2WavePoints: chunk
+                                        ),
+                                        xStart: xStart,
+                                        xEnd: xEnd
+                                    )
+                                        .frame(
+                                            width: A4Size.width.rawValue,
+                                            height: A4Size.height.rawValue
+                                        )
+                                        .padding(.top, 20)
+                                        .padding(.bottom, 20)
+                                        .padding(.leading, 50)
+                                        .padding(.trailing, 50)
+                                )
+                                context.beginPDFPage(nil)
+                                renderer.render { size, renderer in
+                                    renderer(context)
+                                }
+                                context.endPDFPage()
+                            }
+                            context.closePDF()
+                        }
+                    }
 
                 if showModal {
                     Color.black.opacity(0.4)
