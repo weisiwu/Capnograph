@@ -24,6 +24,25 @@ enum SaveErrorTypes: Error {
     case SaveFailed // 保存失败
 }
 
+class PDFImageAnnotation: PDFAnnotation {
+
+    var image: UIImage?
+
+    convenience init(_ image: UIImage?, bounds: CGRect, properties: [AnyHashable : Any]?) {
+        self.init(bounds: bounds, forType: PDFAnnotationSubtype.stamp, withProperties: properties)
+        self.image = image
+    }
+
+    override func draw(with box: PDFDisplayBox, in context: CGContext) {
+        super.draw(with: box, in: context)
+
+        // Drawing the image within the annotation’s bounds.
+        guard let cgImage = image?.cgImage else { return }
+        context.draw(cgImage, in: bounds)
+    }
+}
+
+
 protocol SuccessProtocol {
     var Success: Bool { get }
 }
@@ -126,76 +145,132 @@ struct LineChartViewForImage: View {
     @EnvironmentObject var appConfigManage: AppConfigManage
     var fSize: CGFloat = 14
 
+    func gotoWLD() {
+        if let url = URL(string: "https://www.google.com") {
+            UIApplication.shared.open(url)
+        }
+    }
+    
     var body: some View {
-        print("x轴的坐标是===> \(xStart) \(xEnd) \(xPointStep)")
-        print(Array(
-            stride(
-                from: xStart,
-                through: xEnd,
-                by: xPointStep
-            )
-        ))
-        return Chart {
-            ForEach(Array(data.CO2WavePoints.enumerated()), id: \.offset) { index, point in
-                LineMark(
-                    x: .value("Index", point.index),
-                    y: .value("Value", point.co2)
-                )
-                .interpolationMethod(.cardinal)
-            }
-        }
-        .chartXAxis {
-            AxisMarks(
-                preset: .aligned,
-                position: .bottom,
-                values: Array(
-                    stride(
-                        from: xStart,
-                        through: xEnd,
-                        by: xPointStep
-                    )
-                )
-            ) { value in
-                return AxisValueLabel {
-                    if let intValue = value.as(Int.self) {
-                        Text("\(intValue / 100)S")
-                            .font(.system(size: fSize))
-                            .rotationEffect(.degrees(0))
-                            .frame(width: 40)
+        return ZStack {
+            Chart {
+                    ForEach(Array(data.CO2WavePoints.enumerated()), id: \.offset) { index, point in
+                        LineMark(
+                            x: .value("Index", point.index),
+                            y: .value("Value", point.co2)
+                        )
+                        .interpolationMethod(.cardinal)
                     }
                 }
-                AxisTick(stroke: StrokeStyle(lineWidth: 1)).foregroundStyle(Color.gray)
-                AxisGridLine(centered: true).foregroundStyle(.gray)
-            }
-        }
-//    TODO: 测试用
-//        .chartYScale(domain: 0...Double(blm.CO2Scale.rawValue))
-        .chartYScale(domain: 0...Double(CO2ScaleEnum.mmHg_Large.rawValue))
-        .chartYAxis {
-            AxisMarks(
-                position: .leading,
-//                TODO: 测试用
-//                values: generateYAxis(scale: blm.CO2Scale)
-                values: generateYAxis(scale: CO2ScaleEnum.mmHg_Large)
-            ) { value in
-                AxisValueLabel {
-                    if let intValue = value.as(Int.self) {
-                        Text("\(intValue)")
-                            .font(.system(size: fSize))
-                            .rotationEffect(.degrees(0))
-                            .frame(width: 40)
+                .chartXScale(domain: xStart...xEnd)
+                .chartXAxis {
+                    AxisMarks(
+                        preset: .aligned,
+                        position: .bottom,
+                        values: Array(
+                            stride(
+                                from: xStart,
+                                through: xEnd,
+                                by: xPointStep
+                            )
+                        )
+                    ) { value in
+                        return AxisValueLabel {
+                            if let intValue = value.as(Int.self) {
+                                Text("\(intValue / 100)S")
+                                    .font(.system(size: fSize))
+                                    .rotationEffect(.degrees(0))
+                                    .frame(width: 40)
+                            }
+                        }
+                        AxisTick(stroke: StrokeStyle(lineWidth: 1)).foregroundStyle(Color.gray)
+                        AxisGridLine(centered: true).foregroundStyle(.gray)
                     }
                 }
-                AxisTick(stroke: StrokeStyle(lineWidth: 1)).foregroundStyle(Color.gray)
-                AxisGridLine(centered: true).foregroundStyle(.gray)
-            }
+        //    TODO: 测试用
+        //        .chartYScale(domain: 0...Double(blm.CO2Scale.rawValue))
+                .chartYScale(domain: 0...Double(CO2ScaleEnum.mmHg_Large.rawValue))
+                .chartYAxis {
+                    AxisMarks(
+                        position: .leading,
+        //                TODO: 测试用
+        //                values: generateYAxis(scale: blm.CO2Scale)
+                        values: generateYAxis(scale: CO2ScaleEnum.mmHg_Large)
+                    ) { value in
+                        AxisValueLabel {
+                            if let intValue = value.as(Int.self) {
+                                Text("\(intValue)")
+                                    .font(.system(size: fSize))
+                                    .rotationEffect(.degrees(0))
+                                    .frame(width: 40)
+                            }
+                        }
+                        AxisTick(stroke: StrokeStyle(lineWidth: 1)).foregroundStyle(Color.gray)
+                        AxisGridLine(centered: true).foregroundStyle(.gray)
+                    }
+                }
+        //        .frame(
+        //            width: A4Size.width.rawValue,
+        //            height: A4Size.height.rawValue
+        //        )
+                .padding(0)
+        //        .rotationEffect(.degrees(-90))
+            
+            Text("WLD Instruments Co., Ltd")
+                .font(.system(size: 14))
+                .fontWeight(.bold)
+                .foregroundColor(Color.black.opacity(0.1))
+                .padding()
+                .position(x: 350, y: 50)
+                .rotationEffect(.degrees(-45))
+                .onTapGesture {
+                    gotoWLD()
+                }
+            
+            Text("WLD Instruments Co., Ltd")
+                .font(.system(size: 14))
+                .fontWeight(.bold)
+                .foregroundColor(Color.black.opacity(0.1))
+                .padding()
+                .position(x: 250, y: 250)
+                .rotationEffect(.degrees(-45))
+                .onTapGesture {
+                    gotoWLD()
+                }
+
+            Text("WLD Instruments Co., Ltd")
+                .font(.system(size: 14))
+                .fontWeight(.bold)
+                .foregroundColor(Color.black.opacity(0.1))
+                .padding()
+                .position(x: 550, y: 250)
+                .rotationEffect(.degrees(-45))
+                .onTapGesture {
+                    gotoWLD()
+                }
+
+            Text("WLD Instruments Co., Ltd")
+                .font(.system(size: 14))
+                .fontWeight(.bold)
+                .foregroundColor(Color.black.opacity(0.1))
+                .padding()
+                .position(x: 450, y: 450)
+                .rotationEffect(.degrees(-45))
+                .onTapGesture {
+                    gotoWLD()
+                }
+            
+            Text("WLD Instruments Co., Ltd")
+                .font(.system(size: 14))
+                .fontWeight(.bold)
+                .foregroundColor(Color.black.opacity(0.1))
+                .padding()
+                .position(x: 750, y: 450)
+                .rotationEffect(.degrees(-45))
+                .onTapGesture {
+                    gotoWLD()
+                }
         }
-        .frame(
-            width: A4Size.width.rawValue,
-            height: A4Size.height.rawValue
-        )
-        .padding(0)
-        .rotationEffect(.degrees(-90))
     }
 }
 
@@ -314,62 +389,8 @@ class HistoryDataManage: ObservableObject {
         self.data = nil
     }
 
-    // TODO:(wsw) 使用CoreGraphics创建PDF
-    /**
-    * 保存pdf数据到指定路径
-    * @params fileUrl: 文件保存的路径
-    * @return SaveResultTypes
-    */
-    // private func _savePDFToLocal() throws -> SaveResultTypes {
-    //     // 获取本地文档目录的 URL
-    //     guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-    //         throw SaveErrorTypes.InvalidDirectory
-    //     }
-    //     // 文件名称格式: 20240501182530_20240502192544.pdf 每部分含义如下
-    //     // 第一部分: 波形数据起始时间: 2024年5月1日18点25分30秒
-    //     // 第二部分: 波形数据结束时间: 2024年5月2日19点25分44秒
-    //    let localFileName = "\(data!.recordStartDateStr)-\(data!.recordEndDateStr)"
-    //     // TODO: 临时固定名字，方便后续打开查看
-    //     // let localFileName = "sample"
-        
-    //     // 如果没有blm或者数据，直接返回无数据异常
-    //     guard let data = self.data, let blm = self.blm else {
-    //         return SaveResultTypes.Error(.NoData)
-    //     }
-
-    //     // 保存到PDF中
-    //     // 创建完整的文件路径
-    //     self.pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(SaveTypes.PDF.rawValue)")
-    //     //    TODO: 存储地址
-    //     print("pdfURL===> \(pdfURL)")
-        
-    //     // 定义 PDF 页面尺寸与图像尺寸一致
-    //     var pdfPageBounds = CGRect(x: 0, y: 0, width: A4Size.width.rawValue, height: A4Size.height.rawValue)
-
-    //     guard let pdfURL = self.pdfURL,
-    //           let pdfContext = CGContext(pdfURL as CFURL, mediaBox: &pdfPageBounds, nil) else {
-    //         print("无法创建 PDF 上下文")
-    //         return SaveResultTypes.Error(.SaveFailed)
-    //     }
-        
-    //     // 绘制 Chart View
-    //     let chartImage = LineChartViewForImage(data: data, blm: blm).asImage()
-
-    //     // 开始 PDF 页面
-    //     pdfContext.beginPDFPage(nil)
-
-    //     // 将 UIImage 绘制到 PDF 页面
-    //     UIGraphicsPushContext(pdfContext)
-    //     chartImage.draw(in: pdfPageBounds)
-    //     UIGraphicsPopContext()
-
-    //     // 结束 PDF 页面
-    //     pdfContext.endPDFPage()
-
-    //     return SaveResultTypes.Success
-    // }
-
     // 调试，使用ImageRenderer创建pdf
+    @MainActor
     private func _savePDFToLocal() throws -> SaveResultTypes {
         // 获取本地文档目录的 URL
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
@@ -378,9 +399,7 @@ class HistoryDataManage: ObservableObject {
         // 文件名称格式: 20240501182530_20240502192544.pdf 每部分含义如下
         // 第一部分: 波形数据起始时间: 2024年5月1日18点25分30秒
         // 第二部分: 波形数据结束时间: 2024年5月2日19点25分44秒
-        // let localFileName = "\(data!.recordStartDateStr)-\(data!.recordEndDateStr)"
-        // TODO: 临时固定名字，方便后续打开查看
-        let localFileName = "sample"
+        let localFileName = "\(data!.recordStartDateStr)-\(data!.recordEndDateStr)"
         
         // 如果没有blm或者数据，直接返回无数据异常
         guard let data = self.data, let blm = self.blm else {
@@ -390,8 +409,77 @@ class HistoryDataManage: ObservableObject {
         // 保存到PDF中
         // 创建完整的文件路径
         self.pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(SaveTypes.PDF.rawValue)")
+        print("尝试这个pdfURL===> \(pdfURL)")
+
+        // 保存到PDF中
+        // 创建完整的文件路径
+        self.pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(SaveTypes.PDF.rawValue)")
         //    TODO: 存储地址
         print("pdfURL===> \(pdfURL)")
+
+        // 定义 PDF 页面尺寸与图像尺寸一致
+        var pdfPageBounds = CGRect(x: 0, y: 0, width: A4Size.width.rawValue, height: A4Size.height.rawValue)
+
+        guard let url = self.pdfURL else {
+            print("无法创建 PDF 上下文")
+            return SaveResultTypes.Error(.SaveFailed)
+        }
+
+        print(url)
+        // 每页展示500个点位
+        let pagePointsNumber: Int = 500
+
+        //TODO:  测试数据，后面整体换为真实数据
+        var waveData: [CO2WavePointData] = []
+        for i in 1...1000000 {
+        // for i in 1...1500 {
+            let co2Value = Float(10 + 5 * sin(Double(i) * 2 * Double.pi / 100))
+            let dataPoint = CO2WavePointData(co2: co2Value, RR: 0, ETCO2: 0, FiCO2: 0, index: i)
+            waveData.append(dataPoint)
+        }
+
+        var box = CGRect(
+            x: 0, 
+            y: 0, 
+            width: A4Size.width.rawValue, 
+            height: A4Size.height.rawValue
+        )
+        if let context = CGContext(url as CFURL, mediaBox: &box, nil) {
+            let chunks = waveData.chunked(into: pagePointsNumber)
+            for (index, chunk) in chunks.enumerated() {
+                let xStart = Swift.max(index * pagePointsNumber, 0)
+                let xEnd = Swift.min(xStart + pagePointsNumber, waveData.count)
+                print("当前是第\(index + 1)页,起始是\(xStart)，结束是\(xEnd)")
+                let renderer = ImageRenderer(
+                    content: LineChartViewForImage(
+                        data: HistoryData(
+                            minRR: 30,
+                            maxRR: 50,
+                            minETCO2: 30,
+                            maxETCO2: 50,
+                            CO2WavePoints: chunk
+                        ),
+                        xStart: xStart,
+                        xEnd: xEnd
+                    )
+                        .frame(
+                            width: A4Size.width.rawValue - 50 * 2,
+                            height: A4Size.height.rawValue - 20 * 2
+                        )
+                        .padding(.top, 20)
+                        .padding(.bottom, 20)
+                        .padding(.leading, 50)
+                        .padding(.trailing, 50)
+                )
+                context.beginPDFPage(nil)
+                renderer.render { size, renderer in
+                    renderer(context)
+                }
+                context.endPDFPage()
+            }
+            context.closePDF()
+        }
+
 
         return SaveResultTypes.Success
     }
@@ -402,6 +490,7 @@ class HistoryDataManage: ObservableObject {
     * @params pdfData: 波形数据
     * @return SaveResultTypes
     */
+    @MainActor
     private func _saveToLocal(type: SaveTypes = SaveTypes.PDF) throws -> SaveResultTypes {
         guard data != nil else {
             throw SaveErrorTypes.NoData
