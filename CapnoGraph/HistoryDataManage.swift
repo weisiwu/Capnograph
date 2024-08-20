@@ -141,7 +141,7 @@ struct LineChartViewForImage: View {
     var data: HistoryData
     var xStart: Int = 0
     var xEnd: Int = 0
-//    var blm: BluetoothManager
+    var blm: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
     var fSize: CGFloat = 14
 
@@ -188,14 +188,14 @@ struct LineChartViewForImage: View {
                     }
                 }
         //    TODO: 测试用
-        //        .chartYScale(domain: 0...Double(blm.CO2Scale.rawValue))
-                .chartYScale(domain: 0...Double(CO2ScaleEnum.mmHg_Large.rawValue))
+                .chartYScale(domain: 0...Double(blm.CO2Scale.rawValue))
+//                .chartYScale(domain: 0...Double(CO2ScaleEnum.mmHg_Large.rawValue))
                 .chartYAxis {
                     AxisMarks(
                         position: .leading,
         //                TODO: 测试用
-        //                values: generateYAxis(scale: blm.CO2Scale)
-                        values: generateYAxis(scale: CO2ScaleEnum.mmHg_Large)
+                        values: generateYAxis(scale: blm.CO2Scale)
+//                        values: generateYAxis(scale: CO2ScaleEnum.mmHg_Large)
                     ) { value in
                         AxisValueLabel {
                             if let intValue = value.as(Int.self) {
@@ -409,12 +409,10 @@ class HistoryDataManage: ObservableObject {
         // 保存到PDF中
         // 创建完整的文件路径
         self.pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(SaveTypes.PDF.rawValue)")
-        print("尝试这个pdfURL===> \(pdfURL)")
 
         // 保存到PDF中
         // 创建完整的文件路径
         self.pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(SaveTypes.PDF.rawValue)")
-        //    TODO: 存储地址
         print("pdfURL===> \(pdfURL)")
 
         // 定义 PDF 页面尺寸与图像尺寸一致
@@ -430,13 +428,14 @@ class HistoryDataManage: ObservableObject {
         let pagePointsNumber: Int = 500
 
         //TODO:  测试数据，后面整体换为真实数据
-        var waveData: [CO2WavePointData] = []
-        for i in 1...1000000 {
-        // for i in 1...1500 {
-            let co2Value = Float(10 + 5 * sin(Double(i) * 2 * Double.pi / 100))
-            let dataPoint = CO2WavePointData(co2: co2Value, RR: 0, ETCO2: 0, FiCO2: 0, index: i)
-            waveData.append(dataPoint)
-        }
+//        var waveData: [CO2WavePointData] = []
+//        for i in 1...1000000 {
+//        // for i in 1...1500 {
+//            let co2Value = Float(10 + 5 * sin(Double(i) * 2 * Double.pi / 100))
+//            let dataPoint = CO2WavePointData(co2: co2Value, RR: 0, ETCO2: 0, FiCO2: 0, index: i)
+//            waveData.append(dataPoint)
+//        }
+        let waveData = blm.totalCO2WavedData
 
         var box = CGRect(
             x: 0, 
@@ -453,10 +452,10 @@ class HistoryDataManage: ObservableObject {
                 let renderer = ImageRenderer(
                     content: LineChartViewForImage(
                         data: HistoryData(
-                            minRR: 30,
-                            maxRR: 50,
-                            minETCO2: 30,
-                            maxETCO2: 50,
+                            minRR: blm.rrLower,
+                            maxRR: blm.rrUpper,
+                            minETCO2: blm.etCo2Lower,
+                            maxETCO2: blm.etCo2Upper,
                             CO2WavePoints: chunk
                         ),
                         xStart: xStart,
