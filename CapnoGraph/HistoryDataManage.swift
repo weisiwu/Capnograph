@@ -122,9 +122,9 @@ class HistoryData {
     }
   
     // 更新历史波形数据
-    func updateWavePoints(newPoint: CO2WavePointData) {
-        CO2WavePoints.append(newPoint)
-    }
+    // func updateWavePoints(newPoint: CO2WavePointData) {
+    //     CO2WavePoints.append(newPoint)
+    // }
 
     // 终止记录数据
     func markEndTime() {
@@ -141,15 +141,9 @@ struct LineChartViewForImage: View {
     var data: HistoryData
     var xStart: Int = 0
     var xEnd: Int = 0
-//    var blm: BluetoothManager
+    var blm: BluetoothManager
     @EnvironmentObject var appConfigManage: AppConfigManage
     var fSize: CGFloat = 14
-
-    func gotoWLD() {
-        if let url = URL(string: "https://www.google.com") {
-            UIApplication.shared.open(url)
-        }
-    }
     
     var body: some View {
         return ZStack {
@@ -159,7 +153,7 @@ struct LineChartViewForImage: View {
                             x: .value("Index", point.index),
                             y: .value("Value", point.co2)
                         )
-                        .interpolationMethod(.cardinal)
+                        .interpolationMethod(.catmullRom)
                     }
                 }
                 .chartXScale(domain: xStart...xEnd)
@@ -175,7 +169,7 @@ struct LineChartViewForImage: View {
                             )
                         )
                     ) { value in
-                        return AxisValueLabel {
+                        AxisValueLabel {
                             if let intValue = value.as(Int.self) {
                                 Text("\(intValue / 100)S")
                                     .font(.system(size: fSize))
@@ -187,15 +181,15 @@ struct LineChartViewForImage: View {
                         AxisGridLine(centered: true).foregroundStyle(.gray)
                     }
                 }
-        //    TODO: 测试用
-        //        .chartYScale(domain: 0...Double(blm.CO2Scale.rawValue))
-                .chartYScale(domain: 0...Double(CO2ScaleEnum.mmHg_Large.rawValue))
+                // TODO: 测试用
+                .chartYScale(domain: 0...Double(blm.CO2Scale.rawValue))
+                // .chartYScale(domain: 0...Double(CO2ScaleEnum.mmHg_Large.rawValue))
                 .chartYAxis {
                     AxisMarks(
                         position: .leading,
-        //                TODO: 测试用
-        //                values: generateYAxis(scale: blm.CO2Scale)
-                        values: generateYAxis(scale: CO2ScaleEnum.mmHg_Large)
+                        // TODO: 测试用
+                        values: generateYAxis(scale: blm.CO2Scale)
+                        // values: generateYAxis(scale: CO2ScaleEnum.mmHg_Large)
                     ) { value in
                         AxisValueLabel {
                             if let intValue = value.as(Int.self) {
@@ -209,12 +203,7 @@ struct LineChartViewForImage: View {
                         AxisGridLine(centered: true).foregroundStyle(.gray)
                     }
                 }
-        //        .frame(
-        //            width: A4Size.width.rawValue,
-        //            height: A4Size.height.rawValue
-        //        )
                 .padding(0)
-        //        .rotationEffect(.degrees(-90))
             
             Text("WLD Instruments Co., Ltd")
                 .font(.system(size: 14))
@@ -223,9 +212,6 @@ struct LineChartViewForImage: View {
                 .padding()
                 .position(x: 350, y: 50)
                 .rotationEffect(.degrees(-45))
-                .onTapGesture {
-                    gotoWLD()
-                }
             
             Text("WLD Instruments Co., Ltd")
                 .font(.system(size: 14))
@@ -234,9 +220,6 @@ struct LineChartViewForImage: View {
                 .padding()
                 .position(x: 250, y: 250)
                 .rotationEffect(.degrees(-45))
-                .onTapGesture {
-                    gotoWLD()
-                }
 
             Text("WLD Instruments Co., Ltd")
                 .font(.system(size: 14))
@@ -245,9 +228,6 @@ struct LineChartViewForImage: View {
                 .padding()
                 .position(x: 550, y: 250)
                 .rotationEffect(.degrees(-45))
-                .onTapGesture {
-                    gotoWLD()
-                }
 
             Text("WLD Instruments Co., Ltd")
                 .font(.system(size: 14))
@@ -256,9 +236,6 @@ struct LineChartViewForImage: View {
                 .padding()
                 .position(x: 450, y: 450)
                 .rotationEffect(.degrees(-45))
-                .onTapGesture {
-                    gotoWLD()
-                }
             
             Text("WLD Instruments Co., Ltd")
                 .font(.system(size: 14))
@@ -267,9 +244,6 @@ struct LineChartViewForImage: View {
                 .padding()
                 .position(x: 750, y: 450)
                 .rotationEffect(.degrees(-45))
-                .onTapGesture {
-                    gotoWLD()
-                }
         }
     }
 }
@@ -359,7 +333,6 @@ class HistoryDataManage: ObservableObject {
 
     // 将蓝牙管理实例注入历史数据中
     func syncBluetoothManagerData() {
-        print("是否开启注入")
         guard let blm = self.blm else {
             print("无蓝牙，无法注入")
             return
@@ -372,21 +345,6 @@ class HistoryDataManage: ObservableObject {
             maxETCO2: blm.etCo2Upper,
             CO2WavePoints: []
         )
-
-        guard let historyData = self.data else {
-            return
-        }
-
-        blm.totalCO2WavedData.forEach { point in
-            historyData.updateWavePoints(newPoint: point)
-        }
-    }
-
-    /**
-    * 清空记录
-    */
-    func clearRecord() {
-        self.data = nil
     }
 
     // 调试，使用ImageRenderer创建pdf
@@ -396,25 +354,20 @@ class HistoryDataManage: ObservableObject {
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             throw SaveErrorTypes.InvalidDirectory
         }
-        // 文件名称格式: 20240501182530_20240502192544.pdf 每部分含义如下
-        // 第一部分: 波形数据起始时间: 2024年5月1日18点25分30秒
-        // 第二部分: 波形数据结束时间: 2024年5月2日19点25分44秒
-        let localFileName = "\(data!.recordStartDateStr)-\(data!.recordEndDateStr)"
         
         // 如果没有blm或者数据，直接返回无数据异常
         guard let data = self.data, let blm = self.blm else {
             return SaveResultTypes.Error(.NoData)
         }
 
-        // 保存到PDF中
-        // 创建完整的文件路径
-        self.pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(SaveTypes.PDF.rawValue)")
-        print("尝试这个pdfURL===> \(pdfURL)")
+        // 文件名称格式: 20240501182530_20240502192544.pdf 每部分含义如下
+        // 第一部分: 波形数据起始时间: 2024年5月1日18点25分30秒
+        // 第二部分: 波形数据结束时间: 2024年5月2日19点25分44秒
+        let localFileName = "\(data.recordStartDateStr)-\(data.recordEndDateStr)"
 
         // 保存到PDF中
         // 创建完整的文件路径
         self.pdfURL = documentsDirectory.appendingPathComponent("\(localFileName).\(SaveTypes.PDF.rawValue)")
-        //    TODO: 存储地址
         print("pdfURL===> \(pdfURL)")
 
         // 定义 PDF 页面尺寸与图像尺寸一致
@@ -425,18 +378,20 @@ class HistoryDataManage: ObservableObject {
             return SaveResultTypes.Error(.SaveFailed)
         }
 
-        print(url)
         // 每页展示500个点位
         let pagePointsNumber: Int = 500
 
         //TODO:  测试数据，后面整体换为真实数据
-        var waveData: [CO2WavePointData] = []
-        for i in 1...1000000 {
-        // for i in 1...1500 {
-            let co2Value = Float(10 + 5 * sin(Double(i) * 2 * Double.pi / 100))
-            let dataPoint = CO2WavePointData(co2: co2Value, RR: 0, ETCO2: 0, FiCO2: 0, index: i)
-            waveData.append(dataPoint)
-        }
+    //    var waveData: [CO2WavePointData] = []
+    //    for i in 1...1000000 {
+    //    for i in 1...10000 {
+    //    for i in 1...1500 {
+    //        let co2Value = Float(10 + 5 * sin(Double(i) * 2 * Double.pi / 100))
+    //        let dataPoint = CO2WavePointData(co2: co2Value, RR: 0, ETCO2: 0, FiCO2: 0, index: i)
+    //        waveData.append(dataPoint)
+    //    }
+        let waveData = blm.totalCO2WavedData
+        print("蓝牙一共接收到\(waveData.count)")
 
         var box = CGRect(
             x: 0, 
@@ -444,32 +399,34 @@ class HistoryDataManage: ObservableObject {
             width: A4Size.width.rawValue, 
             height: A4Size.height.rawValue
         )
-        if let context = CGContext(url as CFURL, mediaBox: &box, nil) {
+        if let blm = self.blm,
+            let context = CGContext(url as CFURL, mediaBox: &box, nil) {
             let chunks = waveData.chunked(into: pagePointsNumber)
             for (index, chunk) in chunks.enumerated() {
                 let xStart = Swift.max(index * pagePointsNumber, 0)
                 let xEnd = Swift.min(xStart + pagePointsNumber, waveData.count)
-                print("当前是第\(index + 1)页,起始是\(xStart)，结束是\(xEnd)")
+                print("第\(index + 1)页: 起\(xStart) 结\(xEnd) \(chunk.count)")
                 let renderer = ImageRenderer(
                     content: LineChartViewForImage(
                         data: HistoryData(
-                            minRR: 30,
-                            maxRR: 50,
-                            minETCO2: 30,
-                            maxETCO2: 50,
+                            minRR: blm.rrLower,
+                            maxRR: blm.rrUpper,
+                            minETCO2: blm.etCo2Lower,
+                            maxETCO2: blm.etCo2Upper,
                             CO2WavePoints: chunk
                         ),
                         xStart: xStart,
-                        xEnd: xEnd
+                        xEnd: xEnd,
+                        blm: blm
                     )
                         .frame(
                             width: A4Size.width.rawValue - 50 * 2,
                             height: A4Size.height.rawValue - 20 * 2
                         )
-                        .padding(.top, 20)
-                        .padding(.bottom, 20)
-                        .padding(.leading, 50)
-                        .padding(.trailing, 50)
+                        // .padding(.top, 20)
+                        // .padding(.bottom, 20)
+                        // .padding(.leading, 50)
+                        // .padding(.trailing, 50)
                 )
                 context.beginPDFPage(nil)
                 renderer.render { size, renderer in
@@ -492,9 +449,9 @@ class HistoryDataManage: ObservableObject {
     */
     @MainActor
     private func _saveToLocal(type: SaveTypes = SaveTypes.PDF) throws -> SaveResultTypes {
-        guard data != nil else {
+        guard let blm = self.blm, blm.totalCO2WavedData.count > 0 else {
             throw SaveErrorTypes.NoData
-        }
+        }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
 
         // 标记记录数据结束时间
         data!.markEndTime()
