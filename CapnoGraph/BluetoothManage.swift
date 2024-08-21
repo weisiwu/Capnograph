@@ -855,14 +855,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             default:
                 print("CO2Waveform DPI 不匹配")
             }
-            // 更新数据到CO2
-            currentWavePointData = CO2WavePointData(
-                co2: currentCO2,
-                RR: RespiratoryRate,
-                ETCO2: ETCO2,
-                FiCO2: FiCO2,
-                index: totalCO2WavedData.count
-            )
             isValidETCO2 = CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower;
             isValidRR = CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower;
 
@@ -876,6 +868,14 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 isPlayingAlaram = true
             }
         }
+        // 更新数据到CO2
+        currentWavePointData = CO2WavePointData(
+            co2: currentCO2,
+            RR: RespiratoryRate,
+            ETCO2: ETCO2,
+            FiCO2: FiCO2,
+            index: totalCO2WavedData.count
+        )
         // 将受到的数据绘制到曲线图上
         receivedCO2WavedData.append(DataPoint(value: currentCO2))
         totalCO2WavedData.append(currentWavePointData)

@@ -150,10 +150,10 @@ struct LineChartViewForImage: View {
             Chart {
                     ForEach(Array(data.CO2WavePoints.enumerated()), id: \.offset) { index, point in
                         LineMark(
-                            x: .value("Index", point.index),
+                            x: .value("Index", index + xStart),
                             y: .value("Value", point.co2)
                         )
-                        .interpolationMethod(.catmullRom)
+                         .interpolationMethod(.catmullRom)
                     }
                 }
                 .chartXScale(domain: xStart...xEnd)
@@ -171,7 +171,7 @@ struct LineChartViewForImage: View {
                     ) { value in
                         AxisValueLabel {
                             if let intValue = value.as(Int.self) {
-                                Text("\(intValue / 100)S")
+                                Text("\(intValue / xPointStep)S")
                                     .font(.system(size: fSize))
                                     .rotationEffect(.degrees(0))
                                     .frame(width: 40)
@@ -401,6 +401,10 @@ class HistoryDataManage: ObservableObject {
         )
         if let blm = self.blm,
             let context = CGContext(url as CFURL, mediaBox: &box, nil) {
+            print("输出一下表格当前的值 \(blm.receivedCO2WavedData)")
+            for (index, value) in blm.receivedCO2WavedData.enumerated() {
+                print("已经接收到的\(index) => \(value)")
+            }
             let chunks = waveData.chunked(into: pagePointsNumber)
             for (index, chunk) in chunks.enumerated() {
                 let xStart = Swift.max(index * pagePointsNumber, 0)
@@ -423,10 +427,10 @@ class HistoryDataManage: ObservableObject {
                             width: A4Size.width.rawValue - 50 * 2,
                             height: A4Size.height.rawValue - 20 * 2
                         )
-                        // .padding(.top, 20)
-                        // .padding(.bottom, 20)
-                        // .padding(.leading, 50)
-                        // .padding(.trailing, 50)
+                        .padding(.top, 20)
+                        .padding(.bottom, 20)
+                        .padding(.leading, 50)
+                        .padding(.trailing, 50)
                 )
                 context.beginPDFPage(nil)
                 renderer.render { size, renderer in
