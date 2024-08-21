@@ -129,13 +129,24 @@ enum ISBState: Equatable {
     case CMD_F2H(ISBStateF2H)
 }
 
+// 报警类型
+enum AudioType {
+    case AbnormalAlert // 数值异常报警
+    case AsphyxiaAlert // 窒息报警
+}
+
 class AudioPlayer {
     var audioPlayer: AVAudioPlayer?
     var isReady: Bool = true
     
-    func playAudio() {
-        guard let url = Bundle.main.url(forResource: "Medium", withExtension: "wav") else {
-            print("找不到音频文件")
+    // 默认窒息类型
+    func playAsphyxiaAlertAudio(type: AudioType = AudioType.AsphyxiaAlert) {
+        guard let asphyxiaAlertUrl = Bundle.main.url(
+            forResource: "AsphyxiaAlert", 
+            withExtension: "wav"
+        ), let abnormalAlertUrl = Bundle.main.url(
+            forResource: "AbnormalAlert", withExtension: "wav") else {
+            print("找不到报警音频文件")
             return
         }
 
@@ -146,6 +157,8 @@ class AudioPlayer {
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
+
+            let url = type == AudioType.AbnormalAlert ? abnormalAlertUrl : asphyxiaAlertUrl
 
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.prepareToPlay()
@@ -856,7 +869,10 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             // 检查是否需要报警
             // 1、是否窒息 或者 ETCO2是否超过范围、RR是否超过范围
             if isAsphyxiation {
-                audioIns.playAudio()
+                audioIns.playAsphyxiaAlertAudio()
+                isPlayingAlaram = true
+            } else if !isValidETCO2 || !isValidRR {
+                audioIns.playAsphyxiaAlertAudio(type: AudioType.AbnormalAlert)
                 isPlayingAlaram = true
             }
         }
