@@ -6,7 +6,8 @@ import PDFKit
 
 // 最多展示的横向点数量，每10ms接收到一帧数据，横坐标展示20s的波形图，则共1000个横坐标
 let maxXPoints: Int = 400
-let xPointStep: Int = 100 // 步长，每100取一个坐标点
+// let xPointStep: Int = 100 // 步长，每100取一个坐标点
+let xPointStep: Int = 50 // 步长，每50取一个坐标点
 let unRealValue: Float = 0 // 初始线表时，所有点的初始值
 
 struct DataPoint: Identifiable {
@@ -34,7 +35,7 @@ struct LineChartView: View {
             AxisMarks(preset: .aligned, values: Array(stride(from: 0, through: maxXPoints, by: xPointStep))) { value in
                 AxisValueLabel {
                     if let intValue = value.as(Int.self) {
-                        Text("\(intValue / 100)\(appConfigManage.getTextByKey(key: "MainLineCharUnit"))")
+                        Text("\(intValue / xPointStep)\(appConfigManage.getTextByKey(key: "MainLineCharUnit"))")
                     }
                 }
             }
