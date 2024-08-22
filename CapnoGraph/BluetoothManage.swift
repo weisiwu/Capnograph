@@ -143,6 +143,8 @@ enum AudioType {
 class AudioPlayer {
     var audioPlayer: AVAudioPlayer?
     var isReady: Bool = true
+    // 使用数字替代状态: 0: 不播放 1: 低级报警 2: 中级报警
+    var playStatus: Int = 0
     
     // 默认窒息类型
     func playAlertAudio(type: AudioType = AudioType.MiddleLevelAlert) {
@@ -157,18 +159,51 @@ class AudioPlayer {
             return
         }
 
+        print("历史的状态是什么 \(playStatus) \(isReady)")
+        if !isReady {
+            return
+        }
+        
+        let newPlayStatus = type == AudioType.MiddleLevelAlert ? 2 : 1
+        print("新的状态是什么 \(newPlayStatus)")
+        
+        // 如果新状态是不播放，直接退出
+        if newPlayStatus == 0 {
+            playStatus = 0
+            // 播放新的报警前，先停止已有的
+            stopAudio()
+            return
+        }
+
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
-
-            let url = type == AudioType.MiddleLevelAlert ? middleAlertUrl : lowAlertUrl
-
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.prepareToPlay()
-            audioPlayer?.play()
-            isReady = false
-            DispatchQueue.main.asyncAfter(deadline: .now() + 14) {
-                self.isReady = true
+            
+            // 由低级报警升为中级报警
+            if newPlayStatus == 2 && isReady {
+                // 播放新的报警前，先停止已有的
+                stopAudio()
+                audioPlayer = try AVAudioPlayer(contentsOf: middleAlertUrl)
+                audioPlayer?.prepareToPlay()
+                print("开始播放中级报警")
+                audioPlayer?.play()
+                isReady = false
+                playStatus = newPlayStatus
+                DispatchQueue.main.asyncAfter(deadline: .now() + 14) {
+                    self.isReady = true
+                }
+            } else if newPlayStatus == 1 && isReady {
+                // 播放新的报警前，先停止已有的
+                stopAudio()
+                audioPlayer = try AVAudioPlayer(contentsOf: lowAlertUrl)
+                audioPlayer?.prepareToPlay()
+                print("开始播放低级报警")
+                audioPlayer?.play()
+                isReady = false
+                playStatus = newPlayStatus
+                DispatchQueue.main.asyncAfter(deadline: .now() + 14) {
+                    self.isReady = true
+                }
             }
         } catch {
             print("无法播放音频文件: \(error.localizedDescription)")
@@ -176,6 +211,7 @@ class AudioPlayer {
     }
     
     func stopAudio() {
+        isReady = true
         audioPlayer?.stop()
     }
 }
@@ -242,7 +278,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     let savedPeripheralIdentifierKey = "SavedPeripheralIdentifier"
     // 音频播放器
     var audioIns = AudioPlayer()
-    var isPlayingAlaram: Bool = false
     // 蓝牙是否关闭,初始化为nil
     @Published var isBluetoothClose: Bool? = nil
     // 蓝牙状态发生变化
@@ -585,7 +620,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             resetSendData()
             audioIns.stopAudio()
-            isPlayingAlaram = false
             correctZeroCallback = cb
         }
     }
@@ -853,8 +887,12 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                     isAdaptorPolluted = (data[6] & 0x01) == 1
                 case ISBState80H.ETCO2Value.rawValue:
                     ETCO2 = Float(Int(data[6]) * 128 + Int(data[7])) / 10;
+                    // 检测到呼吸。才能计算是否异常。
+                    isValidETCO2 = !Breathe || (CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower);
                 case ISBState80H.RRValue.rawValue:
                     RespiratoryRate = Int(Int(data[6]) * 128 + Int(data[7]));
+                    // 检测到呼吸。才能计算是否异常。
+                    isValidRR = !Breathe || (CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower);
                 case ISBState80H.FiCO2Value.rawValue:
                     FiCO2 = Int((Int(data[6]) * 128 + Int(data[7])) / 10);
                 case ISBState80H.DetectBreath.rawValue:
@@ -862,14 +900,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 default:
                     print("CO2Waveform DPI 不匹配")
             }
-            isValidETCO2 = CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower;
-            isValidRR = CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower;
-
-            // TODO:(wsw) 待处理的状态
-            // isLowerEnergy
-            // isNeedZeroCorrect
-            // isAdaptorInvalid
-            // isAdaptorPolluted            
 
             // 检查是否需要报警
             if !isAsphyxiation
@@ -881,17 +911,16 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 && !isAdaptorPolluted {
                 // 所有状态均正常
                 audioIns.stopAudio()
-                isPlayingAlaram = false
             } else if isAsphyxiation || !isValidETCO2 || !isValidRR || isLowerEnergy {
                 // 中级报警: 生理报警
                 // 1、是否窒息 2、ETCO2是否超过范围 3、RR是否超过范围 4、是否为低电量
+                print("中级报警")
                 audioIns.playAlertAudio(type: AudioType.MiddleLevelAlert)
-                isPlayingAlaram = true
             } else if isNeedZeroCorrect || isAdaptorInvalid || isAdaptorPolluted {
                 // 低级报警: 技术报警
-                audioIns.playAlertAudio(type: AudioType.LowLevelAlert)
                 // 1、需要零点校准 2、无适配器 3、适配器污染
-                isPlayingAlaram = true
+                print("低级报警")
+                audioIns.playAlertAudio(type: AudioType.LowLevelAlert)
             }
         }
         // 更新数据到CO2
@@ -1191,8 +1220,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         correctZeroCallback = nil
         updateCO2ScaleCallback = nil
         getSettingInfoCallback = nil
-        // 音频播放器
-        isPlayingAlaram = false
     }
 
     /**------  监听蓝牙状态 ------*/
