@@ -110,8 +110,9 @@ enum ISBState84H: Int {
 
 // 【ISB】扩展指令
 enum ISBStateF2H: Int {
-    case NoUse = 0x2A //
-    case CO2Scale = 0x2C //
+    case EnergyStatus = 0x29 // 读取电源状态
+    case NoUse = 0x2A // 读取报警配置
+    case CO2Scale = 0x2C // 波形显示范围
 }
 
 // 【ISB】获取软件信息指令 这是ISB只是用来区分场景，并非真实的设备ISB值
@@ -131,8 +132,12 @@ enum ISBState: Equatable {
 
 // 报警类型
 enum AudioType {
-    case AbnormalAlert // 数值异常报警
-    case AsphyxiaAlert // 窒息报警
+    // 低级报警
+    // 技术报警: 需要零点校准/无适配器/适配器污染
+    case LowLevelAlert
+    // 中级报警
+    // 生理报警: ETCO2值低/ETCO2值高/RR 值高/RR值低/窒息/电池电量低
+    case MiddleLevelAlert
 }
 
 class AudioPlayer {
@@ -140,17 +145,15 @@ class AudioPlayer {
     var isReady: Bool = true
     
     // 默认窒息类型
-    func playAsphyxiaAlertAudio(type: AudioType = AudioType.AsphyxiaAlert) {
-        guard let asphyxiaAlertUrl = Bundle.main.url(
-            forResource: "AsphyxiaAlert", 
+    func playAlertAudio(type: AudioType = AudioType.MiddleLevelAlert) {
+        guard let middleAlertUrl = Bundle.main.url(
+            forResource: "MiddleLevelAlert",
             withExtension: "wav"
-        ), let abnormalAlertUrl = Bundle.main.url(
-            forResource: "AbnormalAlert", withExtension: "wav") else {
+        ), let lowAlertUrl = Bundle.main.url(
+            forResource: "LowLevelAlert",
+            withExtension: "wav"
+        ) else {
             print("找不到报警音频文件")
-            return
-        }
-
-        if !isReady {
             return
         }
 
@@ -158,7 +161,7 @@ class AudioPlayer {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
 
-            let url = type == AudioType.AbnormalAlert ? abnormalAlertUrl : asphyxiaAlertUrl
+            let url = type == AudioType.MiddleLevelAlert ? middleAlertUrl : lowAlertUrl
 
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.prepareToPlay()
@@ -172,12 +175,7 @@ class AudioPlayer {
         }
     }
     
-    func resumePlayAudio() {
-        isReady = true
-    }
-    
     func stopAudio() {
-        isReady = false
         audioPlayer?.stop()
     }
 }
@@ -202,6 +200,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     @Published var isValidETCO2: Bool = true
     @Published var isValidRR: Bool = true
     @Published var isKeepScreenOn: Bool = false
+    @Published var isLowerEnergy: Bool = false // 电池电量低
+    @Published var isNeedZeroCorrect: Bool = false // 需要校零
+    @Published var isAdaptorInvalid: Bool = false // 无适配器
+    @Published var isAdaptorPolluted: Bool = false // 适配器污染
+
     var isCorrectZero: Bool = false
     var barometricPressure: Int = 0
     var NoBreaths: Int = 20
@@ -842,29 +845,52 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         // 存在DPI位时，常规波形信息还会携带定时上报的内容，需要额外处理
         if NBFM > 4 {
             switch DPIM {
-            case ISBState80H.CO2WorkStatus.rawValue:
-               handleCO2Status(data: data, NBFM: NBFM)
-            case ISBState80H.ETCO2Value.rawValue:
-                ETCO2 = Float(Int(data[6]) * 128 + Int(data[7])) / 10;
-            case ISBState80H.RRValue.rawValue:
-                RespiratoryRate = Int(Int(data[6]) * 128 + Int(data[7]));
-            case ISBState80H.FiCO2Value.rawValue:
-                FiCO2 = Int((Int(data[6]) * 128 + Int(data[7])) / 10);
-            case ISBState80H.DetectBreath.rawValue:
-                Breathe = true;
-            default:
-                print("CO2Waveform DPI 不匹配")
+                case ISBState80H.CO2WorkStatus.rawValue:
+                    handleCO2Status(data: data, NBFM: NBFM)
+                    // 模块需要校零: byte2 / bit 2 bit 3 = 10
+                    isNeedZeroCorrect = (data[7] & 0x0C) == 0x0C
+                    isAdaptorInvalid = (data[6] & 0x02) == 1
+                    isAdaptorPolluted = (data[6] & 0x01) == 1
+                case ISBState80H.ETCO2Value.rawValue:
+                    ETCO2 = Float(Int(data[6]) * 128 + Int(data[7])) / 10;
+                case ISBState80H.RRValue.rawValue:
+                    RespiratoryRate = Int(Int(data[6]) * 128 + Int(data[7]));
+                case ISBState80H.FiCO2Value.rawValue:
+                    FiCO2 = Int((Int(data[6]) * 128 + Int(data[7])) / 10);
+                case ISBState80H.DetectBreath.rawValue:
+                    Breathe = true;
+                default:
+                    print("CO2Waveform DPI 不匹配")
             }
             isValidETCO2 = CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower;
             isValidRR = CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower;
 
+            // TODO:(wsw) 待处理的状态
+            // isLowerEnergy
+            // isNeedZeroCorrect
+            // isAdaptorInvalid
+            // isAdaptorPolluted            
+
             // 检查是否需要报警
-            // 1、是否窒息 或者 ETCO2是否超过范围、RR是否超过范围
-            if isAsphyxiation {
-                audioIns.playAsphyxiaAlertAudio()
+            if !isAsphyxiation
+                && isValidETCO2 
+                && isValidRR 
+                && !isLowerEnergy 
+                && !isNeedZeroCorrect 
+                && !isAdaptorInvalid 
+                && !isAdaptorPolluted {
+                // 所有状态均正常
+                audioIns.stopAudio()
+                isPlayingAlaram = false
+            } else if isAsphyxiation || !isValidETCO2 || !isValidRR || isLowerEnergy {
+                // 中级报警: 生理报警
+                // 1、是否窒息 2、ETCO2是否超过范围 3、RR是否超过范围 4、是否为低电量
+                audioIns.playAlertAudio(type: AudioType.MiddleLevelAlert)
                 isPlayingAlaram = true
-            } else if !isValidETCO2 || !isValidRR {
-                audioIns.playAsphyxiaAlertAudio(type: AudioType.AbnormalAlert)
+            } else if isNeedZeroCorrect || isAdaptorInvalid || isAdaptorPolluted {
+                // 低级报警: 技术报警
+                audioIns.playAlertAudio(type: AudioType.LowLevelAlert)
+                // 1、需要零点校准 2、无适配器 3、适配器污染
                 isPlayingAlaram = true
             }
         }
@@ -895,7 +921,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         case ZSBState.Start.rawValue:
             // 如果重新恢复到0，前面又是正在检测中，说明校零成功
             if isCorrectZero {
-                audioIns.resumePlayAudio()
                 correctZeroCallback?()
                 isCorrectZero = false
             }
@@ -1043,8 +1068,12 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
         // WLD扩展ISB
         switch Int(data[2]) {
-            case 44: // 设置波形显示范围
+            // 设置波形显示范围
+            case Int(ISBStateF2H.CO2Scale.rawValue):
                 sendContinuous();
+            // 电池电量状态
+            case Int(ISBStateF2H.EnergyStatus.rawValue):
+                isLowerEnergy = Int(data[6]) == 1
             default:
                 print("扩展指令未知场景")
         }
@@ -1163,7 +1192,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         updateCO2ScaleCallback = nil
         getSettingInfoCallback = nil
         // 音频播放器
-        audioIns.resumePlayAudio()
         isPlayingAlaram = false
     }
 
