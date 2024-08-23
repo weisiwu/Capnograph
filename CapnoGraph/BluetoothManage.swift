@@ -543,7 +543,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         return Data(from)
     }
 
-    /** 发送链接请求 */
+    /** 发送接受波形数据请求 */
     func sendContinuous() {
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             sendArray.append(SensorCommand.CO2Waveform.rawValue)
@@ -612,7 +612,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
 
-    /** 发送链接请求 */
+    /** 发送停止接受波形数据请求 */
     func sendStopContinuous() {
         sendArray.append(SensorCommand.StopContinuous.rawValue)
         sendArray.append(0x01)
@@ -1112,7 +1112,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             return
         }
         func silent() {}
-        updateCO2Unit(cb: silent) // 显示设置
+        // 显示设置
+        updateCO2Unit(cb: silent)
         // 模块设置
         updateNoBreathAndGasCompensation(
             newAsphyxiationTime: asphyxiationTime,
@@ -1164,7 +1165,10 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         // 给外设添加事件管理函数
         peripheral.delegate = self
         peripheral.discoverServices(nil)
+        // 链接成功后将设备信息保存到本地，方便下次直接重连
         UserDefaults.standard.set(peripheral.identifier.uuidString, forKey: savedPeripheralIdentifierKey)
+        // 将本地配置信息同步到设备，如: CO2/RR范围、单位、范围等参数
+        initDevice()
     }
     
     /** 链接失败 */

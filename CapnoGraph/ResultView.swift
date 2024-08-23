@@ -304,7 +304,10 @@ struct ResultView: View {
         .onAppear {
             // 启动后，将所有本地保存的设置都同步到设备上。
             if !hasAppeared {
-                bluetoothManager.initDevice()
+                // TODO:(wsw) 同步设备配置不写在app启动，
+                // 而是放在蓝牙事件委托中，如果发现central(手机)蓝牙开启，自动重连。
+                // 在重连成功的事件委托中，继续初始化设备
+                // bluetoothManager.initDevice()
                 hasAppeared = true
             } else {
                 bluetoothManager.sendContinuous()
