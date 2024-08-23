@@ -7,7 +7,9 @@ import AVFoundation
 let antiHijackStr = "301001301001"
 let antiHijackData = antiHijackStr.data(using: .utf8)!
 
-// 对uuid做扩展
+/**
+ * 对uuid做扩展
+*/
 extension CBUUID {
     var hexString: String {
         let uuidString = self.uuidString.replacingOccurrences(of: "-", with: "")
@@ -19,7 +21,9 @@ extension CBUUID {
     }
 }
 
-//指令集合
+/**
+ * 指令集合
+*/
 enum SensorCommand: UInt8 {
     case CO2Waveform = 0x80 // 接受数据
     case Zero = 0x82 // 校零
@@ -32,7 +36,9 @@ enum SensorCommand: UInt8 {
     case Reset = 0xF8 // 复位指令
 }
 
-//蓝牙服务UUID
+/**
+ * 蓝牙服务UUID
+*/
 enum BLEServerUUID: UInt16 {
     case BLESendDataSer = 0xFFE5 // 65509
     case BLEReceiveDataSer = 0xFFE0 // 65504
@@ -40,7 +46,9 @@ enum BLEServerUUID: UInt16 {
     case BLEAntihijackSer = 0xFFC0 // 65472 反蓝牙劫持
 }
 
-// 蓝牙服务顺序排列
+/**
+ * 蓝牙服务顺序排列
+*/
 let BLEServerOrderedUUID: [UInt16] = [
     BLEServerUUID.BLEAntihijackSer.rawValue,
     BLEServerUUID.BLEReceiveDataSer.rawValue,
@@ -48,7 +56,9 @@ let BLEServerOrderedUUID: [UInt16] = [
     BLEServerUUID.BLEModuleParamsSer.rawValue,
 ]
 
-// 蓝牙特征UUID
+/**
+ * 蓝牙特征UUID
+*/
 enum BLECharacteristicUUID: UInt16 {
     case BLESendDataCha = 0xFFE9
     case BLEReceiveDataCha = 0xFFE4
@@ -58,7 +68,9 @@ enum BLECharacteristicUUID: UInt16 {
     case BLEAntihijackCha = 0xFFC1
 };
 
-// 顺序排列蓝牙特征值UUID
+/**
+ * 顺序排列蓝牙特征值UUID
+*/
 let BLECharacteristicOrderedUUID: [UInt16] = [
     BLECharacteristicUUID.BLEAntihijackCha.rawValue,
     BLECharacteristicUUID.BLEAntihijackChaNofi.rawValue,
@@ -68,12 +80,16 @@ let BLECharacteristicOrderedUUID: [UInt16] = [
     BLECharacteristicUUID.BLEBaudCha.rawValue
 ]
 
-// 蓝牙描述符UUID
+/**
+ * 蓝牙描述符UUID
+*/
 enum BLEDescriptorUUID: UInt16 {
     case CCCDDescriptor = 0x2902
 }
 
-// 校零状态
+/**
+ * 校零状态
+*/
 enum ZSBState: Int {
     case Start = 0
     case Resetting = 4
@@ -81,7 +97,9 @@ enum ZSBState: Int {
     case DetectBreathing = 12
 }
 
-// 接受数据信息DPI（等位替代ISB）
+/**
+ * 接受数据信息DPI（等位替代ISB）
+*/
 enum ISBState80H: UInt8 {
     case CO2WorkStatus = 0x01 // CO2工作状态
     case ETCO2Value = 0x02 // 监测计算到的 ETCO2 数值
@@ -91,7 +109,9 @@ enum ISBState80H: UInt8 {
     case DeviceError = 0x07 // 该帧在硬件确实有问题的时候，将每秒自动汇报一次
 }
 
-// 【ISB】读取/设置模块指令
+/**
+ * 【ISB】读取/设置模块指令
+*/
 enum ISBState84H: Int {
     case NoUse = 0 // 无效的参数设置
     case AirPressure = 1 // 大气压
@@ -108,21 +128,27 @@ enum ISBState84H: Int {
     case Stop = 27 // 停止采样气泵
 }
 
-// 【ISB】扩展指令
+/**
+ * 【ISB】扩展指令
+*/
 enum ISBStateF2H: Int {
     case EnergyStatus = 0x29 // 读取电源状态
     case NoUse = 0x2A // 读取报警配置
     case CO2Scale = 0x2C // 波形显示范围
 }
 
-// 【ISB】获取软件信息指令 这是ISB只是用来区分场景，并非真实的设备ISB值
+/**
+ * 【ISB】获取软件信息指令 这是ISB只是用来区分场景，并非真实的设备ISB值
+*/
 enum ISBStateCAH: Int {
     case GetSoftWareRevision = 99 // 获取软件版本
     case GetProductionDate = 98 // 生产日期
     case GetModuleName = 97 // 模块名称
 }
 
-// 所有CMD的ISB聚合使用
+/**
+ * 所有CMD的ISB聚合使用
+*/
 enum ISBState: Equatable {
     case CMD_80H(ISBState80H)
     case CMD_84H(ISBState84H)
@@ -130,7 +156,9 @@ enum ISBState: Equatable {
     case CMD_F2H(ISBStateF2H)
 }
 
-// 报警类型
+/**
+ * 报警类型
+*/
 enum AudioType {
     // 低级报警
     // 技术报警: 需要零点校准/无适配器/适配器污染
@@ -146,7 +174,9 @@ class AudioPlayer {
     // 使用数字替代状态: 0: 不播放 1: 低级报警 2: 中级报警
     var playStatus: Int = 0
     
-    // 默认窒息类型
+    /**
+     * 默认窒息类型
+    */
     func playAlertAudio(type: AudioType = AudioType.MiddleLevelAlert) {
         guard let middleAlertUrl = Bundle.main.url(
             forResource: "MiddleLevelAlert",
@@ -346,7 +376,9 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
     /**------  发送指令，相关函数 ------*/
     
-    // 对指定UUID的服务进行注册
+    /**
+     * 对指定UUID的服务进行注册
+    */
     func registerService(peripheral: CBPeripheral?, services: [CBService]?) {
         guard let _peripheral = peripheral else {
             return
@@ -395,7 +427,9 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
     
-    // 对指定UUID的特征值进行注册
+    /**
+     * 对指定UUID的特征值进行注册
+    */
     func registerCharacteristic(peripheral: CBPeripheral?, characteristics: [CBCharacteristic]?) {
         guard let _peripheral = peripheral else {
             return
@@ -471,7 +505,9 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }   
     }
 
-    // 监听特征值状态变化
+    /**
+     * 监听特征值状态变化
+    */
     func characteristicStateUpdate (characteristic: CBCharacteristic) {
         // 订阅receiveData成功后，发送链接请求
         if characteristic.uuid.hexIntValue == BLECharacteristicUUID.BLEReceiveDataCha.rawValue {
@@ -500,12 +536,14 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         sendArray.append(cks);
     }
 
-    // 将UInt8格式的数据转换为Bianry格式
+    /**
+     * 将UInt8格式的数据转换为Bianry格式
+    */
     func convertToData(from: [UInt8]) -> Data {
         return Data(from)
     }
 
-    // 发送链接请求
+    /** 发送链接请求 */
     func sendContinuous() {
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             sendArray.append(SensorCommand.CO2Waveform.rawValue)
@@ -574,7 +612,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
 
-    // 发送链接请求
+    /** 发送链接请求 */
     func sendStopContinuous() {
         sendArray.append(SensorCommand.StopContinuous.rawValue)
         sendArray.append(0x01)
@@ -588,7 +626,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
 
-    // 发送关机指令
+    /** 发送关机指令 */
     func shutdown(cb: @escaping () -> Void) {
         sendArray.append(SensorCommand.Reset.rawValue)
         sendArray.append(0x01)
@@ -602,7 +640,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
 
-    // 发送校零指令
+    /** 发送校零指令 */
     func correctZero(cb: @escaping () -> Void, fail: @escaping () -> Void) {
         // 先判断是否接受到数据，如果链接了，肯定回接受到数据
         if receivedArray.count <= 0 {
@@ -620,11 +658,13 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             resetSendData()
             audioIns.stopAudio()
+            // 这里会将正在重置校零的标志重置为false
+            resetInstance()
             correctZeroCallback = cb
         }
     }
 
-    // 更新CO2单位/CO2Scale
+    /** 更新CO2单位/CO2Scale */
     func updateCO2Unit(cb: @escaping () -> Void) {
         // 读取单位前，必须要先停止设置
         sendStopContinuous()
@@ -698,7 +738,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         cb()
     }
 
-    // 检查设置的报警范围是否合法
+    /** 检查设置的报警范围是否合法 */
     func checkAlertRangeValid(co2Low: CGFloat, co2Up: CGFloat, rrLow: CGFloat, rrUp: CGFloat) -> Bool {
         // 如果范围有问题，不更新
         if co2Up <= co2Low || rrUp <= rrLow {
@@ -707,7 +747,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         return true
     }
     
-    // 调整ETCO2/RR的报警范围
+    /** 调整ETCO2/RR的报警范围 */
     func updateAlertRange(co2Low: CGFloat, co2Up: CGFloat, rrLow: CGFloat, rrUp: CGFloat) -> Bool {
         if !checkAlertRangeValid(co2Low: co2Low, co2Up: co2Up, rrLow: rrLow, rrUp: rrUp) {
             return false
@@ -745,7 +785,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         return false
     }
 
-    // 设置模块参数: 窒息时间、氧气补偿
+    /** 设置模块参数: 窒息时间、氧气补偿 */
     func updateNoBreathAndGasCompensation(newAsphyxiationTime: Int, newOxygenCompensation: Double) {
         if let peripheral = connectedPeripheral, let characteristic = sendDataCharacteristic {
             asphyxiationTime = newAsphyxiationTime
@@ -776,7 +816,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
 
-    // 保持屏幕常亮
+    /** 保持屏幕常亮 */
     func keepScreenOn(cb: @escaping () -> Void) {
         isKeepScreenOn = true
         cb()
@@ -821,7 +861,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         return getArray;
     }
     
-    // 从蓝牙返回数据中解析返回值
+    /** 从蓝牙返回数据中解析返回值 */
     func getSpecificValue(firstArray: [UInt8]) {
         // 直接访问内存
         firstArray.withUnsafeBytes { (pointer: UnsafeRawBufferPointer) in
@@ -869,7 +909,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         sendArray = []
     }
 
-    // 处理CO2波形数据
+    /** 处理CO2波形数据 */
     func handleCO2Waveform(data: UnsafeBufferPointer<UInt8>, NBFM: Int) {
         // DPI 只在接受CO2波形时体现
         let DPIM = data[5]
@@ -939,7 +979,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
 
-    // 处理校零，校零结果会在80h中获取，DPI=1
+    /** 处理校零，校零结果会在80h中获取，DPI=1 */
     func handleCO2Status(data: UnsafeBufferPointer<UInt8>, NBFM: Int) {
         if NBFM <= 1 {
             return
@@ -947,18 +987,17 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         // 从80h中获取的校零状态数据
         let ZSBM = Int(data[7] & 12)
         switch ZSBM {
-        case ZSBState.Start.rawValue:
-            // 如果重新恢复到0，前面又是正在检测中，说明校零成功
-            if isCorrectZero {
-                correctZeroCallback?()
-                isCorrectZero = false
-            }
-        case ZSBState.Resetting.rawValue:
-            isCorrectZero = true;
-        case ZSBState.NotReady.rawValue, ZSBState.DetectBreathing.rawValue:
-            isCorrectZero = false;
-        default:
-            isCorrectZero = false;
+            case ZSBState.Start.rawValue:
+                // 如果重新恢复到0，前面又是正在检测中，说明校零成功
+                if isCorrectZero {
+                    correctZeroCallback?()
+                }
+            case ZSBState.Resetting.rawValue:
+                isCorrectZero = true;
+            case ZSBState.NotReady.rawValue, ZSBState.DetectBreathing.rawValue:
+                isCorrectZero = false;
+            default:
+                isCorrectZero = false;
         }
 
         // 获取是否窒息状态: 取DB1，第7位，判断是否被置位
@@ -966,7 +1005,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         isAsphyxiation = (Int(data[6] & 0x40) == 0x40)
     }
     
-    // 处理设置
+    /** 处理设置 */
     func handleSettings(data: UnsafeBufferPointer<UInt8>) {
         switch Int(data[2]) {
             case ISBState84H.AirPressure.rawValue:
@@ -1055,7 +1094,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
 
-    // app启动后触发，同步本地所有配置到设备上
+    /** app启动后触发，同步本地所有配置到设备上 */
     func initDevice() {
         // 展示的时候，从本地获取用户保存的展示参数
         if let defaultUnitStr: String = UserDefaults.standard.string(forKey: "CO2Unit"),
@@ -1091,7 +1130,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         sendContinuous()
     }
 
-    // 处理系统扩展
+    /** 处理系统扩展 */
     func handleSystemExpand(data: UnsafeBufferPointer<UInt8>) {
         print("接受系统扩展相关信息=>\(Int(data[2]))")
 
@@ -1109,7 +1148,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
 
     /**------  中央设备事件回调 ------*/
-    // 开始扫描设备
+
+    /** 开始扫描设备 */
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
         // 查看是否在已发现设备列表，防止重复
         if !discoveredPeripherals.contains(where: { $0.identifier == peripheral.identifier }) {
@@ -1118,7 +1158,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         startScanningCallback?()
     }
     
-    // 连接成功后显示 Toast
+    /** 连接成功后显示Toast */
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         connectedCallback?(true)
         // 给外设添加事件管理函数
@@ -1127,12 +1167,12 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         UserDefaults.standard.set(peripheral.identifier.uuidString, forKey: savedPeripheralIdentifierKey)
     }
     
-    // 链接失败
+    /** 链接失败 */
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         connectedCallback?(false)
     }
 
-    // 设备断开链接后
+    /** 设备断开链接后 */
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         if connectedPeripheral == peripheral {
             connectedPeripheral = nil
@@ -1141,29 +1181,30 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
 
     /**------  外围设备事件回调 ------*/
-    // 扫描设备服务
+
+    /** 扫描设备服务 */
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         registerService(peripheral: peripheral, services: peripheral.services)
     }
     
-    // 扫描服务特征值
+    /** 扫描服务特征值 */
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         registerCharacteristic(peripheral: peripheral, characteristics: service.characteristics)
     }
     
-    // 特征值更新
+    /** 特征值更新 */
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         receivePeripheralData(peripheral: peripheral, characteristic: characteristic)
     }
     
-    // 外设返回响应（针对写特征值并等待返回的情况）
+    /** 外设返回响应（针对写特征值并等待返回的情况） */
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
         if error != nil {
             print("特征\(characteristic.uuid)返回值异常=> \(error)")
         }
     }
     
-    // 监听订阅状态是否成功切换
+    /** 监听订阅状态是否成功切换 */
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
         if let error = error {
             print("设置订阅状态失败: \(characteristic.uuid) \(error.localizedDescription)")
@@ -1173,7 +1214,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
     
-    // 断开蓝牙连接，重设整个应用
+    /** 重设整个应用 */
     func resetInstance() {
         discoveredPeripherals = []
         connectedPeripheral = nil
@@ -1191,6 +1232,11 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         isAsphyxiation = false
         isValidETCO2 = true
         isValidRR = true
+        isKeepScreenOn = false
+        isLowerEnergy = false // 电池电量低
+        isNeedZeroCorrect = false // 需要校零
+        isAdaptorInvalid = false // 无适配器
+        isAdaptorPolluted = false // 适配器污染
         isCorrectZero = false
         barometricPressure = 0
         // 默认无呼吸间隔
@@ -1223,6 +1269,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
 
     /**------  监听蓝牙状态 ------*/
+
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
@@ -1255,6 +1302,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
 
     /**------  工具方法 ------*/
+
     func startScanning(callback: (() -> Void)?) -> Bool {
         guard centralManager.state == .poweredOn else {
             callback?()
@@ -1288,7 +1336,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
     
-    // 链接蓝牙外设
+    /** 链接蓝牙外设 */
     func connect(to peripheral: CBPeripheral?, callback: ((Bool) -> Void)?) {
         if let peripheral {
             // 开始链接之前，先将已经链接的设备断开连接
@@ -1301,19 +1349,21 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         }
     }
     
-    // 在展示页面用于更新参数
+    /** 在展示页面用于更新参数 */
     func updateDisplayParams(newCO2Unit: CO2UnitType, newCO2Scale: CO2ScaleEnum) {
         CO2Unit = newCO2Unit
         CO2Scale = newCO2Scale
     }
 
-    // 判断蓝牙状态
-    // unknown：正在初始化
-    // resetting：蓝牙硬件暂时不可用
-    // unsupported：设备不支持蓝牙功能
-    // unauthorized：应用未被授权使用蓝牙功能
-    // poweredOff：蓝牙已关闭
-    // poweredOn：蓝牙已打开并可用
+    /**
+     * 判断蓝牙状态
+     * unknown：正在初始化
+     * resetting：蓝牙硬件暂时不可用
+     * unsupported：设备不支持蓝牙功能
+     * unauthorized：应用未被授权使用蓝牙功能
+     * poweredOff：蓝牙已关闭
+     * poweredOn：蓝牙已打开并可用
+    */
     func checkBluetoothStatus() -> Bool? {
         switch centralManager.state {
         case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
