@@ -151,7 +151,7 @@ struct LineChartViewForImage: View {
                     ForEach(Array(data.CO2WavePoints.enumerated()), id: \.offset) { index, point in
                         LineMark(
                             x: .value("Index", index + xStart),
-                            y: .value("Value", point.co2)
+                            y: .value("Value", max(point.co2, 0))
                         )
                          .interpolationMethod(.catmullRom)
                     }

@@ -24,7 +24,7 @@ struct LineChartView: View {
             ForEach(Array(bluetoothManager.receivedCO2WavedData.enumerated()), id: \.offset) { index, point in
                 LineMark(
                     x: .value("Index", index),
-                    y: .value("Value", point.value)
+                    y: .value("Value", max(point.value, 0))
                 )
                 .interpolationMethod(.cardinal)
             }
@@ -307,7 +307,6 @@ struct ResultView: View {
                 // TODO:(wsw) 同步设备配置不写在app启动，
                 // 而是放在蓝牙事件委托中，如果发现central(手机)蓝牙开启，自动重连。
                 // 在重连成功的事件委托中，继续初始化设备
-                // bluetoothManager.initDevice()
                 hasAppeared = true
             } else {
                 bluetoothManager.sendContinuous()

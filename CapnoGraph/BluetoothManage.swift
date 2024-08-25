@@ -88,13 +88,14 @@ enum BLEDescriptorUUID: UInt16 {
 }
 
 /**
- * 校零状态
+ * 校零状态 - 走80H结果获取
+ * 0/1/2/3其实是将对应标志位换出来的值
 */
 enum ZSBState: Int {
-    case Start = 0
-    case Resetting = 4
-    case NotReady =  8
-    case DetectBreathing = 12
+    case NOZeroning = 0 // 不处于校零过程
+    case Resetting = 4 // 正在校零
+    case NotReady =  8 // 需要校零
+    case NotReady2 = 12 // 校零
 }
 
 /**
@@ -471,6 +472,9 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 _peripheral.setNotifyValue(true, for: _characteristic)
             case BLECharacteristicUUID.BLESendDataCha.rawValue:
                 sendDataCharacteristic = _characteristic
+                // 这里注意: 注册上这个特征值一定代表，设备已经连接，并且扫描完服务
+                // 将本地配置信息同步到设备，如: CO2/RR范围、单位、范围等参数
+                initDevice()
             case BLECharacteristicUUID.BLERenameCha.rawValue:
                 renameCharacteristic = _characteristic
             case BLECharacteristicUUID.BLEBaudCha.rawValue:
@@ -987,17 +991,19 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         // 从80h中获取的校零状态数据
         let ZSBM = Int(data[7] & 12)
         switch ZSBM {
-            case ZSBState.Start.rawValue:
+            case ZSBState.NOZeroning.rawValue:
                 // 如果重新恢复到0，前面又是正在检测中，说明校零成功
                 if isCorrectZero {
                     correctZeroCallback?()
+                    isCorrectZero = false
                 }
             case ZSBState.Resetting.rawValue:
-                isCorrectZero = true;
-            case ZSBState.NotReady.rawValue, ZSBState.DetectBreathing.rawValue:
-                isCorrectZero = false;
+                isCorrectZero = true
+            case ZSBState.NotReady.rawValue,
+                ZSBState.NotReady2.rawValue:
+                isCorrectZero = false
             default:
-                isCorrectZero = false;
+                isCorrectZero = false
         }
 
         // 获取是否窒息状态: 取DB1，第7位，判断是否被置位
@@ -1133,7 +1139,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
     /** 处理系统扩展 */
     func handleSystemExpand(data: UnsafeBufferPointer<UInt8>) {
-        print("接受系统扩展相关信息=>\(Int(data[2]))")
+        // print("接受系统扩展相关信息=>\(Int(data[2]))")
 
         // WLD扩展ISB
         switch Int(data[2]) {
@@ -1167,8 +1173,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         peripheral.discoverServices(nil)
         // 链接成功后将设备信息保存到本地，方便下次直接重连
         UserDefaults.standard.set(peripheral.identifier.uuidString, forKey: savedPeripheralIdentifierKey)
-        // 将本地配置信息同步到设备，如: CO2/RR范围、单位、范围等参数
-        initDevice()
     }
     
     /** 链接失败 */
@@ -1219,9 +1223,9 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     }
     
     /** 重设整个应用 */
-    func resetInstance() {
-        discoveredPeripherals = []
-        connectedPeripheral = nil
+    func resetInstance(isShutDown: Bool = false) {
+        // discoveredPeripherals = []
+        // connectedPeripheral = nil
         receivedCO2WavedData = Array(repeating: DataPoint(value: unRealValue), count: maxXPoints)
         isScanning = false
         startScanningCallback = nil
@@ -1251,25 +1255,28 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         sSoftwareVersion = ""
         sProductionDate = ""
         sSerialNumber = ""
-        // 扫描的设备、服务、特征
-        sendDataService = nil
-        sendDataCharacteristic = nil
-        receiveDataService = nil
-        receiveDataCharacteristic = nil
-        moduleParamsService = nil
-        moduleParamsCharacteristic = nil
-        antiHijackService = nil
-        antiHijackCharacteristic = nil
-        // 这三个特征值没有明确属于哪个服务，所以可能为空
-        baudCharacteristic = nil
-        renameCharacteristic = nil
-        antiHijackNotifyCharacteristic = nil
-        CCCDDescriptor = nil
-        isConnectToDevice = false
-        shutdownCallback = nil
-        correctZeroCallback = nil
-        updateCO2ScaleCallback = nil
-        getSettingInfoCallback = nil
+
+        if isShutDown {
+            // 扫描的设备、服务、特征
+            sendDataService = nil
+            sendDataCharacteristic = nil
+            receiveDataService = nil
+            receiveDataCharacteristic = nil
+            moduleParamsService = nil
+            moduleParamsCharacteristic = nil
+            antiHijackService = nil
+            antiHijackCharacteristic = nil
+            // 这三个特征值没有明确属于哪个服务，所以可能为空
+            baudCharacteristic = nil
+            renameCharacteristic = nil
+            antiHijackNotifyCharacteristic = nil
+            CCCDDescriptor = nil
+            isConnectToDevice = false
+            shutdownCallback = nil
+            correctZeroCallback = nil
+            updateCO2ScaleCallback = nil
+            getSettingInfoCallback = nil
+        }
     }
 
     /**------  监听蓝牙状态 ------*/
@@ -1288,7 +1295,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             isBluetoothClose = false
         case .poweredOff:
             print("Bluetooth is currently powered off.")
-            resetInstance()
+            resetInstance(isShutDown: true)
             isBluetoothClose = true
             bluetootheStateChanged.send(())
         case .resetting:
