@@ -935,8 +935,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                     isValidETCO2 = !Breathe || (CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower);
                 case ISBState80H.RRValue.rawValue:
                     RespiratoryRate = Int(Int(data[6]) * 128 + Int(data[7]));
-                    // 检测到呼吸。才能计算是否异常。
-                    isValidRR = !Breathe || (CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower);
+                    // 这个和ETCO2不同，如果窒息了，RR肯定不会对
+                    isValidRR = Breathe && (CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower);
                 case ISBState80H.FiCO2Value.rawValue:
                     FiCO2 = Int((Int(data[6]) * 128 + Int(data[7])) / 10);
                 case ISBState80H.DetectBreath.rawValue:
@@ -944,6 +944,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 default:
                     print("CO2Waveform DPI 不匹配")
             }
+            print("isValidETCO2=>\(isValidETCO2) isValidRR=>\(isValidRR) Breathe=>\(Breathe) isAsphyxiation=>\(isAsphyxiation)")
 
             // 检查是否需要报警
             if !isAsphyxiation
