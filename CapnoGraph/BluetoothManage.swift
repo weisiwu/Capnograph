@@ -317,6 +317,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     var isCO2UnitChange: Bool = false
     // 蓝牙管理实例启动时间
     var startDate: Date = Date()
+    // 定时查询电池状态
+    var queryBatteryStatusTimer: Timer?
         
     // 图标展示的实时单位、范围、速度
     @Published var CO2Unit: CO2UnitType = .mmHg {
@@ -561,6 +563,22 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
             peripheral.writeValue(data, for: characteristic, type: .withResponse)
             resetSendData()
+
+            // 每5秒查询一下电池状态
+            if queryBatteryStatusTimer == nil  {
+                queryBatteryStatusTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { timer in
+                    // print("开始发送查询状态")
+                    self.sendArray.append(SensorCommand.Expand.rawValue)
+                    self.sendArray.append(0x02)
+                    self.sendArray.append(UInt8(ISBStateF2H.EnergyStatus.rawValue))
+                    self.appendCKS()
+
+                    let data = self.convertToData(from: self.sendArray)
+
+                    peripheral.writeValue(data, for: characteristic, type: .withResponse)
+                    self.resetSendData()
+                }
+            }
         }
     }
 
@@ -630,6 +648,10 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             resetSendData()
             print("[sendStopContinuous]终止链接请求")
         }
+
+        // print("清空查询queryBatteryStatusTimer")
+        queryBatteryStatusTimer?.invalidate()
+        queryBatteryStatusTimer = nil
     }
 
     /** 发送关机指令 */
@@ -931,7 +953,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                     isNeedZeroCorrect = (data[7] & 0x0C) == 0x0C
                     isAdaptorInvalid = (data[6] & 0x02) == 1
                     isAdaptorPolluted = currentCO2 < 0 && (data[6] & 0x01) == 1
-                    print("是否被污染\(isAdaptorPolluted)")
+                    // print("是否被污染\(isAdaptorPolluted)")
                 case ISBState80H.ETCO2Value.rawValue:
                     ETCO2 = Float(Int(data[6]) * 128 + Int(data[7])) / 10;
                     // 检测到呼吸。才能计算是否异常。
@@ -949,7 +971,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             }
             // print("isValidETCO2=>\(isValidETCO2) isValidRR=>\(isValidRR) Breathe=>\(Breathe) isAsphyxiation=>\(isAsphyxiation)")
 
-            print("是否低电量===> \(isLowerEnergy)")
+            // print("是否低电量===> \(isLowerEnergy)")
             // 检查是否需要报警
             if !isAsphyxiation
                 && isValidETCO2 
@@ -1154,6 +1176,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             // 电池电量状态
             case Int(ISBStateF2H.EnergyStatus.rawValue):
                 isLowerEnergy = Int(data[6]) == 1
+                print("查询是否低电量的DB \(data[3])-\(data[4])-\(data[5])-\(data[6])")
             default:
                 print("扩展指令未知场景")
         }
@@ -1229,8 +1252,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     
     /** 重设整个应用 */
     func resetInstance(isShutDown: Bool = false) {
-        // discoveredPeripherals = []
-        // connectedPeripheral = nil
         receivedCO2WavedData = Array(repeating: DataPoint(value: unRealValue), count: maxXPoints)
         isScanning = false
         startScanningCallback = nil
@@ -1260,6 +1281,10 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
         sSoftwareVersion = ""
         sProductionDate = ""
         sSerialNumber = ""
+        
+        // 取消定时查询
+        queryBatteryStatusTimer?.invalidate()
+        queryBatteryStatusTimer = nil
 
         if isShutDown {
             // 扫描的设备、服务、特征
