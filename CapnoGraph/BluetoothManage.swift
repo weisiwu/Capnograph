@@ -930,15 +930,16 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                     // 模块需要校零: byte2 / bit 2 bit 3 = 10
                     isNeedZeroCorrect = (data[7] & 0x0C) == 0x0C
                     isAdaptorInvalid = (data[6] & 0x02) == 1
-                    isAdaptorPolluted = (data[6] & 0x01) == 1
+                    isAdaptorPolluted = currentCO2 < 0 && (data[6] & 0x01) == 1
+                    print("是否被污染\(isAdaptorPolluted)")
                 case ISBState80H.ETCO2Value.rawValue:
                     ETCO2 = Float(Int(data[6]) * 128 + Int(data[7])) / 10;
                     // 检测到呼吸。才能计算是否异常。
                     isValidETCO2 = !Breathe || (CGFloat(ETCO2) <= etCo2Upper && CGFloat(ETCO2) >= etCo2Lower);
                 case ISBState80H.RRValue.rawValue:
                     RespiratoryRate = Int(Int(data[6]) * 128 + Int(data[7]));
-                    // 这个和ETCO2不同，如果窒息了，RR肯定不会对
-                    isValidRR = Breathe && (CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower);
+                    // 检测到呼吸。才能计算是否异常。
+                    isValidRR = !Breathe || (CGFloat(RespiratoryRate) <= rrUpper && CGFloat(RespiratoryRate) >= rrLower);
                 case ISBState80H.FiCO2Value.rawValue:
                     FiCO2 = Int((Int(data[6]) * 128 + Int(data[7])) / 10);
                 case ISBState80H.DetectBreath.rawValue:
@@ -948,6 +949,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             }
             // print("isValidETCO2=>\(isValidETCO2) isValidRR=>\(isValidRR) Breathe=>\(Breathe) isAsphyxiation=>\(isAsphyxiation)")
 
+            print("是否低电量===> \(isLowerEnergy)")
             // 检查是否需要报警
             if !isAsphyxiation
                 && isValidETCO2 

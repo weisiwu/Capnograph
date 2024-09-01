@@ -116,7 +116,12 @@ enum AppTextsChinese: String {
     case AsphyxiationWarning = "窒息"
     case ETCO2InvalidWarning = "ETCO2异常"
     case RRInvalidWarning = "呼吸率异常"
+    case ETCO2InvalidWarningLower = "EtCO2值过低"
+    case ETCO2InvalidWarningUpper = "EtCO2值过高"
+    case RRInvalidWarningLower = "呼吸率值过低"
+    case RRInvalidWarningUpper = "呼吸率值过高"
     case BluetoothDisconnected = "蓝牙关闭，已重设"
+    case LowerEnergy = "低电量"
     // 分享导出相关
     case ShareBtn = "分享"
     case ExportPDF = "导出PDF"
@@ -208,7 +213,12 @@ enum AppTextsEnglish: String {
     case AsphyxiationWarning = "Asphyxiation"
     case ETCO2InvalidWarning = "EtCO2 abnormality"
     case RRInvalidWarning = "Abnormal Respiratory Rate"
+    case ETCO2InvalidWarningLower = "EtCO2 Value Too Low"
+    case ETCO2InvalidWarningUpper = "EtCO2 Value Too High"
+    case RRInvalidWarningLower = "Respiratory Rate Too Low"
+    case RRInvalidWarningUpper = "Respiratory Rate Too High"
     case BluetoothDisconnected = "Bluetooth is turned off and has been reset"
+    case LowerEnergy = "Low Battery"
     // 分享导出相关
     case ShareBtn = "share"
     case ExportPDF = "Export PDF"
@@ -410,8 +420,18 @@ class AppConfigManage: ObservableObject {
                     return AppTextsChinese.ETCO2InvalidWarning.rawValue
                 case "RRInvalidWarning":
                     return AppTextsChinese.RRInvalidWarning.rawValue
+                case "ETCO2InvalidWarningLower":
+                    return AppTextsChinese.ETCO2InvalidWarningLower.rawValue
+                case "ETCO2InvalidWarningUpper":
+                    return AppTextsChinese.ETCO2InvalidWarningUpper.rawValue
+                case "RRInvalidWarningLower":
+                    return AppTextsChinese.RRInvalidWarningLower.rawValue
+                case "RRInvalidWarningUpper":
+                    return AppTextsChinese.RRInvalidWarningUpper.rawValue
                 case "BluetoothDisconnected":
                     return AppTextsChinese.BluetoothDisconnected.rawValue
+                case "LowerEnergy":
+                    return AppTextsChinese.LowerEnergy.rawValue
                 // 分享导出相关
                 case "ShareBtn":
                     return AppTextsChinese.ShareBtn.rawValue
@@ -575,8 +595,18 @@ class AppConfigManage: ObservableObject {
                     return AppTextsEnglish.ETCO2InvalidWarning.rawValue
                 case "RRInvalidWarning":
                     return AppTextsEnglish.RRInvalidWarning.rawValue
+                case "ETCO2InvalidWarningLower":
+                    return AppTextsEnglish.ETCO2InvalidWarningLower.rawValue
+                case "ETCO2InvalidWarningUpper":
+                    return AppTextsEnglish.ETCO2InvalidWarningUpper.rawValue
+                case "RRInvalidWarningLower":
+                    return AppTextsEnglish.RRInvalidWarningLower.rawValue
+                case "RRInvalidWarningUpper":
+                    return AppTextsEnglish.RRInvalidWarningUpper.rawValue
                 case "BluetoothDisconnected":
                     return AppTextsEnglish.BluetoothDisconnected.rawValue
+                case "LowerEnergy":
+                    return AppTextsEnglish.LowerEnergy.rawValue
                 // 分享导出相关
                 case "ShareBtn":
                     return AppTextsEnglish.ShareBtn.rawValue

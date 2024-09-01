@@ -249,10 +249,20 @@ struct ResultView: View {
         let warningText: String?
         if bluetoothManager.isAsphyxiation {
             warningText = appConfigManage.getTextByKey(key: "AsphyxiationWarning")
+        } else if bluetoothManager.isLowerEnergy {
+            warningText = appConfigManage.getTextByKey(key: "LowerEnergy")
         } else if bluetoothManager.Breathe && !bluetoothManager.isValidETCO2 {
-            warningText = appConfigManage.getTextByKey(key: "ETCO2InvalidWarning")
+            if CGFloat(bluetoothManager.ETCO2) > bluetoothManager.etCo2Upper {
+                warningText = appConfigManage.getTextByKey(key: "ETCO2InvalidWarningUpper")
+            } else {
+                warningText = appConfigManage.getTextByKey(key: "ETCO2InvalidWarningLower")
+            }
         } else if bluetoothManager.Breathe && !bluetoothManager.isValidRR {
-            warningText = appConfigManage.getTextByKey(key: "RRInvalidWarning")
+            if CGFloat(bluetoothManager.RespiratoryRate) > bluetoothManager.rrUpper {
+                warningText = appConfigManage.getTextByKey(key: "RRInvalidWarningUpper")
+            } else {
+                warningText = appConfigManage.getTextByKey(key: "RRInvalidWarningLower")
+            }
         } else {
             warningText = nil
         }
