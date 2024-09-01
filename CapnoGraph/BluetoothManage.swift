@@ -190,13 +190,13 @@ class AudioPlayer {
             return
         }
 
-        print("历史的状态是什么 \(playStatus) \(isReady)")
+        // print("历史的状态是什么 \(playStatus) \(isReady)")
         if !isReady {
             return
         }
         
         let newPlayStatus = type == AudioType.MiddleLevelAlert ? 2 : 1
-        print("新的状态是什么 \(newPlayStatus)")
+        // print("新的状态是什么 \(newPlayStatus)")
         
         // 如果新状态是不播放，直接退出
         if newPlayStatus == 0 {
@@ -216,7 +216,7 @@ class AudioPlayer {
                 stopAudio()
                 audioPlayer = try AVAudioPlayer(contentsOf: middleAlertUrl)
                 audioPlayer?.prepareToPlay()
-                print("开始播放中级报警")
+                // print("开始播放中级报警")
                 audioPlayer?.play()
                 isReady = false
                 playStatus = newPlayStatus
@@ -228,7 +228,7 @@ class AudioPlayer {
                 stopAudio()
                 audioPlayer = try AVAudioPlayer(contentsOf: lowAlertUrl)
                 audioPlayer?.prepareToPlay()
-                print("开始播放低级报警")
+                // print("开始播放低级报警")
                 audioPlayer?.play()
                 isReady = false
                 playStatus = newPlayStatus
@@ -315,6 +315,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
     let bluetootheStateChanged = PassthroughSubject<Void, Never>()
     // CO2单位是否被修改（展示参数）
     var isCO2UnitChange: Bool = false
+    // 蓝牙管理实例启动时间
+    var startDate: Date = Date()
         
     // 图标展示的实时单位、范围、速度
     @Published var CO2Unit: CO2UnitType = .mmHg {
@@ -944,7 +946,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 default:
                     print("CO2Waveform DPI 不匹配")
             }
-            print("isValidETCO2=>\(isValidETCO2) isValidRR=>\(isValidRR) Breathe=>\(Breathe) isAsphyxiation=>\(isAsphyxiation)")
+            // print("isValidETCO2=>\(isValidETCO2) isValidRR=>\(isValidRR) Breathe=>\(Breathe) isAsphyxiation=>\(isAsphyxiation)")
 
             // 检查是否需要报警
             if !isAsphyxiation
@@ -959,12 +961,12 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             } else if isAsphyxiation || !isValidETCO2 || !isValidRR || isLowerEnergy {
                 // 中级报警: 生理报警
                 // 1、是否窒息 2、ETCO2是否超过范围 3、RR是否超过范围 4、是否为低电量
-                print("中级报警")
+                // print("中级报警")
                 audioIns.playAlertAudio(type: AudioType.MiddleLevelAlert)
             } else if isNeedZeroCorrect || isAdaptorInvalid || isAdaptorPolluted {
                 // 低级报警: 技术报警
                 // 1、需要零点校准 2、无适配器 3、适配器污染
-                print("低级报警")
+                // print("低级报警")
                 audioIns.playAlertAudio(type: AudioType.LowLevelAlert)
             }
         }

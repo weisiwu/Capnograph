@@ -106,12 +106,18 @@ class HistoryData {
         maxRR: Double,
         minETCO2: Double, 
         maxETCO2: Double, 
-        CO2WavePoints: [CO2WavePointData]
+        CO2WavePoints: [CO2WavePointData],
+        startDate: Date?
     ) {
         // 记录的时间信息
         dateFormatter.dateFormat = "yyyyMMDDHHmmSS"
-        self.recordStartDate = Date()
-        self.recordStartDateStr = dateFormatter.string(from: recordStartDate)
+        if let _startDate = startDate {
+            self.recordStartDate = _startDate
+            self.recordStartDateStr = dateFormatter.string(from: _startDate)
+        } else {
+            self.recordStartDate = Date()
+            self.recordStartDateStr = dateFormatter.string(from: Date())
+        }
         // 初始化辅助数据，这些数据并不参加渲染pdf，而是由于后续支持pdf数据细节渲染
         self.minRR = minRR
         self.maxRR = maxRR
@@ -126,6 +132,13 @@ class HistoryData {
     //     CO2WavePoints.append(newPoint)
     // }
 
+    // 更新结束时间，以便导出
+    func updateEndRecordDate(end: Date) {
+        self.recordEndDate = end
+        self.recordEndDateStr = dateFormatter.string(from: end)
+        print("修改后的结束四件是多少 、\(self.recordEndDateStr)")
+    }
+    
     // 终止记录数据
     func markEndTime() {
         recordEndDate = Date()
@@ -343,7 +356,8 @@ class HistoryDataManage: ObservableObject {
             maxRR: blm.rrUpper,
             minETCO2: blm.etCo2Lower,
             maxETCO2: blm.etCo2Upper,
-            CO2WavePoints: []
+            CO2WavePoints: [],
+            startDate: blm.startDate
         )
     }
 
@@ -380,18 +394,7 @@ class HistoryDataManage: ObservableObject {
 
         // 每页展示500个点位
         let pagePointsNumber: Int = 500
-
-        //TODO:  测试数据，后面整体换为真实数据
-    //    var waveData: [CO2WavePointData] = []
-    //    for i in 1...1000000 {
-    //    for i in 1...10000 {
-    //    for i in 1...1500 {
-    //        let co2Value = Float(10 + 5 * sin(Double(i) * 2 * Double.pi / 100))
-    //        let dataPoint = CO2WavePointData(co2: co2Value, RR: 0, ETCO2: 0, FiCO2: 0, index: i)
-    //        waveData.append(dataPoint)
-    //    }
         let waveData = blm.totalCO2WavedData
-        print("蓝牙一共接收到\(waveData.count)")
 
         var box = CGRect(
             x: 0, 
@@ -401,10 +404,6 @@ class HistoryDataManage: ObservableObject {
         )
         if let blm = self.blm,
             let context = CGContext(url as CFURL, mediaBox: &box, nil) {
-            print("输出一下表格当前的值 \(blm.receivedCO2WavedData)")
-            for (index, value) in blm.receivedCO2WavedData.enumerated() {
-                print("已经接收到的\(index) => \(value)")
-            }
             let chunks = waveData.chunked(into: pagePointsNumber)
             for (index, chunk) in chunks.enumerated() {
                 let xStart = Swift.max(index * pagePointsNumber, 0)
@@ -417,7 +416,8 @@ class HistoryDataManage: ObservableObject {
                             maxRR: blm.rrUpper,
                             minETCO2: blm.etCo2Lower,
                             maxETCO2: blm.etCo2Upper,
-                            CO2WavePoints: chunk
+                            CO2WavePoints: chunk,
+                            startDate: blm.startDate
                         ),
                         xStart: xStart,
                         xEnd: xEnd,
@@ -499,6 +499,10 @@ class HistoryDataManage: ObservableObject {
     func saveToLocal(args: SaveTypes = SaveTypes.PDF) {
         // 先同步数据
         syncBluetoothManagerData()
+        // 修改结束时间
+        if let historyIns = data {
+            historyIns.updateEndRecordDate(end: Date())
+        }
         wrapLogger(_saveToLocal, args: args)
     }
 }
