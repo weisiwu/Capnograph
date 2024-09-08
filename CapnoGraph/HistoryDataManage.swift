@@ -110,7 +110,7 @@ class HistoryData {
         startDate: Date?
     ) {
         // 记录的时间信息
-        dateFormatter.dateFormat = "yyyyMMDDHHmmSS"
+        dateFormatter.dateFormat = "yyyyMMddHHmmss"
         if let _startDate = startDate {
             self.recordStartDate = _startDate
             self.recordStartDateStr = dateFormatter.string(from: _startDate)
@@ -126,17 +126,11 @@ class HistoryData {
         // pdf主体数据
         self.CO2WavePoints = CO2WavePoints
     }
-  
-    // 更新历史波形数据
-    // func updateWavePoints(newPoint: CO2WavePointData) {
-    //     CO2WavePoints.append(newPoint)
-    // }
 
     // 更新结束时间，以便导出
     func updateEndRecordDate(end: Date) {
         self.recordEndDate = end
         self.recordEndDateStr = dateFormatter.string(from: end)
-        print("修改后的结束四件是多少 、\(self.recordEndDateStr)")
     }
     
     // 终止记录数据
