@@ -200,7 +200,7 @@ struct BottomSheetView: View {
                 .onTapGesture {
                     // 成功生成导出文件后，出现确定弹框，用户点击分享后，唤起分享面板
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        showModal = false
+                        showModal = false 
                     }
                 }
                 .padding(.leading, 20)
@@ -262,6 +262,12 @@ struct ResultView: View {
                 warningText = appConfigManage.getTextByKey(key: "RRInvalidWarningUpper")
             } else {
                 warningText = appConfigManage.getTextByKey(key: "RRInvalidWarningLower")
+            }
+        } else if bluetoothManager.isAdaptorInvalid || bluetoothManager.isAdaptorPolluted {
+            if bluetoothManager.isAdaptorInvalid {
+                warningText = appConfigManage.getTextByKey(key: "AdaptorInvalid")
+            } else {
+                warningText = appConfigManage.getTextByKey(key: "AdaptorPolluted")
             }
         } else {
             warningText = nil

@@ -951,9 +951,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                     handleCO2Status(data: data, NBFM: NBFM)
                     // 模块需要校零: byte2 / bit 2 bit 3 = 10
                     isNeedZeroCorrect = (data[7] & 0x0C) == 0x0C
-                    isAdaptorInvalid = (data[6] & 0x02) == 1
+                    isAdaptorInvalid = (data[6] & 0x02) == 0x02
                     isAdaptorPolluted = currentCO2 < 0 && (data[6] & 0x01) == 1
-                    // print("是否被污染\(isAdaptorPolluted)")
                 case ISBState80H.ETCO2Value.rawValue:
                     ETCO2 = Float(Int(data[6]) * 128 + Int(data[7])) / 10;
                     // 检测到呼吸。才能计算是否异常。
@@ -969,9 +968,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 default:
                     print("CO2Waveform DPI 不匹配")
             }
-            // print("isValidETCO2=>\(isValidETCO2) isValidRR=>\(isValidRR) Breathe=>\(Breathe) isAsphyxiation=>\(isAsphyxiation)")
 
-            // print("是否低电量===> \(isLowerEnergy)")
             // 检查是否需要报警
             if !isAsphyxiation
                 && isValidETCO2 
@@ -985,12 +982,10 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
             } else if isAsphyxiation || !isValidETCO2 || !isValidRR || isLowerEnergy {
                 // 中级报警: 生理报警
                 // 1、是否窒息 2、ETCO2是否超过范围 3、RR是否超过范围 4、是否为低电量
-                // print("中级报警")
                 audioIns.playAlertAudio(type: AudioType.MiddleLevelAlert)
             } else if isNeedZeroCorrect || isAdaptorInvalid || isAdaptorPolluted {
                 // 低级报警: 技术报警
                 // 1、需要零点校准 2、无适配器 3、适配器污染
-                // print("低级报警")
                 audioIns.playAlertAudio(type: AudioType.LowLevelAlert)
             }
         }
@@ -1166,7 +1161,6 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
 
     /** 处理系统扩展 */
     func handleSystemExpand(data: UnsafeBufferPointer<UInt8>) {
-        // print("接受系统扩展相关信息=>\(Int(data[2]))")
 
         // WLD扩展ISB
         switch Int(data[2]) {

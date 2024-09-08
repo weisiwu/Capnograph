@@ -121,7 +121,9 @@ enum AppTextsChinese: String {
     case RRInvalidWarningLower = "呼吸率值过低"
     case RRInvalidWarningUpper = "呼吸率值过高"
     case BluetoothDisconnected = "蓝牙关闭，已重设"
-    case LowerEnergy = "低电量"
+    case LowerEnergy = "低电量"    
+    case AdaptorInvalid = "无适配器"
+    case AdaptorPolluted = "适配器污染"
     // 分享导出相关
     case ShareBtn = "分享"
     case ExportPDF = "导出PDF"
@@ -219,6 +221,8 @@ enum AppTextsEnglish: String {
     case RRInvalidWarningUpper = "Respiratory Rate Too High"
     case BluetoothDisconnected = "Bluetooth is turned off and has been reset"
     case LowerEnergy = "Low Battery"
+    case AdaptorInvalid = "No Adapter"
+    case AdaptorPolluted = "Adapter Pollution"
     // 分享导出相关
     case ShareBtn = "share"
     case ExportPDF = "Export PDF"
@@ -432,6 +436,10 @@ class AppConfigManage: ObservableObject {
                     return AppTextsChinese.BluetoothDisconnected.rawValue
                 case "LowerEnergy":
                     return AppTextsChinese.LowerEnergy.rawValue
+                case "AdaptorInvalid":
+                    return AppTextsChinese.AdaptorInvalid.rawValue
+                case "AdaptorPolluted":
+                    return AppTextsChinese.AdaptorPolluted.rawValue
                 // 分享导出相关
                 case "ShareBtn":
                     return AppTextsChinese.ShareBtn.rawValue
@@ -607,6 +615,10 @@ class AppConfigManage: ObservableObject {
                     return AppTextsEnglish.BluetoothDisconnected.rawValue
                 case "LowerEnergy":
                     return AppTextsEnglish.LowerEnergy.rawValue
+                case "AdaptorInvalid":
+                    return AppTextsEnglish.AdaptorInvalid.rawValue
+                case "AdaptorPolluted":
+                    return AppTextsEnglish.AdaptorPolluted.rawValue
                 // 分享导出相关
                 case "ShareBtn":
                     return AppTextsEnglish.ShareBtn.rawValue
