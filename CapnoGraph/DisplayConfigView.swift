@@ -21,6 +21,7 @@ struct DisplayConfigView: View {
     var checkBluetoothStatus: () -> Bool?
     var updateCO2Unit: (@escaping () -> Void) -> ()
     var updateDisplayParams: ((CO2UnitType, CO2ScaleEnum) -> Void)
+    var sendContinuous: () -> Void
     let CO2Units: [CO2UnitType] = [.KPa, .Percentage, .mmHg]
     let WFSpeeds: [WFSpeedEnum] = [.One, .Two, .Four]
     @Environment(\.presentationMode) var presentationMode
@@ -35,7 +36,8 @@ struct DisplayConfigView: View {
         connectedPeripheral: CBPeripheral?,
         checkBluetoothStatus: @escaping () -> Bool?,
         updateCO2Unit: @escaping (@escaping () -> Void) -> (),
-        updateDisplayParams: @escaping ((CO2UnitType, CO2ScaleEnum) -> Void)
+        updateDisplayParams: @escaping ((CO2UnitType, CO2ScaleEnum) -> Void),
+        sendContinuous:  @escaping (() -> Void)
     ) {
         self.initCO2Unit = initCO2Unit
         self.initCO2Scale = initCO2Scale
@@ -44,6 +46,7 @@ struct DisplayConfigView: View {
         self.checkBluetoothStatus = checkBluetoothStatus
         self.updateCO2Unit = updateCO2Unit
         self.updateDisplayParams = updateDisplayParams
+        self.sendContinuous = sendContinuous
         _paramsModel = StateObject(wrappedValue: CO2DisplayParamModel(initCO2Unit: initCO2Unit, initCO2Scale: initCO2Scale))
     }
     
@@ -96,7 +99,7 @@ struct DisplayConfigView: View {
                             UserDefaults.standard.set(paramsModel.CO2Unit.rawValue, forKey: "CO2Unit")
                             UserDefaults.standard.set(paramsModel.CO2Scale.rawValue, forKey: "CO2Scale")
                             updateDisplayParams(paramsModel.CO2Unit, paramsModel.CO2Scale)
-                            updateCO2Unit{
+                            updateCO2Unit {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                     appConfigManage.loadingMessage = ""
                                     appConfigManage.toastMessage = appConfigManage.getTextByKey(key: "UpdateSettingFinished")
@@ -104,6 +107,7 @@ struct DisplayConfigView: View {
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                         appConfigManage.toastMessage = ""
                                     }
+                                    self.sendContinuous()
                                 }
                             }
                         }

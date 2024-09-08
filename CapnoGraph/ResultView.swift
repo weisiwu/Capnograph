@@ -235,7 +235,6 @@ struct ResultView: View {
     @State private var isVisible = true
     // 更多面板
     @State private var showModal = false
-    // TODO:(wsw) 临时
     
     let timer = Timer.publish(
         every: 1.0, 

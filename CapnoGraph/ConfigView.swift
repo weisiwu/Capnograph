@@ -311,7 +311,8 @@ struct SubConfigContainerView: View {
                 connectedPeripheral: bluetoothManager.connectedPeripheral,
                 checkBluetoothStatus: bluetoothManager.checkBluetoothStatus,
                 updateCO2Unit: bluetoothManager.updateCO2Unit,
-                updateDisplayParams: bluetoothManager.updateDisplayParams
+                updateDisplayParams: bluetoothManager.updateDisplayParams,
+                sendContinuous: bluetoothManager.sendContinuous
             )
         default:
             EmptyView()
