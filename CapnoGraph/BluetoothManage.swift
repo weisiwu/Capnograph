@@ -1028,8 +1028,8 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate, CB
                 isCorrectZero = false
         }
 
-        // 获取是否窒息状态: 取DB1，第7位，判断是否被置位
-        // 这里修改为，如果接受到的就是窒息，那么不用判断是否检测到呼吸（呼吸位是本地保存的，和设备不同步）
+        // 获取是否状态: 取DB1，第7位，判断是否被置位
+        // 那么不用判断是否检测到呼吸（呼吸位是本地保存的，和设备不同步）
         isAsphyxiation = (Int(data[6] & 0x40) == 0x40)
     }
     

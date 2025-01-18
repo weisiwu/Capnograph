@@ -14,11 +14,13 @@
 		1649F3BA2C0B3CE0009DCE65 /* CapnoGraphTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1649F3B92C0B3CE0009DCE65 /* CapnoGraphTests.swift */; };
 		1649F3C42C0B3CE0009DCE65 /* CapnoGraphUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1649F3C32C0B3CE0009DCE65 /* CapnoGraphUITests.swift */; };
 		1649F3C62C0B3CE0009DCE65 /* CapnoGraphUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1649F3C52C0B3CE0009DCE65 /* CapnoGraphUITestsLaunchTests.swift */; };
+		166155482C77945600F563BB /* LowLevelAlert.wav in Resources */ = {isa = PBXBuildFile; fileRef = 166155462C77945600F563BB /* LowLevelAlert.wav */; };
+		166155492C77945600F563BB /* MiddleLevelAlert.wav in Resources */ = {isa = PBXBuildFile; fileRef = 166155472C77945600F563BB /* MiddleLevelAlert.wav */; };
+		16880CB12C74E9B2000F2EEC /* HistoryDataManage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16880CB02C74E9B2000F2EEC /* HistoryDataManage.swift */; };
 		16E9F2602C0C7402004B977E /* SearchDeviceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F25F2C0C7402004B977E /* SearchDeviceListView.swift */; };
 		16E9F2622C0C7450004B977E /* SystemConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2612C0C7450004B977E /* SystemConfigView.swift */; };
 		16E9F2642C0C7491004B977E /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F2632C0C7491004B977E /* ResultView.swift */; };
 		16E9F26E2C0CC1CB004B977E /* AlertConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E9F26D2C0CC1CB004B977E /* AlertConfigView.swift */; };
-		16EA75082C3A93EE00AC3FD2 /* Medium.wav in Resources */ = {isa = PBXBuildFile; fileRef = 16EA75072C3A93EE00AC3FD2 /* Medium.wav */; };
 		414511E32C202F8A0028E8DC /* DisplayConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 414511E22C202F8A0028E8DC /* DisplayConfigView.swift */; };
 		414511E52C202F970028E8DC /* ModuleConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 414511E42C202F970028E8DC /* ModuleConfigView.swift */; };
 		414511E72C2037AC0028E8DC /* ConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 414511E62C2037AC0028E8DC /* ConfigView.swift */; };
@@ -55,11 +57,13 @@
 		1649F3BF2C0B3CE0009DCE65 /* CapnoGraphUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CapnoGraphUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1649F3C32C0B3CE0009DCE65 /* CapnoGraphUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapnoGraphUITests.swift; sourceTree = "<group>"; };
 		1649F3C52C0B3CE0009DCE65 /* CapnoGraphUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapnoGraphUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		166155462C77945600F563BB /* LowLevelAlert.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = LowLevelAlert.wav; sourceTree = "<group>"; };
+		166155472C77945600F563BB /* MiddleLevelAlert.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = MiddleLevelAlert.wav; sourceTree = "<group>"; };
+		16880CB02C74E9B2000F2EEC /* HistoryDataManage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HistoryDataManage.swift; sourceTree = "<group>"; };
 		16E9F25F2C0C7402004B977E /* SearchDeviceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchDeviceListView.swift; sourceTree = "<group>"; };
 		16E9F2612C0C7450004B977E /* SystemConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemConfigView.swift; sourceTree = "<group>"; };
 		16E9F2632C0C7491004B977E /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		16E9F26D2C0CC1CB004B977E /* AlertConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertConfigView.swift; sourceTree = "<group>"; };
-		16EA75072C3A93EE00AC3FD2 /* Medium.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = Medium.wav; path = Capnometer_dev/alarm/Medium.wav; sourceTree = SOURCE_ROOT; };
 		414511E22C202F8A0028E8DC /* DisplayConfigView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DisplayConfigView.swift; sourceTree = "<group>"; };
 		414511E42C202F970028E8DC /* ModuleConfigView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ModuleConfigView.swift; sourceTree = "<group>"; };
 		414511E62C2037AC0028E8DC /* ConfigView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigView.swift; sourceTree = "<group>"; };
@@ -130,6 +134,7 @@
 				414511E42C202F970028E8DC /* ModuleConfigView.swift */,
 				16E9F25F2C0C7402004B977E /* SearchDeviceListView.swift */,
 				41C305342C1306E60063E295 /* BluetoothManage.swift */,
+				16880CB02C74E9B2000F2EEC /* HistoryDataManage.swift */,
 				1649F3AC2C0B3CE0009DCE65 /* Assets.xcassets */,
 				1649F3AE2C0B3CE0009DCE65 /* Preview Content */,
 			);
@@ -171,7 +176,8 @@
 		16EA75062C3A93D300AC3FD2 /* ExtraAssets */ = {
 			isa = PBXGroup;
 			children = (
-				16EA75072C3A93EE00AC3FD2 /* Medium.wav */,
+				166155462C77945600F563BB /* LowLevelAlert.wav */,
+				166155472C77945600F563BB /* MiddleLevelAlert.wav */,
 			);
 			path = ExtraAssets;
 			sourceTree = "<group>";
@@ -286,7 +292,8 @@
 			files = (
 				1649F3B02C0B3CE0009DCE65 /* Preview Assets.xcassets in Resources */,
 				1649F3AD2C0B3CE0009DCE65 /* Assets.xcassets in Resources */,
-				16EA75082C3A93EE00AC3FD2 /* Medium.wav in Resources */,
+				166155482C77945600F563BB /* LowLevelAlert.wav in Resources */,
+				166155492C77945600F563BB /* MiddleLevelAlert.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -312,6 +319,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				16E9F26E2C0CC1CB004B977E /* AlertConfigView.swift in Sources */,
+				16880CB12C74E9B2000F2EEC /* HistoryDataManage.swift in Sources */,
 				16E9F2622C0C7450004B977E /* SystemConfigView.swift in Sources */,
 				16E9F2602C0C7402004B977E /* SearchDeviceListView.swift in Sources */,
 				1649F3AB2C0B3CDE009DCE65 /* ContentView.swift in Sources */,
@@ -501,7 +509,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "";
-				INFOPLIST_KEY_CFBundleDisplayName = CapnoGraph;
+				INFOPLIST_KEY_CFBundleDisplayName = CapnoEasy;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "我们的应用需要使用蓝牙来发现和连接到附近的设备。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -515,11 +523,11 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.6;
-				PRODUCT_BUNDLE_IDENTIFIER = WLD.CapnoGraph;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = WLD.CapnoEasy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Home PC";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = WLD_CapnoEasy_V1;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -544,7 +552,7 @@
 				ENABLE_TESTABILITY = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "";
-				INFOPLIST_KEY_CFBundleDisplayName = CapnoGraph;
+				INFOPLIST_KEY_CFBundleDisplayName = CapnoEasy;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "我们的应用需要使用蓝牙来发现和连接到附近的设备。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -558,11 +566,11 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.6;
-				PRODUCT_BUNDLE_IDENTIFIER = WLD.CapnoGraph;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = WLD.CapnoEasy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Home PC";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = WLD_CapnoEasy_V1;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

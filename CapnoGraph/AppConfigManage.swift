@@ -58,7 +58,7 @@ enum AppTextsChinese: String {
     // 主页
     case MainDeviceName = "设备名称"
     case MainDeviceID = "设备ID"
-    case MainPR = "RR/呼吸率"
+    case MainPR = "呼吸率"
     case MainETCO2 = "ETCO2"
     case MainUnknownName = "未知设备"
     case MainLineCharUnit = "秒"
