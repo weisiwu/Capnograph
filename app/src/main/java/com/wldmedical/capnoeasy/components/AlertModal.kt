@@ -1,32 +1,19 @@
 package com.wldmedical.capnoeasy.components
 
-import android.app.AlertDialog
-import android.app.Dialog
-import android.graphics.Paint.Align
-import android.icu.text.CaseMap.Title
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRowScopeInstance.align
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,7 +22,6 @@ import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -105,21 +91,10 @@ fun AlertModal(
                             }
                             if (ok_btn_text != null && cancel_btn_text != null) {
                                 Row(
-                                    modifier = Modifier.height(44.dp).align(Alignment.CenterVertically)
+                                    modifier = Modifier.height(44.dp)
                                 ) {
                                     Column(
                                         modifier = Modifier.weight(1f).height(44.dp).border(width = 1.dp, color = Color(0x224E5969), shape = RoundedCornerShape(0.dp, 0.dp, 0.dp, 2.dp)),
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        Text(
-                                            text = ok_btn_text,
-                                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                                            fontSize = 16.sp,
-                                            color = Color(0xff165DFF)
-                                        )
-                                    }
-                                    Column(
-                                        modifier = Modifier.weight(1f).height(44.dp).border(width = 1.dp, color = Color(0x224E5969), shape = RoundedCornerShape(0.dp, 0.dp, 2.dp, 0.dp)),
                                         verticalArrangement = Arrangement.Center
                                     ) {
                                         Text(
@@ -127,6 +102,17 @@ fun AlertModal(
                                             modifier = Modifier.align(Alignment.CenterHorizontally),
                                             fontSize = 16.sp,
                                             color = Color(0xff4E5969)
+                                        )
+                                    }
+                                    Column(
+                                        modifier = Modifier.weight(1f).height(44.dp).border(width = 1.dp, color = Color(0x224E5969), shape = RoundedCornerShape(0.dp, 0.dp, 2.dp, 0.dp)),
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Text(
+                                            text = ok_btn_text,
+                                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                                            fontSize = 16.sp,
+                                            color = Color(0xff165DFF)
                                         )
                                     }
                                 }
@@ -146,20 +132,9 @@ fun AlertModalPreview() {
         Column {
             AlertModal(
                 text = "确认要链接此设备？",
-                ok_btn_text = "取消",
-                cancel_btn_text = "链接"
+                ok_btn_text = "链接",
+                cancel_btn_text = "取消"
             )
-//            AlertModal(
-//                title = "",
-//                text = "请确认是否开始记录当前数据？？",
-//                ok_btn_text = "取消",
-//                cancel_btn_text = "确认"
-//            )
-//            AlertModal(
-//                title = "记录保存成功",
-//                text = "保存的记录可在设置>历史记录中查看",
-//                cancel_btn_text = "确认"
-//            )
         }
     }
 }
