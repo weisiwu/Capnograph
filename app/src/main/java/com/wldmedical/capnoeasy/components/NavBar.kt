@@ -44,6 +44,8 @@ data class NavBarComponentState(
     val currentPage: PageScene = PageScene.HOME_PAGE
 )
 
+//TODO: 缺少对三点水的支持
+//TODO: 缺少开始记录的支持
 /**
  * App顶部导航条
  * 所有一级页和二级页使用
