@@ -1,46 +1,28 @@
 package com.wldmedical.capnoeasy.components
 
-import android.provider.CalendarContract.Colors
 import android.util.Log
-import androidx.annotation.ColorRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Text
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SearchBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import androidx.navigation.compose.rememberNavController
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.R
 
@@ -53,75 +35,78 @@ fun DeviceType(
     val baseBgColor = if(isSelected) Color(0xffE7F1FF) else Color(0xffF5F5F5)
     val baseFontColor = if(isSelected) Color(0xff1677FF) else Color.Black
 
-    Button(
-        onClick = {
-            onClick?.invoke()
-        },
-        shape = RoundedCornerShape(2.dp),
-        colors = ButtonColors(
-            containerColor = baseBgColor,
-            contentColor = baseBgColor,
-            disabledContainerColor = baseBgColor,
-            disabledContentColor = baseBgColor
-        ),
+    Box(
         modifier = Modifier
             .width(111.dp)
             .height(37.dp)
-            .padding(end = 9.dp)
-    ) {
-        Box {
-            if(isSelected) {
-                Image(
-                    painter = painterResource(R.drawable.device_tyoe_mark),
-                    contentDescription = "选中",
-                    modifier = Modifier
-                        .width(111.dp)
-                        .height(37.dp)
-                )
+            .padding(0.dp, end = 9.dp)
+            .background(baseBgColor)
+            .clip(RoundedCornerShape(2.dp))
+            .clickable {
+                onClick?.invoke()
             }
-            Text(
-                text = text,
-                color = baseFontColor,
-                fontWeight = FontWeight.Bold,
+    ) {
+        if (isSelected) {
+            Image(
+                painter = painterResource(R.drawable.device_tyoe_mark),
+                contentDescription = "选中",
+                contentScale = ContentScale.FillBounds,
                 modifier = Modifier
-                    .background(Color(0xffF5F5F5)),
+                    .width(108.dp)
+                    .height(36.dp)
+                    .padding(0.dp)
+                    .align(Alignment.Center)
+                    .clip(RoundedCornerShape(2.dp)) // 裁剪图片
             )
         }
+        Text(
+            text = text,
+            color = baseFontColor,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(0.dp)
+                .background(Color(0xffF5F5F5)),
+        )
     }
 }
+
+data class Device(
+    val name: String,
+    val id: String,
+    val index: Int,
+)
+
+val DeviceTypes: Array<Device> = arrayOf(
+//    Device(name = "经典蓝牙", id = "BLUETOOTH_CLASSIC"),
+    Device(name = "蓝牙", id = "BLUETOOTH_LOWENERGY", index = 0),
+    Device(name = "WIFI", id = "WIFI", index = 1),
+    Device(name = "USB", id = "USB", index = 2),
+)
 
 /**
  * App 设备列表页，切换设备类型
  */
 @Composable
-fun DeviceTypeSwitch() {
+fun DeviceTypeSwitch(
+    onTypeClick: ((device: Device) -> UInt)? = null,
+) {
     val selectedIndex = remember { mutableIntStateOf(0) }
-    // TODO: 这里要有一个观察变量，值根据index变化，主要就是是否选中
 
     Row(
-        modifier = Modifier.background(Color.Black)
+        modifier = Modifier
+            .background(Color.Black)
     ) {
-        DeviceType(
-            text = "蓝牙",
-            isSelected = true,
-            onClick = {
-                selectedIndex.intValue = 0
-            }
-        )
-        DeviceType(
-            text = "WIFI",
-            isSelected = false,
-            onClick = {
-                selectedIndex.intValue = 1
-            }
-        )
-        DeviceType(
-            text = "USB",
-            isSelected = false,
-            onClick = {
-                selectedIndex.intValue = 2
-            }
-        )
+        for (device in DeviceTypes) {
+            DeviceType(
+                text = device.name,
+                isSelected = device.index == selectedIndex.value,
+                onClick = {
+                    selectedIndex.intValue = 0
+                    onTypeClick?.invoke(device)
+                }
+            )
+        }
     }
 }
 

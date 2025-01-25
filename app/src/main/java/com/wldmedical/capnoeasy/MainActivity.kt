@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.wldmedical.capnoeasy.components.ActionBar
+import com.wldmedical.capnoeasy.components.DeviceTypeSwitch
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.NavBar
 import com.wldmedical.capnoeasy.components.NavBarComponentState
@@ -37,18 +38,19 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Loading(text = "搜索设备中")
                     CapnoEasyTheme {
-                        NavBar(
-                            state = historypage,
-                            onRightClick = {
-                                // 处理点击事件的逻辑
-                                Log.d("TAG", "Button clicked")
-                            }
-                        )
+//                        NavBar(
+//                            state = historypage,
+//                            onRightClick = {
+//                                // 处理点击事件的逻辑
+//                                Log.d("TAG", "Button clicked")
+//                            }
+//                        )
 
-                        ActionBar(
-                            selectedIndex = mid,
-                            onTabClick = {}
-                        )
+                        DeviceTypeSwitch()
+//                        ActionBar(
+//                            selectedIndex = mid,
+//                            onTabClick = {}
+//                        )
                     }
                 }
             }
