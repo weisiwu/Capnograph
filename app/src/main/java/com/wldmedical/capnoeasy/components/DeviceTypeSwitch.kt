@@ -26,6 +26,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.R
 
+data class DeviceType(
+    val name: String,
+    val id: String,
+    val index: Int,
+)
+
+enum class DeviceTypeList(val deviceType: DeviceType) {
+    BLE(DeviceType(name = "蓝牙", id = "BLUETOOTH_LOWENERGY", index = 0)),
+    WIFI(DeviceType(name = "WIFI", id = "WIFI", index = 1)),
+    USB(DeviceType(name = "USB", id = "USB", index = 2)),
+    BLUETHOOTH(DeviceType(name = "经典蓝牙", id = "BLUETOOTH_CLASSIC", index = 3)),
+}
+
+val DeviceTypes: Array<DeviceType> = arrayOf(
+    DeviceTypeList.BLE.deviceType,
+    DeviceTypeList.WIFI.deviceType,
+    DeviceTypeList.USB.deviceType,
+//    DeviceTypeList.BLUETHOOTH.deviceType,
+)
+
 @Composable
 fun DeviceType(
     text: String,
@@ -71,25 +91,12 @@ fun DeviceType(
     }
 }
 
-data class Device(
-    val name: String,
-    val id: String,
-    val index: Int,
-)
-
-val DeviceTypes: Array<Device> = arrayOf(
-//    Device(name = "经典蓝牙", id = "BLUETOOTH_CLASSIC"),
-    Device(name = "蓝牙", id = "BLUETOOTH_LOWENERGY", index = 0),
-    Device(name = "WIFI", id = "WIFI", index = 1),
-    Device(name = "USB", id = "USB", index = 2),
-)
-
 /**
  * App 设备列表页，切换设备类型
  */
 @Composable
 fun DeviceTypeSwitch(
-    onTypeClick: ((device: Device) -> UInt)? = null,
+    onTypeClick: ((device: DeviceType) -> UInt)? = null,
 ) {
     val selectedIndex = remember { mutableIntStateOf(0) }
 
@@ -100,7 +107,7 @@ fun DeviceTypeSwitch(
         for (device in DeviceTypes) {
             DeviceType(
                 text = device.name,
-                isSelected = device.index == selectedIndex.value,
+                isSelected = device.index == selectedIndex.intValue,
                 onClick = {
                     selectedIndex.intValue = 0
                     onTypeClick?.invoke(device)

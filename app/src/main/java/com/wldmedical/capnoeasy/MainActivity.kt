@@ -16,6 +16,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.wldmedical.capnoeasy.components.ActionBar
+import com.wldmedical.capnoeasy.components.Device
+import com.wldmedical.capnoeasy.components.DeviceList
 import com.wldmedical.capnoeasy.components.DeviceTypeSwitch
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.NavBar
@@ -31,6 +33,21 @@ class MainActivity : ComponentActivity() {
             val mid = remember { mutableStateOf(1) }
             val historypage = remember { mutableStateOf(NavBarComponentState(currentPage = PageScene.HISTORY_LIST_PAGE)) }
 
+            val devices = listOf(
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+                Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
+            )
+
             Scaffold { innerPadding ->
                 Box(modifier = Modifier
                     .fillMaxSize()
@@ -38,19 +55,20 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Loading(text = "搜索设备中")
                     CapnoEasyTheme {
-//                        NavBar(
-//                            state = historypage,
-//                            onRightClick = {
-//                                // 处理点击事件的逻辑
-//                                Log.d("TAG", "Button clicked")
-//                            }
-//                        )
+                        NavBar(
+                            state = historypage,
+                            onRightClick = {
+                                // 处理点击事件的逻辑
+                                Log.d("TAG", "Button clicked")
+                            }
+                        )
 
-                        DeviceTypeSwitch()
-//                        ActionBar(
-//                            selectedIndex = mid,
-//                            onTabClick = {}
-//                        )
+                        DeviceList(devices = devices)
+//                        DeviceTypeSwitch()
+                        ActionBar(
+                            selectedIndex = mid,
+                            onTabClick = {}
+                        )
                     }
                 }
             }
