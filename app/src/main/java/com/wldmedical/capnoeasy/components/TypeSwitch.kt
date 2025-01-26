@@ -95,7 +95,7 @@ fun DeviceType(
  * App 设备列表页，切换设备类型
  */
 @Composable
-fun DeviceTypeSwitch(
+fun TypeSwitch(
     onTypeClick: ((device: DeviceType) -> UInt)? = null,
 ) {
     val selectedIndex = remember { mutableIntStateOf(0) }
@@ -119,8 +119,8 @@ fun DeviceTypeSwitch(
 
 @Preview(showBackground = true)
 @Composable
-fun DeviceTypeSwitchPreview() {
+fun TypeSwitchPreview() {
     CapnoEasyTheme {
-        DeviceTypeSwitch()
+        TypeSwitch()
     }
 }

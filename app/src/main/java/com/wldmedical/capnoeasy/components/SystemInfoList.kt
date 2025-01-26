@@ -29,7 +29,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// TODO: 按钮无法切换点击 
+// TODO: 按钮无法切换点击
 data class SystemIno(
     val name: String,
     val value: String,
@@ -61,7 +61,9 @@ val systeminfos = arrayOf(
 )
 
 /**
- * App 配置页 - 系统配置页，配置列表
+ * App 类型选择
+ * 1、打印设置中的是否展示二维码
+ * 2、设备列表中，切换设备链接方式
  */
 @Composable
 fun SystemInoList(

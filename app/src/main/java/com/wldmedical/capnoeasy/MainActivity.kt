@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.wldmedical.capnoeasy.components.ActionBar
 import com.wldmedical.capnoeasy.components.Device
 import com.wldmedical.capnoeasy.components.DeviceList
-import com.wldmedical.capnoeasy.components.DeviceTypeSwitch
+import com.wldmedical.capnoeasy.components.TypeSwitch
 import com.wldmedical.capnoeasy.components.EtCo2Table
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.NavBar
@@ -64,13 +64,13 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
-                        EtCo2Table()
+//                        EtCo2Table()
 //                        DeviceList(devices = devices)
 //                        DeviceTypeSwitch()
-                        ActionBar(
-                            selectedIndex = mid,
-                            onTabClick = {}
-                        )
+//                        ActionBar(
+//                            selectedIndex = mid,
+//                            onTabClick = {}
+//                        )
                     }
                 }
             }
