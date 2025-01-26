@@ -130,7 +130,7 @@ fun SettingList(
                     )
                 }
                 HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth().height(2.dp).background(Color(0xffDFE6E9)).alpha(0.4f)
+                    modifier = Modifier.fillMaxWidth().height(2.dp).background(Color(0xffDFE6E9)).alpha(0.4f).padding(horizontal = 18.dp)
                 )
             }
         }
