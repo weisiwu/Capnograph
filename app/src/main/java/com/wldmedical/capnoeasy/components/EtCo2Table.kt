@@ -91,7 +91,6 @@ fun AttributeLine(
                     Text(
                         text = attribute.defaultValue,
                         modifier = Modifier.fillMaxWidth()
-//                            .align()
                     )
                 },
             )

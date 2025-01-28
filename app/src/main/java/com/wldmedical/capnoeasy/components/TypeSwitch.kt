@@ -26,20 +26,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.R
 
-data class DeviceType(
-    val name: String,
-    val id: String,
-    val index: Int,
-)
+interface CustomType {
+    val name: String
+    val id: String
+    val index: Int
+}
 
-enum class DeviceTypeList(val deviceType: DeviceType) {
+data class DeviceType(
+    override val name: String,
+    override val id: String,
+    override val index: Int
+): CustomType
+
+enum class DeviceTypeList(val deviceType: CustomType) {
     BLE(DeviceType(name = "蓝牙", id = "BLUETOOTH_LOWENERGY", index = 0)),
     WIFI(DeviceType(name = "WIFI", id = "WIFI", index = 1)),
     USB(DeviceType(name = "USB", id = "USB", index = 2)),
     BLUETHOOTH(DeviceType(name = "经典蓝牙", id = "BLUETOOTH_CLASSIC", index = 3)),
 }
 
-val DeviceTypes: Array<DeviceType> = arrayOf(
+val DeviceTypes: Array<CustomType> = arrayOf(
     DeviceTypeList.BLE.deviceType,
     DeviceTypeList.WIFI.deviceType,
     DeviceTypeList.USB.deviceType,
@@ -96,21 +102,22 @@ fun DeviceType(
  */
 @Composable
 fun TypeSwitch(
-    onTypeClick: ((device: DeviceType) -> UInt)? = null,
+    types: Array<CustomType>,
+    onTypeClick: ((type: CustomType) -> Unit)? = null,
 ) {
     val selectedIndex = remember { mutableIntStateOf(0) }
 
     Row(
         modifier = Modifier
-            .background(Color.Black)
+            .background(Color.Transparent)
     ) {
-        for (device in DeviceTypes) {
+        for (type in types) {
             DeviceType(
-                text = device.name,
-                isSelected = device.index == selectedIndex.intValue,
+                text = type.name,
+                isSelected = type.index == selectedIndex.intValue,
                 onClick = {
                     selectedIndex.intValue = 0
-                    onTypeClick?.invoke(device)
+                    onTypeClick?.invoke(type)
                 }
             )
         }
@@ -121,6 +128,8 @@ fun TypeSwitch(
 @Composable
 fun TypeSwitchPreview() {
     CapnoEasyTheme {
-        TypeSwitch()
+        TypeSwitch(
+            types = DeviceTypes
+        )
     }
 }

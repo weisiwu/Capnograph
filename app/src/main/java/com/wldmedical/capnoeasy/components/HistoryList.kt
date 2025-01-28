@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,17 +12,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
@@ -40,7 +36,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.R
@@ -89,6 +84,7 @@ data class Record(
     var endTime: LocalDateTime
 )
 
+// TODO: 列表分组还没有加上
 /**
  * App 历史列表，内容为设备上记录的整体历史记录数据
  * 分为三组: 全部、病人、时间
@@ -147,7 +143,9 @@ fun HistoryList(
                         color = Color(0xff1677FF)
                     )
                 },
-                modifier = Modifier.fillMaxWidth().padding(0.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp),
             ) {
                 Groups.forEachIndexed { index, group ->
                     val isSeleted = selectedIndex == index
@@ -162,7 +160,9 @@ fun HistoryList(
                                 text = group.name,
                                 maxLines = 1,
                                 fontSize = 17.sp,
-                                modifier = Modifier.weight(1f).padding(0.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(0.dp),
                                 fontWeight = FontWeight.Bold,
                                 color = if(isSeleted) Color(0xff1677FF) else Color(0xff333333),
                                 overflow = TextOverflow.Ellipsis,

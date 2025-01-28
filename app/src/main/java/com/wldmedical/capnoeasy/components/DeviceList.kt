@@ -36,7 +36,7 @@ import com.wldmedical.capnoeasy.R
 data class Device(
     val name: String,
     val mac: String,
-    val type: DeviceType = DeviceTypeList.BLE.deviceType
+    val type: CustomType = DeviceTypeList.BLE.deviceType
 )
 
 val emptyAlert = "附近没有可配对设备！"
@@ -50,7 +50,7 @@ val emptyAlert = "附近没有可配对设备！"
 @Composable
 fun DeviceList(
     devices: List<Device>,
-    onSearch: ((DeviceType) -> Unit)? = null,
+    onSearch: ((CustomType) -> Unit)? = null,
     onDeviceClick: ((device: Device) -> UInt)? = null,
 ) {
     val configuration = LocalConfiguration.current

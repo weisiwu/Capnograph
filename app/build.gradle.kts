@@ -53,6 +53,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout.core)
     implementation(libs.androidx.constraintlayout)
     implementation("com.github.zj565061763:compose-wheel-picker:1.0.0-rc02")
+    implementation("com.github.qingmei2.RxImagePicker:rximagepicker:2.5.6")
+    implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
