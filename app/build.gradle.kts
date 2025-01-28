@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.constraintlayout.core)
     implementation(libs.androidx.constraintlayout)
+    implementation("com.github.zj565061763:compose-wheel-picker:1.0.0-rc02")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

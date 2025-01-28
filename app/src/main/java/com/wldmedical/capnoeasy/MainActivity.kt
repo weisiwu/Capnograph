@@ -24,7 +24,7 @@ import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.NavBar
 import com.wldmedical.capnoeasy.components.NavBarComponentState
 import com.wldmedical.capnoeasy.components.PageScene
-import com.wldmedical.capnoeasy.components.RollerSelector
+import com.wldmedical.capnoeasy.components.WheelPicker
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 
 class MainActivity : ComponentActivity() {
@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
-                        RollerSelector("大气压(mmHg)")
+                        WheelPicker(co2UnitsObj)
 //                        EtCo2Table()
 //                        DeviceList(devices = devices)
 //                        DeviceTypeSwitch()
