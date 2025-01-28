@@ -1,5 +1,7 @@
 package com.wldmedical.capnoeasy
 
+import com.wldmedical.capnoeasy.components.GROUP_BY
+
 interface BaseEnmu<T> {
     val value: T
 }

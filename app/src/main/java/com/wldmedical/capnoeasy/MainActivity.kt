@@ -20,12 +20,20 @@ import com.wldmedical.capnoeasy.components.Device
 import com.wldmedical.capnoeasy.components.DeviceList
 import com.wldmedical.capnoeasy.components.TypeSwitch
 import com.wldmedical.capnoeasy.components.EtCo2Table
+import com.wldmedical.capnoeasy.components.GENDER
+import com.wldmedical.capnoeasy.components.HistoryList
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.NavBar
 import com.wldmedical.capnoeasy.components.NavBarComponentState
 import com.wldmedical.capnoeasy.components.PageScene
+import com.wldmedical.capnoeasy.components.Patient
+import com.wldmedical.capnoeasy.components.Record
 import com.wldmedical.capnoeasy.components.WheelPicker
+import com.wldmedical.capnoeasy.components.formatter
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
+import java.time.LocalDateTime
+import java.time.format.DateTimeParseException
+import java.util.UUID
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +57,39 @@ class MainActivity : ComponentActivity() {
                 Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
                 Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
             )
+            val patient = Patient(
+                name = "病人A",
+                age = 90,
+                gender = GENDER.MALE,
+                id = UUID.randomUUID()
+            )
+            var startTime: LocalDateTime = LocalDateTime.now()
+            var endTime: LocalDateTime = LocalDateTime.now()
+            val startTimeString = "2025年1月29日18:00:03"
+            val endTimeString = "2025年1月01日18:00:03"
+
+            try {
+                startTime = LocalDateTime.parse(startTimeString, formatter) // 将字符串解析为 LocalDateTime 对象
+                endTime = LocalDateTime.parse(endTimeString, formatter) // 将字符串解析为 LocalDateTime 对象
+            } catch (e: DateTimeParseException) {
+                println("Invalid date time format: ${e.message}") // 捕获并处理解析异常
+            }
+
+            val records = listOf(
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+                Record(patient = patient, startTime = startTime, endTime = endTime),
+            )
 
             Scaffold { innerPadding ->
                 Box(modifier = Modifier
@@ -65,7 +106,8 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
-                        WheelPicker(co2UnitsObj)
+                        HistoryList(records = records)
+//                        WheelPicker(co2UnitsObj)
 //                        EtCo2Table()
 //                        DeviceList(devices = devices)
 //                        DeviceTypeSwitch()

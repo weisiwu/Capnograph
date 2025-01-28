@@ -26,6 +26,7 @@ import com.wldmedical.capnoeasy.co2UnitsObj
 import com.wldmedical.capnoeasy.wfSpeedsObj
 import com.wldmedical.capnoeasy.wheelPickerConfig
 
+// TODO: 选择状态还没有搞定
 /**
  * App 通用滚动选择器
  * 适用于
@@ -58,7 +59,9 @@ fun WheelPicker(
         }
 
         FVerticalWheelPicker(
-            modifier = Modifier.fillMaxWidth().height(150.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp),
             count = 3,
             itemHeight = 40.dp,
             state = state ,
