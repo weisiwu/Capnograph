@@ -11,13 +11,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.wldmedical.capnoeasy.components.ActionBar
 import com.wldmedical.capnoeasy.components.Device
 import com.wldmedical.capnoeasy.components.DeviceList
+import com.wldmedical.capnoeasy.components.EtCo2LineChart
 import com.wldmedical.capnoeasy.components.TypeSwitch
 import com.wldmedical.capnoeasy.components.EtCo2Table
 import com.wldmedical.capnoeasy.components.GENDER
@@ -91,6 +95,15 @@ class MainActivity : ComponentActivity() {
                 Record(patient = patient, startTime = startTime, endTime = endTime),
             )
 
+            val modelProducer = remember { CartesianChartModelProducer() }
+            LaunchedEffect(Unit) {
+                modelProducer.runTransaction {
+                    lineSeries {
+                        series(13, 8, 7, 12, 0, 1, 15, 14, 0, 11, 6, 12, 0, 11, 12, 11)
+                    }
+                }
+            }
+
             Scaffold { innerPadding ->
                 Box(modifier = Modifier
                     .fillMaxSize()
@@ -106,7 +119,8 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
-                        HistoryList(records = records)
+                        EtCo2LineChart(modelProducer)
+//                        HistoryList(records = records)
 //                        WheelPicker(co2UnitsObj)
 //                        EtCo2Table()
 //                        DeviceList(devices = devices)

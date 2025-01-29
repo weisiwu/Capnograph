@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+val vicoVersion = "2.0.1"
+
 android {
     namespace = "com.wldmedical.capnoeasy"
     compileSdk = 35
@@ -53,7 +55,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout.core)
     implementation(libs.androidx.constraintlayout)
     implementation("com.github.zj565061763:compose-wheel-picker:1.0.0-rc02")
-    implementation("com.github.qingmei2.RxImagePicker:rximagepicker:2.5.6")
+    //https://www.patrykandpatrick.com/vico/guide/stable/getting-started
+    implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

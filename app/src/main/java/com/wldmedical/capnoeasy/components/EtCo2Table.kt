@@ -77,16 +77,11 @@ fun AttributeLine(
                     fontWeight = FontWeight.Thin,
                     color = Color(0xff1D2129)
                 ),
-                label = {
-                    Text(
-                        text = if(inputText.value != "") inputText.value else attribute.defaultValue,
-                    )
-                },
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.White,
-                    focusedIndicatorColor = Color.White,
-                    unfocusedIndicatorColor = Color.White
-                ),
+//                colors = TextFieldDefaults.textFieldColors(
+//                    containerColor = Color.White,
+//                    focusedIndicatorColor = Color.White,
+//                    unfocusedIndicatorColor = Color.White
+//                ),
                 placeholder = {
                     Text(
                         text = attribute.defaultValue,

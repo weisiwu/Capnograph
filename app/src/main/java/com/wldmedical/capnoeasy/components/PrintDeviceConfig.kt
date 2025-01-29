@@ -43,7 +43,7 @@ val SupportQRCodeTypes: Array<CustomType> = arrayOf(
     SupportQRCodeType(name = "否", id = "否", index = 1),
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+// TODO: 缺少一个选择图片的能力
 @Composable
 fun CustomTextField(
     title: String? = null,
@@ -52,7 +52,9 @@ fun CustomTextField(
     val inputText = remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp)
     ) {
         if(title != null) {
             Text(
@@ -78,17 +80,19 @@ fun CustomTextField(
                 fontWeight = FontWeight.Thin,
                 color = Color(0xff1D2129)
             ),
-            colors = TextFieldDefaults.textFieldColors(
-                containerColor = Color.White,
-                focusedIndicatorColor = Color.White,
-                unfocusedIndicatorColor = Color.White
-            ),
+//            colors = TextFieldDefaults.textFieldColors(
+//                containerColor = Color.White,
+//                focusedIndicatorColor = Color.White,
+//                unfocusedIndicatorColor = Color.White
+//            ),
             placeholder = {
                 Text(
                     text = defaultText,
                     fontSize = 17.sp,
                     color = Color(0xffCCCCCC),
-                    modifier = Modifier.fillMaxWidth().padding(0.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(0.dp)
                 )
             },
         )
@@ -128,7 +132,10 @@ fun PrintDeviceConfig(
                 modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp)
             )
             Row(
-                modifier = Modifier.fillMaxWidth().background(Color.Transparent).padding(bottom = 18.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Transparent)
+                    .padding(bottom = 18.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 TypeSwitch(
@@ -153,7 +160,9 @@ fun PrintDeviceConfig(
                 color = Color(0xff666666),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 18.dp).padding(top = 18.dp)
+                modifier = Modifier
+                    .padding(horizontal = 18.dp)
+                    .padding(top = 18.dp)
             )
             Box(
                 modifier = Modifier
