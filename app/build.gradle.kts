@@ -57,6 +57,7 @@ dependencies {
     implementation("com.github.zj565061763:compose-wheel-picker:1.0.0-rc02")
     //https://www.patrykandpatrick.com/vico/guide/stable/getting-started
     implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
