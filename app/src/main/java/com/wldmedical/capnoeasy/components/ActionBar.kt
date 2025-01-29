@@ -27,13 +27,14 @@ import androidx.compose.ui.text.style.TextOverflow
 
 data class TabItem(
     val text: String,
-    val icon: ImageVector? = null // 可选的图标
+    val icon: ImageVector? = null, // 可选的图标
+    val index: Int = 0,
 )
 
 val tabs = listOf(
-    TabItem(text = "搜索设备", icon = Icons.Filled.Search ),
-    TabItem(text = "主页", icon = Icons.Filled.Home ),
-    TabItem(text = "设置", icon = Icons.Filled.Settings ),
+    TabItem(text = "搜索设备", icon = Icons.Filled.Search, index = 0 ),
+    TabItem(text = "主页", icon = Icons.Filled.Home, index = 1 ),
+    TabItem(text = "设置", icon = Icons.Filled.Settings, index = 2 ),
 )
 
 /**

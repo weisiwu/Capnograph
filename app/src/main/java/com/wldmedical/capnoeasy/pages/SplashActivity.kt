@@ -43,8 +43,8 @@ class SplashActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SplashScreen(onNavigateToMain = {
-//                startActivity(Intent(this, MainActivity::class.java))
-//                finish()
+                startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+                finish()
             })
         }
     }

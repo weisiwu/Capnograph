@@ -1,5 +1,7 @@
 package com.wldmedical.capnoeasy.components
 
+import android.content.Intent
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
@@ -27,6 +30,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.pages.AlertSettingActivity
+import com.wldmedical.capnoeasy.pages.DisplaySettingActivity
+import com.wldmedical.capnoeasy.pages.HistoryRecordsActivity
+import com.wldmedical.capnoeasy.pages.MainActivity
+import com.wldmedical.capnoeasy.pages.ModuleSettingActivity
+import com.wldmedical.capnoeasy.pages.PrintSettingActivity
+import com.wldmedical.capnoeasy.pages.SearchActivity
+import com.wldmedical.capnoeasy.pages.SettingActivity
+import com.wldmedical.capnoeasy.pages.SystemSettingActivity
 
 enum class SettingType(value: Int) {
     ZERO(0), // 校零
@@ -99,6 +111,7 @@ val settings = arrayOf(
  */
 @Composable
 fun SettingList(
+    context: ComponentActivity? = null,
     settings: Array<Setting>,
     onSettingClick: ((setting: Setting) -> UInt)? = null,
 ) {
@@ -114,7 +127,24 @@ fun SettingList(
                         .fillMaxWidth()
                         .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 27.dp)
                         .clickable {
-                            onSettingClick?.invoke(setting)
+                            var intent = Intent(context, SettingActivity::class.java)
+                            when(setting.type) {
+                                SettingType.ALERT_PARAM -> intent = Intent(context, AlertSettingActivity::class.java)
+                                SettingType.DISPLAY_PARAM -> intent = Intent(context, DisplaySettingActivity::class.java)
+                                SettingType.MODULE_PARAM -> intent = Intent(context, ModuleSettingActivity::class.java)
+                                SettingType.SYSTEM_SETTING -> intent = Intent(context, SystemSettingActivity::class.java)
+                                SettingType.PRINT_SETTING -> intent = Intent(context, PrintSettingActivity::class.java)
+                                SettingType.HISTORY_RECORD -> intent = Intent(context, HistoryRecordsActivity::class.java)
+//                                SettingType.SHUTDOWN -> intent = Intent(context, SearchActivity::class.java)
+//                                SettingType.ZERO -> intent = Intent(context, SearchActivity::class.java)
+//                                SettingType.KEEP_LIGHT -> intent = Intent(context, SearchActivity::class.java)
+                                SettingType.ZERO -> println("")
+                                SettingType.KEEP_LIGHT -> println("")
+                                SettingType.SHUTDOWN -> println("")
+                            }
+                            context?.startActivity(intent)
+                            // TODO: 同样支持外部覆盖
+//                            onSettingClick?.invoke(setting)
                         }
                 ) {
                     Text(

@@ -22,19 +22,28 @@
         android:icon="@drawable/app_logo"
         android:label="@string/app_name"
         android:roundIcon="@drawable/app_logo_round"
+        android:theme="@style/Theme.Splash"
         android:supportsRtl="true"
-        android:theme="@style/Theme.App.Starting"
         tools:targetApi="31">
         <activity
             android:name=".pages.SplashActivity"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.CapnoEasy">
+            android:theme="@style/Theme.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".pages.MainActivity" android:exported="false" />
+        <activity android:name=".pages.SearchActivity" android:exported="false" />
+        <activity android:name=".pages.SettingActivity" android:exported="false" />
+        <activity android:name=".pages.AlertSettingActivity" android:exported="false" />
+        <activity android:name=".pages.DisplaySettingActivity" android:exported="false" />
+        <activity android:name=".pages.HistoryRecordDetailActivity" android:exported="false" />
+        <activity android:name=".pages.HistoryRecordsActivity" android:exported="false" />
+        <activity android:name=".pages.ModuleSettingActivity" android:exported="false" />
+        <activity android:name=".pages.PrintSettingActivity" android:exported="false" />
+        <activity android:name=".pages.SystemSettingActivity" android:exported="false" />
     </application>
 
 </manifest>

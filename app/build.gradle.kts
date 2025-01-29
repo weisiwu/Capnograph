@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+//    id("com.google.dagger.hilt.android")  // Hilt 插件
+//    kotlin("kapt")
 }
 
 val vicoVersion = "2.0.1"
@@ -38,6 +40,7 @@ android {
     }
     buildFeatures {
         compose = true
+//        viewBinding = true
     }
 }
 
@@ -58,6 +61,10 @@ dependencies {
     //https://www.patrykandpatrick.com/vico/guide/stable/getting-started
     implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
     implementation("androidx.core:core-splashscreen:1.0.1")
+//    implementation("com.google.dagger:hilt-android:2.51")
+//    kapt("com.google.dagger:hilt-android-compiler:2.51")
+//    implementation("androidx.room:room-runtime:2.6.1")
+//    kapt("androidx.room:room-compiler:2.6.1")  // ✅ 确保 Room 依赖一致
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
