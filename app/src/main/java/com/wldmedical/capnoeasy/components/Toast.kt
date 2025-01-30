@@ -17,8 +17,6 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.ui.Alignment
@@ -29,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.maskOpacity
+import com.wldmedical.capnoeasy.maxMaskZIndex
 
 enum class ToastType {
     SUCCESS,
@@ -47,24 +47,23 @@ data class ToastData(
  */
 @Composable
 fun Toast(
-    text: String,
-    type: ToastType = ToastType.SUCCESS,
-    showMask: Boolean = false,
+    data: ToastData? = null,
+    onClick: (() -> Unit)? = null
 ) {
-    var showToast = remember { mutableStateOf(true) }
-    val alpha = if (showMask) 0.2f else 0f
-
-    if (!showToast.value) {
+    if (data == null) {
         return
     }
 
+    val alpha = if (data.showMask) maskOpacity else 0f
+
     Box(
         modifier = Modifier
+            .zIndex(maxMaskZIndex)
             .fillMaxSize()
             .zIndex(999f)
             .background(Color.Black.copy(alpha = alpha))
             .clickable {
-                showToast.value = false
+                onClick?.invoke()
             },
     ) {
         Column(
@@ -88,7 +87,7 @@ fun Toast(
                         .align(Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    when(type) {
+                    when(data.type) {
                         ToastType.SUCCESS -> {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
@@ -105,7 +104,7 @@ fun Toast(
                         }
                     }
                     Text(
-                        text = text,
+                        text = data.text,
                         modifier = Modifier.padding(start = 6.dp),
                         color = Color.White,
                         fontSize = 16.sp
@@ -121,9 +120,11 @@ fun Toast(
 fun ToastPreview() {
     CapnoEasyTheme {
         Toast(
-            text = "链接失败",
-            type = ToastType.FAIL,
-            showMask = false
+            data = ToastData(
+                text = "链接失败",
+                type = ToastType.FAIL,
+                showMask = false
+            ),
         )
     }
 }

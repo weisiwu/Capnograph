@@ -1,11 +1,12 @@
 package com.wldmedical.capnoeasy.components
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -102,13 +103,16 @@ fun DeviceType(
  */
 @Composable
 fun TypeSwitch(
+    modifier: Modifier = Modifier,
     types: Array<CustomType>,
     onTypeClick: ((type: CustomType) -> Unit)? = null,
 ) {
     val selectedIndex = remember { mutableIntStateOf(0) }
 
     Row(
-        modifier = Modifier
+        horizontalArrangement = Arrangement.Center,
+        modifier = modifier
+            .fillMaxWidth()
             .background(Color.Transparent)
     ) {
         for (type in types) {

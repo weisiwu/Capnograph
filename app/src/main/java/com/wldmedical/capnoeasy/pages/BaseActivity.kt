@@ -10,6 +10,7 @@ import com.wldmedical.capnoeasy.components.BaseLayout
 import com.wldmedical.capnoeasy.components.ConfirmModal
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.Toast
+import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.models.AppStateModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -23,7 +24,13 @@ open class BaseActivity : ComponentActivity() {
     open fun ShowLoading(viewModel: AppStateModel) {
         val loadingData = viewModel.loadingData.value
         if (loadingData != null) {
-            Loading(text = loadingData.text)
+            Loading(
+                data = loadingData,
+                onClick = {
+                    // TODO: 这里可以细化，比如链接中的，点击也不应该消失
+                    viewModel.updateLoadingData(null)
+                }
+            )
         }
     }
 
@@ -33,9 +40,13 @@ open class BaseActivity : ComponentActivity() {
         val alertData = viewModel.alertData.value
         if (alertData != null) {
             AlertModal(
-                text = alertData.text,
-                ok_btn_text = alertData.ok_btn_text,
-                cancel_btn_text = alertData.cancel_btn_text
+                data = alertData,
+                onOk = {
+                    viewModel.updateLoadingData(null)
+                },
+                onCancel = {
+                    viewModel.updateLoadingData(null)
+                }
             )
         }
     }
@@ -46,9 +57,10 @@ open class BaseActivity : ComponentActivity() {
         val confirmData = viewModel.confirmData.value
         if (confirmData != null) {
             ConfirmModal(
-                text = confirmData.text,
-                title = confirmData.title,
-                confirm_btn_text = confirmData.confirm_btn_text
+                data = confirmData,
+                onClick = {
+                    viewModel.updateConfirmData(null)
+                }
             )
         }
     }
@@ -59,9 +71,10 @@ open class BaseActivity : ComponentActivity() {
         val toastData = viewModel.toastData.value
         if (toastData != null) {
             Toast(
-                text = toastData.text,
-                type = toastData.type,
-                showMask = toastData.showMask
+                data = toastData,
+                onClick = {
+                    viewModel.updateToastData(null)
+                }
             )
         }
     }
@@ -77,16 +90,17 @@ open class BaseActivity : ComponentActivity() {
         setContent {
             BaseLayout(
                 context = this,
+                float = { viewModel ->
+                    ShowToast(viewModel)
+
+                    ShowAlert(viewModel)
+
+                    ShowConfirm(viewModel)
+
+                    ShowLoading(viewModel)
+                }
             ) { viewModel ->
                 Content(viewModel)
-
-                ShowToast(viewModel)
-
-                ShowAlert(viewModel)
-
-                ShowConfirm(viewModel)
-
-                ShowLoading(viewModel)
             }
         }
     }

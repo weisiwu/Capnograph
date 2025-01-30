@@ -14,8 +14,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.ui.Alignment
@@ -23,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.wldmedical.capnoeasy.maskOpacity
+import com.wldmedical.capnoeasy.maxMaskZIndex
 
 data class LoadingData(
     val text: String,
@@ -34,27 +34,21 @@ data class LoadingData(
  */
 @Composable
 fun Loading(
-    text: String,
-    onClick: ((Boolean) -> Boolean)? = null
+    data: LoadingData? = null,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
-    var showLoading = remember { mutableStateOf(true) }
-
-    if (!showLoading.value) {
+    if (data == null) {
         return
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .zIndex(999f)
-            .background(Color.Black.copy(alpha = 0.2f))
+            .zIndex(maxMaskZIndex)
+            .background(Color.Black.copy(alpha = maskOpacity))
             .clickable {
-                var showLoadingTmp = false;
-
-                if (onClick != null) {
-                    showLoadingTmp = onClick(showLoading.value)
-                }
-                showLoading.value = showLoadingTmp
+                onClick?.invoke()
             },
     ) {
         Column {
@@ -69,7 +63,7 @@ fun Loading(
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
                 Text(
-                    text = text,
+                    text = data.text,
                     modifier = Modifier.align(Alignment.CenterVertically).padding(start = 12.dp)
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -84,7 +78,7 @@ fun Loading(
 fun LoadingPreview() {
     CapnoEasyTheme {
         Column {
-            Loading(text = "搜索设备中")
+            Loading(LoadingData(text = "搜索设备中"))
         }
     }
 }

@@ -24,6 +24,7 @@ fun BaseLayout(
     onTabClick: ((index: Int) -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: AppStateModel = hiltViewModel(),
+    float: @Composable (AppStateModel) -> Unit,
     content: @Composable (AppStateModel) -> Unit,
 ) {
     Column {
@@ -60,4 +61,5 @@ fun BaseLayout(
             isInPreview = true
         )
     }
+    float(viewModel)
 }

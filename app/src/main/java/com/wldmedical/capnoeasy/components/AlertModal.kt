@@ -15,8 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.ui.Alignment
@@ -26,11 +24,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
+import com.wldmedical.capnoeasy.maskOpacity
+import com.wldmedical.capnoeasy.maxMaskZIndex
 
 data class AlertData(
-    val text: String,
-    val ok_btn_text: String,
-    val cancel_btn_text: String
+    val title: String? = null,
+    val text: String? = null,
+    val ok_btn_text: String? = null,
+    val cancel_btn_text: String? = null
 )
 
 /**
@@ -39,37 +40,30 @@ data class AlertData(
  */
 @Composable
 fun AlertModal(
-    title: String? = null,
-    text: String? = null,
-    cancel_btn_text: String? = null,
-    ok_btn_text: String? = null,
-    onClick: ((Boolean) -> Boolean)? = null
+    data: AlertData?,
+    onOk: (() -> Unit)? = null,
+    onCancel: (() -> Unit)? = null
 ) {
-    var showAlert = remember { mutableStateOf(true) }
-
-    if (!showAlert.value) {
+    if (data == null) {
         return
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .zIndex(999f)
-            .background(Color.Black.copy(alpha = 0.2f))
+            .zIndex(maxMaskZIndex)
+            .background(Color.Black.copy(alpha = maskOpacity))
             .clickable {
-                var showLoadingTmp = false;
-
-                if (onClick != null) {
-                    showLoadingTmp = onClick(showAlert.value)
-                }
-                showAlert.value = showLoadingTmp
+                onCancel?.invoke()
             },
     ) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally)
             ) {
-                Dialog(onDismissRequest = { showAlert.value = false }) {
+                Dialog(onDismissRequest = {
+                    onCancel?.invoke()
+                }) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -77,45 +71,57 @@ fun AlertModal(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Column {
-                            if (title != null) {
+                            if (data.title != null) {
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     Text(
                                         modifier = Modifier.align(Alignment.CenterHorizontally),
-                                        text = title,
+                                        text = data.title,
                                     )
                                 }
                             }
-                            if (text != null) {
+                            if (data.text != null) {
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     Text(
-                                        text = text,
+                                        text = data.text,
                                         modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 20.dp, bottom = 20.dp),
                                         fontSize = 17.sp,
                                         color = Color(0xff1D2129)
                                     )
                                 }
                             }
-                            if (ok_btn_text != null && cancel_btn_text != null) {
+                            if (data.ok_btn_text != null && data.cancel_btn_text != null) {
                                 Row(
                                     modifier = Modifier.height(44.dp)
                                 ) {
                                     Column(
-                                        modifier = Modifier.weight(1f).height(44.dp).border(width = 1.dp, color = Color(0x224E5969), shape = RoundedCornerShape(0.dp, 0.dp, 0.dp, 2.dp)),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(44.dp)
+                                            .border(width = 1.dp, color = Color(0x224E5969), shape = RoundedCornerShape(0.dp, 0.dp, 0.dp, 2.dp))
+                                            .clickable {
+                                                onCancel?.invoke()
+                                            },
                                         verticalArrangement = Arrangement.Center
                                     ) {
                                         Text(
-                                            text = cancel_btn_text,
+                                            text = data.cancel_btn_text,
                                             modifier = Modifier.align(Alignment.CenterHorizontally),
                                             fontSize = 16.sp,
                                             color = Color(0xff4E5969)
                                         )
                                     }
                                     Column(
-                                        modifier = Modifier.weight(1f).height(44.dp).border(width = 1.dp, color = Color(0x224E5969), shape = RoundedCornerShape(0.dp, 0.dp, 2.dp, 0.dp)),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(44.dp).
+                                            border(width = 1.dp, color = Color(0x224E5969), shape = RoundedCornerShape(0.dp, 0.dp, 2.dp, 0.dp))
+                                            .clickable {
+                                                onOk?.invoke()
+                                            },
                                         verticalArrangement = Arrangement.Center
                                     ) {
                                         Text(
-                                            text = ok_btn_text,
+                                            text = data.ok_btn_text,
                                             modifier = Modifier.align(Alignment.CenterHorizontally),
                                             fontSize = 16.sp,
                                             color = Color(0xff165DFF)
@@ -137,9 +143,11 @@ fun AlertModalPreview() {
     CapnoEasyTheme {
         Column {
             AlertModal(
-                text = "确认要链接此设备？",
-                ok_btn_text = "链接",
-                cancel_btn_text = "取消"
+                AlertData(
+                    text = "确认要链接此设备？",
+                    ok_btn_text = "链接",
+                    cancel_btn_text = "取消",
+                )
             )
         }
     }

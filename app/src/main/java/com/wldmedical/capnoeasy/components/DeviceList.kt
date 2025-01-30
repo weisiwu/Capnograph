@@ -1,6 +1,5 @@
 package com.wldmedical.capnoeasy.components
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -51,7 +50,7 @@ val emptyAlert = "附近没有可配对设备！"
 fun DeviceList(
     devices: List<Device>,
     onSearch: ((CustomType) -> Unit)? = null,
-    onDeviceClick: ((device: Device) -> UInt)? = null,
+    onDeviceClick: ((device: Device) -> Unit)? = null,
 ) {
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp.dp

@@ -15,8 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.ui.Alignment
@@ -27,11 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
+import com.wldmedical.capnoeasy.maskOpacity
+import com.wldmedical.capnoeasy.maxMaskZIndex
 
 data class ConfirmData(
-    val text: String,
-    val title: String,
-    val confirm_btn_text: String
+    val text: String? = null,
+    val title: String? = null,
+    val confirm_btn_text: String? = null
 )
 
 /**
@@ -40,36 +40,28 @@ data class ConfirmData(
  */
 @Composable
 fun ConfirmModal(
-    title: String? = null,
-    text: String? = null,
-    confirm_btn_text: String? = null,
-    onClick: ((Boolean) -> Boolean)? = null
+    data: ConfirmData? = null,
+    onClick: (() -> Unit)? = null
 ) {
-    var showAlert = remember { mutableStateOf(true) }
 
-    if (!showAlert.value) {
+    if (data == null) {
         return
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .zIndex(999f)
-            .background(Color.Black.copy(alpha = 0.2f))
+            .zIndex(maxMaskZIndex)
+            .background(Color.Black.copy(alpha = maskOpacity))
             .clickable {
-                var showLoadingTmp = false;
-
-                if (onClick != null) {
-                    showLoadingTmp = onClick(showAlert.value)
-                }
-                showAlert.value = showLoadingTmp
+                onClick?.invoke()
             },
     ) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally)
             ) {
-                Dialog(onDismissRequest = { showAlert.value = false }) {
+                Dialog(onDismissRequest = { onClick?.invoke() }) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -77,22 +69,22 @@ fun ConfirmModal(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Column {
-                            if (title != null) {
+                            if (data.title != null) {
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     Text(
                                         modifier = Modifier
                                             .align(Alignment.CenterHorizontally)
                                             .padding(top = 20.dp),
-                                        text = title,
+                                        text = data.title,
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
-                            if (text != null) {
+                            if (data.text != null) {
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     Text(
-                                        text = text,
+                                        text = data.text,
                                         modifier = Modifier
                                             .align(Alignment.CenterHorizontally)
                                             .padding(top = 12.dp, bottom = 20.dp, start = 20.dp, end = 20.dp),
@@ -102,16 +94,23 @@ fun ConfirmModal(
                                     )
                                 }
                             }
-                            if (confirm_btn_text != null) {
+                            if (data.confirm_btn_text != null) {
                                 Row(
-                                    modifier = Modifier.height(44.dp)
+                                    modifier = Modifier
+                                        .height(44.dp)
+                                        .clickable {
+                                            onClick?.invoke()
+                                        }
                                 ) {
                                     Column(
-                                        modifier = Modifier.weight(1f).height(44.dp).border(width = 1.dp, color = Color(0x224E5969), shape = RoundedCornerShape(0.dp, 0.dp, 0.dp, 2.dp)),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(44.dp)
+                                            .border(width = 1.dp, color = Color(0x224E5969), shape = RoundedCornerShape(0.dp, 0.dp, 0.dp, 2.dp)),
                                         verticalArrangement = Arrangement.Center
                                     ) {
                                         Text(
-                                            text = confirm_btn_text,
+                                            text = data.confirm_btn_text,
                                             modifier = Modifier.align(Alignment.CenterHorizontally),
                                             fontSize = 16.sp,
                                             color = Color(0xff4E5969)
@@ -132,9 +131,11 @@ fun ConfirmModal(
 fun ConfirmModalPreview() {
     CapnoEasyTheme {
         ConfirmModal(
-            title = "记录保存成功",
-            text = "保存的记录可在设置>历史记录中查看",
-            confirm_btn_text = "确认"
+            data = ConfirmData(
+                title = "记录保存成功",
+                text = "保存的记录可在设置>历史记录中查看",
+                confirm_btn_text = "确认"
+            )
         )
     }
 }
