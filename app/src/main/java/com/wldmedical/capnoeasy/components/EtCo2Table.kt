@@ -125,9 +125,12 @@ fun EtCo2Table(
 ) {
     LazyColumn {
         items(attributes) { attribute ->
-            AttributeLine(attribute = attribute, onInputChange = { newVal ->
-                println("wswTest 这是完毕传入的函数")
-            })
+            AttributeLine(
+                attribute = attribute,
+                onInputChange = { newVal ->
+                    println("wswTestETCO2Table 输入 $newVal")
+                }
+            )
         }
     }
 }

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -24,10 +25,19 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.State
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 
 enum class PageScene(val title: String) {
     HOME_PAGE("CapnoGraph"), // 主页
@@ -56,12 +66,28 @@ data class NavBarComponentState(
 @Composable
 fun NavBar(
     state: State<NavBarComponentState>,
-    onRightClick: () -> Unit
+    onRightClick: (() -> Unit)? = null
 ) {
     val navController = rememberNavController()
     val isFocus = remember { mutableStateOf(false) }
+    val isRecording = remember { mutableStateOf(false) }
     val showSearch = remember { derivedStateOf { state.value.currentPage == PageScene.HISTORY_LIST_PAGE } }
+    var showRecort = remember { derivedStateOf { state.value.currentPage == PageScene.HOME_PAGE } }
     val showBack = remember { derivedStateOf { state.value.currentPage != PageScene.HOME_PAGE } }
+    var rightIcon: ImageVector? = null
+
+    when(state.value.currentPage) {
+        PageScene.HISTORY_LIST_PAGE -> rightIcon = Icons.Filled.Search
+        PageScene.HISTORY_DETAIL_PAGE -> rightIcon = Icons.Filled.MoreVert
+        PageScene.HOME_PAGE ->
+            if (isRecording.value) {
+                // TODO: 这里肯定要换图
+                rightIcon = Icons.Filled.Info
+            } else {
+                rightIcon = Icons.Filled.PlayArrow
+            }
+        else -> println("No Use")
+    }
 
     TopAppBar(
         navigationIcon = {
@@ -110,13 +136,32 @@ fun NavBar(
             }
         },
         actions = {
-            if (showSearch.value && !isFocus.value) {
-                IconButton(onClick = {
-                    onRightClick()
-                    isFocus.value = !isFocus.value
-                }) {
-                    Icon(imageVector = Icons.Filled.Search, contentDescription = "Search")
+            if (rightIcon != null && !isFocus.value) {
+                Column {
+                    IconButton(
+                        modifier = Modifier.padding(0.dp),
+                        onClick = {
+                            onRightClick?.invoke()
+                            isFocus.value = !isFocus.value
+                        }
+                    ) {
+                        // TODO: 这个的description可以改写
+                        Icon(
+                            imageVector = rightIcon,
+                            contentDescription = "Search"
+                        )
+                    }
+                    if (showRecort.value) {
+                        Text(
+                            text = "开始记录",
+                            fontSize = 12.sp
+                        )
+                    }
                 }
+            } else {
+                Spacer(
+                    modifier = Modifier.width(50.dp)
+                )
             }
         },
     )
@@ -128,32 +173,17 @@ fun NavBarPreview() {
     val homepage = remember { mutableStateOf(NavBarComponentState(currentPage = PageScene.HOME_PAGE)) }
     val settingpage = remember { mutableStateOf(NavBarComponentState(currentPage = PageScene.SETTING_PAGE)) }
     val historypage = remember { mutableStateOf(NavBarComponentState(currentPage = PageScene.HISTORY_LIST_PAGE)) }
+    val detailpage = remember { mutableStateOf(NavBarComponentState(currentPage = PageScene.HISTORY_DETAIL_PAGE)) }
 
     CapnoEasyTheme {
         Column {
-            NavBar(
-                state = homepage,
-                onRightClick = {
-                    // 处理点击事件的逻辑
-                    Log.d("TAG", "Button clicked")
-                }
-            )
+            NavBar(state = homepage)
 
-            NavBar(
-                state = settingpage,
-                onRightClick = {
-                    // 处理点击事件的逻辑
-                    Log.d("TAG", "Button clicked")
-                }
-            )
+            NavBar(state = settingpage)
 
-            NavBar(
-                state = historypage,
-                onRightClick = {
-                    // 处理点击事件的逻辑
-                    Log.d("TAG", "Button clicked")
-                }
-            )
+            NavBar(state = historypage,)
+
+            NavBar(state = detailpage)
         }
     }
 }
