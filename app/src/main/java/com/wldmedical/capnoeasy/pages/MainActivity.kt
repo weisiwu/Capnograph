@@ -7,6 +7,8 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.wldmedical.capnoeasy.components.EtCo2LineChart
 import com.wldmedical.capnoeasy.components.EtCo2Table
+import com.wldmedical.capnoeasy.components.PageScene
+import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 
 /***
@@ -15,7 +17,8 @@ import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 class MainActivity : BaseActivity() {
 
     @Composable
-    override fun Content() {
+    override fun Content(viewModel: AppStateModel) {
+        viewModel.updateCurrentPage(PageScene.HOME_PAGE)
         val modelProducer = remember { CartesianChartModelProducer() }
         LaunchedEffect(Unit) {
             modelProducer.runTransaction {

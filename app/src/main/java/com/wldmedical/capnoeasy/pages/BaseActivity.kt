@@ -5,32 +5,33 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
-import com.wldmedical.capnoeasy.co2ScalesObj
-import com.wldmedical.capnoeasy.co2UnitsObj
 import com.wldmedical.capnoeasy.components.BaseLayout
-import com.wldmedical.capnoeasy.components.BasePage
-import com.wldmedical.capnoeasy.components.RangeSelector
-import com.wldmedical.capnoeasy.components.RangeType
-import com.wldmedical.capnoeasy.components.WheelPicker
-import com.wldmedical.capnoeasy.wfSpeedsObj
+import com.wldmedical.capnoeasy.models.AppStateModel
+import dagger.hilt.android.AndroidEntryPoint
 
 /***
  * 所有页面基类
  */
+@AndroidEntryPoint
 open class BaseActivity : ComponentActivity() {
     // 通用加载中
-    open fun showLoading(isLoading: Boolean) {
+    @Composable
+    open fun showLoading() {
     }
 
     // 通用alert提示
-    open fun showAlert(message: String?) {
+    @Composable
+    open fun showAlert() {
     }
 
     // 通用Toast提示
+    @Composable
     open fun showToast() {}
 
     @Composable
-    open fun Content() {}
+    open fun Content(viewModel: AppStateModel) {
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,8 +39,16 @@ open class BaseActivity : ComponentActivity() {
         setContent {
             BaseLayout(
                 context = this,
-            ) {
-                Content()
+            ) { viewModel ->
+                Content(viewModel)
+
+//                showToast()
+//
+//                showAlert()
+//
+//                showToast()
+//
+//                showLoading()
             }
         }
     }

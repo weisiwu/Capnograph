@@ -1,4 +1,4 @@
-package com.wldmedical.capnoeasy.modules
+package com.wldmedical.capnoeasy.kits
 
 /**
  * 数据本地存储

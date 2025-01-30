@@ -1,6 +1,5 @@
 package com.wldmedical.capnoeasy.components
 
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,9 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.material3.Tab
@@ -24,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
+import com.wldmedical.capnoeasy.models.AppState
+import com.wldmedical.capnoeasy.models.AppStateModel
 
 data class TabItem(
     val text: String,
@@ -44,7 +42,7 @@ val tabs = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActionBar(
-    selectedIndex: MutableState<Int>,
+    viewModel: AppStateModel,
     onTabClick: ((index: Int) -> Unit)? = null,
     isInPreview: Boolean = false
 ) {
@@ -54,15 +52,15 @@ fun ActionBar(
         if (!isInPreview) {
             Spacer(modifier = Modifier.weight(1f))
         }
-        PrimaryTabRow(selectedTabIndex = selectedIndex.value) {
+        PrimaryTabRow(selectedTabIndex = viewModel.currentTab.value ) {
             tabs.forEachIndexed { index, tab ->
-                val selected = selectedIndex.value == index
+                val selected = viewModel.currentTab.value == index
                 val selectedColor = if (selected) Color(0xFF0256FF) else Color(0xff86909C)
                 Tab(
                     selected = selected,
                     selectedContentColor = selectedColor,
                     onClick = {
-                        selectedIndex.value = index
+                        viewModel.updateCurrentTab(index)
                         onTabClick?.invoke(index)
                     },
                     icon = { tab.icon?.let {
@@ -87,26 +85,11 @@ fun ActionBar(
 @Preview(showBackground = true)
 @Composable
 fun ActionBarPreview() {
-    val start = remember { mutableStateOf(0) }
-    val mid = remember { mutableStateOf(1) }
-    val last = remember { mutableStateOf(2) }
-
     CapnoEasyTheme {
         Column {
             ActionBar(
-                selectedIndex = start,
+                viewModel = AppStateModel(appState = AppState()),
                 onTabClick = {},
-                isInPreview = true
-            )
-
-            ActionBar(
-                selectedIndex = mid,
-                onTabClick = {},
-                isInPreview = true
-            )
-
-            ActionBar(
-                selectedIndex = last,
                 isInPreview = true
             )
         }

@@ -2,8 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-//    id("com.google.dagger.hilt.android")  // Hilt 插件
-//    kotlin("kapt")
+    id("com.google.dagger.hilt.android")  // Hilt 插件
+    id("kotlin-kapt")
 }
 
 val vicoVersion = "2.0.1"
@@ -61,10 +61,10 @@ dependencies {
     //https://www.patrykandpatrick.com/vico/guide/stable/getting-started
     implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
     implementation("androidx.core:core-splashscreen:1.0.1")
-//    implementation("com.google.dagger:hilt-android:2.51")
-//    kapt("com.google.dagger:hilt-android-compiler:2.51")
-//    implementation("androidx.room:room-runtime:2.6.1")
-//    kapt("androidx.room:room-compiler:2.6.1")  // ✅ 确保 Room 依赖一致
+    //https://developer.android.com/training/dependency-injection/hilt-android?hl=zh-cn
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0-alpha01")
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -73,4 +73,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+// Allow references to generated code
+kapt {
+    correctErrorTypes = true
 }

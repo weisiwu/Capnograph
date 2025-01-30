@@ -1,4 +1,4 @@
-package com.wldmedical.capnoeasy.modules
+package com.wldmedical.capnoeasy.kits
 
 /**
  * 打印相关

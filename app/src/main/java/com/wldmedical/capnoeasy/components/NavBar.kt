@@ -12,7 +12,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SearchBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,8 +23,11 @@ import androidx.navigation.compose.rememberNavController
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.runtime.State
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.lifecycle.ViewModel
+import com.wldmedical.capnoeasy.models.AppStateModel
 
 enum class PageScene(val title: String) {
     HOME_PAGE("CapnoGraph"), // 主页
@@ -53,7 +55,7 @@ data class NavBarComponentState(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavBar(
-    state: MutableState<NavBarComponentState>,
+    state: State<NavBarComponentState>,
     onRightClick: () -> Unit
 ) {
     val navController = rememberNavController()
