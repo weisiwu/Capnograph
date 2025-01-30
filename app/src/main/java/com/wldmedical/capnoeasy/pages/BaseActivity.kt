@@ -29,6 +29,9 @@ open class BaseActivity : ComponentActivity() {
                 onClick = {
                     // TODO: 这里可以细化，比如链接中的，点击也不应该消失
                     viewModel.updateLoadingData(null)
+                },
+                onTimeout = {
+                    viewModel.updateLoadingData(null)
                 }
             )
         }
@@ -73,6 +76,9 @@ open class BaseActivity : ComponentActivity() {
             Toast(
                 data = toastData,
                 onClick = {
+                    viewModel.updateToastData(null)
+                },
+                onTimeout = {
                     viewModel.updateToastData(null)
                 }
             )

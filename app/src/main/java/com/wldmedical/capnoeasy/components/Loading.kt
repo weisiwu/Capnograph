@@ -14,6 +14,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.ui.Alignment
@@ -23,9 +26,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.wldmedical.capnoeasy.maskOpacity
 import com.wldmedical.capnoeasy.maxMaskZIndex
+import kotlinx.coroutines.delay
 
 data class LoadingData(
     val text: String,
+    val duration: Long = 0,
 )
 
 /**
@@ -36,10 +41,27 @@ data class LoadingData(
 fun Loading(
     data: LoadingData? = null,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    onTimeout: (() -> Unit)? = null,
 ) {
+    val isTimeout = remember { mutableStateOf(false) }
+
     if (data == null) {
         return
+    }
+
+    // 超时消失
+    if (isTimeout.value) {
+        isTimeout.value = false
+        onTimeout?.invoke()
+        return
+    }
+
+    if (data.duration > 0) {
+        LaunchedEffect(Unit) {
+            delay(data.duration)
+            isTimeout.value = true
+        }
     }
 
     Box(

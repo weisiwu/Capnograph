@@ -55,4 +55,4 @@ val asphyxiationTimeRange = 10..60
 val o2Compensation = 0..100
 
 val maxMaskZIndex = 9999f
-val maskOpacity = 0.4f
+val maskOpacity = 0.2f

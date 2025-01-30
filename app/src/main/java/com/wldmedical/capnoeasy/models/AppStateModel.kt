@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.wldmedical.capnoeasy.components.AlertData
 import com.wldmedical.capnoeasy.components.ConfirmData
 import com.wldmedical.capnoeasy.components.Device
+import com.wldmedical.capnoeasy.components.DeviceType
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.NavBarComponentState
 import com.wldmedical.capnoeasy.components.PageScene
@@ -54,6 +55,9 @@ class AppState @Inject constructor() {
 
     // 蓝牙设备列表 - 保存从蓝牙模块读取来的设备列表
     var devices: MutableList<Device> = mutableListOf()
+
+    // 搜索方式AKA链接设备方式
+    val connectType: MutableState<DeviceType?> = mutableStateOf(null)
 }
 
 @HiltViewModel
@@ -117,5 +121,11 @@ class AppStateModel @Inject constructor(private val appState: AppState): ViewMod
     val devices = appState.devices
     fun updateDevices(newVal: MutableList<Device>) {
         appState.devices = newVal
+    }
+
+    // 搜索方式AKA链接设备方式
+    val connectType = appState.connectType
+    fun updateConnectType(newVal: DeviceType?) {
+        appState.connectType.value = newVal
     }
 }

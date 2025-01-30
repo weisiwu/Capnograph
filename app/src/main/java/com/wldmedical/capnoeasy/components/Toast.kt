@@ -17,6 +17,9 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.ui.Alignment
@@ -29,6 +32,7 @@ import androidx.compose.ui.zIndex
 import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.maskOpacity
 import com.wldmedical.capnoeasy.maxMaskZIndex
+import kotlinx.coroutines.delay
 
 enum class ToastType {
     SUCCESS,
@@ -38,7 +42,8 @@ enum class ToastType {
 data class ToastData(
     val text: String,
     val type: ToastType,
-    val showMask: Boolean
+    val showMask: Boolean,
+    val duration: Long = 0,
 )
 
 /**
@@ -48,10 +53,27 @@ data class ToastData(
 @Composable
 fun Toast(
     data: ToastData? = null,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    onTimeout: (() -> Unit)? = null,
 ) {
+    val isTimeout = remember { mutableStateOf(false) }
+
     if (data == null) {
         return
+    }
+
+    // 超时消失
+    if (isTimeout.value) {
+        isTimeout.value = false
+        onTimeout?.invoke()
+        return
+    }
+
+    if (data.duration > 0) {
+        LaunchedEffect(Unit) {
+            delay(data.duration)
+            isTimeout.value = true
+        }
     }
 
     val alpha = if (data.showMask) maskOpacity else 0f
