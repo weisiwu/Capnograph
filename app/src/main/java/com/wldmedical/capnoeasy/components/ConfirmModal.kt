@@ -28,6 +28,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 
+data class ConfirmData(
+    val text: String,
+    val title: String,
+    val confirm_btn_text: String
+)
+
 /**
  * App 全局确认弹框，底部有一个按钮
  * 所有一级页和二级页使用

@@ -1,7 +1,9 @@
 package com.wldmedical.capnoeasy.components
 
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -26,8 +28,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.State
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.lifecycle.ViewModel
-import com.wldmedical.capnoeasy.models.AppStateModel
 
 enum class PageScene(val title: String) {
     HOME_PAGE("CapnoGraph"), // 主页
@@ -59,7 +59,7 @@ fun NavBar(
     onRightClick: () -> Unit
 ) {
     val navController = rememberNavController()
-    var isFocus = remember { mutableStateOf(false) }
+    val isFocus = remember { mutableStateOf(false) }
     val showSearch = remember { derivedStateOf { state.value.currentPage == PageScene.HISTORY_LIST_PAGE } }
     val showBack = remember { derivedStateOf { state.value.currentPage != PageScene.HOME_PAGE } }
 
@@ -97,11 +97,16 @@ fun NavBar(
                     content = {},
                 )
             } else {
-                Text(
-                    text = state.value.currentPage.title,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                )
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = state.value.currentPage.title,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
         },
         actions = {

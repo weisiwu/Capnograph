@@ -27,6 +27,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 
+data class AlertData(
+    val text: String,
+    val ok_btn_text: String,
+    val cancel_btn_text: String
+)
+
 /**
  * App 全剧报警弹框，底部有两个按钮，可选择样式
  * 所有一级页和二级页使用

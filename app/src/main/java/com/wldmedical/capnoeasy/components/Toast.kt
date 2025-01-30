@@ -35,6 +35,12 @@ enum class ToastType {
     FAIL
 }
 
+data class ToastData(
+    val text: String,
+    val type: ToastType,
+    val showMask: Boolean
+)
+
 /**
  * App 全局toast
  * 所有一级页和二级页使用
@@ -114,18 +120,6 @@ fun Toast(
 @Composable
 fun ToastPreview() {
     CapnoEasyTheme {
-//        Toast(
-//            text = "开始记录",
-//            type = ToastType.SUCCESS,
-//            showMask = true
-//        )
-
-//        Toast(
-//            text = "链接失败",
-//            type = ToastType.FAIL,
-//            showMask = true
-//        )
-
         Toast(
             text = "链接失败",
             type = ToastType.FAIL,
