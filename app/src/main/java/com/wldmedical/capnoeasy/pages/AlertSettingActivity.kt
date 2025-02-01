@@ -1,11 +1,13 @@
 package com.wldmedical.capnoeasy.pages
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -23,14 +25,22 @@ import com.wldmedical.capnoeasy.ETCO2Range
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.RRRange
 import com.wldmedical.capnoeasy.RR_UNIT
+import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.RangeSelector
 import com.wldmedical.capnoeasy.components.RangeType
+import com.wldmedical.capnoeasy.components.ToastData
 
 /***
  * 设置二级页 - 报警
  */
 class AlertSettingActivity : BaseActivity() {
     override val pageScene = PageScene.ALERT_CONFIG_PAGE
+
+    // TODO: 这里没有很好的初始哈
+    var minETCO2: Float = 0f
+    var maxETCO2: Float = 0f
+    var minRR: Float = 0f
+    var maxRR: Float = 0f
 
     @Composable
     override fun Content() {
@@ -42,6 +52,12 @@ class AlertSettingActivity : BaseActivity() {
                 startValue = 0f,
                 endValue = 10f,
                 valueRange = ETCO2Range,
+                onValueChange = { start, end ->
+                    minETCO2 = start
+                    if (end != null) {
+                        maxETCO2 = end
+                    }
+                }
             )
 
             RangeSelector(
@@ -51,6 +67,12 @@ class AlertSettingActivity : BaseActivity() {
                 startValue = 0f,
                 endValue = 10f,
                 valueRange = RRRange,
+                onValueChange = { start, end ->
+                    minRR = start
+                    if (end != null) {
+                        maxRR = end
+                    }
+                }
             )
 
             Spacer(
@@ -63,7 +85,26 @@ class AlertSettingActivity : BaseActivity() {
                     .fillMaxWidth()
             ) {
                 Card (
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.clickable {
+                        viewModel.updateAlertRRRange(minRR, maxRR)
+                        viewModel.updateAlertETCO2Range(minETCO2, maxETCO2)
+                        viewModel.updateLoadingData(
+                            LoadingData(
+                                text = "正在设置",
+                                duration = 800,
+                                callback = {
+                                    viewModel.updateToastData(
+                                        ToastData(
+                                            text = "设置成功",
+                                            showMask = false,
+                                            duration = 600,
+                                        )
+                                    )
+                                }
+                            )
+                        )
+                    }
                 ) {
                     Text(
                         text = "保存",
@@ -73,12 +114,18 @@ class AlertSettingActivity : BaseActivity() {
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .background(Color(0xffE0EAFF))
-                            .padding(horizontal = 30.dp, vertical = 16.dp)
+                            .padding(horizontal = 30.dp, vertical = 12.dp)
                             .wrapContentWidth()
                             .wrapContentHeight()
                     )
                 }
             }
+            
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(16.dp)
+            )
         }
     }
 }

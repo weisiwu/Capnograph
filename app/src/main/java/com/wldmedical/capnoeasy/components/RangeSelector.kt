@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.components
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -61,7 +62,8 @@ fun RangeSelector(
     value: Float = 0f,
     startValue: Float = 0f,
     endValue: Float = 0f,
-    valueRange: ClosedFloatingPointRange<Float>
+    valueRange: ClosedFloatingPointRange<Float>,
+    onValueChange: ((Float, Float?) -> Unit)? = null,
 ) {
     val totalOffset = if (unit != "") 200 else 100
     val singlePosition = remember { mutableFloatStateOf(value) }
@@ -117,7 +119,7 @@ fun RangeSelector(
             Slider(
                 value = singlePosition.floatValue,
                 valueRange = valueRange,
-                // TODO: 滑块带有白色的背景，无法去除 
+                // TODO: 滑块带有白色的背景，无法去除
                 thumb = {
                     Image(
                         painterResource(id = R.drawable.oneside_range_thumb),"选择器滑块",
@@ -127,7 +129,10 @@ fun RangeSelector(
                     )
                 },
                 colors = thumbColors,
-                onValueChange = { singlePosition.floatValue = it },
+                onValueChange = {
+                    singlePosition.floatValue = it
+                    onValueChange?.invoke(it, null)
+                },
                 modifier = Modifier.drawWithContent {
                     drawContent()
 
@@ -189,8 +194,8 @@ fun RangeSelector(
                             .background(Color.Transparent)
                     )
                 },
-                onValueChange = { range -> bothPosition.value = range },
-                onValueChangeFinished = {
+                onValueChange = { range -> bothPosition.value = range
+                    onValueChange?.invoke(range.start, range.endInclusive)
                 },
             )
         }

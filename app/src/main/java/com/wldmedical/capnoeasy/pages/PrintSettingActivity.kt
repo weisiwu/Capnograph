@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.pages
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.PrintDeviceConfig
@@ -12,6 +13,10 @@ class PrintSettingActivity : BaseActivity() {
 
     @Composable
     override fun Content() {
-        PrintDeviceConfig()
+        Column {
+            PrintDeviceConfig(
+                onSave = {}
+            )
+        }
     }
 }

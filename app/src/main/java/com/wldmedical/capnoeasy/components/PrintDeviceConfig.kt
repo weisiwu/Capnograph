@@ -6,13 +6,18 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -113,7 +118,7 @@ fun CustomTextField(
 @Composable
 fun PrintDeviceConfig(
     onSelectLogo: (() -> Unit)? = null,
-    onSave: ((index: Int) -> Unit)? = null,
+    onSave: (() -> Unit)? = null,
 ) {
     val isSupportQRCode = remember { mutableStateOf(false) }
 
@@ -190,6 +195,43 @@ fun PrintDeviceConfig(
                 }
             )
         }
+
+        Spacer(
+            modifier = Modifier.weight(1f)
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            Card (
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.clickable {
+                    // TODO: 保存所有配置
+                    onSave?.invoke()
+                }
+            ) {
+                Text(
+                    text = "保存",
+                    letterSpacing = 5.sp,
+                    color = Color(0xff165DFF),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .background(Color(0xffE0EAFF))
+                        .padding(horizontal = 30.dp, vertical = 16.dp)
+                        .wrapContentWidth()
+                        .wrapContentHeight()
+                )
+            }
+        }
+
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+        )
     }
 }
 

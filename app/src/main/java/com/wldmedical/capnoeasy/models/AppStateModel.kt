@@ -81,6 +81,17 @@ class AppState @Inject constructor() {
 
     // 年龄
     val patientAge: MutableState<Int> = mutableIntStateOf(0)
+    
+    /***
+     * 设置相关
+     */
+    // TODO: 需要有一个默认单位的。ETCO2，需要加上
+
+    // 报警ETCO2范围
+    val alertETCO2Range: MutableState<ClosedRange<Float>> = mutableStateOf(0f..0f)
+
+    // 报警呼吸率范围
+    val alertRRRange: MutableState<ClosedRange<Float>> = mutableStateOf(0f..0f)
 }
 
 @HiltViewModel
@@ -189,5 +200,22 @@ class AppStateModel @Inject constructor(private val appState: AppState): ViewMod
     val patientAge = appState.patientAge
     fun updatePatientAge(newVal: Int) {
         appState.patientAge.value = newVal
+    }
+
+    /***
+     * 设置相关
+     */
+    // TODO: 需要有一个默认单位的。ETCO2，需要加上
+
+    // 报警ETCO2范围
+    val alertETCO2Range = appState.alertETCO2Range
+    fun updateAlertETCO2Range(start: Float, end: Float) {
+        appState.alertETCO2Range.value = start..end
+    }
+
+    // 报警呼吸率范围
+    val alertRRRange = appState.alertRRRange
+    fun updateAlertRRRange(start: Float, end: Float) {
+        appState.alertRRRange.value = start..end
     }
 }
