@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy
 
+import java.text.DecimalFormat
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
@@ -13,6 +14,8 @@ data class wheelPickerConfig<out E: BaseEnmu<V>, V>(
     val items: List<E>,
     val defaultValue: E
 )
+
+val RR_UNIT: String = "bmp"
 
 enum class CO2_UNIT(val rawValue: String):BaseEnmu<String> {
     MMHG("mmHg"),
@@ -49,9 +52,11 @@ val wfSpeedsObj = wheelPickerConfig(items = wfSpeeds, title = "WF Speed", defaul
 
 val maxETCO2Range = 25f..50f
 val minETCO2Range = 0f..25f
+val ETCO2Range = 0f..50f
 
-val maxRRRange = 0..60
-val minRRRange = 0..30
+val maxRRRange = 0f..60f
+val minRRRange = 0f..30f
+val RRRange = 0f..60f
 
 val asphyxiationTimeRange = 10..60
 val o2Compensation = 0..100
@@ -90,3 +95,5 @@ enum class PageScene(val title: String) {
     HISTORY_LIST_PAGE("CapnoGraph-历史记录"), // 设置页 - 历史记录列表
     HISTORY_DETAIL_PAGE("CapnoGraph-记录详情"), // 设置页 - 历史记录详情
 }
+
+val FloatToFixed = DecimalFormat("#")

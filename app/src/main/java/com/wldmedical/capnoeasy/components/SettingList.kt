@@ -108,9 +108,8 @@ val settings = arrayOf(
  */
 @Composable
 fun SettingList(
-    context: ComponentActivity? = null,
     settings: Array<Setting>,
-    onSettingClick: ((setting: Setting) -> UInt)? = null,
+    onSettingClick: ((setting: Setting) -> Unit)? = null,
 ) {
     Column(
         verticalArrangement = Arrangement.Center,
@@ -124,21 +123,7 @@ fun SettingList(
                         .fillMaxWidth()
                         .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 27.dp)
                         .clickable {
-                            var intent = Intent(context, SettingActivity::class.java)
-                            when(setting.type) {
-                                SettingType.ALERT_PARAM -> intent = Intent(context, AlertSettingActivity::class.java)
-                                SettingType.DISPLAY_PARAM -> intent = Intent(context, DisplaySettingActivity::class.java)
-                                SettingType.MODULE_PARAM -> intent = Intent(context, ModuleSettingActivity::class.java)
-                                SettingType.SYSTEM_SETTING -> intent = Intent(context, SystemSettingActivity::class.java)
-                                SettingType.PRINT_SETTING -> intent = Intent(context, PrintSettingActivity::class.java)
-                                SettingType.HISTORY_RECORD -> intent = Intent(context, HistoryRecordsActivity::class.java)
-                                else -> {
-                                    println("NO")
-                                }
-                            }
-                            context?.startActivity(intent)
-                            // TODO: 同样支持外部覆盖
-//                            onSettingClick?.invoke(setting)
+                            onSettingClick?.invoke(setting)
                         }
                 ) {
                     Text(

@@ -42,7 +42,7 @@ enum class ToastType {
 data class ToastData(
     val text: String,
     val type: ToastType = ToastType.SUCCESS,
-    val showMask: Boolean,
+    val showMask: Boolean = true,
     val duration: Long = 0,
     val callback:  (() -> Unit)? = null,
 )

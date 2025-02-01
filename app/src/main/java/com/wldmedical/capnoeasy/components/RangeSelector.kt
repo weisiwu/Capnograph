@@ -1,15 +1,19 @@
 package com.wldmedical.capnoeasy.components
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -29,6 +33,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import com.wldmedical.capnoeasy.FloatToFixed
 import com.wldmedical.capnoeasy.R
 
 enum class RangeType{
@@ -46,26 +56,43 @@ enum class RangeType{
 @Composable
 fun RangeSelector(
     title: String = "",
+    unit: String = "",
     type: RangeType = RangeType.ONESIDE,
     value: Float = 0f,
     startValue: Float = 0f,
     endValue: Float = 0f,
-    valueRange: ClosedFloatingPointRange<Float>,
-    steps: Int = 1,
+    valueRange: ClosedFloatingPointRange<Float>
 ) {
+    val totalOffset = if (unit != "") 200 else 100
     val singlePosition = remember { mutableFloatStateOf(value) }
     val bothPosition = remember { mutableStateOf(startValue..endValue) }
+    val startTextMeasurer = rememberTextMeasurer()
+    val endTextMeasurer = rememberTextMeasurer()
     val thumbColors = SliderDefaults.colors(
         activeTrackColor = Color(0xff00CEC9),
         inactiveTrackColor = Color(0xffDFE6E9),
-        thumbColor = Color(0xff00CEC9)
-    );
+        thumbColor = Color(0xff00CEC9),
+    )
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 18.dp)
     ) {
+        HorizontalDivider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(2.dp)
+                .background(Color(0xffDFE6E9))
+                .alpha(0.4f)
+        )
+
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(24.dp)
+        )
+
         if(title.isNotEmpty()) {
             Row(
                 horizontalArrangement = Arrangement.Start,
@@ -77,34 +104,73 @@ fun RangeSelector(
                     fontWeight = FontWeight.Bold
                 )
             }
+            // 因为滑块值会向上移动-30.dp，所以要预留空间出来
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(16.dp)
+            )
         }
 
         // TODO: 值的位置不对，现在覆盖在滑块上
         if(type == RangeType.ONESIDE) {
             Slider(
-                value = singlePosition.value,
+                value = singlePosition.floatValue,
                 valueRange = valueRange,
-                steps = steps,
+                // TODO: 滑块带有白色的背景，无法去除 
                 thumb = {
                     Image(
                         painterResource(id = R.drawable.oneside_range_thumb),"选择器滑块",
-                        modifier = Modifier.size(30.dp)
-                    )
-                    Text(
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 18.sp,
-                        text = singlePosition.value.toString(),
+                        modifier = Modifier
+                            .size(30.dp)
+                            .background(Color.Transparent),
                     )
                 },
                 colors = thumbColors,
-                onValueChange = { singlePosition.value = it }
+                onValueChange = { singlePosition.floatValue = it },
+                modifier = Modifier.drawWithContent {
+                    drawContent()
+
+                    val offset = singlePosition.floatValue / valueRange.endInclusive * totalOffset
+                    val thumbX = (singlePosition.floatValue - valueRange.start) / (valueRange.endInclusive - valueRange.start) * size.width
+
+                    drawText(
+                        textMeasurer = startTextMeasurer,
+                        text = FloatToFixed.format(singlePosition.floatValue) + unit,
+                        topLeft = Offset(thumbX - offset, -30f),
+                        style = TextStyle(fontSize = 16.sp)
+                    )
+                }
             )
         } else if(type == RangeType.BOTH) {
             RangeSlider(
                 value = bothPosition.value,
                 valueRange = valueRange,
-                steps = steps,
                 colors = thumbColors,
+                modifier = Modifier.drawWithContent {
+                    drawContent()
+
+                    // TODO: 这里正确的思路是，thumbStart 值存在问题，而不是估算偏移来弥补误差
+                    val startOffset = bothPosition.value.start / valueRange.endInclusive * totalOffset
+                    val endOffset = bothPosition.value.endInclusive / valueRange.endInclusive * totalOffset
+                    val thumbStart = (bothPosition.value.start - valueRange.start) / (valueRange.endInclusive - valueRange.start) * size.width
+
+                    drawText(
+                        textMeasurer = startTextMeasurer,
+                        text = FloatToFixed.format(bothPosition.value.start) + unit,
+                        topLeft = Offset(thumbStart - startOffset, -30f),
+                        style = TextStyle(fontSize = 16.sp)
+                    )
+
+                    val thumbEnd = (bothPosition.value.endInclusive - valueRange.start) / (valueRange.endInclusive - valueRange.start) * size.width
+
+                    drawText(
+                        textMeasurer = endTextMeasurer,
+                        text = FloatToFixed.format(bothPosition.value.endInclusive) + unit,
+                        topLeft = Offset(thumbEnd - endOffset, -30f),
+                        style = TextStyle(fontSize = 16.sp)
+                    )
+                },
                 startThumb = {
                     Image(
                         painterResource(id = R.drawable.both_range_left_thumb),"选择器左侧滑块",
@@ -112,11 +178,7 @@ fun RangeSelector(
                             .size(30.dp)
                             .padding(0.dp)
                     )
-                    Text(
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 18.sp,
-                        text = bothPosition.value.start.toString(),
-                    )
+
                 },
                 endThumb = {
                     Image(
@@ -124,11 +186,7 @@ fun RangeSelector(
                         modifier = Modifier
                             .size(30.dp)
                             .padding(0.dp)
-                    )
-                    Text(
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 18.sp,
-                        text = bothPosition.value.endInclusive.toString()
+                            .background(Color.Transparent)
                     )
                 },
                 onValueChange = { range -> bothPosition.value = range },
@@ -136,12 +194,11 @@ fun RangeSelector(
                 },
             )
         }
-        HorizontalDivider(
+
+        Spacer(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(2.dp)
-                .background(Color(0xffDFE6E9))
-                .alpha(0.4f)
+                .height(32.dp)
         )
     }
 }
@@ -150,21 +207,58 @@ fun RangeSelector(
 @Composable
 fun RangeSelectorPreview() {
     CapnoEasyTheme {
-        Column {
+        Column(
+            modifier = Modifier.background(Color.White)
+        ) {
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+            )
+
             RangeSelector(
                 title = "大气压(mmHg)",
-                value = 12.3f,
+                unit = "mmHg",
+                value = 18f,
                 type = RangeType.ONESIDE,
-                valueRange = 0.3f..30f,
+                valueRange = 0f..30f,
             )
 
             RangeSelector(
                 title = "ETCO2 范围",
+                unit = "mmHg",
                 type = RangeType.BOTH,
-                startValue = 2.5f,
-                endValue = 10f,
-                valueRange = 0.3f..30f,
+                startValue = 1f,
+                endValue = 12f,
+                valueRange = 0f..30f,
             )
+
+            Spacer(
+                modifier = Modifier.weight(1f)
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Card (
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(
+                        text = "保存",
+                        letterSpacing = 5.sp,
+                        color = Color(0xff165DFF),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .background(Color(0xffE0EAFF))
+                            .padding(horizontal = 30.dp, vertical = 16.dp)
+                            .wrapContentWidth()
+                            .wrapContentHeight()
+                    )
+                }
+            }
         }
     }
 }
