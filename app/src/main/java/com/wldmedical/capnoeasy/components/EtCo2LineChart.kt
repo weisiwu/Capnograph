@@ -48,7 +48,11 @@ fun EtCo2LineChart(modelProducer: CartesianChartModelProducer) {
     val BottomAxisValueFormatter = CartesianValueFormatter.decimal(YDecimalFormat)
 
     Column(
-        modifier = Modifier.fillMaxWidth().height(250.dp).padding(horizontal = 16.dp).background(Color.White)
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(250.dp)
+            .padding(horizontal = 16.dp)
+            .background(Color.Transparent)
     ) {
         Text(
             text = "实时ETCO2",
@@ -81,7 +85,7 @@ fun EtCo2LineChart(modelProducer: CartesianChartModelProducer) {
             scrollState = rememberVicoScrollState(scrollEnabled = false),
             zoomState = rememberVicoZoomState(zoomEnabled = false),
             modelProducer = modelProducer,
-            modifier = Modifier.fillMaxWidth().height(200.dp)
+            modifier = Modifier.fillMaxWidth().height(200.dp).background(Color.Transparent)
         )
     }
 }
