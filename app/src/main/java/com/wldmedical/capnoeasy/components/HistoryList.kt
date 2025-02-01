@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import java.time.LocalDateTime
@@ -48,11 +49,6 @@ import java.util.UUID
 
 val emptyRecordAlert = "没有历史波形数据"
 val formatter = DateTimeFormatter.ofPattern("yyyy年M月d日HH:mm:ss", Locale.CHINA)
-
-enum class GENDER {
-    MALE,
-    FEMEALE
-}
 
 enum class GROUP_BY {
     ALL,

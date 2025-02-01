@@ -31,7 +31,9 @@ data class AlertData(
     val title: String? = null,
     val text: String? = null,
     val ok_btn_text: String? = null,
-    val cancel_btn_text: String? = null
+    val cancel_btn_text: String? = null,
+    val onOk: (() -> Unit)? = null,
+    val onCancel: (() -> Unit)? = null,
 )
 
 /**
@@ -40,9 +42,7 @@ data class AlertData(
  */
 @Composable
 fun AlertModal(
-    data: AlertData?,
-    onOk: (() -> Unit)? = null,
-    onCancel: (() -> Unit)? = null
+    data: AlertData?
 ) {
     if (data == null) {
         return
@@ -54,7 +54,7 @@ fun AlertModal(
             .zIndex(maxMaskZIndex)
             .background(Color.Black.copy(alpha = maskOpacity))
             .clickable {
-                onCancel?.invoke()
+                data?.onCancel?.invoke()
             },
     ) {
         Column {
@@ -62,7 +62,7 @@ fun AlertModal(
                 modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally)
             ) {
                 Dialog(onDismissRequest = {
-                    onCancel?.invoke()
+                    data?.onCancel?.invoke()
                 }) {
                     Card(
                         modifier = Modifier
@@ -99,7 +99,7 @@ fun AlertModal(
                                             .height(44.dp)
                                             .border(width = 1.dp, color = Color(0x224E5969), shape = RoundedCornerShape(0.dp, 0.dp, 0.dp, 2.dp))
                                             .clickable {
-                                                onCancel?.invoke()
+                                                data?.onCancel?.invoke()
                                             },
                                         verticalArrangement = Arrangement.Center
                                     ) {
@@ -116,7 +116,7 @@ fun AlertModal(
                                             .height(44.dp).
                                             border(width = 1.dp, color = Color(0x224E5969), shape = RoundedCornerShape(0.dp, 0.dp, 2.dp, 0.dp))
                                             .clickable {
-                                                onOk?.invoke()
+                                                data?.onOk?.invoke()
                                             },
                                         verticalArrangement = Arrangement.Center
                                     ) {

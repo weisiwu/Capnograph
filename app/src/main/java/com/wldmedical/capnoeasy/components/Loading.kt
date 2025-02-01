@@ -31,6 +31,7 @@ import kotlinx.coroutines.delay
 data class LoadingData(
     val text: String,
     val duration: Long = 0,
+    val callback:  (() -> Unit)? = null,
 )
 
 /**
@@ -60,6 +61,7 @@ fun Loading(
     if (data.duration > 0) {
         LaunchedEffect(Unit) {
             delay(data.duration)
+            data.callback?.invoke()
             isTimeout.value = true
         }
     }

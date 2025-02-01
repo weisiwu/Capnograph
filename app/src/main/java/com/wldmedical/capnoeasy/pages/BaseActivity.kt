@@ -1,16 +1,18 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.ViewModelProvider
+import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.AlertModal
 import com.wldmedical.capnoeasy.components.BaseLayout
 import com.wldmedical.capnoeasy.components.ConfirmModal
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.Toast
-import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.models.AppStateModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -19,9 +21,12 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 open class BaseActivity : ComponentActivity() {
+    /***
+     * 相关渲染函数
+     */
     // 通用加载中
     @Composable
-    open fun ShowLoading(viewModel: AppStateModel) {
+    open fun ShowLoading() {
         val loadingData = viewModel.loadingData.value
         if (loadingData != null) {
             Loading(
@@ -39,38 +44,29 @@ open class BaseActivity : ComponentActivity() {
 
     // 通用alert提示
     @Composable
-    open fun ShowAlert(viewModel: AppStateModel) {
+    open fun ShowAlert() {
         val alertData = viewModel.alertData.value
         if (alertData != null) {
             AlertModal(
-                data = alertData,
-                onOk = {
-                    viewModel.updateLoadingData(null)
-                },
-                onCancel = {
-                    viewModel.updateLoadingData(null)
-                }
+                data = alertData
             )
         }
     }
 
     // 通用confirm提示
     @Composable
-    open fun ShowConfirm(viewModel: AppStateModel) {
+    open fun ShowConfirm() {
         val confirmData = viewModel.confirmData.value
         if (confirmData != null) {
             ConfirmModal(
-                data = confirmData,
-                onClick = {
-                    viewModel.updateConfirmData(null)
-                }
+                data = confirmData
             )
         }
     }
 
     // 通用Toast提示
     @Composable
-    open fun ShowToast(viewModel: AppStateModel) {
+    open fun ShowToast() {
         val toastData = viewModel.toastData.value
         if (toastData != null) {
             Toast(
@@ -86,28 +82,52 @@ open class BaseActivity : ComponentActivity() {
     }
 
     @Composable
-    open fun Content(viewModel: AppStateModel) {
+    open fun Content() {}
 
+    /***
+     * 逻辑相关函数
+     */
+    lateinit var viewModel: AppStateModel
+
+    open val pageScene = PageScene.HOME_PAGE
+
+    open fun updatePageScene() {
+        this.viewModel.updateCurrentPage(this.pageScene)
     }
 
+    open fun onNavBarRightClick() {}
+
+    /***
+     * 生命周期函数
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel = ViewModelProvider(this)[AppStateModel::class.java]
         enableEdgeToEdge()
         setContent {
+            updatePageScene()
             BaseLayout(
                 context = this,
-                float = { viewModel ->
-                    ShowToast(viewModel)
+                float = {
+                    ShowToast()
 
-                    ShowAlert(viewModel)
+                    ShowAlert()
 
-                    ShowConfirm(viewModel)
+                    ShowConfirm()
 
-                    ShowLoading(viewModel)
-                }
-            ) { viewModel ->
-                Content(viewModel)
+                    ShowLoading()
+                },
+                onNavBarRightClick = { onNavBarRightClick() }
+            ) {
+                Content()
             }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode === RESULT_OK) {
+            updatePageScene()
         }
     }
 }

@@ -63,8 +63,10 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
     //https://developer.android.com/training/dependency-injection/hilt-android?hl=zh-cn
     implementation("com.google.dagger:hilt-android:2.51.1")
+    implementation(libs.androidx.appcompat)
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0-alpha01")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

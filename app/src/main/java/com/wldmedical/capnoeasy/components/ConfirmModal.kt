@@ -31,7 +31,8 @@ import com.wldmedical.capnoeasy.maxMaskZIndex
 data class ConfirmData(
     val text: String? = null,
     val title: String? = null,
-    val confirm_btn_text: String? = null
+    val confirm_btn_text: String? = null,
+    val onClick: (() -> Unit)? = null,
 )
 
 /**
@@ -41,7 +42,6 @@ data class ConfirmData(
 @Composable
 fun ConfirmModal(
     data: ConfirmData? = null,
-    onClick: (() -> Unit)? = null
 ) {
 
     if (data == null) {
@@ -54,14 +54,14 @@ fun ConfirmModal(
             .zIndex(maxMaskZIndex)
             .background(Color.Black.copy(alpha = maskOpacity))
             .clickable {
-                onClick?.invoke()
+                data?.onClick?.invoke()
             },
     ) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally)
             ) {
-                Dialog(onDismissRequest = { onClick?.invoke() }) {
+                Dialog(onDismissRequest = { data?.onClick?.invoke() }) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -99,7 +99,7 @@ fun ConfirmModal(
                                     modifier = Modifier
                                         .height(44.dp)
                                         .clickable {
-                                            onClick?.invoke()
+                                            data?.onClick?.invoke()
                                         }
                                 ) {
                                     Column(

@@ -5,22 +5,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.Device
 import com.wldmedical.capnoeasy.components.DeviceList
 import com.wldmedical.capnoeasy.components.DeviceType
 import com.wldmedical.capnoeasy.components.DeviceTypes
 import com.wldmedical.capnoeasy.components.LoadingData
-import com.wldmedical.capnoeasy.components.PageScene
 import com.wldmedical.capnoeasy.components.TypeSwitch
-import com.wldmedical.capnoeasy.models.AppStateModel
 
 /***
  * 搜素列表
  */
 class SearchActivity : BaseActivity() {
+    override val pageScene = PageScene.DEVICES_LIST_PAGE
+
     @Composable
-    override fun Content(viewModel: AppStateModel) {
-        viewModel.updateCurrentPage(PageScene.DEVICES_LIST_PAGE)
+    override fun Content() {
         val selectedIndex = if (viewModel.connectType.value == null) 0 else DeviceTypes.indexOfFirst { type -> viewModel.connectType.value == type }
         val devices = listOf(
             Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),

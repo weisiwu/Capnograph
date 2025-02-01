@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
@@ -33,10 +32,8 @@ import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.pages.AlertSettingActivity
 import com.wldmedical.capnoeasy.pages.DisplaySettingActivity
 import com.wldmedical.capnoeasy.pages.HistoryRecordsActivity
-import com.wldmedical.capnoeasy.pages.MainActivity
 import com.wldmedical.capnoeasy.pages.ModuleSettingActivity
 import com.wldmedical.capnoeasy.pages.PrintSettingActivity
-import com.wldmedical.capnoeasy.pages.SearchActivity
 import com.wldmedical.capnoeasy.pages.SettingActivity
 import com.wldmedical.capnoeasy.pages.SystemSettingActivity
 
@@ -135,12 +132,9 @@ fun SettingList(
                                 SettingType.SYSTEM_SETTING -> intent = Intent(context, SystemSettingActivity::class.java)
                                 SettingType.PRINT_SETTING -> intent = Intent(context, PrintSettingActivity::class.java)
                                 SettingType.HISTORY_RECORD -> intent = Intent(context, HistoryRecordsActivity::class.java)
-//                                SettingType.SHUTDOWN -> intent = Intent(context, SearchActivity::class.java)
-//                                SettingType.ZERO -> intent = Intent(context, SearchActivity::class.java)
-//                                SettingType.KEEP_LIGHT -> intent = Intent(context, SearchActivity::class.java)
-                                SettingType.ZERO -> println("")
-                                SettingType.KEEP_LIGHT -> println("")
-                                SettingType.SHUTDOWN -> println("")
+                                else -> {
+                                    println("NO")
+                                }
                             }
                             context?.startActivity(intent)
                             // TODO: 同样支持外部覆盖

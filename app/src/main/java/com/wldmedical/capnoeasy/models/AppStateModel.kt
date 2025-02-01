@@ -2,16 +2,18 @@ package com.wldmedical.capnoeasy.models
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.wldmedical.capnoeasy.GENDER
+import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.AlertData
 import com.wldmedical.capnoeasy.components.ConfirmData
 import com.wldmedical.capnoeasy.components.Device
 import com.wldmedical.capnoeasy.components.DeviceType
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.NavBarComponentState
-import com.wldmedical.capnoeasy.components.PageScene
 import com.wldmedical.capnoeasy.components.ToastData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -58,6 +60,27 @@ class AppState @Inject constructor() {
 
     // 搜索方式AKA链接设备方式
     val connectType: MutableState<DeviceType?> = mutableStateOf(null)
+
+    // 是否正在记录波形数据
+    val isRecording: MutableState<Boolean> = mutableStateOf(false)
+
+    /***
+     * 主页表格相关数据
+     */
+    // RR
+    val rr: MutableState<Float> = mutableFloatStateOf(0f)
+
+    // ETCO2
+    val etCO2: MutableState<Float> = mutableFloatStateOf(0f)
+
+    // 病人姓名
+    val patientName: MutableState<String?> = mutableStateOf(null)
+
+    // 性别
+    val patientGender: MutableState<GENDER> = mutableStateOf(GENDER.MALE)
+
+    // 年龄
+    val patientAge: MutableState<Int> = mutableIntStateOf(0)
 }
 
 @HiltViewModel
@@ -127,5 +150,44 @@ class AppStateModel @Inject constructor(private val appState: AppState): ViewMod
     val connectType = appState.connectType
     fun updateConnectType(newVal: DeviceType?) {
         appState.connectType.value = newVal
+    }
+
+    // 是否正在记录波形数据
+    val isRecording = appState.isRecording
+    fun updateIsRecording(newVal: Boolean) {
+        appState.isRecording.value = newVal
+    }
+
+    /***
+     * 主页表格相关数据
+     */
+    // RR
+    val rr = appState.rr
+    fun updateRR(newVal: Float) {
+        appState.rr.value = newVal
+    }
+
+    // ETCO2
+    val etCO2 = appState.etCO2
+    fun updateETCO2(newVal: Float) {
+        appState.etCO2.value = newVal
+    }
+
+    // 病人姓名
+    val patientName = appState.patientName
+    fun updatePatientName(newVal: String) {
+        appState.patientName.value = newVal
+    }
+
+    // 性别
+    val patientGender = appState.patientGender
+    fun updatePatientGender(newVal: GENDER) {
+        appState.patientGender.value = newVal
+    }
+
+    // 年龄
+    val patientAge = appState.patientAge
+    fun updatePatientAge(newVal: Int) {
+        appState.patientAge.value = newVal
     }
 }

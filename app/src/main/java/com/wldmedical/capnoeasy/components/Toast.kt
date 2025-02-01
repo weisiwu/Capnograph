@@ -41,9 +41,10 @@ enum class ToastType {
 
 data class ToastData(
     val text: String,
-    val type: ToastType,
+    val type: ToastType = ToastType.SUCCESS,
     val showMask: Boolean,
     val duration: Long = 0,
+    val callback:  (() -> Unit)? = null,
 )
 
 /**
@@ -72,6 +73,7 @@ fun Toast(
     if (data.duration > 0) {
         LaunchedEffect(Unit) {
             delay(data.duration)
+            data.callback?.invoke()
             isTimeout.value = true
         }
     }

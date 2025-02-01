@@ -1,13 +1,15 @@
 package com.wldmedical.capnoeasy.components
 
+import android.app.Activity.RESULT_OK
 import android.content.Intent
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.core.app.ActivityOptionsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.pages.MainActivity
@@ -27,9 +29,18 @@ fun BaseLayout(
     float: @Composable (AppStateModel) -> Unit,
     content: @Composable (AppStateModel) -> Unit,
 ) {
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
+//    val options = ActivityOptions.makeCustomAnimation(LocalContext.current, 0, 0) // 无动画效果
+
     Column {
         NavBar(
-            state = viewModel.currentPage,
+            viewModel = viewModel,
+            onLeftClick = {
+                val intent = Intent()
+                intent.putExtra("result", "back")
+                context.setResult(RESULT_OK, intent)
+                context.finish()
+            },
             onRightClick = {
                 onNavBarRightClick?.invoke()
             }
@@ -49,13 +60,12 @@ fun BaseLayout(
             viewModel = viewModel,
             onTabClick = { index ->
                 var intent = Intent(context, MainActivity::class.java)
-                viewModel.updateCurrentTab(index)
                 when(index) {
                     0 -> intent = Intent(context, SearchActivity::class.java)
                     1 -> intent = Intent(context, MainActivity::class.java)
                     2 -> intent = Intent(context, SettingActivity::class.java)
                 }
-                context.startActivity(intent, ActivityOptionsCompat.makeCustomAnimation(context, 0, 0).toBundle())
+                launcher.launch(intent)
                 onTabClick?.invoke(index)
             },
             isInPreview = true
