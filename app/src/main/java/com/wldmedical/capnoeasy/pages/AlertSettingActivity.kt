@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.ETCO2Range
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.RRRange
@@ -36,21 +35,25 @@ import com.wldmedical.capnoeasy.components.ToastData
 class AlertSettingActivity : BaseActivity() {
     override val pageScene = PageScene.ALERT_CONFIG_PAGE
 
-    // TODO: 这里没有很好的初始哈
     var minETCO2: Float = 0f
-    var maxETCO2: Float = 0f
+    var maxETCO2: Float = 10f
     var minRR: Float = 0f
-    var maxRR: Float = 0f
+    var maxRR: Float = 10f
 
     @Composable
     override fun Content() {
+        minETCO2 = viewModel.alertETCO2Range.value.start
+        maxETCO2 = viewModel.alertETCO2Range.value.endInclusive
+        minRR = viewModel.alertRRRange.value.start
+        maxRR = viewModel.alertRRRange.value.endInclusive
+
         Column {
             RangeSelector(
                 title = "ETCO2 范围",
-                unit = CO2_UNIT.MMHG.rawValue,
+                unit = viewModel.CO2Unit.value.rawValue,
                 type = RangeType.BOTH,
-                startValue = 0f,
-                endValue = 10f,
+                startValue = minETCO2,
+                endValue = maxETCO2,
                 valueRange = ETCO2Range,
                 onValueChange = { start, end ->
                     minETCO2 = start
@@ -64,8 +67,8 @@ class AlertSettingActivity : BaseActivity() {
                 title = "RR 范围",
                 unit = RR_UNIT,
                 type = RangeType.BOTH,
-                startValue = 0f,
-                endValue = 10f,
+                startValue = minRR,
+                endValue = maxRR,
                 valueRange = RRRange,
                 onValueChange = { start, end ->
                     minRR = start

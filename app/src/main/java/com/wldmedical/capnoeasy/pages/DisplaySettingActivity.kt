@@ -41,7 +41,6 @@ import com.wldmedical.capnoeasy.wheelPickerConfig
 class DisplaySettingActivity : BaseActivity() {
     override val pageScene = PageScene.DISPLAY_CONFIG_PAGE
 
-    // TODO: 这里没有很好的初始哈
     var CO2Unit: CO2_UNIT = CO2_UNIT.MMHG
     var CO2Scale: CO2_SCALE = CO2_SCALE.MIDDLE
     var WFSpeed: WF_SPEED = WF_SPEED.MIDDLE

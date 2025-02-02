@@ -88,13 +88,11 @@ class AppState @Inject constructor() {
     /***
      * 设置相关
      */
-    // TODO: 需要有一个默认单位的。ETCO2，需要加上
-
     // 报警ETCO2范围
-    val alertETCO2Range: MutableState<ClosedRange<Float>> = mutableStateOf(0f..0f)
+    val alertETCO2Range: MutableState<ClosedRange<Float>> = mutableStateOf(0f..10f)
 
     // 报警呼吸率范围
-    val alertRRRange: MutableState<ClosedRange<Float>> = mutableStateOf(0f..0f)
+    val alertRRRange: MutableState<ClosedRange<Float>> = mutableStateOf(0f..10f)
 
     // CO2单位
     val CO2Unit: MutableState<CO2_UNIT> = mutableStateOf(CO2_UNIT.MMHG)
