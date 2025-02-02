@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import com.wldmedical.capnoeasy.CO2_SCALE
 import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.GENDER
+import com.wldmedical.capnoeasy.LanguageTypes
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.WF_SPEED
 import com.wldmedical.capnoeasy.components.AlertData
@@ -102,6 +103,36 @@ class AppState @Inject constructor() {
 
     // WF Speed
     val WFSpeed: MutableState<WF_SPEED> = mutableStateOf(WF_SPEED.MIDDLE)
+
+    // 窒息时间
+    val asphyxiationTime: MutableState<Int> = mutableIntStateOf(10)
+
+    // 氧气补偿
+    val o2Compensation: MutableState<Float> = mutableFloatStateOf(16f)
+
+    /***
+     * 系统相关设置
+     */
+    // 语言
+    val language: MutableState<LanguageTypes> = mutableStateOf(LanguageTypes.CHINESE)
+
+    // 固件版本
+    val firmVersion: MutableState<String> = mutableStateOf("--")
+
+    // 硬件版本
+    val hardwareVersion: MutableState<String> = mutableStateOf("--")
+
+    // 软件版本
+    val softwareVersion: MutableState<String> = mutableStateOf("--")
+
+    // 生产日期
+    val productDate: MutableState<String> = mutableStateOf("--")
+
+    // 序列号
+    val serialNumber: MutableState<String> = mutableStateOf("--")
+
+    // 模块名称
+    val moduleName: MutableState<String> = mutableStateOf("CapnoGraph")
 }
 
 @HiltViewModel
@@ -245,5 +276,59 @@ class AppStateModel @Inject constructor(private val appState: AppState): ViewMod
     val WFSpeed = appState.WFSpeed
     fun updateWFSpeed(newVal: WF_SPEED) {
         appState.WFSpeed.value = newVal
+    }
+
+    // 窒息时间
+    val asphyxiationTime = appState.asphyxiationTime
+    fun updateAsphyxiationTime(newVal: Int) {
+        appState.asphyxiationTime.value = newVal
+    }
+
+    // 氧气补偿
+    val o2Compensation = appState.o2Compensation
+    fun updateO2Compensation(newVal: Float) {
+        appState.o2Compensation.value = newVal
+    }
+
+    // 语言
+    val language = appState.language
+    fun updateLanguage(newVal: LanguageTypes) {
+        appState.language.value = newVal
+    }
+
+    // 固件版本
+    val firmVersion = appState.firmVersion
+    fun updateFirmVersion(newVal: String) {
+        appState.firmVersion.value = newVal
+    }
+
+    // 硬件版本
+    val hardwareVersion = appState.hardwareVersion
+    fun updateHardwareVersion(newVal: String) {
+        appState.hardwareVersion.value = newVal
+    }
+
+    // 软件版本
+    val softwareVersion = appState.softwareVersion
+    fun updateSoftwareVersion(newVal: String) {
+        appState.softwareVersion.value = newVal
+    }
+
+    // 生产日期
+    val productDate = appState.productDate
+    fun updateProductDate(newVal: String) {
+        appState.productDate.value = newVal
+    }
+
+    // 序列号
+    val serialNumber = appState.serialNumber
+    fun updateSerialNumber(newVal: String) {
+        appState.serialNumber.value = newVal
+    }
+
+    // 模块名称
+    val moduleName = appState.moduleName
+    fun updateModuleName(newVal: String) {
+        appState.moduleName.value = newVal
     }
 }

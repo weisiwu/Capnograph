@@ -36,9 +36,9 @@ class AlertSettingActivity : BaseActivity() {
     override val pageScene = PageScene.ALERT_CONFIG_PAGE
 
     var minETCO2: Float = 0f
-    var maxETCO2: Float = 10f
+    var maxETCO2: Float = 0f
     var minRR: Float = 0f
-    var maxRR: Float = 10f
+    var maxRR: Float = 0f
 
     @Composable
     override fun Content() {

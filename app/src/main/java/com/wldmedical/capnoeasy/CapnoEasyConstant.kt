@@ -16,6 +16,8 @@ data class wheelPickerConfig<out E: BaseEnmu<V>, V>(
 )
 
 val RR_UNIT: String = "bmp"
+val TIME_UNIT: String = "S"
+val O2_UNIT: String = "%"
 
 enum class CO2_UNIT(val rawValue: String):BaseEnmu<String> {
     MMHG("mmHg"),
@@ -58,8 +60,8 @@ val maxRRRange = 0f..60f
 val minRRRange = 0f..30f
 val RRRange = 0f..60f
 
-val asphyxiationTimeRange = 10..60
-val o2Compensation = 0..100
+val asphyxiationTimeRange = 10f..60f
+val o2CompensationRange = 0f..100f
 
 val maxMaskZIndex = 9999f
 val maskOpacity = 0.2f
@@ -97,3 +99,15 @@ enum class PageScene(val title: String) {
 }
 
 val FloatToFixed = DecimalFormat("#")
+
+enum class LanguageTypes(val cname: String) {
+    CHINESE(cname = "中文"),
+    ENGLISH(cname = "English")
+}
+
+data class SystemIno(
+    val name: String,
+    val value: String,
+    val isRadio: Boolean = false,
+    val radios: Array<LanguageTypes>? = null
+)

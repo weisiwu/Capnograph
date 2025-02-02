@@ -1,6 +1,7 @@
 package com.wldmedical.capnoeasy.pages
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,9 +20,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wldmedical.capnoeasy.O2_UNIT
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.TIME_UNIT
+import com.wldmedical.capnoeasy.asphyxiationTimeRange
+import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.RangeSelector
 import com.wldmedical.capnoeasy.components.RangeType
+import com.wldmedical.capnoeasy.components.ToastData
+import com.wldmedical.capnoeasy.o2CompensationRange
 
 /***
  * 设置二级页 - 模块
@@ -29,21 +36,35 @@ import com.wldmedical.capnoeasy.components.RangeType
 class ModuleSettingActivity : BaseActivity() {
     override val pageScene = PageScene.MODULE_CONFIG_PAGE
 
+    var asphyxiationTime: Int = 0
+    var o2Compensation: Float = 0f
+
     @Composable
     override fun Content() {
+        asphyxiationTime = viewModel.asphyxiationTime.value
+        o2Compensation = viewModel.o2Compensation.value
+
         Column {
             RangeSelector(
-                title = "大气压(mmHg)",
-                value = 12.3f,
+                title = "窒息时间(${TIME_UNIT})",
+                value = asphyxiationTime.toFloat(),
+                unit = TIME_UNIT,
                 type = RangeType.ONESIDE,
-                valueRange = 0.3f..30f,
+                valueRange = asphyxiationTimeRange,
+                onValueChange = { newVal, _ ->
+                    asphyxiationTime = newVal.toInt()
+                }
             )
 
             RangeSelector(
-                title = "大气压(mmHg)",
-                value = 12.3f,
+                title = "氧气补偿(${O2_UNIT})",
+                unit = O2_UNIT,
+                value = o2Compensation,
                 type = RangeType.ONESIDE,
-                valueRange = 0.3f..30f,
+                valueRange = o2CompensationRange,
+                onValueChange = { newVal, _ ->
+                    o2Compensation = newVal
+                }
             )
 
             Spacer(
@@ -56,7 +77,26 @@ class ModuleSettingActivity : BaseActivity() {
                     .fillMaxWidth()
             ) {
                 Card (
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.clickable {
+                        viewModel.updateAsphyxiationTime(asphyxiationTime)
+                        viewModel.updateO2Compensation(o2Compensation)
+                        viewModel.updateLoadingData(
+                            LoadingData(
+                                text = "正在设置",
+                                duration = 800,
+                                callback = {
+                                    viewModel.updateToastData(
+                                        ToastData(
+                                            text = "设置成功",
+                                            showMask = false,
+                                            duration = 600,
+                                        )
+                                    )
+                                }
+                            )
+                        )
+                    }
                 ) {
                     Text(
                         text = "保存",
