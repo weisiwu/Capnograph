@@ -6,8 +6,11 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.wldmedical.capnoeasy.CO2_SCALE
+import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.WF_SPEED
 import com.wldmedical.capnoeasy.components.AlertData
 import com.wldmedical.capnoeasy.components.ConfirmData
 import com.wldmedical.capnoeasy.components.Device
@@ -92,6 +95,15 @@ class AppState @Inject constructor() {
 
     // 报警呼吸率范围
     val alertRRRange: MutableState<ClosedRange<Float>> = mutableStateOf(0f..0f)
+
+    // CO2单位
+    val CO2Unit: MutableState<CO2_UNIT> = mutableStateOf(CO2_UNIT.MMHG)
+
+    // CO2 Scale
+    val CO2Scale: MutableState<CO2_SCALE> = mutableStateOf(CO2_SCALE.MIDDLE)
+
+    // WF Speed
+    val WFSpeed: MutableState<WF_SPEED> = mutableStateOf(WF_SPEED.MIDDLE)
 }
 
 @HiltViewModel
@@ -217,5 +229,23 @@ class AppStateModel @Inject constructor(private val appState: AppState): ViewMod
     val alertRRRange = appState.alertRRRange
     fun updateAlertRRRange(start: Float, end: Float) {
         appState.alertRRRange.value = start..end
+    }
+
+    // 设置CO2单位
+    val CO2Unit = appState.CO2Unit
+    fun updateCO2Unit(newVal: CO2_UNIT) {
+        appState.CO2Unit.value = newVal
+    }
+
+    // 设置CO2 Scale（主页线图的纵坐标范围）
+    val CO2Scale = appState.CO2Scale
+    fun updateCO2Scale(newVal: CO2_SCALE) {
+        appState.CO2Scale.value = newVal
+    }
+
+    // WF Speed
+    val WFSpeed = appState.WFSpeed
+    fun updateWFSpeed(newVal: WF_SPEED) {
+        appState.WFSpeed.value = newVal
     }
 }
