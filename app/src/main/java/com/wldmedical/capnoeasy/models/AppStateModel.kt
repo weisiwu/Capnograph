@@ -133,6 +133,21 @@ class AppState @Inject constructor() {
 
     // 模块名称
     val moduleName: MutableState<String> = mutableStateOf("CapnoGraph")
+
+    // 打印设置-地址
+    val printAddress: MutableState<String> = mutableStateOf("")
+
+    // 打印设置-电话
+    val printPhone: MutableState<String> = mutableStateOf("")
+
+    // 打印设置-网址
+    val printUrl: MutableState<String> = mutableStateOf("")
+
+    // 打印设置-是否支持网址二维码
+    val printUrlQRCode: MutableState<Boolean> = mutableStateOf(true)
+
+    // 打印设置-Logo
+    val printLogo: MutableState<String> = mutableStateOf("")
 }
 
 @HiltViewModel
@@ -330,5 +345,35 @@ class AppStateModel @Inject constructor(private val appState: AppState): ViewMod
     val moduleName = appState.moduleName
     fun updateModuleName(newVal: String) {
         appState.moduleName.value = newVal
+    }
+
+    // 打印设置-地址
+    val printAddress = appState.printAddress
+    fun updatePrintAddress(newVal: String) {
+        appState.printAddress.value = newVal
+    }
+
+    // 打印设置-电话
+    val printPhone = appState.printPhone
+    fun updatePrintPhone(newVal: String) {
+        appState.printPhone.value = newVal
+    }
+
+    // 打印设置-网址
+    val printUrl = appState.printUrl
+    fun updatePrintUrl(newVal: String) {
+        appState.printUrl.value = newVal
+    }
+
+    // 打印设置-是否支持网址二维码
+    val printUrlQRCode = appState.printUrlQRCode
+    fun updatePrintUrlQRCode(newVal: Boolean) {
+        appState.printUrlQRCode.value = newVal
+    }
+
+    // 打印设置-Logo
+    val printLogo = appState.printLogo
+    fun updatePrintLogo(newVal: String) {
+        appState.printLogo.value = newVal
     }
 }
