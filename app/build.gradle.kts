@@ -31,16 +31,23 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
-//        viewBinding = true
+    }
+
+    // https://github.com/bcgit/bc-java/issues/1685
+    packaging {
+        resources.excludes.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
     }
 }
 
@@ -64,6 +71,8 @@ dependencies {
     //https://developer.android.com/training/dependency-injection/hilt-android?hl=zh-cn
     implementation("com.google.dagger:hilt-android:2.51.1")
     implementation(libs.androidx.appcompat)
+    implementation(libs.identity.jvm)
+    implementation(libs.androidx.bluetooth)
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0-alpha01")
     implementation("org.jetbrains.kotlin:kotlin-reflect")

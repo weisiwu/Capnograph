@@ -216,7 +216,6 @@ class PrintSettingActivity : BaseActivity() {
                                 val directory = context.getDir("images", Context.MODE_PRIVATE)
                                 val file = File(directory, logoImgName)
                                 val imagePath = file.absolutePath
-                                println("wswTest 图片的绝对地址是===> ${imagePath}")
 
                                 viewModel.updatePrintAddress(printAddress)
                                 viewModel.updatePrintPhone(printPhone)

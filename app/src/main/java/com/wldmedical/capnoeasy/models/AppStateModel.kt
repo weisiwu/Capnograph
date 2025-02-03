@@ -1,10 +1,14 @@
 package com.wldmedical.capnoeasy.models
 
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.wldmedical.capnoeasy.CO2_SCALE
 import com.wldmedical.capnoeasy.CO2_UNIT
@@ -20,6 +24,8 @@ import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.NavBarComponentState
 import com.wldmedical.capnoeasy.components.ToastData
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -148,10 +154,18 @@ class AppState @Inject constructor() {
 
     // 打印设置-Logo
     val printLogo: MutableState<String> = mutableStateOf("")
+
+    /***
+     * 实时蓝牙设备数据
+     */
+    // 周围设备列表
+    var discoveredPeripherals = MutableStateFlow<List<BluetoothDevice>>(emptyList())
 }
 
 @HiltViewModel
-class AppStateModel @Inject constructor(private val appState: AppState): ViewModel() {
+class AppStateModel @Inject constructor(
+    private val appState: AppState,
+): ViewModel() {
     // 当前所在页面
     val currentPage: State<NavBarComponentState> = appState.currentPage
     fun updateCurrentPage(newVal: PageScene) {
@@ -375,5 +389,17 @@ class AppStateModel @Inject constructor(private val appState: AppState): ViewMod
     val printLogo = appState.printLogo
     fun updatePrintLogo(newVal: String) {
         appState.printLogo.value = newVal
+    }
+
+    // 附近蓝牙设备-扫描结果
+    val discoveredPeripherals: StateFlow<List<BluetoothDevice>> = appState.discoveredPeripherals
+    fun updateDiscoveredPeripherals(item: BluetoothDevice?, isClear: Boolean = false) {
+        val currentList = discoveredPeripherals.value.orEmpty().toMutableList()
+        if (item != null && !currentList.contains(item)) {
+            currentList.add(item)
+            appState.discoveredPeripherals.value = currentList.toList()
+        } else if(isClear) {
+            appState.discoveredPeripherals.value = mutableListOf()
+        }
     }
 }

@@ -1,5 +1,7 @@
 package com.wldmedical.capnoeasy.components
 
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.kits.unkownName
 
 data class Device(
     val name: String,
@@ -46,11 +49,12 @@ val emptyAlert = "附近没有可配对设备！"
  * 有数据的时候展示列表
  * 无数据的时候展示空数据兜底样式
  */
+@SuppressLint("MissingPermission")
 @Composable
 fun DeviceList(
-    devices: List<Device>,
+    devices: List<BluetoothDevice>,
     onSearch: ((CustomType) -> Unit)? = null,
-    onDeviceClick: ((device: Device) -> Unit)? = null,
+    onDeviceClick: ((device: BluetoothDevice) -> Unit)? = null,
 ) {
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp.dp
@@ -77,7 +81,7 @@ fun DeviceList(
                 )
                 Text(
                     text = emptyAlert,
-                    fontSize = 24.sp,
+                    fontSize = 20.sp,
                     color = Color(0xFF687383)
                 )
             }
@@ -93,11 +97,11 @@ fun DeviceList(
                     ) {
                         Column {
                             Text(
-                                text = device.name,
+                                text = device.name ?: unkownName,
                                 fontSize = 17.sp,
                             )
                             Text(
-                                text = device.mac,
+                                text = device.address,
                                 fontSize = 15.sp,
                                 color = Color(0xff888888)
                             )
@@ -171,20 +175,7 @@ fun DeviceList(
 @Preview(showBackground = true)
 @Composable
 fun DeviceListPreview() {
-    val devices = listOf(
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-    )
+    val devices = listOf<BluetoothDevice>()
     CapnoEasyTheme {
         DeviceList(devices = devices)
     }

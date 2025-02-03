@@ -120,7 +120,7 @@ fun HistoryList(
                 )
                 Text(
                     text = emptyRecordAlert,
-                    fontSize = 24.sp,
+                    fontSize = 20.sp,
                     color = Color(0xFF687383)
                 )
             }

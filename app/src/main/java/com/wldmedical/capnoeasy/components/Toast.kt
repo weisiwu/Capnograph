@@ -43,7 +43,7 @@ data class ToastData(
     val text: String,
     val type: ToastType = ToastType.SUCCESS,
     val showMask: Boolean = true,
-    val duration: Long = 0,
+    val duration: Long = 600,
     val callback:  (() -> Unit)? = null,
 )
 

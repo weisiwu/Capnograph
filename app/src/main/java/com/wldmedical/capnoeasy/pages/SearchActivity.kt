@@ -1,17 +1,21 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.PageScene
-import com.wldmedical.capnoeasy.components.Device
 import com.wldmedical.capnoeasy.components.DeviceList
 import com.wldmedical.capnoeasy.components.DeviceType
 import com.wldmedical.capnoeasy.components.DeviceTypes
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.TypeSwitch
+import com.wldmedical.capnoeasy.kits.unkownName
 
 /***
  * 搜素列表
@@ -19,23 +23,12 @@ import com.wldmedical.capnoeasy.components.TypeSwitch
 class SearchActivity : BaseActivity() {
     override val pageScene = PageScene.DEVICES_LIST_PAGE
 
+    @SuppressLint("MissingPermission")
+    @RequiresApi(Build.VERSION_CODES.S)
     @Composable
     override fun Content() {
         val selectedIndex = if (viewModel.connectType.value == null) 0 else DeviceTypes.indexOfFirst { type -> viewModel.connectType.value == type }
-        val devices = listOf(
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-            Device(name = "SMI-M14", mac = "D4:F0:EA:C0:93:9B"),
-        )
+        val discoveredPeripherals = viewModel.discoveredPeripherals.collectAsState()
 
         TypeSwitch(
             selectedIndex = selectedIndex,
@@ -53,45 +46,23 @@ class SearchActivity : BaseActivity() {
         )
 
         DeviceList(
-            devices = devices,
+            devices = discoveredPeripherals.value,
             onSearch = {
+                viewModel.updateDiscoveredPeripherals(null, true)
                 viewModel.updateLoadingData(
                     LoadingData(
-                        text = "开始搜索${it.name}"
+                        text = "开始搜索${it.name ?: unkownName}"
                     )
                 )
+                blueToothKit.searchDevices()
             },
             onDeviceClick = {
+                blueToothKit.connectDevice(device = it)
                 viewModel.updateLoadingData(
                     LoadingData(
-                        text = "开始链接设备${it.name}"
+                        text = "开始链接设备${it.name ?: unkownName}"
                     )
                 )
-
-//                viewModel.updateAlertData(
-//                    AlertData(
-//                        text = "开始链接设备${it.name}",
-//                        ok_btn_text = "ok",
-//                        cancel_btn_text = "cancel"
-//                    )
-//                )
-
-//                viewModel.updateConfirmData(
-//                    ConfirmData(
-//                        text = "开始链接设备${it.name}",
-//                        title = "标题",
-//                        confirm_btn_text = "确认按钮",
-//                    )
-//                )
-
-//                viewModel.updateToastData(
-//                    ToastData(
-//                        text = "开始链接设备${it.name}",
-//                        type = ToastType.FAIL,
-//                        showMask = true,
-//                        duration = 500
-//                    )
-//                )
             }
         )
     }

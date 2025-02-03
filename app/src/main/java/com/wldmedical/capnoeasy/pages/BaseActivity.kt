@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -13,6 +14,9 @@ import com.wldmedical.capnoeasy.components.BaseLayout
 import com.wldmedical.capnoeasy.components.ConfirmModal
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.Toast
+import com.wldmedical.capnoeasy.components.ToastData
+import com.wldmedical.capnoeasy.components.ToastType
+import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.models.AppStateModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -89,10 +93,36 @@ open class BaseActivity : ComponentActivity() {
      */
     lateinit var viewModel: AppStateModel
 
+    lateinit var blueToothKit: BlueToothKit
+
     open val pageScene = PageScene.HOME_PAGE
 
     open fun updatePageScene() {
         this.viewModel.updateCurrentPage(this.pageScene)
+    }
+
+    private fun checkBlueToothFail() {
+        viewModel.updateToastData(
+            ToastData(
+                text = "搜索失败",
+                type = ToastType.FAIL,
+                showMask = false
+            )
+        )
+    }
+
+    private fun onScanFind(device: BluetoothDevice) {
+        viewModel.updateDiscoveredPeripherals(device)
+    }
+
+    private fun scanFinish() {
+        viewModel.updateToastData(
+            ToastData(
+                text = "搜索结束",
+                type = ToastType.SUCCESS,
+                showMask = false
+            )
+        )
     }
 
     open fun onNavBarRightClick() {}
@@ -103,6 +133,12 @@ open class BaseActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this)[AppStateModel::class.java]
+        blueToothKit = BlueToothKit(
+            activity = this,
+            checkBlueToothFail = { checkBlueToothFail() },
+            onScanFind = { onScanFind(it) },
+            scanFinish = { scanFinish() }
+        )
         enableEdgeToEdge()
         setContent {
             updatePageScene()
