@@ -159,6 +159,17 @@ enum class ISBStateCAH(val value: Int) {
     GetModuleName(value = 97), // 模块名称
 }
 
+val supportCMDs: Array<UInt> = arrayOf(
+    SensorCommand.CO2Waveform.value.toUInt(),
+    SensorCommand.Zero.value.toUInt(),
+    SensorCommand.Settings.value.toUInt(),
+    SensorCommand.Expand.value.toUInt(),
+    SensorCommand.GetSoftwareRevision.value.toUInt(),
+    SensorCommand.StopContinuous.value.toUInt(),
+    SensorCommand.NACKError.value.toUInt(),
+    SensorCommand.ResetNoBreaths.value.toUInt(),
+)
+
 /***
  * CapnoEasy设备通讯协议
  * 1、设置相关指令
