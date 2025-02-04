@@ -1,9 +1,11 @@
 package com.wldmedical.capnoeasy.kits
 
+import android.provider.Contacts.Intents.UI
 import java.util.UUID
 
 /**
  * 指令集合
+ * 指令自身是0-255的正整数，使用UByte类型保存
  */
 enum class SensorCommand(val value: Int) {
     CO2Waveform(value = 0x80), // 接受数据
@@ -47,12 +49,16 @@ enum class BLEServersUUID(val value: UUID) {
     BLESendDataSer(
         value = convert16BitUUIDto128Bit(BLEServers.BLESendDataSer.value)
     ),
+    BLEModuleParamsSer(
+        value = convert16BitUUIDto128Bit(BLEServers.BLEModuleParamsSer.value)
+    ),
 }
 
 val sortedBLEServersUUID = listOf(
     BLEServersUUID.BLEAntihijackSer.value,
     BLEServersUUID.BLEReceiveDataSer.value,
     BLEServersUUID.BLESendDataSer.value,
+    BLEServersUUID.BLEModuleParamsSer.value,
 )
 
 /**
@@ -83,6 +89,12 @@ enum class BLECharacteristicUUID(val value: UUID) {
     BLEAntihijackChaNofi(
         value = convert16BitUUIDto128Bit(BLECharacteristics.BLEAntihijackChaNofi.value)
     ),
+    BLERenameCha(
+        value = convert16BitUUIDto128Bit(BLECharacteristics.BLERenameCha.value)
+    ),
+    BLEBaudCha(
+        value = convert16BitUUIDto128Bit(BLECharacteristics.BLEBaudCha.value)
+    ),
 };
 
 val sortedBLECharacteristicUUID = listOf(
@@ -91,13 +103,6 @@ val sortedBLECharacteristicUUID = listOf(
     BLECharacteristicUUID.BLEReceiveDataCha.value,
     BLECharacteristicUUID.BLESendDataCha.value,
 )
-
-/**
- * 蓝牙描述符UUID
- */
-enum class BLEDescriptorUUID(val value: Int) {
-    CCCDDescriptor(value = 0x2902),
-}
 
 /**
  * 校零状态 - 走80H结果获取
@@ -159,19 +164,13 @@ enum class ISBStateCAH(val value: Int) {
     GetModuleName(value = 97), // 模块名称
 }
 
-val supportCMDs: Array<UInt> = arrayOf(
-    SensorCommand.CO2Waveform.value.toUInt(),
-    SensorCommand.Zero.value.toUInt(),
-    SensorCommand.Settings.value.toUInt(),
-    SensorCommand.Expand.value.toUInt(),
-    SensorCommand.GetSoftwareRevision.value.toUInt(),
-    SensorCommand.StopContinuous.value.toUInt(),
-    SensorCommand.NACKError.value.toUInt(),
-    SensorCommand.ResetNoBreaths.value.toUInt(),
+val supportCMDs: Array<Int> = arrayOf(
+    SensorCommand.CO2Waveform.value,
+    SensorCommand.Zero.value,
+    SensorCommand.Settings.value,
+    SensorCommand.Expand.value,
+    SensorCommand.GetSoftwareRevision.value,
+    SensorCommand.StopContinuous.value,
+    SensorCommand.NACKError.value,
+    SensorCommand.ResetNoBreaths.value,
 )
-
-/***
- * CapnoEasy设备通讯协议
- * 1、设置相关指令
- * 2、接受发送过来的数据
- */

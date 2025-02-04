@@ -13,6 +13,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
+import android.bluetooth.BluetoothStatusCodes
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
@@ -36,6 +37,9 @@ import dagger.hilt.android.qualifiers.ActivityContext
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.text.SimpleDateFormat
+import java.util.LinkedList
+import java.util.Timer
+import java.util.TimerTask
 import java.util.regex.Pattern
 import javax.inject.Inject
 import kotlin.experimental.and
@@ -61,7 +65,7 @@ data class DataPoint(val index: Int, val value: Float)
 // 记录波形数据用格式
 data class CO2WavePointData(
     val co2: Float = 0f,
-    val RR: Int = 0,
+    val RR: UInt = 0u,
     val ETCO2: Float = 0f,
     val FiCO2: Float = 0f,
     val index: Int = 0
@@ -112,6 +116,74 @@ class BlueToothKit @Inject constructor(
 
     private val bluetoothLeScanner: BluetoothLeScanner? = bluetoothAdapter?.bluetoothLeScanner
 
+    // 蓝牙指令任务队列，避免快速写导致外围设备无法响应
+    private val messageQueue = LinkedList<ByteArray>()
+
+    private var isSending = false
+
+    private var timer: Timer? = null
+
+    private fun sendMessage(
+        gatt: BluetoothGatt? = connectedCapnoEasyGATT,
+        data: ByteArray? = sendArray.toByteArray(),
+        type: Int = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
+        characteristic: BluetoothGattCharacteristic? = sendDataCharacteristic
+    ) {
+        messageQueue.offer(data!!.copyOf()) // 将消息放入队列
+
+        if (!isSending) {
+            println("wswTest 开启了timer")
+            startTimer(gatt, type, characteristic) // 启动定时器
+        }
+    }
+
+    private fun startTimer(gatt: BluetoothGatt?, type: Int, characteristic: BluetoothGattCharacteristic?) {
+        timer = Timer()
+        timer?.schedule(
+            object : TimerTask() {
+                override fun run() {
+                    println("wswTest 开始执行下一条数据 ${characteristic!!.uuid}")
+                    sendNextMessage(gatt, type, characteristic)
+                }
+            },
+            0, // 延迟 0 毫秒后开始执行
+             300 // 每 100 毫秒执行一次
+        )
+    }
+
+    private fun stopTimer() {
+        println("wswTest 关闭了timer")
+        timer?.cancel()
+        timer = null
+    }
+
+    @SuppressLint("MissingPermission", "NewApi")
+    private fun sendNextMessage(gatt: BluetoothGatt?, type: Int, characteristic: BluetoothGattCharacteristic?) {
+        println("wswTest messageQueue ${messageQueue.size} isSending ${isSending}")
+        if (messageQueue.isNotEmpty() && !isSending) {
+            isSending = true
+            val message = messageQueue.poll()
+            val status = message?.let {
+                gatt?.writeCharacteristic(
+                    characteristic!!,
+                    it,
+                    type
+                )
+            }
+
+            if (status == BluetoothStatusCodes.SUCCESS) {
+                println("wswTest 消息发送成功 ${status} ${characteristic!!.uuid}")
+            } else {
+                println("wswTest 消息发送失败 ${status} ${characteristic!!.uuid}")
+            }
+            isSending = false
+        } else if (messageQueue.isEmpty()) {
+            stopTimer() // 队列为空，停止定时器
+            isSending = false
+        }
+    }
+
+    // 是否正在扫描
     private var scanning = false
 
     // BLE蓝牙-扫描回调
@@ -130,6 +202,7 @@ class BlueToothKit @Inject constructor(
 
     // BLE蓝牙-连接设备回调
     private val gattCallback = object : BluetoothGattCallback() {
+        // 设备是否成功链接
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             when (newState) {
@@ -138,7 +211,6 @@ class BlueToothKit @Inject constructor(
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     // 设备已断开连接
-                    println("wswTest 设备断开链接")
                 }
                 else -> {
                     // 其他状态
@@ -147,11 +219,42 @@ class BlueToothKit @Inject constructor(
             }
         }
 
+        // 发现设备服务，集中处理service和characteristic
         @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 // 设备已连接
                 initCapnoEasyConection(gatt)
+            }
+        }
+
+        // 用于接收设备发送的通知数据。
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic?
+        ) {
+            println("wswTest 特征值发生改变 ${characteristic?.uuid}")
+            // 收到通知数据
+            if (characteristic != null) { }
+        }
+
+        // 处理特征值写入操作的结果，包括设置订阅状态
+        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+        override fun onCharacteristicWrite(
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic?,
+            status: Int
+        ) {
+            println("wswTest 开始写入特征值 ${characteristic?.uuid}")
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                println("wswTest 设置订阅状态成功: ${characteristic?.uuid}")
+                // 订阅receiveData成功后，发送链接请求
+                if (characteristic?.uuid == BLECharacteristicUUID.BLEReceiveDataCha.value) {
+                    sendStopContinuous() // 停止历史可能存在数据串
+                    sendContinuous() // 重新开始请求新的数据串
+                }
+            } else {
+                println("wswTest 设置订阅状态失败: ${characteristic?.uuid}，状态码: $status")
             }
         }
     }
@@ -184,6 +287,10 @@ class BlueToothKit @Inject constructor(
     var antiHijackCharacteristic: BluetoothGattCharacteristic? = null
 
     var antiHijackNotifyCharacteristic: BluetoothGattCharacteristic? = null
+
+    var moduleParamsService: BluetoothGattService? = null
+
+    var moduleParamsCharacteristic: BluetoothGattCharacteristic? = null
 
     // 周围设备列表
     public val discoveredPeripherals = mutableListOf<BluetoothDevice>()
@@ -222,13 +329,19 @@ class BlueToothKit @Inject constructor(
     public var currentETCO2: Float = 0f
 
     // 当前呼吸率
-    public  var currentRespiratoryRate: Int = 0
+    public var currentRespiratoryRate: UInt = 0u
 
     // 当前FiCO2
     public var currentFiCO2: Float = 0f
 
     // 当前是否还在呼吸
     public var currentBreathe: Boolean = false
+
+    // 设置窒息时间
+    public var asphyxiationTime: Int = 20
+    
+    // 设置氧气补偿
+    public var oxygenCompensation: Float = 20f
 
     // 电池电量低
     public var isLowerEnergy: Boolean = false
@@ -392,6 +505,7 @@ class BlueToothKit @Inject constructor(
     // 链接低功耗蓝牙
     @SuppressLint("MissingPermission")
     private fun connectBleDevice(device: BluetoothDevice) {
+        println("wswTest 通过GATT进行连接")
         device.connectGatt(activity, false, gattCallback)
     }
 
@@ -405,81 +519,92 @@ class BlueToothKit @Inject constructor(
         }
 
         val services = connectedCapnoEasyGATT!!.services
-        var isCatch = false
         val sortedServices = mutableListOf<BluetoothGattService>()
+        val catchCharacteristic = mutableListOf<BluetoothGattCharacteristic>()
 
         // 根据 Service 的 UUID 进行排序
         for (uuid in sortedBLEServersUUID) {
             val service = services.find { it.uuid == uuid }
             if (service != null) {
+                println("wswTest 注册了哪些服务 ${service.uuid}")
                 sortedServices.add(service)
             }
         }
 
+        // 宣召有安歇service
         for (service in sortedServices) {
             when(service.uuid) {
                 // 反劫持
                 BLEServersUUID.BLEAntihijackSer.value -> {
                     antiHijackService = service
-                    isCatch = true
+                    catchCharacteristic.addAll(service.characteristics)
                 }
                 // 接受数据
                 BLEServersUUID.BLEReceiveDataSer.value -> {
                     receiveDataService = service
-                    isCatch = true
+                    catchCharacteristic.addAll(service.characteristics)
                 }
                 // 发送数据
                 BLEServersUUID.BLESendDataSer.value -> {
                     sendDataService = service
-                    isCatch = true
+                    catchCharacteristic.addAll(service.characteristics)
+                }
+                // 模块
+                BLEServersUUID.BLEModuleParamsSer.value -> {
+                    moduleParamsService = service
+                    catchCharacteristic.addAll(service.characteristics)
                 }
             }
+        }
 
-            // 有需要订阅的服务，寻找服务的特征值
-            if (isCatch) {
-                val characteristics = service.characteristics
+        // 有需要订阅的服务，寻找服务的特征值
+        var filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEAntihijackCha.value }
+        // 反劫持
+        if (filterList.isNotEmpty()) {
+            println("wswTest 注册了反劫持")
+            antiHijackCharacteristic = filterList[0]
+            sendMessage(data = antiHijackData, type = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT, characteristic = antiHijackCharacteristic)
+//            connectedCapnoEasyGATT!!.writeCharacteristic(filterList[0], antiHijackData, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+        }
 
-                for (characteristic in characteristics) {
-                    when(characteristic.uuid) {
-                        // 反劫持
-                        BLECharacteristicUUID.BLEAntihijackCha.value -> {
-                            connectedCapnoEasyGATT!!.writeCharacteristic(characteristic, antiHijackData, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
-                            antiHijackCharacteristic = characteristic
-                        }
-                        // 监听反劫持广播
-                        BLECharacteristicUUID.BLEAntihijackChaNofi.value -> {
-                            connectedCapnoEasyGATT!!.setCharacteristicNotification(characteristic, true)
-                            antiHijackNotifyCharacteristic = characteristic
-                        }
-                        // 接受数据
-                        BLECharacteristicUUID.BLEReceiveDataCha.value -> {
-                            connectedCapnoEasyGATT!!.setCharacteristicNotification(characteristic, true)
-                            receiveDataCharacteristic = characteristic
-                        }
-                        // 发送数据
-                        BLECharacteristicUUID.BLESendDataCha.value -> {
-//                            // 显示设置
-//                            updateCO2Unit(cb: silent)
-//                            // 模块设置
-//                            updateNoBreathAndGasCompensation(
-//                                newAsphyxiationTime: asphyxiationTime,
-//                                newOxygenCompensation: oxygenCompensation
-//                            )
-//                            // 报警设置
-//                            updateAlertRange(
-//                                co2Low: etCo2Lower,
-//                                co2Up: etCo2Upper,
-//                                rrLow: rrLower,
-//                                rrUp: rrUpper
-//                            )
-//
-                            sendDataCharacteristic = characteristic
-                            // 设置结束后，开始尝试接受数据
-                            sendContinuous()
-                        }
-                    }
-                }
-            }
+        filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEAntihijackChaNofi.value }
+        // 监听反劫持广播
+        if (filterList.isNotEmpty()) {
+            println("wswTest 注册了反劫持广播")
+            antiHijackNotifyCharacteristic = filterList[0]
+            connectedCapnoEasyGATT!!.setCharacteristicNotification(filterList[0], true)
+        }
+
+        filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEReceiveDataCha.value }
+        // 接受数据
+        if (filterList.isNotEmpty()) {
+            println("wswTest 注册了接受数据")
+            receiveDataCharacteristic = filterList[0]
+            connectedCapnoEasyGATT!!.setCharacteristicNotification(filterList[0], true)
+        }
+
+        filterList = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLESendDataCha.value }
+        // 发送数据
+        if (filterList.isNotEmpty()) {
+            println("wswTest 注册了发送时间")
+            sendDataCharacteristic = filterList[0]
+            // 读取单位前，必须要先停止设置
+            sendStopContinuous()
+            // 显示设置
+            // TODO: 临时测试
+            updateCO2UnitScale(CO2_UNIT.KPA, CO2_SCALE.LARGE)
+            // 模块设置
+            updateNoBreathAndGasCompensation(asphyxiationTime, oxygenCompensation)
+            // 报警设置
+            // TODO: 默认值来源还没有定下俩
+            updateAlertRange(
+                co2Low = 2f,
+                co2Up = 10f,
+                rrLow = 2,
+                rrUp = 10
+            )
+            // 设置结束后，开始尝试接受数据
+            sendContinuous()
         }
     }
 
@@ -504,42 +629,37 @@ class BlueToothKit @Inject constructor(
     }
 
     // 发送接受波形数据请求
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     private fun sendContinuous() {
         sendArray.add(SensorCommand.CO2Waveform.value.toByte())
         sendArray.add(0x02)
         sendArray.add(0x00)
-        appendCKS()
-        // 写入特征值
-        if (sendDataCharacteristic != null) {
-            sendDataCharacteristic!!.value = sendArray.toByteArray()
-            connectedCapnoEasyGATT?.writeCharacteristic(sendDataCharacteristic)
-            resetSendData()
-        }
+        sendSavedData()
     }
 
     // 发送停止接受波形数据请求
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     private fun sendStopContinuous() {
         sendArray.add(SensorCommand.StopContinuous.value.toByte())
         sendArray.add(0x01)
-        appendCKS()
-
-        sendDataCharacteristic!!.value = sendArray.toByteArray()
-        connectedCapnoEasyGATT?.writeCharacteristic(sendDataCharacteristic)
-        resetSendData()
+        sendSavedData()
     }
 
     // 发送当前存储数据
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun sendSavedData() {
-        if (connectedCapnoEasyGATT == null) {
+        if (connectedCapnoEasyGATT == null || sendDataCharacteristic == null) {
+            println("wswTEst sendSavedData【失败】 ")
             resetSendData()
             return
         }
         appendCKS()
-        sendDataCharacteristic!!.value = sendArray.toByteArray()
-        connectedCapnoEasyGATT?.writeCharacteristic(sendDataCharacteristic)
+        println("wswTest sendSavedData【成功】")
+//        println("wswTest sendSavedData【成功】===> 特征值有么有 $sendDataCharacteristic")
+        sendMessage()
         resetSendData()
     }
 
@@ -552,6 +672,7 @@ class BlueToothKit @Inject constructor(
      * 通过CAH获取
      * 软件版本
      */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun getDeviceInfo() {
         // ISB=21
@@ -580,6 +701,7 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 发送关机指令 */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun shutdown() {
         sendArray.add(SensorCommand.Reset.value.toByte())
@@ -588,6 +710,7 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 发送校零指令 */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun correctZero() {
         sendArray.add(SensorCommand.Zero.value.toByte())
@@ -598,14 +721,13 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 更新CO2单位/CO2Scale */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun updateCO2UnitScale(
         co2Unit: CO2_UNIT? = null,
         co2Scale: CO2_SCALE? = null,
     ) {
-        // 读取单位前，必须要先停止设置
-        sendStopContinuous()
-
+        println("wswTest 初始化单位相关， ${co2Unit} ${co2Scale}")
         if (co2Unit != null) {
             // 设置CO2单位
             sendArray.add(SensorCommand.Settings.value.toByte())
@@ -653,11 +775,13 @@ class BlueToothKit @Inject constructor(
             } else if (co2Scale == CO2_SCALE.LARGE) {
                 sendArray.add(0x02)
             }
+            println("wswTest 准备发送Scale数据")
             sendSavedData()
         }
     }
 
     /** 调整ETCO2/RR的报警范围 */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun updateAlertRange(
         co2Low: Float = 0f,
@@ -686,20 +810,21 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 设置模块参数: 窒息时间、氧气补偿 */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun updateNoBreathAndGasCompensation(
         newAsphyxiationTime: Int = 0,
         newOxygenCompensation: Float = 0f
     ) {
         // 设置窒息时间
         sendArray.add(SensorCommand.Settings.value.toByte())
-        sendArray.add(0x03)
+        sendArray.add(0x03.toByte())
         sendArray.add(ISBState84H.NoBreaths.value.toByte())
         sendArray.add(newAsphyxiationTime.toByte())
         sendSavedData()
 
         // 设置氧气补偿
         sendArray.add(SensorCommand.Settings.value.toByte())
-        sendArray.add(0x06)
+        sendArray.add(0x06.toByte())
         sendArray.add(ISBState84H.GasCompensation.value.toByte())
         sendArray.add(newOxygenCompensation.toInt().toByte())
         sendArray.add(0x00)
@@ -723,6 +848,7 @@ class BlueToothKit @Inject constructor(
         if (device == null) {
             return
         }
+        println("wswTest 开始链接设备")
         // 链接后，需要将设备存到不同的属性中
         if (device.type == DEVICE_TYPE_LE) {
             connectBleDevice(device)
@@ -735,10 +861,10 @@ class BlueToothKit @Inject constructor(
 
     fun getCMDDataArray(): List<UInt> {
         var getArray: List<UInt> = listOf();
-        val command: UInt = receivedArray[0]
+        val command: UByte = receivedArray[0].toUByte()
 
         // 从接受到数据头部不停的向后移动，直到获取指令类型
-        while (receivedArray.size > 0 && !supportCMDs.contains(command)) {
+        while (receivedArray.size > 0 && !supportCMDs.contains(command.toInt())) {
             receivedArray.removeAt(0)
         }
 
@@ -762,15 +888,15 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 从蓝牙返回数据中解析返回值 */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun getSpecificValue(firstArray: ByteArray) {
         // 使用 ByteBuffer 直接访问内存，更安全高效
-        val buffer = ByteBuffer.wrap(firstArray).order(ByteOrder.LITTLE_ENDIAN) // 假设是小端序
-
-        val commandM = buffer.get()
+        val buffer = ByteBuffer.wrap(firstArray).order(ByteOrder.LITTLE_ENDIAN)
+        val commandM = buffer.get().toInt()
         val NBFM = buffer.get().toInt() and 0xFF // 转换为无符号整数
-        val cksM = firstArray.last()
+        val cksM = firstArray.last().toInt()
 
-        if (!supportCMDs.contains(commandM.toUInt())) {
+        if (!supportCMDs.contains(commandM)) {
             return
         }
 
@@ -780,16 +906,16 @@ class BlueToothKit @Inject constructor(
         }
 
         val cks = calculateCKS(firstArray.dropLast(1).toByteArray()) // 注意 toByteArray() 的使用
-        if (cks != cksM) {
+        if (cks.toInt() != cksM) {
             println("checksum校验失败 cks:$cks 接收到的cks:$cksM")
             return
         }
 
         when (commandM) {
-            SensorCommand.CO2Waveform.value.toByte() -> handleCO2Waveform(firstArray, NBFM) // 传递原始数组
-            SensorCommand.Settings.value.toByte() -> handleSettings(firstArray) // 传递原始数组
-            SensorCommand.GetSoftwareRevision.value.toByte() -> handleSofrWareVersion(firstArray) // 传递原始数组
-            SensorCommand.Expand.value.toByte() -> handleSystemExpand(firstArray) // 传递原始数组
+            SensorCommand.CO2Waveform.value -> handleCO2Waveform(firstArray, NBFM) // 传递原始数组
+            SensorCommand.Settings.value -> handleSettings(firstArray) // 传递原始数组
+            SensorCommand.GetSoftwareRevision.value -> handleSofrWareVersion(firstArray) // 传递原始数组
+            SensorCommand.Expand.value -> handleSystemExpand(firstArray) // 传递原始数组
             else -> println("未知指令 $commandM")
         }
     }
@@ -813,7 +939,7 @@ class BlueToothKit @Inject constructor(
                     currentETCO2 = (buffer.get(6).toInt() and 0xFF * 128 + (buffer.get(7).toInt() and 0xFF)).toFloat() / 10
                 }
                 ISBState80H.RRValue.value.toByte() -> {
-                    currentRespiratoryRate = buffer.get(6).toInt() and 0xFF * 128 + (buffer.get(7).toInt() and 0xFF)
+                    currentRespiratoryRate = buffer.get(6).toUInt() and 0xFFu * 128u + (buffer.get(7).toUInt() and 0xFFu)
                 }
                 ISBState80H.FiCO2Value.value.toByte() -> {
                     currentFiCO2 = ((buffer.get(6).toInt() and 0xFF * 128 + (buffer.get(7).toInt() and 0xFF)).toFloat() / 10)
@@ -960,6 +1086,7 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 处理系统扩展 */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun handleSystemExpand(data: ByteArray) {
         val buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
 
