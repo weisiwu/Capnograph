@@ -31,6 +31,7 @@ import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.RangeSelector
 import com.wldmedical.capnoeasy.components.RangeType
 import com.wldmedical.capnoeasy.components.ToastData
+import kotlin.math.floor
 
 /***
  * 设置二级页 - 报警
@@ -99,22 +100,24 @@ class AlertSettingActivity : BaseActivity() {
                         viewModel.updateLoadingData(
                             LoadingData(
                                 text = "正在设置",
-                                duration = 800,
-                                callback = {
-                                    blueToothKit.updateCO2UnitScale(
-                                        co2Unit = viewModel.CO2Unit.value,
-                                        co2Scale = viewModel.CO2Scale.value,
-                                        callback = { viewModel.clearXData() }
-                                    )
-                                    viewModel.updateToastData(
-                                        ToastData(
-                                            text = "设置成功",
-                                            showMask = false,
-                                            duration = InfinityDuration,
-                                        )
-                                    )
-                                }
+                                duration = InfinityDuration,
                             )
+                        )
+                        blueToothKit.updateAlertRange(
+                            co2Low = minETCO2,
+                            co2Up = maxETCO2,
+                            rrLow = floor(minRR).toInt(),
+                            rrUp = floor(maxRR).toInt(),
+                            callback = {
+                                viewModel.clearXData()
+                                viewModel.updateToastData(
+                                    ToastData(
+                                        text = "设置成功",
+                                        showMask = false,
+                                        duration = InfinityDuration,
+                                    )
+                                )
+                            }
                         )
                     }
                 ) {

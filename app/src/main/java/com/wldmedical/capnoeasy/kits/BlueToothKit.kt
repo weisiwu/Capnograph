@@ -750,6 +750,27 @@ class BlueToothKit @Inject constructor(
     /** 调整ETCO2/RR的报警范围 */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
+    fun updateAlertRange(
+        co2Low: Float = 0f,
+        co2Up: Float = 0f,
+        rrLow: Int = 0,
+        rrUp: Int = 0,
+        callback: (() -> Unit)? = null
+    ) {
+        taskQueue.addTasks(
+            listOf(
+                Runnable { sendStopContinuous() },
+                Runnable { innerUpdateAlertRange(co2Low, co2Up, rrLow, rrUp) },
+                Runnable { sendContinuous() },
+                Runnable { callback?.invoke() }
+            )
+        )
+        taskQueue.executeTask()
+    }
+
+    /** 调整ETCO2/RR的报警范围 */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    @SuppressLint("MissingPermission")
     fun innerUpdateAlertRange(
         co2Low: Float = 0f,
         co2Up: Float = 0f,
