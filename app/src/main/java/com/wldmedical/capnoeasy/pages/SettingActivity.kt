@@ -2,7 +2,10 @@ package com.wldmedical.capnoeasy.pages
 
 import android.content.Intent
 import android.view.WindowManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.core.app.ActivityOptionsCompat
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.SettingList
@@ -19,7 +22,10 @@ class SettingActivity : BaseActivity() {
 
     @Composable
     override fun Content() {
-        SettingList(
+        val options = ActivityOptionsCompat.makeCustomAnimation(this, 0, 0)
+        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
+
+         SettingList(
             settings = settings,
             onSettingClick = { setting ->
                 var couldJump = true
@@ -62,7 +68,7 @@ class SettingActivity : BaseActivity() {
                     }
                 }
                 if (couldJump) {
-                    this.startActivity(intent)
+                    launcher.launch(intent, options)
                 }
             }
         )
