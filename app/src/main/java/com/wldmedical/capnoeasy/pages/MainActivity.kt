@@ -2,7 +2,9 @@ package com.wldmedical.capnoeasy.pages
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.wldmedical.capnoeasy.PageScene
@@ -11,7 +13,9 @@ import com.wldmedical.capnoeasy.components.EtCo2LineChart
 import com.wldmedical.capnoeasy.components.EtCo2Table
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
+import com.wldmedical.capnoeasy.kits.maxXPoints
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
+import kotlinx.coroutines.flow.collectLatest
 
 /***
  * 主页
@@ -50,20 +54,36 @@ class MainActivity : BaseActivity() {
     @Composable
     override fun Content() {
         val modelProducer = remember { CartesianChartModelProducer() }
-        LaunchedEffect(Unit) {
-            modelProducer.runTransaction {
-                lineSeries {
-                    series(13, 8, 7, 12, 0, 1, 15, 14, 0, 11, 6, 12, 0, 11, 12, 11)
+        val emptyList = Array(size = maxXPoints, init = { 0 })
+
+        LaunchedEffect(blueToothKit.dataFlow) { // 监听 bluetoothKit 实例的变化
+            blueToothKit.dataFlow.collectLatest { newData -> // 收集 Flow 的数据
+                if (newData.size > 0) {
+                    val restLen = maxXPoints - newData.size
+                    val restList = List(size = restLen, init = { 0f })
+                    val intList = newData.map { it.value }
+                    val resList = restList + intList
+                    println("wswTest 共仓类似是 ${resList.size}")
+                    modelProducer.runTransaction {
+                        lineSeries { series(resList) }
+                    }
+                } else {
+                    modelProducer.runTransaction {
+                        lineSeries { series(emptyList.toList()) }
+                    }
                 }
             }
         }
 
         CapnoEasyTheme {
-            EtCo2LineChart(modelProducer)
+            EtCo2LineChart(
+                modelProducer,
+                maxY = viewModel.CO2Scale.value.value.toDouble()
+            )
         }
 
         EtCo2Table(
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }

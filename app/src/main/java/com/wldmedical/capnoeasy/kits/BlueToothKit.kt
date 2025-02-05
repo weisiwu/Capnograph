@@ -35,9 +35,16 @@ import com.wldmedical.capnoeasy.CO2_SCALE
 import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.WF_SPEED
 import dagger.hilt.android.qualifiers.ActivityContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.text.SimpleDateFormat
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.regex.Pattern
 import javax.inject.Inject
 import kotlin.experimental.and
@@ -63,7 +70,7 @@ data class DataPoint(val index: Int, val value: Float)
 // 记录波形数据用格式
 data class CO2WavePointData(
     val co2: Float = 0f,
-    val RR: UInt = 0u,
+    val RR: Int = 0,
     val ETCO2: Float = 0f,
     val FiCO2: Float = 0f,
     val index: Int = 0
@@ -240,13 +247,22 @@ class BlueToothKit @Inject constructor(
         }
 
         // 用于接收设备发送的通知数据。
+        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?
         ) {
             // 收到通知数据
-            if (characteristic != null) {
-//                println("wswTset 接收到的数据问题")
+            if (characteristic?.uuid == BLECharacteristicUUID.BLEReceiveDataCha.value) {
+                receivedArray.addAll(listOf(characteristic.value))
+
+                CoroutineScope(Dispatchers.Default).launch {
+                    if (receivedArray.size >= 20) {
+                        val firstArray = getCMDDataArray()
+                        println("wswTest 接收到的数据是==> ${firstArray.toList()} ||| ${receivedArray.size}")
+                        getSpecificValue(firstArray.toByteArray());
+                    }
+                }
             }
         }
 
@@ -294,8 +310,6 @@ class BlueToothKit @Inject constructor(
 
     var moduleParamsService: BluetoothGattService? = null
 
-    var moduleParamsCharacteristic: BluetoothGattCharacteristic? = null
-
     // 蓝牙启动后需要监听的特征值列表
     val catchCharacteristic = mutableListOf<BluetoothGattCharacteristic>()
 
@@ -319,9 +333,18 @@ class BlueToothKit @Inject constructor(
 
     // 已经接收到的数据 - 已经解析出来的
     public val receivedCO2WavedData = mutableListOf<DataPoint>()
+    private val _dataFlow = MutableStateFlow<List<DataPoint>>(emptyList())
+    val dataFlow: StateFlow<List<DataPoint>> = _dataFlow
+    fun updateReceivedData(newData: List<DataPoint>) {
+        if (newData.size > 0) {
+            _dataFlow.value = newData.toList() // 更新 Flow 的值
+        }
+//        receivedCO2WavedData.clear()
+//        receivedCO2WavedData.addAll(newData)
+    }
 
     // 已经接收到的波次数据 - 原始数据，解析出后清空
-    public val receivedArray = mutableListOf<UInt>()
+    public val receivedArray: BlockingQueue<ByteArray> = LinkedBlockingQueue()
 
     // 准备发送给设备的命令数据 - 发送后清空
     public val sendArray = mutableListOf<Byte>()
@@ -336,7 +359,7 @@ class BlueToothKit @Inject constructor(
     public var currentETCO2: Float = 0f
 
     // 当前呼吸率
-    public var currentRespiratoryRate: UInt = 0u
+    public var currentRespiratoryRate: Int = 0
 
     // 当前FiCO2
     public var currentFiCO2: Float = 0f
@@ -896,42 +919,81 @@ class BlueToothKit @Inject constructor(
         }
     }
 
-    fun getCMDDataArray(): List<UInt> {
-        var getArray: List<UInt> = listOf();
-        val command: UByte = receivedArray[0].toUByte()
+    fun getCMDDataArray(): List<Byte> {
+        val getArray: MutableList<Byte> = mutableListOf() // 使用 MutableList 存储数据
+        val command: Int = receivedArray.peek()?.get(0)?.toUByte()?.toInt() ?: 0 // 获取队首元素，如果队列为空则返回0
+        println("wswTest command 是什么${command}")
 
         // 从接受到数据头部不停的向后移动，直到获取指令类型
-        while (receivedArray.size > 0 && !supportCMDs.contains(command.toInt())) {
-            receivedArray.removeAt(0)
+        while (receivedArray.isNotEmpty() && !supportCMDs.contains(command)) {
+            receivedArray.poll() // 移除队首元素
         }
 
         // 数据长度为空，排除
-        // 当长度为1的时候
+        if (receivedArray.isEmpty()) {
+            return getArray
+        }
+
         // 根据NBF获取所有数据: 第二位是NBF长度，但是整体需要加上额外两位(指令位、NBF位)
-        // 只有CMD，连NBF都没有，属于异常响应
-        if (receivedArray.size <= 0) {
-            return getArray;
+        // 当长度为1的时候 有CMD，连NBF都没有，属于异常响应
+        if (receivedArray.size == 1) {
+            return getArray
         }
 
         // 取此段指令所有数据: CMD + NBF + DB + CKS
-        val endIndex = (receivedArray[1] + 2u).toInt()
+        // TODO: 会有以下bug，导致崩溃
+//        2025-02-05 23:20:14.141  9412-9604  AndroidRuntime          com.wldmedical.capnoeasy             E  FATAL EXCEPTION: DefaultDispatcher-worker-2
+//        Process: com.wldmedical.capnoeasy, PID: 9412
+//        java.lang.ArrayIndexOutOfBoundsException: length=1; index=1
+//        at com.wldmedical.capnoeasy.kits.BlueToothKit.getCMDDataArray(BlueToothKit.kt:933)
+//        at com.wldmedical.capnoeasy.kits.BlueToothKit$gattCallback$1$onCharacteristicChanged$1.invokeSuspend(BlueToothKit.kt:259)
+//        at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+//        at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+//        at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
+//        at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:829)
+//        at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
+//        at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
+//        Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [StandaloneCoroutine{Cancelling}@b086fe, Dispatchers.Default]
+        var nbf: Int = 0
+        try {
+            nbf = receivedArray.peek()?.get(1)?.toUByte()?.toInt() ?: 0 // 获取NBF长度
+        } catch (e: NullPointerException) {
+            println("wswTest NullPointerException: ${e.message}")
+            // 处理空指针异常，例如返回空列表或默认值
+            return getArray
+        } catch (e: IndexOutOfBoundsException) {
+            println("wswTest IndexOutOfBoundsException: ${e.message}")
+            // 处理索引越界异常
+            return getArray
+        } catch (e: NumberFormatException) {
+            println("wswTest NumberFormatException: ${e.message}")
+            // 处理数字格式异常
+            return getArray
+        } catch (e: Exception) {
+            println("wswTest Exception: ${e.message}")
+            // 处理其他异常
+            return getArray
+        }
+        val endIndex = nbf + 2
 
-        if (endIndex <= receivedArray.size) {
-            getArray = receivedArray.subList(0, endIndex)
-            receivedArray.subList(0, endIndex).clear() // 移除已经读取的数据
+        if (receivedArray.size >= endIndex) {
+            // TODO: 这里没有明白，为什么会返回单个的
+            return receivedArray.take().toList()
         }
 
-        return getArray;
+        return getArray
     }
 
     /** 从蓝牙返回数据中解析返回值 */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun getSpecificValue(firstArray: ByteArray) {
+        if (firstArray.size < 2) {
+            return
+        }
         // 使用 ByteBuffer 直接访问内存，更安全高效
-        val buffer = ByteBuffer.wrap(firstArray).order(ByteOrder.LITTLE_ENDIAN)
-        val commandM = buffer.get().toInt()
-        val NBFM = buffer.get().toInt() and 0xFF // 转换为无符号整数
-        val cksM = firstArray.last().toInt()
+        val commandM = firstArray[0].toUByte().toInt()
+        val NBFM = firstArray[1].toUByte().toInt() // 转换为无符号整数
+        val cksM = firstArray.last().toUByte().toInt()
 
         if (!supportCMDs.contains(commandM)) {
             return
@@ -949,39 +1011,37 @@ class BlueToothKit @Inject constructor(
         }
 
         when (commandM) {
-            SensorCommand.CO2Waveform.value -> handleCO2Waveform(firstArray, NBFM) // 传递原始数组
-            SensorCommand.Settings.value -> handleSettings(firstArray) // 传递原始数组
-            SensorCommand.GetSoftwareRevision.value -> handleSofrWareVersion(firstArray) // 传递原始数组
-            SensorCommand.Expand.value -> handleSystemExpand(firstArray) // 传递原始数组
+            SensorCommand.CO2Waveform.value -> handleCO2Waveform(firstArray, NBFM)
+            SensorCommand.Settings.value -> handleSettings(firstArray)
+            SensorCommand.GetSoftwareRevision.value -> handleSofrWareVersion(firstArray)
+            SensorCommand.Expand.value -> handleSystemExpand(firstArray)
             else -> println("未知指令 $commandM")
         }
     }
 
     /** 处理CO2波形数据 */
     private fun handleCO2Waveform(data: ByteArray, NBFM: Int) {
-        val buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
-
-        val DPIM = buffer.get(5)
-        currentCO2 = (128 * buffer.get(3).toInt() and 0xFF + (buffer.get(4).toInt() and 0xFF) - 1000).toFloat() / 100
+        val DPIM = data[5].toUByte().toInt()
+        currentCO2 = (128 * data[3].toUByte().toInt() + (data[4].toUByte().toInt()) - 1000).toFloat() / 100
 
         if (NBFM > 4) {
             when (DPIM) {
-                ISBState80H.CO2WorkStatus.value.toByte() -> {
+                ISBState80H.CO2WorkStatus.value -> {
                     handleCO2Status(data, NBFM)
-                    isNeedZeroCorrect = (buffer.get(7) and 0x0C) == 0x0C.toByte()
-                    isAdaptorInvalid = (buffer.get(6) and 0x02) == 0x02.toByte()
-                    isAdaptorPolluted = currentCO2 < 0 && (buffer.get(6) and 0x01) == 1.toByte()
+                    isNeedZeroCorrect = (data[7].toUByte().toInt() and 0x0C) == 0x0C
+                    isAdaptorInvalid = (data[6].toUByte().toInt() and 0x02) == 0x02
+                    isAdaptorPolluted = currentCO2 < 0 && (data[6].toUByte().toInt() and 0x01) == 1
                 }
-                ISBState80H.ETCO2Value.value.toByte() -> {
-                    currentETCO2 = (buffer.get(6).toInt() and 0xFF * 128 + (buffer.get(7).toInt() and 0xFF)).toFloat() / 10
+                ISBState80H.ETCO2Value.value -> {
+                    currentETCO2 = (data[6].toUByte().toInt() * 128 + (data[7].toUByte().toInt())).toFloat() / 10
                 }
-                ISBState80H.RRValue.value.toByte() -> {
-                    currentRespiratoryRate = buffer.get(6).toUInt() and 0xFFu * 128u + (buffer.get(7).toUInt() and 0xFFu)
+                ISBState80H.RRValue.value -> {
+                    currentRespiratoryRate = data[6].toUByte().toInt() * 128 + (data[7].toUByte().toInt())
                 }
-                ISBState80H.FiCO2Value.value.toByte() -> {
-                    currentFiCO2 = ((buffer.get(6).toInt() and 0xFF * 128 + (buffer.get(7).toInt() and 0xFF)).toFloat() / 10)
+                ISBState80H.FiCO2Value.value -> {
+                    currentFiCO2 = ((data[6].toUByte().toInt().toInt() and 0xFF * 128 + (data[7].toUByte().toInt().toInt() and 0xFF)).toFloat() / 10)
                 }
-                ISBState80H.DetectBreath.value.toByte() -> currentBreathe = true
+                ISBState80H.DetectBreath.value -> currentBreathe = true
                 else -> println("CO2Waveform DPI 不匹配")
             }
 
@@ -1010,10 +1070,13 @@ class BlueToothKit @Inject constructor(
                 index = totalCO2WavedData.size
             )
         )
+//        println("wswTest 解析出来的二氧化碳数据 ${currentCO2} __ ${currentRespiratoryRate}")
+//        println("wswTest这个的长度是 ${receivedCO2WavedData.size}")
 
         if (receivedCO2WavedData.size > maxXPoints) {
             receivedCO2WavedData.removeAt(0)
         }
+        updateReceivedData(receivedCO2WavedData)
     }
 
     /** 处理校零，校零结果会在80h中获取，DPI=1 */
@@ -1022,9 +1085,7 @@ class BlueToothKit @Inject constructor(
             return
         }
 
-        val buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
-
-        val ZSBM = buffer.get(7).toInt() and 0x0C // 使用 & 0x0C 提取相关位
+        val ZSBM = data[7].toUByte().toInt() and 0x0C // 使用 & 0x0C 提取相关位
 
         when (ZSBM) {
             ZSBState.NOZeroning.value -> {
@@ -1040,34 +1101,32 @@ class BlueToothKit @Inject constructor(
             else -> isCorrectZero = false
         }
 
-        isAsphyxiation = (buffer.get(6).toInt() and 0x40) == 0x40 // 检查是否置位
+        isAsphyxiation = (data[6].toUByte().toInt().toInt() and 0x40) == 0x40 // 检查是否置位
     }
 
     /** 处理设置： 序列号、硬件版本、设备名称 */
     private fun handleSettings(data: ByteArray) {
-        val buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN) // 假设小端序
-
-        when (buffer.get(2).toInt() and 0xFF) { // 使用 Int 类型进行比较
+        when (data[2].toUByte().toInt() and 0xFF) { // 使用 Int 类型进行比较
             ISBState84H.GetSensorPartNumber.value -> {
                 deviceName = ""
                 for (i in 0..9) {
-                    val uScalar = buffer.get(i + 3).toInt() and 0xFF
+                    val uScalar = (data[i].toUByte().toInt()+ 3) and 0xFF
                     deviceName += uScalar.toChar().toString() // 使用 toChar() 转换为字符
                 }
             }
             ISBState84H.GetSerialNumber.value -> {
-                val DB1 = buffer.get(3).toDouble() * 2.0.pow(28)
-                val DB2 = buffer.get(4).toDouble() * 2.0.pow(21)
-                val DB3 = buffer.get(5).toDouble() * 2.0.pow(14)
-                val DB4 = buffer.get(6).toDouble() * 2.0.pow(7)
-                val DB5 = buffer.get(7).toDouble()
+                val DB1 = data[3].toUByte().toInt().toDouble() * 2.0.pow(28)
+                val DB2 = data[4].toUByte().toInt().toDouble() * 2.0.pow(21)
+                val DB3 = data[5].toUByte().toInt().toDouble() * 2.0.pow(14)
+                val DB4 = data[6].toUByte().toInt().toDouble() * 2.0.pow(7)
+                val DB5 = data[7].toUByte().toInt().toDouble()
                 val sNum = DB1 + DB2 + DB3 + DB4 + DB5
                 sSerialNumber = String.format("%.0f", sNum)
             }
             ISBState84H.GetHardWareRevision.value -> {
-                val DB1 = buffer.get(3).toInt() and 0xFF
-                val DB2 = buffer.get(4).toInt() and 0xFF
-                val DB3 = buffer.get(5).toInt() and 0xFF
+                val DB1 = data[3].toUByte().toInt()
+                val DB2 = data[4].toUByte().toInt()
+                val DB3 = data[5].toUByte().toInt()
                 sHardwareVersion = "${DB1.toChar()}.${DB2.toChar()}.${DB3.toChar()}"
             }
             else -> println("模块参数设置 未知ISB")
@@ -1076,12 +1135,11 @@ class BlueToothKit @Inject constructor(
 
     /** 获取生产日期、软件版本 */
     private fun handleSofrWareVersion(data: ByteArray) {
-        val buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
-        val NBFM = buffer.get(1).toInt() and 0xFF
+        val NBFM = data[1].toUByte().toInt() and 0xFF
         var rawSoftWareVersion = ""
 
         for (i in 0 until NBFM) {
-            val uScalar = buffer.get(i + 3).toInt() and 0xFF
+            val uScalar = (data[i].toUByte().toInt()+ 3) and 0xFF
             rawSoftWareVersion += uScalar.toChar().toString()
         }
 
@@ -1127,13 +1185,13 @@ class BlueToothKit @Inject constructor(
     private fun handleSystemExpand(data: ByteArray) {
         val buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
 
-        when (buffer.get(2).toInt() and 0xFF) {
+        when (data[2].toUByte().toInt().toInt() and 0xFF) {
             ISBStateF2H.CO2Scale.value -> {
                 sendContinuous()
             }
             ISBStateF2H.EnergyStatus.value -> {
-                isLowerEnergy = (buffer.get(6).toInt() and 0xFF) == 1
-                println("查询是否低电量的DB ${buffer.get(3)}-${buffer.get(4)}-${buffer.get(5)}-${buffer.get(6)}")
+                isLowerEnergy = (data[6].toUByte().toInt().toInt() and 0xFF) == 1
+                println("查询是否低电量的DB ${data[3].toUByte().toInt()}-${data[4].toUByte().toInt()}-${data[5].toUByte().toInt()}-${data[6].toUByte().toInt()}")
             }
             else -> println("扩展指令未知场景")
         }

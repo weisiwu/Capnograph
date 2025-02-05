@@ -41,9 +41,12 @@ import java.text.DecimalFormat
  * 所有一级页和二级页使用
  */
 @Composable
-fun EtCo2LineChart(modelProducer: CartesianChartModelProducer) {
+fun EtCo2LineChart(
+    modelProducer: CartesianChartModelProducer,
+    maxY: Double = 50.0
+) {
     val lineColor = Color(0xffa485e0)
-    val RangeProvider = CartesianLayerRangeProvider.fixed(maxY = 100.0)
+    val RangeProvider = CartesianLayerRangeProvider.fixed(maxY = maxY)
     val YDecimalFormat = DecimalFormat("#'s'")
     val BottomAxisValueFormatter = CartesianValueFormatter.decimal(YDecimalFormat)
 
@@ -79,6 +82,7 @@ fun EtCo2LineChart(modelProducer: CartesianChartModelProducer) {
                     ),
                     rangeProvider = RangeProvider,
                 ),
+                getXStep = { 80.0 },
                 startAxis = VerticalAxis.rememberStart(),
                 bottomAxis = HorizontalAxis.rememberBottom(valueFormatter = BottomAxisValueFormatter),
             ),
