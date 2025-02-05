@@ -644,21 +644,42 @@ class BlueToothKit @Inject constructor(
     /** 发送关机指令 */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
-    fun shutdown() {
-        sendArray.add(SensorCommand.Reset.value.toByte())
-        sendArray.add(0x01)
-        sendSavedData()
+    fun shutdown(callback: (() -> Unit)? = null) {
+        taskQueue.addTasks(
+            listOf(
+                Runnable { sendStopContinuous() },
+                Runnable {
+                    sendArray.add(SensorCommand.Reset.value.toByte())
+                    sendArray.add(0x01)
+                    sendSavedData()
+                },
+                Runnable { sendContinuous() },
+                Runnable { callback?.invoke() }
+            )
+        )
+        taskQueue.executeTask()
     }
 
     /** 发送校零指令 */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
-    fun correctZero() {
-        sendArray.add(SensorCommand.Zero.value.toByte())
-        sendArray.add(0x01)
-        sendSavedData()
-        // audioIns.stopAudio()
-        // resetInstance()
+    fun correctZero(callback: (() -> Unit)? = null) {
+        taskQueue.addTasks(
+            listOf(
+                Runnable { sendStopContinuous() },
+                Runnable {
+                    sendArray.add(SensorCommand.Zero.value.toByte())
+                    sendArray.add(0x01)
+                    sendSavedData()
+                },
+                Runnable { sendContinuous() },
+                Runnable {
+                    Thread.sleep(10000)
+                    callback?.invoke()
+                }
+            )
+        )
+        taskQueue.executeTask()
     }
 
     /** 更新CO2单位/CO2Scale */
