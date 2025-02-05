@@ -99,10 +99,6 @@ const val unkownName = "未知设备"
  */
 class BlueToothKit @Inject constructor(
     @ActivityContext private val activity: Activity,
-    private val checkBlueToothFail: (() -> Unit)? = null, // 权限检查失败
-    private val SCAN_PERIOD: Long = 5000,
-    private val onScanFind: ((BluetoothDevice) -> Unit)? = null, // 扫描结束
-    private val scanFinish: (() -> Unit)? = null, // 扫描结束
 ) {
     /******************* 属性 *******************/
     // 获取主线程的 Handler
@@ -122,17 +118,17 @@ class BlueToothKit @Inject constructor(
         type: Int = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
         characteristic: BluetoothGattCharacteristic? = sendDataCharacteristic
     ) {
-        println("wswTest 达到这里开始发送")
         val result = connectedCapnoEasyGATT?.writeCharacteristic(
             characteristic!!,
             data!!,
             type
         )
-        println("wswTest 写入的结果 $result ${characteristic!!.uuid}")
     }
 
     // 是否正在扫描
     private var scanning = false
+
+    private val SCAN_PERIOD: Long = 5000
 
     // BLE蓝牙-扫描回调
     private val leScanCallback = object : ScanCallback() {
@@ -140,13 +136,15 @@ class BlueToothKit @Inject constructor(
             val device = result.device
             if (device != null && !discoveredPeripherals.contains(device)) {
                 discoveredPeripherals.add(device)
-                onScanFind?.invoke(device)
+                scanFind?.invoke(device)
             }
         }
 
         // 扫描失败
         override fun onScanFailed(errorCode: Int) {}
     }
+
+    private var scanFind: ((BluetoothDevice)-> Unit)? = null
 
     private var onDeviceConnectSuccess: (()-> Unit)? = null
 
@@ -260,7 +258,6 @@ class BlueToothKit @Inject constructor(
             status: Int
         ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                println("wswTest 执行任务中")
                 taskQueue.executeTask()
             }
         }
@@ -274,7 +271,7 @@ class BlueToothKit @Inject constructor(
                 val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
                 if (device != null && !discoveredPeripherals.contains(device)) {
                     discoveredPeripherals.add(device)
-                    onScanFind?.invoke(device)
+                    scanFind?.invoke(device)
                 }
             }
         }
@@ -481,7 +478,13 @@ class BlueToothKit @Inject constructor(
 
     // 扫描流程集合
     @RequiresApi(Build.VERSION_CODES.S)
-    public fun searchDevices(type: BluetoothType = BluetoothType.ALL) {
+    public fun searchDevices(
+        type: BluetoothType = BluetoothType.ALL,
+        scanFinish: (() -> Unit)? = null, // 扫描结束
+        scanFind: ((BluetoothDevice) -> Unit)? = null, // 扫描结束
+        checkBlueToothFail: (() -> Unit)? = null
+    ) {
+        this.scanFind = scanFind
         // 检查蓝牙状态是否正确
         if (checkBluetoothStatus() != CHECK_SUCCESS) {
             checkBlueToothFail?.invoke()
@@ -527,17 +530,19 @@ class BlueToothKit @Inject constructor(
         // 发送数据
         if (filterList.isNotEmpty()) {
             sendDataCharacteristic = filterList[0]
-            // TODO: 默认值需要下掉 
+            // TODO: 默认值需要修改
             taskQueue.addTasks(
                 listOf(
                     // 读取单位前，必须要先停止设置
                     Runnable { sendStopContinuous() },
                     // 显示设置
-                    Runnable { innerUpdateCO2UnitScale(CO2_UNIT.MMHG, CO2_SCALE.SMALL) },
+                    Runnable { updateCO2Unit(CO2_UNIT.MMHG) },
+                    Runnable { updateCO2Scale(CO2_SCALE.MIDDLE) },
                     // 模块设置
-                    Runnable { innerUpdateNoBreathAndGasCompensation(asphyxiationTime, oxygenCompensation) },
+                    Runnable { updateNoBreath(asphyxiationTime) },
+                    Runnable { updateGasCompensation(oxygenCompensation) },
                     // 报警设置
-                    Runnable { innerUpdateAlertRange(10f,13.1f, 2,10) },
+                    Runnable { innerUpdateAlertRange(10f,20f, 10, 20) },
                     // 设置结束后，开始尝试接受数据
                     Runnable { sendContinuous() },
                     // 返回首页
@@ -591,12 +596,9 @@ class BlueToothKit @Inject constructor(
     @SuppressLint("MissingPermission")
     fun sendSavedData() {
         if (connectedCapnoEasyGATT == null || sendDataCharacteristic == null) {
-            println("wswTest 没有发送，直接退出来  ${connectedCapnoEasyGATT}")
-            println("wswTest sendDataCharacteristic ${sendDataCharacteristic}")
             resetSendData()
             return
         }
-        println("wswTest 继续向后面进行发送")
         appendCKS()
         writeDataToDevice()
         resetSendData()
@@ -670,25 +672,21 @@ class BlueToothKit @Inject constructor(
     ) {
         taskQueue.addTasks(
             listOf(
-                Runnable { innerUpdateCO2UnitScale(co2Unit, co2Scale) },
+                Runnable { sendStopContinuous() },
+                Runnable { updateCO2Unit(co2Unit) },
+                Runnable { updateCO2Scale(co2Scale) },
+                Runnable { sendContinuous() },
                 Runnable { callback?.invoke() }
             )
         )
         taskQueue.executeTask()
-//        taskQueue.executeAllTasks()
-        println("wswTest 执行所有的任务")
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
-    fun innerUpdateCO2UnitScale(
+    fun updateCO2Unit(
         co2Unit: CO2_UNIT? = null,
-        co2Scale: CO2_SCALE? = null,
-        wfSpeed: WF_SPEED? = null,
     ) {
-
-        println("触发了更新的任务 ${co2Unit}")
-        println("触发了更新的任务2 ${co2Scale}")
         if (co2Unit != null) {
             // 设置CO2单位
             sendArray.add(SensorCommand.Settings.value.toByte())
@@ -705,7 +703,13 @@ class BlueToothKit @Inject constructor(
             }
             sendSavedData()
         }
+    }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    @SuppressLint("MissingPermission")
+    fun updateCO2Scale(
+        co2Scale: CO2_SCALE? = null,
+    ) {
         if (co2Scale != null) {
             // 设置CO2Scale
             sendArray.add(SensorCommand.Expand.value.toByte())
@@ -772,11 +776,10 @@ class BlueToothKit @Inject constructor(
         sendSavedData()
     }
 
-    /** 设置模块参数: 窒息时间、氧气补偿 */
+    /** 设置模块参数: 窒息时间 */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    fun innerUpdateNoBreathAndGasCompensation(
+    fun updateNoBreath(
         newAsphyxiationTime: Int = 0,
-        newOxygenCompensation: Float = 0f
     ) {
         // 设置窒息时间
         sendArray.add(SensorCommand.Settings.value.toByte())
@@ -784,7 +787,13 @@ class BlueToothKit @Inject constructor(
         sendArray.add(ISBState84H.NoBreaths.value.toByte())
         sendArray.add(newAsphyxiationTime.toByte())
         sendSavedData()
+    }
 
+    /** 设置模块参数: 氧气补偿 */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun updateGasCompensation(
+        newOxygenCompensation: Float = 0f
+    ) {
         // 设置氧气补偿
         sendArray.add(SensorCommand.Settings.value.toByte())
         sendArray.add(0x06.toByte())
@@ -1067,5 +1076,21 @@ class BlueToothKit @Inject constructor(
             }
             else -> println("扩展指令未知场景")
         }
+    }
+}
+
+object BlueToothKitManager {
+    @SuppressLint("StaticFieldLeak")
+    lateinit var blueToothKit: BlueToothKit
+
+    fun initialize(
+        activity: Activity
+    ) {
+        if (::blueToothKit.isInitialized) {
+            return
+        }
+        blueToothKit = BlueToothKit(
+            activity = activity,
+        )
     }
 }

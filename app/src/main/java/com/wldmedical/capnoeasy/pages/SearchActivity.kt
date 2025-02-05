@@ -18,6 +18,8 @@ import com.wldmedical.capnoeasy.components.DeviceList
 import com.wldmedical.capnoeasy.components.DeviceType
 import com.wldmedical.capnoeasy.components.DeviceTypes
 import com.wldmedical.capnoeasy.components.LoadingData
+import com.wldmedical.capnoeasy.components.ToastData
+import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.components.TypeSwitch
 import com.wldmedical.capnoeasy.kits.unkownName
 import kotlinx.coroutines.Dispatchers
@@ -63,7 +65,29 @@ class SearchActivity : BaseActivity() {
                         text = "开始搜索${it.name ?: unkownName}"
                     )
                 )
-                blueToothKit.searchDevices()
+                blueToothKit.searchDevices(
+                    scanFinish = {
+                        viewModel.updateToastData(
+                            ToastData(
+                                text = "搜索结束",
+                                type = ToastType.SUCCESS,
+                                showMask = false
+                            )
+                        )
+                    },
+                    scanFind = {
+                        viewModel.updateDiscoveredPeripherals(it)
+                    },
+                    checkBlueToothFail = {
+                        viewModel.updateToastData(
+                            ToastData(
+                                text = "搜索失败",
+                                type = ToastType.FAIL,
+                                showMask = false
+                            )
+                        )
+                    }
+                )
             },
             onDeviceClick = {
                 blueToothKit.connectDevice(

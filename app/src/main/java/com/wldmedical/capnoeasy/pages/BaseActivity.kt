@@ -4,12 +4,9 @@ import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.ViewModelProvider
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.AlertModal
@@ -20,8 +17,10 @@ import com.wldmedical.capnoeasy.components.Toast
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.kits.BlueToothKit
+import com.wldmedical.capnoeasy.kits.BlueToothKitManager
 import com.wldmedical.capnoeasy.models.AppStateModel
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /***
  * 所有页面基类
@@ -104,28 +103,8 @@ open class BaseActivity : ComponentActivity() {
         this.viewModel.updateCurrentPage(this.pageScene)
     }
 
-    private fun checkBlueToothFail() {
-        viewModel.updateToastData(
-            ToastData(
-                text = "搜索失败",
-                type = ToastType.FAIL,
-                showMask = false
-            )
-        )
-    }
-
     private fun onScanFind(device: BluetoothDevice) {
         viewModel.updateDiscoveredPeripherals(device)
-    }
-
-    private fun scanFinish() {
-        viewModel.updateToastData(
-            ToastData(
-                text = "搜索结束",
-                type = ToastType.SUCCESS,
-                showMask = false
-            )
-        )
     }
 
     open fun onNavBarRightClick() {}
@@ -136,12 +115,8 @@ open class BaseActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this)[AppStateModel::class.java]
-        blueToothKit = BlueToothKit(
-            activity = this,
-            checkBlueToothFail = { checkBlueToothFail() },
-            onScanFind = { onScanFind(it) },
-            scanFinish = { scanFinish() }
-        )
+        BlueToothKitManager.initialize(this)
+        blueToothKit = BlueToothKitManager.blueToothKit
         enableEdgeToEdge()
         setContent {
             updatePageScene()
