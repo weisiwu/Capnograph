@@ -1,5 +1,7 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.annotation.SuppressLint
+import androidx.compose.animation.core.InfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.ETCO2Range
+import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.RRRange
 import com.wldmedical.capnoeasy.RR_UNIT
@@ -40,6 +43,7 @@ class AlertSettingActivity : BaseActivity() {
     var minRR: Float = 0f
     var maxRR: Float = 0f
 
+    @SuppressLint("NewApi")
     @Composable
     override fun Content() {
         minETCO2 = viewModel.alertETCO2Range.value.start
@@ -97,11 +101,16 @@ class AlertSettingActivity : BaseActivity() {
                                 text = "正在设置",
                                 duration = 800,
                                 callback = {
+                                    blueToothKit.updateCO2UnitScale(
+                                        co2Unit = viewModel.CO2Unit.value,
+                                        co2Scale = viewModel.CO2Scale.value,
+                                        callback = { viewModel.clearXData() }
+                                    )
                                     viewModel.updateToastData(
                                         ToastData(
                                             text = "设置成功",
                                             showMask = false,
-                                            duration = 600,
+                                            duration = InfinityDuration,
                                         )
                                     )
                                 }

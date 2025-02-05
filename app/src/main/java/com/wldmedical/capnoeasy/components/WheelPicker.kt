@@ -23,12 +23,12 @@ import androidx.compose.ui.unit.sp
 import com.sd.lib.compose.wheel_picker.FVerticalWheelPicker
 import com.sd.lib.compose.wheel_picker.FWheelPickerFocusVertical
 import com.sd.lib.compose.wheel_picker.rememberFWheelPickerState
-import com.wldmedical.capnoeasy.co2ScalesObj
+import com.wldmedical.capnoeasy.WF_SPEED
 import com.wldmedical.capnoeasy.co2UnitsObj
+import com.wldmedical.capnoeasy.wfSpeeds
 import com.wldmedical.capnoeasy.wfSpeedsObj
 import com.wldmedical.capnoeasy.wheelPickerConfig
 
-// TODO: 选择状态还没有搞定
 /**
  * App 通用滚动选择器
  * 适用于
@@ -109,7 +109,7 @@ fun RollerSelectorPreview() {
             )
 
             WheelPicker(
-                config = co2ScalesObj
+                config = wheelPickerConfig(items = wfSpeeds, title = "WF Speed", defaultValue = WF_SPEED.MIDDLE)
             )
 
             WheelPicker(

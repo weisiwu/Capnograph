@@ -1,7 +1,10 @@
 package com.wldmedical.capnoeasy.pages
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityOptionsCompat
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.DeviceList
 import com.wldmedical.capnoeasy.components.DeviceType
@@ -16,6 +20,9 @@ import com.wldmedical.capnoeasy.components.DeviceTypes
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.TypeSwitch
 import com.wldmedical.capnoeasy.kits.unkownName
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 /***
  * 搜素列表
@@ -29,6 +36,8 @@ class SearchActivity : BaseActivity() {
     override fun Content() {
         val selectedIndex = if (viewModel.connectType.value == null) 0 else DeviceTypes.indexOfFirst { type -> viewModel.connectType.value == type }
         val discoveredPeripherals = viewModel.discoveredPeripherals.collectAsState()
+        val options = ActivityOptionsCompat.makeCustomAnimation(this, 0, 0)
+        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
         TypeSwitch(
             selectedIndex = selectedIndex,
@@ -57,7 +66,18 @@ class SearchActivity : BaseActivity() {
                 blueToothKit.searchDevices()
             },
             onDeviceClick = {
-                blueToothKit.connectDevice(device = it)
+                blueToothKit.connectDevice(
+                    device = it,
+                    onSuccess = {
+                        viewModel.clearXData()
+                        viewModel.updateCurrentTab(1)
+                        viewModel.updateCurrentPage(PageScene.HOME_PAGE)
+                        val intent = Intent(this, MainActivity::class.java)
+                        GlobalScope.launch(Dispatchers.Main) { // 使用协程切换到主线程
+                            launcher.launch(intent, options)
+                        }
+                    }
+                )
                 viewModel.updateLoadingData(
                     LoadingData(
                         text = "开始链接设备${it.name ?: unkownName}"

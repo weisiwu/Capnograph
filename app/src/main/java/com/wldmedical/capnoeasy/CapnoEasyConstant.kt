@@ -31,15 +31,20 @@ val co2Units = listOf(CO2_UNIT.KPA, CO2_UNIT.MMHG, CO2_UNIT.PERCENT)
 val co2UnitsObj = wheelPickerConfig(items = co2Units, title = "CO2 单位", defaultValue = CO2_UNIT.MMHG)
 
 enum class CO2_SCALE(val rawValue: Float):BaseEnmu<Float> {
-    SMALL(6.7f),
-    MIDDLE(8f),
-    LARGE(10f);
+    SMALL(50f),
+    MIDDLE(60f),
+    LARGE(75f),
+
+    KPA_SMALL(6.7f),
+    KPA_MIDDLE(8f),
+    KPA_LARGE(10f),
+
+    PERCENT_SMALL(6.6f),
+    PERCENT_MIDDLE(7.9f),
+    PERCENT_LARGE(9.9f);
 
     override val value: Float = rawValue
 }
-
-val co2Scales = listOf(CO2_SCALE.SMALL, CO2_SCALE.MIDDLE, CO2_SCALE.LARGE)
-val co2ScalesObj = wheelPickerConfig(items = co2Scales, title = "CO2 Scale", defaultValue = CO2_SCALE.MIDDLE)
 
 enum class WF_SPEED(val rawValue: Float):BaseEnmu<Float> {
     SMALL(1f),
@@ -111,3 +116,5 @@ data class SystemIno(
     val isRadio: Boolean = false,
     val radios: Array<LanguageTypes>? = null
 )
+
+val InfinityDuration: Long = 1000000000

@@ -1,14 +1,11 @@
 package com.wldmedical.capnoeasy.models
 
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.wldmedical.capnoeasy.CO2_SCALE
 import com.wldmedical.capnoeasy.CO2_UNIT
@@ -104,8 +101,10 @@ class AppState @Inject constructor() {
     // CO2单位
     val CO2Unit: MutableState<CO2_UNIT> = mutableStateOf(CO2_UNIT.MMHG)
 
-    // CO2 Scale
     val CO2Scale: MutableState<CO2_SCALE> = mutableStateOf(CO2_SCALE.MIDDLE)
+
+    // 当前co2 scale
+    var co2Scales: MutableList<CO2_SCALE> = mutableListOf(CO2_SCALE.SMALL, CO2_SCALE.MIDDLE, CO2_SCALE.LARGE)
 
     // WF Speed
     val WFSpeed: MutableState<WF_SPEED> = mutableStateOf(WF_SPEED.MIDDLE)
@@ -299,6 +298,12 @@ class AppStateModel @Inject constructor(
     val CO2Scale = appState.CO2Scale
     fun updateCO2Scale(newVal: CO2_SCALE) {
         appState.CO2Scale.value = newVal
+    }
+
+    // 当前co2 scale
+    val co2Scales = appState.co2Scales
+    fun updateCo2Scales(newVal: MutableList<CO2_SCALE>) {
+        appState.co2Scales = newVal
     }
 
     // WF Speed

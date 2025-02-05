@@ -74,4 +74,47 @@ class BluetoothTaskQueue {
             lock.unlock()
         }
     }
+
+    /**
+     * 依次执行任务队列中的所有任务
+     */
+    fun executeAllTasks() {  // 修改方法名，更清晰地表达功能
+        lock.lock()
+        try {
+            if (isExecuting) return // 正在执行，无需重复执行
+
+            isExecuting = true
+            thread {
+                while (taskQueue.isNotEmpty()) { // 循环执行，直到队列为空
+                    val task = taskQueue.peek()
+                    try {
+                        task?.run()
+                        taskQueue.poll() // 任务执行成功，从队列中移除
+                    } catch (e: Exception) {
+                        println("wsw 任务执行失败：${e.message}")
+                        // 失败计数器（这里简化为3次）
+                        var retryCount = 0
+                        while (retryCount < 3) {
+                            retryCount++
+                            try {
+                                task?.run()
+                                taskQueue.poll() // 任务执行成功，从队列中移除
+                                break // 退出重试循环
+                            } catch (e: Exception) {
+                                println("wswTest 任务重试失败${retryCount}：${e.message}")
+                            }
+                        }
+                        if (retryCount == 3) {
+                            taskQueue.poll()
+                        }
+
+                    }
+                }
+                isExecuting = false // 所有任务执行完成，重置标志
+            }
+        } finally {
+            lock.unlock()
+        }
+    }
+
 }
