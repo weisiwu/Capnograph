@@ -1,5 +1,7 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.O2_UNIT
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.TIME_UNIT
@@ -39,6 +42,7 @@ class ModuleSettingActivity : BaseActivity() {
     var asphyxiationTime: Int = 0
     var o2Compensation: Float = 0f
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @Composable
     override fun Content() {
         asphyxiationTime = viewModel.asphyxiationTime.value
@@ -84,17 +88,22 @@ class ModuleSettingActivity : BaseActivity() {
                         viewModel.updateLoadingData(
                             LoadingData(
                                 text = "正在设置",
-                                duration = 800,
-                                callback = {
-                                    viewModel.updateToastData(
-                                        ToastData(
-                                            text = "设置成功",
-                                            showMask = false,
-                                            duration = 600,
-                                        )
-                                    )
-                                }
+                                duration = InfinityDuration,
                             )
+                        )
+                        blueToothKit.updateNoBreathAndCompensation(
+                            asphyxiationTime,
+                            o2Compensation,
+                            callback = {
+                                viewModel.clearXData()
+                                viewModel.updateToastData(
+                                    ToastData(
+                                        text = "设置成功",
+                                        showMask = false,
+                                        duration = 800,
+                                    )
+                                )
+                            }
                         )
                     }
                 ) {

@@ -114,7 +114,7 @@ class AlertSettingActivity : BaseActivity() {
                                     ToastData(
                                         text = "设置成功",
                                         showMask = false,
-                                        duration = InfinityDuration,
+                                        duration = 800,
                                     )
                                 )
                             }

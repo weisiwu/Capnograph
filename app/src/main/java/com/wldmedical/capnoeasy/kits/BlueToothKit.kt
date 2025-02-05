@@ -797,6 +797,25 @@ class BlueToothKit @Inject constructor(
         sendSavedData()
     }
 
+    /** 设置模块参数: 窒息时间/氧气补偿 */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun updateNoBreathAndCompensation(
+        newAsphyxiationTime: Int = 0,
+        newOxygenCompensation: Float = 0f,
+        callback: (() -> Unit)? = null
+    ) {
+        taskQueue.addTasks(
+            listOf(
+                Runnable { sendStopContinuous() },
+                Runnable { updateNoBreath(newAsphyxiationTime) },
+                Runnable { updateGasCompensation(newOxygenCompensation) },
+                Runnable { sendContinuous() },
+                Runnable { callback?.invoke() }
+            )
+        )
+        taskQueue.executeTask()
+    }
+
     /** 设置模块参数: 窒息时间 */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun updateNoBreath(
