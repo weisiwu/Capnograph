@@ -84,10 +84,10 @@ class AppState @Inject constructor() {
     val patientName: MutableState<String?> = mutableStateOf(null)
 
     // 性别
-    val patientGender: MutableState<GENDER> = mutableStateOf(GENDER.MALE)
+    val patientGender: MutableState<GENDER?> = mutableStateOf(null)
 
     // 年龄
-    val patientAge: MutableState<Int> = mutableIntStateOf(0)
+    val patientAge: MutableState<Int?> = mutableStateOf(null)
     
     /***
      * 设置相关

@@ -75,7 +75,7 @@ fun DeviceList(
             .fillMaxWidth()
             .heightIn(min = deviceListMinHeight, max = deviceListMaxHeight)
     ) {
-        if(devices.size == 0) {
+        if(devices.isEmpty()) {
             Column (
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -84,7 +84,7 @@ fun DeviceList(
                 Image(
                     painter = painterResource(R.drawable.empty_device_list),
                     contentDescription = emptyAlert,
-                    modifier = Modifier.size(150.dp).padding(bottom = 16.dp)
+                    modifier = Modifier.size(150.dp).padding(bottom = 16.dp, top = 16.dp)
                 )
                 Text(
                     text = emptyAlert,

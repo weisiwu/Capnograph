@@ -40,24 +40,40 @@ fun AttributeLine(
     attribute: Atribute,
     onInputChange: ((newVal: String) -> Unit)? = null,
 ) {
-    var value = ""
-    when(attribute.viewModelName) {
-        "rr" -> value = viewModel.rr.value.toString()
-        "etCO2" -> value = viewModel.etCO2.value.toString()
-        "patientName" -> value = viewModel.patientName.value ?: ""
-        "patientGender" -> value = viewModel.patientGender.value.title
-        "patientAge" -> value = viewModel.patientAge.value.toString()
-        else -> value = viewModel.rr.value.toString()
+    val value = when(attribute.viewModelName) {
+        "rr" -> viewModel.rr.value.toString()
+        "etCO2" -> viewModel.etCO2.value.toString()
+        "patientName" -> viewModel.patientName.value ?: ""
+        "patientGender" -> if(viewModel.patientGender.value == null) "" else viewModel.patientGender.value!!.title
+        "patientAge" -> if(viewModel.patientAge.value == null) "" else viewModel.patientAge.value.toString()
+        else -> viewModel.rr.value.toString()
     }
-    
+    // 由于jet compose 中的TextField组件内padding无法设置调整，所以通过调整外padding来控制
+    val rowModifier = if(attribute.isSelect) {
+        Modifier.padding(start = 28.dp, end = 29.dp)
+    } else if (attribute.editable) {
+        Modifier.padding(start = 28.dp, end = 13.dp)
+    } else {
+        Modifier.padding(start = 28.dp, end = 28.dp)
+    }
+
+    var valueFontWeight = FontWeight.Bold
+    var valueText = value
+    var valueColor = Color(0xff1D2129)
+
+    if (value.isEmpty()) {
+        valueFontWeight = FontWeight.Thin
+        valueText = attribute.placeholder
+        valueColor = Color.Gray
+    }
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = rowModifier
             .fillMaxWidth()
             .wrapContentHeight()
             .background(Color.Transparent)
-            .padding(start = 28.dp, end = 28.dp)
     ) {
         Column (
             verticalArrangement = Arrangement.Center,
@@ -95,10 +111,10 @@ fun AttributeLine(
                     }
             ) {
                 Text(
-                    text = if (value != "") value else attribute.placeholder,
-                    fontWeight = FontWeight.Bold,
+                    text = valueText,
+                    fontWeight = valueFontWeight,
                     fontSize = 16.sp,
-                    color = Color(0xff1D2129),
+                    color = valueColor,
                     modifier = Modifier
                 )
             }
@@ -147,7 +163,8 @@ fun AttributeLine(
                     Text(
                         textAlign = TextAlign.End,
                         text = attribute.placeholder,
-                        color = Color(0xff1D2129),
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Light,
                         modifier = Modifier.fillMaxWidth()
                     )
                 },
@@ -159,10 +176,10 @@ fun AttributeLine(
                     .height(baseRowHeight)
             ) {
                 Text(
-                    text = if (value != "") value else attribute.placeholder,
-                    fontWeight = FontWeight.Bold,
+                    text = valueText,
+                    fontWeight = valueFontWeight,
                     fontSize = 16.sp,
-                    color = Color(0xff1D2129),
+                    color = valueColor,
                     modifier = Modifier
                 )
             }
@@ -209,6 +226,10 @@ fun EtCo2Table(
 @Composable
 fun EtCo2TablePreview() {
     CapnoEasyTheme {
-        EtCo2Table(viewModel = AppStateModel(appState = AppState()))
+        Row(
+            modifier = Modifier.background(Color.White)
+        ) {
+            EtCo2Table(viewModel = AppStateModel(appState = AppState()))
+        }
     }
 }
