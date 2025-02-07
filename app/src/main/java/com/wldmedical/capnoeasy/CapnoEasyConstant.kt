@@ -118,3 +118,5 @@ data class SystemIno(
 )
 
 val InfinityDuration: Long = 1000000000
+
+val patientParams = "patient"

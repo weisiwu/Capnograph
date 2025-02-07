@@ -16,7 +16,9 @@ import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.Toast
 import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.kits.BlueToothKitManager
-import com.wldmedical.capnoeasy.kits.PrintProtocalKit
+import com.wldmedical.capnoeasy.kits.LocalStorageKit
+import com.wldmedical.capnoeasy.kits.LocalStorageKitManager
+import com.wldmedical.capnoeasy.kits.PrintProtocalKitManager
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.AndroidEntryPoint
@@ -98,6 +100,8 @@ open class BaseActivity : ComponentActivity() {
 
     lateinit var printProtocalKit: HotmeltPinter
 
+    lateinit var localStorageKit: LocalStorageKit
+
     open val pageScene = PageScene.HOME_PAGE
 
     open fun updatePageScene() {
@@ -117,9 +121,12 @@ open class BaseActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this)[AppStateModel::class.java]
         BlueToothKitManager.initialize(this)
-        PrintProtocalKit.initialize()
+        PrintProtocalKitManager.initialize()
+        LocalStorageKitManager.initialize(this)
         blueToothKit = BlueToothKitManager.blueToothKit
-        printProtocalKit = PrintProtocalKit.printProtocalKit
+        printProtocalKit = PrintProtocalKitManager.printProtocalKit
+        localStorageKit = LocalStorageKitManager.localStorageKit
+
         enableEdgeToEdge()
         setContent {
             updatePageScene()

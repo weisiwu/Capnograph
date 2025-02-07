@@ -1,9 +1,14 @@
 package com.wldmedical.capnoeasy.components
 
+import android.content.Intent
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +30,8 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -38,49 +45,25 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityOptionsCompat
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.kits.GROUP_BY
+import com.wldmedical.capnoeasy.kits.Group
+import com.wldmedical.capnoeasy.kits.Groups
+import com.wldmedical.capnoeasy.kits.Patient
+import com.wldmedical.capnoeasy.kits.Record
+import com.wldmedical.capnoeasy.pages.HistoryRecordDetailActivity
+import com.wldmedical.capnoeasy.patientParams
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.Locale
-import java.util.UUID
 
 val emptyRecordAlert = "没有历史波形数据"
 val formatter = DateTimeFormatter.ofPattern("yyyy年M月d日HH:mm:ss", Locale.CHINA)
 
-enum class GROUP_BY {
-    ALL,
-    PATIENT,
-    DATE
-}
-
-data class Group(
-    val type: GROUP_BY = GROUP_BY.ALL,
-    val name: String,
-)
-
-val Groups = listOf(
-    Group(name = "全部", type = GROUP_BY.ALL),
-    Group(name = "病人", type = GROUP_BY.PATIENT),
-    Group(name = "时间", type = GROUP_BY.DATE),
-)
-
-data class Patient(
-    val name: String,
-    val id: UUID,
-    val gender: GENDER = GENDER.MALE,
-    val age: Int
-)
-
-data class Record(
-    val patient: Patient,
-    val startTime: LocalDateTime,
-    var endTime: LocalDateTime
-)
-
-// TODO: 列表分组还没有加上
 /**
  * App 历史列表，内容为设备上记录的整体历史记录数据
  * 分为三组: 全部、病人、时间
@@ -88,18 +71,31 @@ data class Record(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryList(
-    records: List<Record>,
+    records: MutableList<Record>,
+    state: MutableState<GROUP_BY>,
     onSearch: ((Group) -> Unit)? = null,
     onItemClick: ((record: Record) -> UInt)? = null,
+    context: ComponentActivity,
 ) {
+    var rRecords = remember { records }
+    val rState = remember { state }
+    var filterRecords = remember {
+        derivedStateOf {
+            when (rState.value) {
+                GROUP_BY.ALL -> rRecords
+                GROUP_BY.PATIENT -> rRecords
+                GROUP_BY.DATE -> rRecords
+            }
+        }
+    }
+    val options = ActivityOptionsCompat.makeCustomAnimation(context, 0, 0)
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
     val configuration = LocalConfiguration.current
     val thirdScreenWidth = configuration.screenWidthDp.dp / 3
     val minListHeight = 100.dp
-    val state = remember { mutableStateOf(GROUP_BY.ALL) }
     val selectedIndex = Groups.indexOfFirst { group ->
-        group.type == state.value
+        group.type == rState.value
     }
-
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -107,7 +103,7 @@ fun HistoryList(
             .fillMaxWidth()
             .heightIn(min = minListHeight)
     ) {
-        if(records.isEmpty()) {
+        if(rRecords.isEmpty()) {
             Column (
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -144,11 +140,11 @@ fun HistoryList(
                     .padding(0.dp),
             ) {
                 Groups.forEachIndexed { index, group ->
-                    val isSeleted = selectedIndex == index
+                    val isSelected = selectedIndex == index
                     Tab(
-                        selected = isSeleted,
+                        selected = isSelected,
                         onClick = {
-                            state.value = group.type
+                            rState.value = group.type
                             onSearch?.invoke(group)
                         },
                         text = {
@@ -160,7 +156,7 @@ fun HistoryList(
                                     .weight(1f)
                                     .padding(0.dp),
                                 fontWeight = FontWeight.Bold,
-                                color = if(isSeleted) Color(0xff1677FF) else Color(0xff333333),
+                                color = if(isSelected) Color(0xff1677FF) else Color(0xff333333),
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
@@ -168,7 +164,7 @@ fun HistoryList(
                 }
             }
             LazyColumn {
-                items(records) { device ->
+                items(rRecords) { record ->
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
@@ -176,7 +172,10 @@ fun HistoryList(
                             .fillMaxWidth()
                             .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
                             .clickable {
-                                onItemClick?.invoke(device)
+                                onItemClick?.invoke(record)
+                                val intent = Intent(context, HistoryRecordDetailActivity::class.java)
+                                intent.putExtra(patientParams, record)
+                                launcher.launch(intent, options)
                             }
                     ) {
                         Column(
@@ -184,25 +183,25 @@ fun HistoryList(
                         ) {
                             Row {
                                 Text(
-                                    text = device.patient.name,
+                                    text = record.patient.name,
                                     fontSize = 17.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(end = 8.dp)
                                     )
                                 Text(
-                                    text = "${device.patient.age}岁",
+                                    text = "${record.patient.age}岁",
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(end = 8.dp)
                                 )
                                 Text(
-                                    text = if(device.patient.gender == GENDER.MALE) "男" else "女",
+                                    text = if(record.patient.gender == GENDER.MALE) "男" else "女",
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                 )
                             }
                             Text(
-                                text = "${device.startTime.format(formatter)}-${device.endTime.format(formatter)}",
+                                text = "${record.startTime.format(formatter)}-${record.endTime.format(formatter)}",
                                 fontSize = 12.sp,
                                 color = Color(0xff888888),
                                 maxLines = 1,
@@ -236,17 +235,16 @@ fun HistoryList(
 @Preview(showBackground = true)
 @Composable
 fun HistoryListPreview() {
-//    val records: List<Device> = listOf()
     val patient = Patient(
         name = "病人A",
         age = 90,
         gender = GENDER.MALE,
-        id = UUID.randomUUID()
     )
     var startTime: LocalDateTime = LocalDateTime.now()
     var endTime: LocalDateTime = LocalDateTime.now()
     val startTimeString = "2025年1月29日18:00:03"
     val endTimeString = "2025年1月01日18:00:03"
+    val state = remember { mutableStateOf(GROUP_BY.ALL) }
 
     try {
         startTime = LocalDateTime.parse(startTimeString, formatter) // 将字符串解析为 LocalDateTime 对象
@@ -255,8 +253,7 @@ fun HistoryListPreview() {
         println("Invalid date time format: ${e.message}") // 捕获并处理解析异常
     }
 
-    val records = listOf(
-        Record(patient = patient, startTime = startTime, endTime = endTime),
+    val records = mutableListOf(
         Record(patient = patient, startTime = startTime, endTime = endTime),
         Record(patient = patient, startTime = startTime, endTime = endTime),
         Record(patient = patient, startTime = startTime, endTime = endTime),
@@ -271,6 +268,14 @@ fun HistoryListPreview() {
         Record(patient = patient, startTime = startTime, endTime = endTime),
     )
     CapnoEasyTheme {
-        HistoryList(records = records)
+        Box (
+            modifier = Modifier.background(Color.White)
+        ) {
+            HistoryList(
+                records = records,
+                state = state,
+                context = ComponentActivity()
+            )
+        }
     }
 }
