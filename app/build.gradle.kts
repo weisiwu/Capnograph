@@ -79,6 +79,7 @@ dependencies {
     // 安装 Coil 和对应的Compose 扩展
     implementation("io.coil-kt:coil:2.4.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("com.google.accompanist:accompanist-drawablepainter:0.37.0")
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

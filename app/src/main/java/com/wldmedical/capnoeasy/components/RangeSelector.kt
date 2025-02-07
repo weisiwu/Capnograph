@@ -1,6 +1,6 @@
 package com.wldmedical.capnoeasy.components
 
-import androidx.activity.ComponentActivity
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -53,6 +53,7 @@ enum class RangeType{
  * 1、报警参数
  * 2、模块餐宿
  */
+@SuppressLint("ResourceType")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RangeSelector(
@@ -124,7 +125,7 @@ fun RangeSelector(
                         painterResource(id = R.drawable.oneside_range_thumb),"选择器滑块",
                         modifier = Modifier
                             .size(30.dp)
-                            .background(Color.Transparent),
+                            .background(Color.Red)
                     )
                 },
                 colors = thumbColors,
@@ -182,7 +183,6 @@ fun RangeSelector(
                             .size(30.dp)
                             .padding(0.dp)
                     )
-
                 },
                 endThumb = {
                     Image(
@@ -232,8 +232,8 @@ fun RangeSelectorPreview() {
                 title = "ETCO2 范围",
                 unit = "mmHg",
                 type = RangeType.BOTH,
-                startValue = 1f,
-                endValue = 12f,
+                startValue = 11f,
+                endValue = 25f,
                 valueRange = 0f..30f,
             )
 
