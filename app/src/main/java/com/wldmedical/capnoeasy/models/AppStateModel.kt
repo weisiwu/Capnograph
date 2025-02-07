@@ -101,6 +101,7 @@ class AppState @Inject constructor() {
     // CO2单位
     val CO2Unit: MutableState<CO2_UNIT> = mutableStateOf(CO2_UNIT.MMHG)
 
+    // CO2 在主页刻度的最大范围
     val CO2Scale: MutableState<CO2_SCALE> = mutableStateOf(CO2_SCALE.MIDDLE)
 
     // 当前co2 scale

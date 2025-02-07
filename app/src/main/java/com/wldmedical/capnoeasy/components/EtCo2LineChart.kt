@@ -1,6 +1,7 @@
 package com.wldmedical.capnoeasy.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,15 +41,18 @@ import java.text.DecimalFormat
  * App底部导航条
  * 所有一级页和二级页使用
  */
+// TODO: 横坐标格式化问题，应该是每100个点，展示一个横坐标为多少秒 
+// TODO: 虚拟500个点，展示 
+// TODO: 不断更新数据，看效果
 @Composable
 fun EtCo2LineChart(
     modelProducer: CartesianChartModelProducer,
     maxY: Double = 50.0
 ) {
     val lineColor = Color(0xffa485e0)
-    val RangeProvider = CartesianLayerRangeProvider.fixed(maxY = maxY)
-    val YDecimalFormat = DecimalFormat("#'s'")
-    val BottomAxisValueFormatter = CartesianValueFormatter.decimal(YDecimalFormat)
+    val rangeProvider = CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = maxY, minX = 0.0)
+    val xDecimalFormat = DecimalFormat("#'s'") // 横坐标格式化
+    val bottomAxisValueFormatter = CartesianValueFormatter.decimal(xDecimalFormat)
 
     Column(
         modifier = Modifier
@@ -61,7 +65,8 @@ fun EtCo2LineChart(
             text = "实时ETCO2",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xff1D2129)
+            color = Color(0xff1D2129),
+            modifier = Modifier.padding(bottom = 16.dp)
         )
         CartesianChartHost(
             chart = rememberCartesianChart(
@@ -80,16 +85,21 @@ fun EtCo2LineChart(
                             ),
                         )
                     ),
-                    rangeProvider = RangeProvider,
+                    rangeProvider = rangeProvider,
                 ),
-                getXStep = { 80.0 },
+                getXStep = { 100.0 },
                 startAxis = VerticalAxis.rememberStart(),
-                bottomAxis = HorizontalAxis.rememberBottom(valueFormatter = BottomAxisValueFormatter),
+                bottomAxis = HorizontalAxis.rememberBottom(
+                    valueFormatter = bottomAxisValueFormatter,
+                ),
             ),
             scrollState = rememberVicoScrollState(scrollEnabled = false),
             zoomState = rememberVicoZoomState(zoomEnabled = false),
             modelProducer = modelProducer,
-            modifier = Modifier.fillMaxWidth().height(200.dp).background(Color.Transparent)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .background(Color.Transparent)
         )
     }
 }
@@ -108,6 +118,10 @@ fun EtCo2LineChartPreview() {
     }
 
     CapnoEasyTheme {
-        EtCo2LineChart(modelProducer)
+        Box(
+            modifier = Modifier.background(Color.White)
+        ) {
+            EtCo2LineChart(modelProducer)
+        }
     }
 }

@@ -332,15 +332,19 @@ class BlueToothKit @Inject constructor(
     public val pairedPrinter = mutableStateOf<BluetoothDevice?>(null)
 
     // 已经接收到的数据 - 已经解析出来的
-    public val receivedCO2WavedData = mutableListOf<DataPoint>()
+    private val receivedCO2WavedData = mutableListOf<DataPoint>()
+
+    // 内部值可变
     private val _dataFlow = MutableStateFlow<List<DataPoint>>(emptyList())
+
+    // 对外值不可变
     val dataFlow: StateFlow<List<DataPoint>> = _dataFlow
-    fun updateReceivedData(newData: List<DataPoint>) {
-        if (newData.size > 0) {
+
+    // 更细内部的值，触发数据更新
+    private fun updateReceivedData(newData: List<DataPoint>) {
+        if (newData.isNotEmpty()) {
             _dataFlow.value = newData.toList() // 更新 Flow 的值
         }
-//        receivedCO2WavedData.clear()
-//        receivedCO2WavedData.addAll(newData)
     }
 
     // 已经接收到的波次数据 - 原始数据，解析出后清空
