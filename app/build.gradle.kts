@@ -80,6 +80,10 @@ dependencies {
     implementation("io.coil-kt:coil:2.4.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("com.google.accompanist:accompanist-drawablepainter:0.37.0")
+    // 引用佳博SDK和自定义打印SDK
+    implementation(fileTree(mapOf("include" to listOf("*.jar"), "dir" to "libs")))
+    implementation(files("libs/SDKLib.jar"))
+    implementation(files("libs/HotMeltPrint.jar"))
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
