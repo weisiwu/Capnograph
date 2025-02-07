@@ -14,13 +14,12 @@ import com.wldmedical.capnoeasy.components.BaseLayout
 import com.wldmedical.capnoeasy.components.ConfirmModal
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.Toast
-import com.wldmedical.capnoeasy.components.ToastData
-import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.kits.BlueToothKitManager
+import com.wldmedical.capnoeasy.kits.PrintProtocalKit
 import com.wldmedical.capnoeasy.models.AppStateModel
+import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 /***
  * 所有页面基类
@@ -97,6 +96,8 @@ open class BaseActivity : ComponentActivity() {
 
     lateinit var blueToothKit: BlueToothKit
 
+    lateinit var printProtocalKit: HotmeltPinter
+
     open val pageScene = PageScene.HOME_PAGE
 
     open fun updatePageScene() {
@@ -116,7 +117,9 @@ open class BaseActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this)[AppStateModel::class.java]
         BlueToothKitManager.initialize(this)
+        PrintProtocalKit.initialize()
         blueToothKit = BlueToothKitManager.blueToothKit
+        printProtocalKit = PrintProtocalKit.printProtocalKit
         enableEdgeToEdge()
         setContent {
             updatePageScene()
