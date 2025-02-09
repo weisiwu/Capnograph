@@ -1,6 +1,7 @@
 package com.wldmedical.capnoeasy.components
 
 import android.content.Intent
+import android.widget.Space
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -46,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityOptionsCompat
 import com.wldmedical.capnoeasy.GENDER
@@ -81,6 +83,7 @@ fun HistoryList(
 ) {
     val rRecords = remember { records }
     val rState = remember { state }
+    val newRecords = mutableListOf<Record>()
     val options = ActivityOptionsCompat.makeCustomAnimation(context, 0, 0)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
     val configuration = LocalConfiguration.current
@@ -157,76 +160,12 @@ fun HistoryList(
 
             // 无分组
             if (rState.value == GROUP_BY.ALL) {
-                LazyColumn {
-                        items(rRecords) { record ->
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
-                                    .clickable {
-                                        onItemClick?.invoke(record)
-                                        val intent = Intent(context, HistoryRecordDetailActivity::class.java)
-                                        intent.putExtra(patientParams, record)
-                                        launcher.launch(intent, options)
-                                    }
-                            ) {
-                                Column(
-                                    modifier = Modifier.align(Alignment.CenterVertically)
-                                ) {
-                                    Row {
-                                        Text(
-                                            text = record.patient.name,
-                                            fontSize = 17.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(end = 8.dp)
-                                        )
-                                        Text(
-                                            text = "${record.patient.age}岁",
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(end = 8.dp)
-                                        )
-                                        Text(
-                                            text = if(record.patient.gender == GENDER.MALE) "男" else "女",
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Bold,
-                                        )
-                                    }
-                                    Text(
-                                        text = "${record.startTime.format(formatter)}-${record.endTime.format(formatter)}",
-                                        fontSize = 12.sp,
-                                        color = Color(0xff888888),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                                Spacer(modifier = Modifier
-                                    .weight(1f)
-                                    .widthIn(min = 32.dp))
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    modifier = Modifier.size(30.dp),
-                                    tint = Color(0xffCACACA),
-                                    contentDescription = "ArrowBack"
-                                )
-                            }
-                            HorizontalDivider(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(2.dp)
-                                    .padding(horizontal = 16.dp)
-                                    .background(Color(0xffDFE6E9))
-                                    .alpha(0.4f)
-                            )
-                        }
-                    }
+                newRecords.addAll(rRecords)
             } else {
+                // 带有分组的情况 - 默认走病人
                 var currentGroup = ""
                 var groupedById  = rRecords.groupBy { it.patientIndex }
-                val newRecords = mutableListOf<Record>()
-                // 带有分组的情况
+
                 if (rState.value == GROUP_BY.DATE) {
                     groupedById  = rRecords.groupBy { it.dateIndex.toString() }
                 }
@@ -259,95 +198,100 @@ fun HistoryList(
                     }
                     newRecords.addAll(records)
                 }
-                LazyColumn {
-                    items(newRecords) { record ->
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    top = 16.dp,
-                                    bottom = 16.dp,
-                                    start = 16.dp,
-                                    end = 16.dp
+            }
+
+            LazyColumn {
+                items(newRecords) { record ->
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = 16.dp,
+                                bottom = 16.dp,
+                                start = 16.dp,
+                                end = 16.dp
+                            )
+                            .clickable {
+                                onItemClick?.invoke(record)
+                                val intent = Intent(
+                                    context,
+                                    HistoryRecordDetailActivity::class.java
                                 )
-                                .clickable {
-                                    onItemClick?.invoke(record)
-                                    val intent = Intent(
-                                        context,
-                                        HistoryRecordDetailActivity::class.java
-                                    )
-                                    intent.putExtra(patientParams, record)
-                                    launcher.launch(intent, options)
-                                }
+                                intent.putExtra(patientParams, record)
+                                launcher.launch(intent, options)
+                            }
+                    ) {
+                        if (record.isGroupTitle) {
+                            Text(
+                                text = record.groupTitle,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            return@items
+                        }
+
+                        Column(
+                            modifier = Modifier.align(Alignment.CenterVertically)
                         ) {
-                            if (record.isGroupTitle) {
+                            Row {
                                 Text(
-                                    text = record.groupTitle,
-                                    fontSize = 18.sp,
+                                    text = record.patient.name,
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(
+                                    text = "${record.patient.age}岁",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(
+                                    text = if (record.patient.gender == GENDER.MALE) "男" else "女",
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                 )
-                                return@items
                             }
-
-                            Column(
-                                modifier = Modifier.align(Alignment.CenterVertically)
-                            ) {
-                                Row {
-                                    Text(
-                                        text = record.patient.name,
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(end = 8.dp)
+                            Text(
+                                text = "${record.startTime.format(formatter)}-${
+                                    record.endTime.format(
+                                        formatter
                                     )
-                                    Text(
-                                        text = "${record.patient.age}岁",
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text(
-                                        text = if (record.patient.gender == GENDER.MALE) "男" else "女",
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                }
-                                Text(
-                                    text = "${record.startTime.format(formatter)}-${
-                                        record.endTime.format(
-                                            formatter
-                                        )
-                                    }",
-                                    fontSize = 12.sp,
-                                    color = Color(0xff888888),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            Spacer(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .widthIn(min = 32.dp)
-                            )
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                modifier = Modifier.size(30.dp),
-                                tint = Color(0xffCACACA),
-                                contentDescription = "ArrowBack"
+                                }",
+                                fontSize = 12.sp,
+                                color = Color(0xff888888),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
-                        HorizontalDivider(
+                        Spacer(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(2.dp)
-                                .padding(horizontal = 16.dp)
-                                .background(Color(0xffDFE6E9))
-                                .alpha(0.4f)
+                                .weight(1f)
+                                .widthIn(min = 32.dp)
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            modifier = Modifier.size(30.dp),
+                            tint = Color(0xffCACACA),
+                            contentDescription = "ArrowBack"
                         )
                     }
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(2.dp)
+                            .padding(horizontal = 16.dp)
+                            .background(Color(0xffDFE6E9))
+                            .alpha(0.4f)
+                    )
                 }
             }
+
+            Spacer(
+                modifier = Modifier.fillMaxWidth().weight(1f).heightIn(min = 50.dp)
+            )
         }
     }
 }
