@@ -65,14 +65,13 @@ dependencies {
     implementation(libs.androidx.constraintlayout.core)
     implementation(libs.androidx.constraintlayout)
     implementation("com.github.zj565061763:compose-wheel-picker:1.0.0-rc02")
-    //https://www.patrykandpatrick.com/vico/guide/stable/getting-started
-    implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
     implementation("androidx.core:core-splashscreen:1.0.1")
     //https://developer.android.com/training/dependency-injection/hilt-android?hl=zh-cn
     implementation("com.google.dagger:hilt-android:2.51.1")
     implementation(libs.androidx.appcompat)
     implementation(libs.identity.jvm)
     implementation(libs.androidx.bluetooth)
+    implementation(libs.androidx.foundation.layout.android)
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0-alpha01")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -80,6 +79,8 @@ dependencies {
     implementation("io.coil-kt:coil:2.4.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("com.google.accompanist:accompanist-drawablepainter:0.37.0")
+    // MPAndroidChart: https://github.com/PhilJay/MPAndroidChart
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     // 引用佳博SDK和自定义打印SDK
     implementation(fileTree(mapOf("include" to listOf("*.jar"), "dir" to "libs")))
     implementation(files("libs/SDKLib.jar"))

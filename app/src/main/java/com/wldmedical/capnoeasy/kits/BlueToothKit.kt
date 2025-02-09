@@ -27,6 +27,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -47,7 +48,7 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.regex.Pattern
 import javax.inject.Inject
-import kotlin.experimental.and
+import kotlin.math.absoluteValue
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
@@ -257,10 +258,13 @@ class BlueToothKit @Inject constructor(
                 receivedArray.addAll(listOf(characteristic.value))
 
                 CoroutineScope(Dispatchers.Default).launch {
+                    println("wswTest 是否在接受数据?  ${receivedArray.size}")
                     if (receivedArray.size >= 20) {
                         val firstArray = getCMDDataArray()
-                        println("wswTest 接收到的数据是==> ${firstArray.toList()} ||| ${receivedArray.size}")
-                        getSpecificValue(firstArray.toByteArray());
+                        if (firstArray != null) {
+//                        println("wswTest 接收到的数据是==> ${firstArray.toList()} ||| ${receivedArray.size}")
+                            getSpecificValue(firstArray.toByteArray());
+                        }
                     }
                 }
             }
@@ -341,10 +345,16 @@ class BlueToothKit @Inject constructor(
     val dataFlow: StateFlow<List<DataPoint>> = _dataFlow
 
     // 更细内部的值，触发数据更新
-    private fun updateReceivedData(newData: List<DataPoint>) {
-        if (newData.isNotEmpty()) {
-            _dataFlow.value = newData.toList() // 更新 Flow 的值
+    fun updateReceivedData(newData: DataPoint) {
+        val currentList = _dataFlow.value.toMutableList() // 获取当前列表并创建新的 MutableList
+
+        // 更新 Flow 的值
+        if (_dataFlow.value.size >= maxXPoints) {
+            currentList.removeAt(0) // 删除头部元素
         }
+
+        currentList.add(newData)
+        _dataFlow.value = currentList // 更新 StateFlow
     }
 
     // 已经接收到的波次数据 - 原始数据，解析出后清空
@@ -354,19 +364,19 @@ class BlueToothKit @Inject constructor(
     public val sendArray = mutableListOf<Byte>()
 
     // 当前CO2值
-    public var currentCO2: Float = 0f
+    public var currentCO2: MutableState<Float> = mutableStateOf(0f)
 
     // 本次记录的所有波形数据
     public var totalCO2WavedData = mutableListOf<CO2WavePointData>()
 
     // 当前ETCO2值
-    public var currentETCO2: Float = 0f
+    public var currentETCO2: MutableState<Float> = mutableStateOf(0f)
 
     // 当前呼吸率
-    public var currentRespiratoryRate: Int = 0
+    public var currentRespiratoryRate: MutableState<Int> = mutableStateOf(0)
 
     // 当前FiCO2
-    public var currentFiCO2: Float = 0f
+    public var currentFiCO2 = 0f
 
     // 当前是否还在呼吸
     public var currentBreathe: Boolean = false
@@ -923,10 +933,9 @@ class BlueToothKit @Inject constructor(
         }
     }
 
-    fun getCMDDataArray(): List<Byte> {
+    fun getCMDDataArray(): (List<Byte>)? {
         val getArray: MutableList<Byte> = mutableListOf() // 使用 MutableList 存储数据
         val command: Int = receivedArray.peek()?.get(0)?.toUByte()?.toInt() ?: 0 // 获取队首元素，如果队列为空则返回0
-        println("wswTest command 是什么${command}")
 
         // 从接受到数据头部不停的向后移动，直到获取指令类型
         while (receivedArray.isNotEmpty() && !supportCMDs.contains(command)) {
@@ -935,48 +944,43 @@ class BlueToothKit @Inject constructor(
 
         // 数据长度为空，排除
         if (receivedArray.isEmpty()) {
-            return getArray
+            return null
         }
 
         // 根据NBF获取所有数据: 第二位是NBF长度，但是整体需要加上额外两位(指令位、NBF位)
         // 当长度为1的时候 有CMD，连NBF都没有，属于异常响应
         if (receivedArray.size == 1) {
-            return getArray
+            return null
         }
 
         // 取此段指令所有数据: CMD + NBF + DB + CKS
-        // TODO: 会有以下bug，导致崩溃
-//        2025-02-05 23:20:14.141  9412-9604  AndroidRuntime          com.wldmedical.capnoeasy             E  FATAL EXCEPTION: DefaultDispatcher-worker-2
-//        Process: com.wldmedical.capnoeasy, PID: 9412
-//        java.lang.ArrayIndexOutOfBoundsException: length=1; index=1
-//        at com.wldmedical.capnoeasy.kits.BlueToothKit.getCMDDataArray(BlueToothKit.kt:933)
-//        at com.wldmedical.capnoeasy.kits.BlueToothKit$gattCallback$1$onCharacteristicChanged$1.invokeSuspend(BlueToothKit.kt:259)
-//        at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
-//        at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
-//        at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
-//        at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:829)
-//        at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
-//        at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
-//        Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [StandaloneCoroutine{Cancelling}@b086fe, Dispatchers.Default]
         var nbf: Int = 0
         try {
-            nbf = receivedArray.peek()?.get(1)?.toUByte()?.toInt() ?: 0 // 获取NBF长度
+            val iterator = receivedArray.iterator()
+            if (iterator.hasNext()) {
+                iterator.next() // 跳过第一个元素
+                if (iterator.hasNext()) {
+                    val secondElement = iterator.next()
+                    // 处理 secondElement
+                    nbf = secondElement.get(0).toUByte().toInt() ?: 0 // 获取NBF长度
+                }
+            }
         } catch (e: NullPointerException) {
             println("wswTest NullPointerException: ${e.message}")
             // 处理空指针异常，例如返回空列表或默认值
-            return getArray
+            return null
         } catch (e: IndexOutOfBoundsException) {
             println("wswTest IndexOutOfBoundsException: ${e.message}")
             // 处理索引越界异常
-            return getArray
+            return null
         } catch (e: NumberFormatException) {
             println("wswTest NumberFormatException: ${e.message}")
             // 处理数字格式异常
-            return getArray
+            return null
         } catch (e: Exception) {
             println("wswTest Exception: ${e.message}")
             // 处理其他异常
-            return getArray
+            return null
         }
         val endIndex = nbf + 2
 
@@ -985,7 +989,7 @@ class BlueToothKit @Inject constructor(
             return receivedArray.take().toList()
         }
 
-        return getArray
+        return null
     }
 
     /** 从蓝牙返回数据中解析返回值 */
@@ -1026,7 +1030,7 @@ class BlueToothKit @Inject constructor(
     /** 处理CO2波形数据 */
     private fun handleCO2Waveform(data: ByteArray, NBFM: Int) {
         val DPIM = data[5].toUByte().toInt()
-        currentCO2 = (128 * data[3].toUByte().toInt() + (data[4].toUByte().toInt()) - 1000).toFloat() / 100
+        currentCO2.value = (128 * data[3].toUByte().toInt() + (data[4].toUByte().toInt()) - 1000).toFloat() / 100
 
         if (NBFM > 4) {
             when (DPIM) {
@@ -1034,13 +1038,15 @@ class BlueToothKit @Inject constructor(
                     handleCO2Status(data, NBFM)
                     isNeedZeroCorrect = (data[7].toUByte().toInt() and 0x0C) == 0x0C
                     isAdaptorInvalid = (data[6].toUByte().toInt() and 0x02) == 0x02
-                    isAdaptorPolluted = currentCO2 < 0 && (data[6].toUByte().toInt() and 0x01) == 1
+                    isAdaptorPolluted = currentCO2.value < 0 && (data[6].toUByte().toInt() and 0x01) == 1
                 }
                 ISBState80H.ETCO2Value.value -> {
-                    currentETCO2 = (data[6].toUByte().toInt() * 128 + (data[7].toUByte().toInt())).toFloat() / 10
+                    currentETCO2.value = (data[6].toUByte().toFloat() * 128 + (data[7].toUByte().toFloat())) / 10f
+                    println("wswTest currentETCO2 ${currentETCO2} ")
                 }
                 ISBState80H.RRValue.value -> {
-                    currentRespiratoryRate = data[6].toUByte().toInt() * 128 + (data[7].toUByte().toInt())
+                    currentRespiratoryRate.value = data[6].toUByte().toInt() * 128 + (data[7].toUByte().toInt())
+                    println("wswTest 呼吸率 ${currentRespiratoryRate} ")
                 }
                 ISBState80H.FiCO2Value.value -> {
                     currentFiCO2 = ((data[6].toUByte().toInt().toInt() and 0xFF * 128 + (data[7].toUByte().toInt().toInt() and 0xFF)).toFloat() / 10)
@@ -1059,28 +1065,26 @@ class BlueToothKit @Inject constructor(
             // }
         }
 
-        receivedCO2WavedData.add(
-            DataPoint(
-                index = receivedCO2WavedData.size,
-                value = currentCO2,
-            )
+        val currentPoint = DataPoint(
+            index = receivedCO2WavedData.size,
+            value = currentCO2.value,
         )
+        receivedCO2WavedData.add(currentPoint)
         totalCO2WavedData.add(
             CO2WavePointData(
-                co2 = currentCO2,
-                RR = currentRespiratoryRate,
-                ETCO2 = currentETCO2,
+                co2 = currentCO2.value,
+                RR = currentRespiratoryRate.value,
+                ETCO2 = currentETCO2.value,
                 FiCO2 = currentFiCO2,
                 index = totalCO2WavedData.size
             )
         )
-//        println("wswTest 解析出来的二氧化碳数据 ${currentCO2} __ ${currentRespiratoryRate}")
-//        println("wswTest这个的长度是 ${receivedCO2WavedData.size}")
 
-        if (receivedCO2WavedData.size > maxXPoints) {
+        if (receivedCO2WavedData.size >= maxXPoints) {
             receivedCO2WavedData.removeAt(0)
         }
-        updateReceivedData(receivedCO2WavedData)
+//        println("wswTest 接收到的数据是 ${currentPoint}")
+        updateReceivedData(currentPoint)
     }
 
     /** 处理校零，校零结果会在80h中获取，DPI=1 */

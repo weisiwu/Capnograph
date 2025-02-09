@@ -28,9 +28,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.GENDER
+import com.wldmedical.capnoeasy.kits.BlueToothKit
+import com.wldmedical.capnoeasy.kits.BlueToothKitManager.blueToothKit
 import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.patientAgeRange
+import kotlin.math.absoluteValue
 
 val baseRowHeight = 56.dp
 
@@ -176,7 +179,7 @@ fun AttributeLine(
                     .height(baseRowHeight)
             ) {
                 Text(
-                    text = valueText,
+                    text = if (attribute.viewModelName == "rr") blueToothKit.currentRespiratoryRate.value.toString() else blueToothKit.currentCO2.value.toString(),
                     fontWeight = valueFontWeight,
                     fontSize = 16.sp,
                     color = valueColor,
@@ -210,6 +213,7 @@ val attributes = listOf(
 @Composable
 fun EtCo2Table(
     viewModel: AppStateModel,
+    blueToothKit: BlueToothKit,
     onTypeClick: ((device: DeviceType) -> UInt)? = null,
 ) {
     LazyColumn {
@@ -229,7 +233,10 @@ fun EtCo2TablePreview() {
         Row(
             modifier = Modifier.background(Color.White)
         ) {
-            EtCo2Table(viewModel = AppStateModel(appState = AppState()))
+            EtCo2Table(
+                blueToothKit = blueToothKit,
+                viewModel = AppStateModel(appState = AppState())
+            )
         }
     }
 }

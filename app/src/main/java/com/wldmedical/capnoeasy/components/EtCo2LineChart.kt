@@ -1,5 +1,7 @@
 package com.wldmedical.capnoeasy.components
 
+import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,43 +21,56 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
-import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
-import com.patrykandpatrick.vico.compose.common.fill
-import com.patrykandpatrick.vico.compose.common.shader.verticalGradient
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
+import androidx.compose.ui.viewinterop.AndroidView
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
-import java.text.DecimalFormat
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
+import com.wldmedical.capnoeasy.kits.BlueToothKit
+import com.wldmedical.capnoeasy.kits.BlueToothKitManager.blueToothKit
+import com.wldmedical.capnoeasy.kits.maxXPoints
+import com.wldmedical.capnoeasy.models.AppState
+import com.wldmedical.capnoeasy.models.AppStateModel
+import kotlinx.coroutines.flow.collectLatest
 
 /**
  * App底部导航条
  * 所有一级页和二级页使用
  */
-// TODO: 横坐标格式化问题，应该是每100个点，展示一个横坐标为多少秒 
-// TODO: 虚拟500个点，展示 
-// TODO: 不断更新数据，看效果
 @Composable
 fun EtCo2LineChart(
-    modelProducer: CartesianChartModelProducer,
-    maxY: Double = 50.0
+    blueToothKit: BlueToothKit,
+    viewModel: AppStateModel
 ) {
-    val lineColor = Color(0xffa485e0)
-    val rangeProvider = CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = maxY, minX = 0.0)
-    val xDecimalFormat = DecimalFormat("#'s'") // 横坐标格式化
-    val bottomAxisValueFormatter = CartesianValueFormatter.decimal(xDecimalFormat)
+    val a = 1;
+    val chart: MutableState<LineChart?> = remember { mutableStateOf(null) }
+    val entries = remember { mutableStateListOf<Entry>() }.apply {
+        repeat(maxXPoints) { add(Entry(it.toFloat(), 0f)) }
+    }
+    var index = 0f
+
+    // TODO: 临时mock500个虚拟点
+//    LaunchedEffect(a) {
+//        RandomCurveGenerator(
+//            updateGraph = { blueToothKit.updateReceivedData(DataPoint(index = 1, value = it)) }
+//        )
+//    }
+
+    // 处理折线图动画效果
+    LaunchedEffect(blueToothKit.dataFlow) { // 监听 bluetoothKit 实例的变化
+        blueToothKit.dataFlow.collectLatest { newData -> // 收集 Flow 的数据
+            if (newData.isNotEmpty()) {
+                if (entries.size >= maxXPoints) {
+                    entries.removeAt(0) // 删除头部元素
+                }
+                index += 1f
+                entries.add(Entry(index, newData.last().value))
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -68,60 +86,79 @@ fun EtCo2LineChart(
             color = Color(0xff1D2129),
             modifier = Modifier.padding(bottom = 16.dp)
         )
-        CartesianChartHost(
-            chart = rememberCartesianChart(
-                rememberLineCartesianLayer(
-                    lineProvider =
-                    LineCartesianLayer.LineProvider.series(
-                        LineCartesianLayer.rememberLine(
-                            fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
-                            areaFill =
-                            LineCartesianLayer.AreaFill.single(
-                                fill(
-                                    ShaderProvider.verticalGradient(
-                                        arrayOf(lineColor.copy(alpha = 0.4f), Color.Transparent)
-                                    )
-                                )
-                            ),
-                        )
-                    ),
-                    rangeProvider = rangeProvider,
-                ),
-                getXStep = { 100.0 },
-                startAxis = VerticalAxis.rememberStart(),
-                bottomAxis = HorizontalAxis.rememberBottom(
-                    valueFormatter = bottomAxisValueFormatter,
-                ),
-            ),
-            scrollState = rememberVicoScrollState(scrollEnabled = false),
-            zoomState = rememberVicoZoomState(zoomEnabled = false),
-            modelProducer = modelProducer,
+
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
-                .background(Color.Transparent)
-        )
+                .height(300.dp)
+        ) {
+            AndroidView(
+                factory = {
+                    LineChart(it).apply {
+                        // 设置图表大小
+                        layoutParams = LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            300.dp.value.toInt()
+                        )
+
+                        // 设置图表背景颜色
+                        setBackgroundColor(Color.Transparent.value.toInt())
+
+                        // 设置 X 轴位置
+                        xAxis.position = XAxis.XAxisPosition.BOTTOM
+
+                        // 禁用右侧 Y 轴
+                        axisRight.isEnabled = false
+
+                        // 隐藏 DescriptionLabel
+                        description.isEnabled = false
+
+                        // 设置 Y 轴值范围
+                        axisLeft.axisMinimum = 0f
+                        axisLeft.axisMaximum = viewModel.CO2Scale.value.value
+
+                        // 设置 X 轴格式化器
+                        xAxis.valueFormatter = object : ValueFormatter() {
+                            override fun getFormattedValue(value: Float): String {
+                                val data = entries[entries.size - 1]
+                                return when {
+                                    (data.x.toInt()) % 100 == 0 -> (data.x.toInt() / 100).toString() + "S"
+                                    else -> ""
+                                }
+                            }
+                        }
+
+                        chart.value = this
+                    }
+                },
+                update = {
+                    // 设置数据
+                    val dataSet = LineDataSet(entries, "ETCO2")
+                    val lineData = LineData(dataSet)
+                    dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
+                    chart.value?.data = lineData
+                    it.invalidate()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+            )
+        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun EtCo2LineChartPreview() {
-    // preview 模式有问题，不要在preview模式下看
-    val modelProducer = remember { CartesianChartModelProducer() }
-    LaunchedEffect(Unit) {
-        modelProducer.runTransaction {
-            lineSeries {
-                series(13, 8, 7, 12, 0, 1, 15, 14, 0, 11, 6, 12, 0, 11, 12, 11)
-            }
-        }
-    }
 
     CapnoEasyTheme {
         Box(
             modifier = Modifier.background(Color.White)
         ) {
-            EtCo2LineChart(modelProducer)
+            EtCo2LineChart(
+                blueToothKit,
+                viewModel = AppStateModel(appState = AppState())
+            )
         }
     }
 }
