@@ -25,6 +25,8 @@ data class Record(
     var endTime: LocalDateTime,
     val dateIndex: Int = 0,
     val patientIndex: String = "",
+    val isGroupTitle: Boolean = false,
+    val groupTitle: String = "",
 ): Serializable
 
 enum class GROUP_BY {

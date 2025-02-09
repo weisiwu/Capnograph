@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -20,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,7 +34,6 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -77,22 +79,12 @@ fun HistoryList(
     onItemClick: ((record: Record) -> UInt)? = null,
     context: ComponentActivity,
 ) {
-    var rRecords = remember { records }
+    val rRecords = remember { records }
     val rState = remember { state }
-    var filterRecords = remember {
-        derivedStateOf {
-            when (rState.value) {
-                GROUP_BY.ALL -> rRecords
-                GROUP_BY.PATIENT -> rRecords
-                GROUP_BY.DATE -> rRecords
-            }
-        }
-    }
     val options = ActivityOptionsCompat.makeCustomAnimation(context, 0, 0)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
     val configuration = LocalConfiguration.current
     val thirdScreenWidth = configuration.screenWidthDp.dp / 3
-    val minListHeight = 100.dp
     val selectedIndex = Groups.indexOfFirst { group ->
         group.type == rState.value
     }
@@ -100,8 +92,7 @@ fun HistoryList(
     Column(
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = minListHeight)
+            .fillMaxSize()
     ) {
         if(rRecords.isEmpty()) {
             Column (
@@ -163,69 +154,198 @@ fun HistoryList(
                     )
                 }
             }
-            LazyColumn {
-                items(rRecords) { record ->
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
-                            .clickable {
-                                onItemClick?.invoke(record)
-                                val intent = Intent(context, HistoryRecordDetailActivity::class.java)
-                                intent.putExtra(patientParams, record)
-                                launcher.launch(intent, options)
-                            }
-                    ) {
-                        Column(
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        ) {
-                            Row {
-                                Text(
-                                    text = record.patient.name,
-                                    fontSize = 17.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(end = 8.dp)
+
+            // 无分组
+            if (rState.value == GROUP_BY.ALL) {
+                LazyColumn {
+                        items(rRecords) { record ->
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                                    .clickable {
+                                        onItemClick?.invoke(record)
+                                        val intent = Intent(context, HistoryRecordDetailActivity::class.java)
+                                        intent.putExtra(patientParams, record)
+                                        launcher.launch(intent, options)
+                                    }
+                            ) {
+                                Column(
+                                    modifier = Modifier.align(Alignment.CenterVertically)
+                                ) {
+                                    Row {
+                                        Text(
+                                            text = record.patient.name,
+                                            fontSize = 17.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(end = 8.dp)
+                                        )
+                                        Text(
+                                            text = "${record.patient.age}岁",
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(end = 8.dp)
+                                        )
+                                        Text(
+                                            text = if(record.patient.gender == GENDER.MALE) "男" else "女",
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
+                                    Text(
+                                        text = "${record.startTime.format(formatter)}-${record.endTime.format(formatter)}",
+                                        fontSize = 12.sp,
+                                        color = Color(0xff888888),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
-                                Text(
-                                    text = "${record.patient.age}岁",
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(
-                                    text = if(record.patient.gender == GENDER.MALE) "男" else "女",
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold,
+                                }
+                                Spacer(modifier = Modifier
+                                    .weight(1f)
+                                    .widthIn(min = 32.dp))
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    modifier = Modifier.size(30.dp),
+                                    tint = Color(0xffCACACA),
+                                    contentDescription = "ArrowBack"
                                 )
                             }
-                            Text(
-                                text = "${record.startTime.format(formatter)}-${record.endTime.format(formatter)}",
-                                fontSize = 12.sp,
-                                color = Color(0xff888888),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                            HorizontalDivider(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(2.dp)
+                                    .padding(horizontal = 16.dp)
+                                    .background(Color(0xffDFE6E9))
+                                    .alpha(0.4f)
                             )
                         }
-                        Spacer(modifier = Modifier
-                            .weight(1f)
-                            .widthIn(min = 32.dp))
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            modifier = Modifier.size(30.dp),
-                            tint = Color(0xffCACACA),
-                            contentDescription = "ArrowBack"
+                    }
+            } else {
+                var currentGroup = ""
+                var groupedById  = rRecords.groupBy { it.patientIndex }
+                val newRecords = mutableListOf<Record>()
+                // 带有分组的情况
+                if (rState.value == GROUP_BY.DATE) {
+                    groupedById  = rRecords.groupBy { it.dateIndex.toString() }
+                }
+                groupedById.forEach { (id, records) ->
+                    if (currentGroup != id) {
+                        currentGroup = id
+                        if (rState.value == GROUP_BY.PATIENT) {
+                            val patient = records[0].patient
+                            newRecords.add(
+                                Record(
+                                    patient = patient,
+                                    startTime = records[0].startTime,
+                                    endTime = records[0].endTime,
+                                    isGroupTitle = true,
+                                    groupTitle = patient.name + " " + patient.gender.title + " " + patient.age
+                                )
+                            )
+                        } else {
+                            val startDate = records[0].startTime
+                            newRecords.add(
+                                Record(
+                                    patient = records[0].patient,
+                                    startTime = startDate,
+                                    endTime = records[0].endTime,
+                                    isGroupTitle = true,
+                                    groupTitle = startDate.year.toString() + "年" + startDate.monthValue + "月" + startDate.dayOfMonth + "日"
+                                )
+                            )
+                        }
+                    }
+                    newRecords.addAll(records)
+                }
+                LazyColumn {
+                    items(newRecords) { record ->
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    top = 16.dp,
+                                    bottom = 16.dp,
+                                    start = 16.dp,
+                                    end = 16.dp
+                                )
+                                .clickable {
+                                    onItemClick?.invoke(record)
+                                    val intent = Intent(
+                                        context,
+                                        HistoryRecordDetailActivity::class.java
+                                    )
+                                    intent.putExtra(patientParams, record)
+                                    launcher.launch(intent, options)
+                                }
+                        ) {
+                            if (record.isGroupTitle) {
+                                Text(
+                                    text = record.groupTitle,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                return@items
+                            }
+
+                            Column(
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            ) {
+                                Row {
+                                    Text(
+                                        text = record.patient.name,
+                                        fontSize = 17.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(
+                                        text = "${record.patient.age}岁",
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(
+                                        text = if (record.patient.gender == GENDER.MALE) "男" else "女",
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                                Text(
+                                    text = "${record.startTime.format(formatter)}-${
+                                        record.endTime.format(
+                                            formatter
+                                        )
+                                    }",
+                                    fontSize = 12.sp,
+                                    color = Color(0xff888888),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            Spacer(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .widthIn(min = 32.dp)
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                modifier = Modifier.size(30.dp),
+                                tint = Color(0xffCACACA),
+                                contentDescription = "ArrowBack"
+                            )
+                        }
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(2.dp)
+                                .padding(horizontal = 16.dp)
+                                .background(Color(0xffDFE6E9))
+                                .alpha(0.4f)
                         )
                     }
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(2.dp)
-                            .padding(horizontal = 16.dp)
-                            .background(Color(0xffDFE6E9))
-                            .alpha(0.4f)
-                    )
                 }
             }
         }
