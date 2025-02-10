@@ -176,7 +176,7 @@ fun HistoryList(
                                     startTime = records[0].startTime,
                                     endTime = records[0].endTime,
                                     isGroupTitle = true,
-                                    groupTitle = patient.name + " " + patient.gender.title + " " + patient.age
+                                    groupTitle = patient.name + " " + patient.gender.title + " " + patient.age + "岁"
                                 )
                             )
                         } else {

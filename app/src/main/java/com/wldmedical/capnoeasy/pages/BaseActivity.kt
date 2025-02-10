@@ -115,6 +115,10 @@ open class BaseActivity : ComponentActivity() {
         viewModel.updateDiscoveredPeripherals(device)
     }
 
+    open fun onTabClick(index: Int): Boolean {
+        return true
+    }
+
     open fun onNavBarRightClick() {}
 
     /***
@@ -134,10 +138,10 @@ open class BaseActivity : ComponentActivity() {
         LocalStorageKitManager.initialize(this, (application as CapnoEasyApplication))
         localStorageKit = LocalStorageKitManager.localStorageKit
 
-        lifecycleScope.launch {
-            // 后续删除，临时mock数据
-            localStorageKit.mock()
-        }
+        // lifecycleScope.launch {
+        //     // 后续删除，临时mock数据
+        //     localStorageKit.mock()
+        // }
 
         enableEdgeToEdge()
         setContent {
@@ -153,6 +157,7 @@ open class BaseActivity : ComponentActivity() {
 
                     ShowLoading()
                 },
+                onTabClick = { onTabClick(it) },
                 onNavBarRightClick = { onNavBarRightClick() }
             ) {
                 Content()

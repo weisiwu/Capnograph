@@ -27,7 +27,7 @@ import com.wldmedical.capnoeasy.pages.SettingActivity
 fun BaseLayout(
     context: ComponentActivity,
     onNavBarRightClick: (() -> Unit)? = null,
-    onTabClick: ((index: Int) -> Unit)? = null,
+    onTabClick: ((index: Int) -> Boolean)? = null,
     modifier: Modifier = Modifier,
     viewModel: AppStateModel = hiltViewModel(),
     float: @Composable (AppStateModel) -> Unit,
@@ -65,6 +65,8 @@ fun BaseLayout(
         ActionBar(
             viewModel = viewModel,
             onTabClick = { index ->
+                val shouldContinue = onTabClick?.invoke(index) ?: true
+                if (!shouldContinue) { return@ActionBar }
                 var intent = Intent(context, MainActivity::class.java)
                 when(index) {
                     0 -> intent = Intent(context, SearchActivity::class.java)
@@ -72,7 +74,6 @@ fun BaseLayout(
                     2 -> intent = Intent(context, SettingActivity::class.java)
                 }
                 launcher.launch(intent, options)
-                onTabClick?.invoke(index)
             },
             isInPreview = true
         )

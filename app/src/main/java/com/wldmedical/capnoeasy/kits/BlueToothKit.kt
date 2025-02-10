@@ -263,7 +263,7 @@ class BlueToothKit @Inject constructor(
                 receivedArray.addAll(characteristic.value.toList())
 
                 CoroutineScope(Dispatchers.Default).launch {
-                    println("wswTest 是否在接受数据V1  ${receivedArray.size}")
+//                    println("wswTest 是否在接受数据V1  ${receivedArray.size}")
                     if (receivedArray.size >= 20) {
                         val firstArray = getCMDDataArray()
                         if (firstArray != null) {

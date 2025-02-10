@@ -25,6 +25,8 @@ import com.wldmedical.capnoeasy.components.formatter
 import com.wldmedical.capnoeasy.pages.BaseActivity
 import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -190,12 +192,9 @@ class LocalStorageKit @Inject constructor(
      * 在主页填写了病人信息并点击记录时候调用
      */
     suspend fun savePatient(
-        name: String = "",
-        gender: GENDER,
-        age: Int = 0
+        patient: Patient
     ) {
         withContext(Dispatchers.IO) {
-            val patient = Patient(name, gender, age);
             database.patientDto().insertPatient(patient)
             patients.add(patient)
         }
@@ -265,8 +264,8 @@ class LocalStorageKit @Inject constructor(
 
     suspend fun mock() {
         // 添加两个病人
-        savePatient(name = "病人A", age = 90, gender = GENDER.MALE)
-        savePatient(name = "病人B", age = 80, gender = GENDER.FORMALE)
+        savePatient(Patient(name = "病人A", age = 90, gender = GENDER.MALE))
+        savePatient(Patient(name = "病人B", age = 80, gender = GENDER.FORMALE))
 
         val date1: LocalDateTime = LocalDateTime.now()
         val date2: LocalDateTime = LocalDateTime.parse("2007-12-03T10:15:30")

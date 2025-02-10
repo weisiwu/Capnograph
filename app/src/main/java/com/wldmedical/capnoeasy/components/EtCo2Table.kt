@@ -129,6 +129,8 @@ fun AttributeLine(
             TextField(
                 value = value,
                 singleLine = true,
+                // TODO: 开始记录后，给个特殊样式 
+//                enabled = !viewModel.isRecording.value,
                 modifier = Modifier
                     .height(baseRowHeight)
                     .padding(0.dp)
