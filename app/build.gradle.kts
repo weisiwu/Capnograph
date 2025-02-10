@@ -49,6 +49,12 @@ android {
     packaging {
         resources.excludes.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
     }
+
+    kapt {
+        arguments {
+            arg("room.schemaLocation", "$projectDir/schemas")  // 指定导出架构的目录
+        }
+    }
 }
 
 dependencies {
@@ -85,6 +91,11 @@ dependencies {
     implementation(fileTree(mapOf("include" to listOf("*.jar"), "dir" to "libs")))
     implementation(files("libs/SDKLib.jar"))
     implementation(files("libs/HotMeltPrint.jar"))
+    // Room Persistence Library
+    implementation("androidx.room:room-runtime:2.5.0")
+    kapt("androidx.room:room-compiler:2.5.0")
+    // 引入Gson
+    implementation("com.google.code.gson:gson:2.10.1")
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

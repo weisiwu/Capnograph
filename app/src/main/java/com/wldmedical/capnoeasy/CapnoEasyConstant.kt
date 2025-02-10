@@ -124,3 +124,5 @@ val patientParams = "patient"
 val USER_PREF_NS = "wld_medical_capnoeasy_prefs"
 
 val PAIRED_DEVICE_KEY = "paired_device_address"
+
+val DATABASE_NS = "wld_medical_capnoeasy_database"

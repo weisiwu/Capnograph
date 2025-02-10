@@ -8,6 +8,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.AlertModal
 import com.wldmedical.capnoeasy.components.BaseLayout
@@ -22,6 +24,7 @@ import com.wldmedical.capnoeasy.kits.PrintProtocalKitManager
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 /***
  * 所有页面基类
@@ -119,13 +122,22 @@ open class BaseActivity : ComponentActivity() {
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         viewModel = ViewModelProvider(this)[AppStateModel::class.java]
+
         BlueToothKitManager.initialize(this)
-        PrintProtocalKitManager.initialize()
-        LocalStorageKitManager.initialize(this)
         blueToothKit = BlueToothKitManager.blueToothKit
+
+        PrintProtocalKitManager.initialize()
         printProtocalKit = PrintProtocalKitManager.printProtocalKit
+
+        LocalStorageKitManager.initialize(this, (application as CapnoEasyApplication))
         localStorageKit = LocalStorageKitManager.localStorageKit
+
+        lifecycleScope.launch {
+            // 后续删除，临时mock数据
+            localStorageKit.mock()
+        }
 
         enableEdgeToEdge()
         setContent {
