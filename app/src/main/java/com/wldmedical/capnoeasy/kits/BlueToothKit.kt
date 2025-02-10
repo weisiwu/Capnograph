@@ -406,19 +406,19 @@ class BlueToothKit @Inject constructor(
     public var isAsphyxiation: Boolean = false
 
     // 设备名称
-    public var deviceName: String = ""
+    public var deviceName: MutableState<String> = mutableStateOf("")
 
     // 设备序列号
-    public var sSerialNumber: String = ""
+    public var sSerialNumber: MutableState<String> = mutableStateOf("")
 
     // 设备硬件版本
-    public var sHardwareVersion: String = ""
+    public var sHardwareVersion: MutableState<String> = mutableStateOf("")
 
     // 设备软件版本
-    public var sSoftwareVersion: String = ""
+    public var sSoftwareVersion: MutableState<String> = mutableStateOf("")
 
     // 生产日期
-    public var productionDate: String = ""
+    public var productionDate: MutableState<String> = mutableStateOf("")
 
     /******************* 方法 *******************/
     // 判断蓝牙状态
@@ -1083,7 +1083,6 @@ class BlueToothKit @Inject constructor(
         if (receivedCO2WavedData.size >= maxXPoints) {
             receivedCO2WavedData.removeAt(0)
         }
-//        println("wswTest 接收到的数据是 ${currentPoint}")
         updateReceivedData(currentPoint)
     }
 
@@ -1113,13 +1112,14 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 处理设置： 序列号、硬件版本、设备名称 */
+    @SuppressLint("DefaultLocale")
     private fun handleSettings(data: ByteArray) {
         when (data[2].toUByte().toInt() and 0xFF) { // 使用 Int 类型进行比较
             ISBState84H.GetSensorPartNumber.value -> {
-                deviceName = ""
+                deviceName.value = ""
                 for (i in 0..9) {
                     val uScalar = (data[i].toUByte().toInt()+ 3) and 0xFF
-                    deviceName += uScalar.toChar().toString() // 使用 toChar() 转换为字符
+                    deviceName.value += uScalar.toChar().toString() // 使用 toChar() 转换为字符
                 }
             }
             ISBState84H.GetSerialNumber.value -> {
@@ -1129,13 +1129,13 @@ class BlueToothKit @Inject constructor(
                 val DB4 = data[6].toUByte().toInt().toDouble() * 2.0.pow(7)
                 val DB5 = data[7].toUByte().toInt().toDouble()
                 val sNum = DB1 + DB2 + DB3 + DB4 + DB5
-                sSerialNumber = String.format("%.0f", sNum)
+                sSerialNumber.value = String.format("%.0f", sNum)
             }
             ISBState84H.GetHardWareRevision.value -> {
                 val DB1 = data[3].toUByte().toInt()
                 val DB2 = data[4].toUByte().toInt()
                 val DB3 = data[5].toUByte().toInt()
-                sHardwareVersion = "${DB1.toChar()}.${DB2.toChar()}.${DB3.toChar()}"
+                sHardwareVersion.value = "${DB1.toChar()}.${DB2.toChar()}.${DB3.toChar()}"
             }
             else -> println("模块参数设置 未知ISB")
         }
@@ -1161,25 +1161,20 @@ class BlueToothKit @Inject constructor(
                 val dateTimeString = matcher.group(2)
                 val fullTimeString = "$yearString $dateTimeString"
 
-                sSoftwareVersion = rawSoftWareVersion.replace(matcher.group(), "").trim()
-                sSoftwareVersion = sSoftwareVersion.replace(Regex("[\\p{Cc}]"), "") // Remove control characters
-                sSoftwareVersion = sSoftwareVersion.replace(Regex("-+$"), "") // Remove trailing hyphens
+                sSoftwareVersion.value = rawSoftWareVersion.replace(matcher.group(), "").trim()
+                sSoftwareVersion.value = sSoftwareVersion.value.replace(Regex("[\\p{Cc}]"), "") // Remove control characters
+                sSoftwareVersion.value = sSoftwareVersion.value.replace(Regex("-+$"), "") // Remove trailing hyphens
 
                 val formatter = SimpleDateFormat("yy MM/dd/yy HH:mm")
                 try {
                     val date = formatter.parse(fullTimeString)
                     formatter.applyPattern("yyyy/MM/dd HH:mm:ss")
-                    productionDate = formatter.format(date)
+                    productionDate.value = formatter.format(date)
                     println("Formatted Time: $productionDate")
-                    // TODO: 这里需要加待办
-//                    getSettingInfoCallback?.invoke(formattedDateString, ISBState.CMD_CAH(ISBState.GetProductionDate)) // 需要定义 ISBState.CMD_CAH
 
                 } catch (e: Exception) {
                     println("Failed to parse date: ${e.message}")
                 }
-
-                // TODO: 需要加待办
-//                getSettingInfoCallback?.invoke(remainingText, ISBState.CMD_CAH(ISBState.GetModuleName)) // 需要定义 ISBState.CMD_CAH
             } else {
                 println("No match found")
             }

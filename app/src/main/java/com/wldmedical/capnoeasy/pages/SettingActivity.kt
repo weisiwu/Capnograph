@@ -32,7 +32,7 @@ class SettingActivity : BaseActivity() {
                 ToastData(
                     text = "未连接设备，请链接后再试",
                     showMask = false,
-                    duration = 800,
+                    duration = 1000,
                 )
             )
         }

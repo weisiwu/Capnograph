@@ -35,7 +35,7 @@ class SystemSettingActivity : BaseActivity() {
 
     val infoHeight = 60.dp
 
-    fun updateLanguage(newLanguage: LanguageTypes) {
+    private fun updateLanguage(newLanguage: LanguageTypes) {
         viewModel.updateLanguage(newLanguage)
     }
 
@@ -52,11 +52,11 @@ class SystemSettingActivity : BaseActivity() {
                 )
             ),
             SystemIno(name = "固件版本", value = viewModel.firmVersion.value),
-            SystemIno(name = "硬件版本", value = viewModel.hardwareVersion.value),
-            SystemIno(name = "软件版本", value = viewModel.softwareVersion.value),
-            SystemIno(name = "生产日期", value = viewModel.productDate.value),
-            SystemIno(name = "序列号", value = viewModel.serialNumber.value),
-            SystemIno(name = "模块名称", value = viewModel.moduleName.value),
+            SystemIno(name = "硬件版本", value = blueToothKit.sHardwareVersion.value),
+            SystemIno(name = "软件版本", value = blueToothKit.sSoftwareVersion.value),
+            SystemIno(name = "生产日期", value = blueToothKit.productionDate.value),
+            SystemIno(name = "序列号", value = blueToothKit.sSerialNumber.value),
+            SystemIno(name = "模块名称", value = blueToothKit.deviceName.value),
         )
 
         Column(

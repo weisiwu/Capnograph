@@ -40,12 +40,13 @@ val baseRowHeight = 56.dp
 @Composable
 fun AttributeLine(
     viewModel: AppStateModel,
+    blueToothKit: BlueToothKit,
     attribute: Atribute,
     onInputChange: ((newVal: String) -> Unit)? = null,
 ) {
     val value = when(attribute.viewModelName) {
-        "rr" -> viewModel.rr.value.toString()
-        "etCO2" -> viewModel.etCO2.value.toString()
+        "rr" -> blueToothKit.currentRespiratoryRate.value.toString()
+        "etCO2" -> blueToothKit.currentCO2.value.toString()
         "patientName" -> viewModel.patientName.value ?: ""
         "patientGender" -> if(viewModel.patientGender.value == null) "" else viewModel.patientGender.value!!.title
         "patientAge" -> if(viewModel.patientAge.value == null) "" else viewModel.patientAge.value.toString()
@@ -220,6 +221,7 @@ fun EtCo2Table(
         items(attributes) { attribute ->
             AttributeLine(
                 viewModel = viewModel,
+                blueToothKit = blueToothKit,
                 attribute = attribute,
             )
         }
