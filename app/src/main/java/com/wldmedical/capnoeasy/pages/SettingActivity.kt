@@ -23,6 +23,22 @@ import com.wldmedical.capnoeasy.components.settings
 class SettingActivity : BaseActivity() {
     override val pageScene = PageScene.SETTING_PAGE
 
+    // 检查是否已经链接上CannoEasy
+    private fun checkHasConnectDevice(cb: (() -> Unit)? = null) {
+        if (blueToothKit.connectedCapnoEasy.value != null) {
+            cb?.invoke()
+        } else {
+            viewModel.updateToastData(
+                ToastData(
+                    text = "未连接设备，请链接后再试",
+                    showMask = false,
+                    duration = 800,
+                )
+            )
+        }
+    }
+
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @Composable
     override fun Content() {
@@ -42,22 +58,24 @@ class SettingActivity : BaseActivity() {
                     SettingType.PRINT_SETTING -> intent = Intent(this, PrintSettingActivity::class.java)
                     SettingType.HISTORY_RECORD -> intent = Intent(this, HistoryRecordsActivity::class.java)
                     SettingType.ZERO -> {
-                        couldJump = false
-                        viewModel.updateLoadingData(
-                            LoadingData(
-                                text = "正在校零",
-                                duration = InfinityDuration,
-                            )
-                        )
-                        blueToothKit.correctZero() {
-                            viewModel.clearXData()
-                            viewModel.updateToastData(
-                                ToastData(
-                                    text = "成功校零",
-                                    showMask = false,
-                                    duration = 800,
+                        checkHasConnectDevice {
+                            couldJump = false
+                            viewModel.updateLoadingData(
+                                LoadingData(
+                                    text = "正在校零",
+                                    duration = InfinityDuration,
                                 )
                             )
+                            blueToothKit.correctZero() {
+                                viewModel.clearXData()
+                                viewModel.updateToastData(
+                                    ToastData(
+                                        text = "成功校零",
+                                        showMask = false,
+                                        duration = 800,
+                                    )
+                                )
+                            }
                         }
                     }
                     SettingType.KEEP_LIGHT -> {
@@ -72,22 +90,24 @@ class SettingActivity : BaseActivity() {
                         )
                     }
                     SettingType.SHUTDOWN -> {
-                        couldJump = false
-                        viewModel.updateLoadingData(
-                            LoadingData(
-                                text = "正在关机",
-                                duration = InfinityDuration,
-                            )
-                        )
-                        blueToothKit.shutdown() {
-                            viewModel.clearXData()
-                            viewModel.updateToastData(
-                                ToastData(
-                                    text = "成功关机",
-                                    showMask = false,
-                                    duration = 800,
+                        checkHasConnectDevice {
+                            couldJump = false
+                            viewModel.updateLoadingData(
+                                LoadingData(
+                                    text = "正在关机",
+                                    duration = InfinityDuration,
                                 )
                             )
+                            blueToothKit.shutdown() {
+                                viewModel.clearXData()
+                                viewModel.updateToastData(
+                                    ToastData(
+                                        text = "成功关机",
+                                        showMask = false,
+                                        duration = 800,
+                                    )
+                                )
+                            }
                         }
                     }
                 }
