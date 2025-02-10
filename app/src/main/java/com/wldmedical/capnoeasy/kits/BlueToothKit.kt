@@ -21,6 +21,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
@@ -34,6 +35,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.registerReceiver
 import com.wldmedical.capnoeasy.CO2_SCALE
 import com.wldmedical.capnoeasy.CO2_UNIT
+import com.wldmedical.capnoeasy.PAIRED_DEVICE_KEY
+import com.wldmedical.capnoeasy.USER_PREF_NS
 import com.wldmedical.capnoeasy.WF_SPEED
 import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.CoroutineScope
@@ -116,7 +119,7 @@ class BlueToothKit @Inject constructor(
 
     private val bluetoothManager: BluetoothManager = activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 
-    private val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.adapter
+    public val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.adapter
 
     private val bluetoothLeScanner: BluetoothLeScanner? = bluetoothAdapter?.bluetoothLeScanner
 
@@ -154,7 +157,7 @@ class BlueToothKit @Inject constructor(
 
     private var scanFind: ((BluetoothDevice)-> Unit)? = null
 
-    private var onDeviceConnectSuccess: (()-> Unit)? = null
+    private var onDeviceConnectSuccess: ((BluetoothDevice?)-> Unit)? = null
 
     // BLE蓝牙-连接设备回调
     private val gattCallback = object : BluetoothGattCallback() {
@@ -558,6 +561,21 @@ class BlueToothKit @Inject constructor(
         device.connectGatt(activity, false, gattCallback)
     }
 
+    // 保存已经配对的设备
+    public fun savePairedBLEDevice(context: Activity, device: BluetoothDevice?) {
+        if (device == null) { return }
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString(PAIRED_DEVICE_KEY, device.address)
+        editor.apply()
+    }
+
+    // 读取已配对设备
+    public fun getSavedBLEDeviceAddress(context: Activity): String? {
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
+        return sharedPreferences.getString(PAIRED_DEVICE_KEY, null)
+    }
+
     // 链接上CapnoEasy后，需要尽快发送初始化信息，否则会断开
     @SuppressLint("MissingPermission")
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -582,8 +600,8 @@ class BlueToothKit @Inject constructor(
                     Runnable { innerUpdateAlertRange(10f,20f, 10, 20) },
                     // 设置结束后，开始尝试接受数据
                     Runnable { sendContinuous() },
-                    // 返回首页
-                    Runnable { onDeviceConnectSuccess?.invoke() },
+                    // 返回首页&&保存配对设备信息到本地
+                    Runnable { onDeviceConnectSuccess?.invoke(connectedCapnoEasy.value) },
                 )
             )
         }
@@ -916,7 +934,7 @@ class BlueToothKit @Inject constructor(
     @SuppressLint("MissingPermission")
     public fun connectDevice(
         device: BluetoothDevice?,
-        onSuccess: (() -> Unit)? = null
+        onSuccess: ((BluetoothDevice?) -> Unit)? = null
     ) {
         if (device == null) {
             return

@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import com.wldmedical.capnoeasy.PageScene
@@ -15,6 +16,20 @@ import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
  */
 class MainActivity : BaseActivity() {
     override val pageScene = PageScene.HOME_PAGE
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        try {
+            val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)
+            if (deviceAddress != null) {
+                val device = blueToothKit.bluetoothAdapter?.getRemoteDevice(deviceAddress)
+                // 尝试自动连接已经配对设备
+                blueToothKit.connectDevice(device)
+            }
+        } catch (e: Exception) {
+            println("wswTest 捕获到自动链接BLE配对设备异常: ${e.message}")
+        }
+    }
 
     override fun onNavBarRightClick() {
         val isRecording = viewModel.isRecording.value

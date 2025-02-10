@@ -92,7 +92,7 @@ class SearchActivity : BaseActivity() {
             onDeviceClick = {
                 blueToothKit.connectDevice(
                     device = it,
-                    onSuccess = {
+                    onSuccess = { device ->
                         viewModel.clearXData()
                         viewModel.updateCurrentTab(1)
                         viewModel.updateCurrentPage(PageScene.HOME_PAGE)
@@ -100,6 +100,8 @@ class SearchActivity : BaseActivity() {
                         GlobalScope.launch(Dispatchers.Main) { // 使用协程切换到主线程
                             launcher.launch(intent, options)
                         }
+                        // 保存配对设备信息到本地
+                        blueToothKit.savePairedBLEDevice(this, device)
                     }
                 )
                 viewModel.updateLoadingData(
