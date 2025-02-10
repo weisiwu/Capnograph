@@ -46,7 +46,7 @@ fun AttributeLine(
 ) {
     val value = when(attribute.viewModelName) {
         "rr" -> blueToothKit.currentRespiratoryRate.value.toString()
-        "etCO2" -> blueToothKit.currentCO2.value.toString()
+        "etCO2" -> blueToothKit.currentETCO2.value.toString()
         "patientName" -> viewModel.patientName.value ?: ""
         "patientGender" -> if(viewModel.patientGender.value == null) "" else viewModel.patientGender.value!!.title
         "patientAge" -> if(viewModel.patientAge.value == null) "" else viewModel.patientAge.value.toString()

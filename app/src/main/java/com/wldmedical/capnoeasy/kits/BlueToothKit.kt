@@ -49,8 +49,10 @@ import java.nio.ByteOrder
 import java.text.SimpleDateFormat
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.locks.ReentrantLock
 import java.util.regex.Pattern
 import javax.inject.Inject
+import kotlin.concurrent.withLock
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -258,14 +260,13 @@ class BlueToothKit @Inject constructor(
         ) {
             // 收到通知数据
             if (characteristic?.uuid == BLECharacteristicUUID.BLEReceiveDataCha.value) {
-                receivedArray.addAll(listOf(characteristic.value))
+                receivedArray.addAll(characteristic.value.toList())
 
                 CoroutineScope(Dispatchers.Default).launch {
-                    println("wswTest 是否在接受数据?  ${receivedArray.size}")
+                    println("wswTest 是否在接受数据V1  ${receivedArray.size}")
                     if (receivedArray.size >= 20) {
                         val firstArray = getCMDDataArray()
                         if (firstArray != null) {
-//                        println("wswTest 接收到的数据是==> ${firstArray.toList()} ||| ${receivedArray.size}")
                             getSpecificValue(firstArray.toByteArray());
                         }
                     }
@@ -361,7 +362,7 @@ class BlueToothKit @Inject constructor(
     }
 
     // 已经接收到的波次数据 - 原始数据，解析出后清空
-    public val receivedArray: BlockingQueue<ByteArray> = LinkedBlockingQueue()
+    public var receivedArray: BlockingQueue<Byte> = LinkedBlockingQueue()
 
     // 准备发送给设备的命令数据 - 发送后清空
     public val sendArray = mutableListOf<Byte>()
@@ -953,7 +954,7 @@ class BlueToothKit @Inject constructor(
 
     fun getCMDDataArray(): (List<Byte>)? {
         val getArray: MutableList<Byte> = mutableListOf() // 使用 MutableList 存储数据
-        val command: Int = receivedArray.peek()?.get(0)?.toUByte()?.toInt() ?: 0 // 获取队首元素，如果队列为空则返回0
+        val command: Int = receivedArray.peek()?.toUByte()?.toInt() ?: 0 // 获取队首元素，如果队列为空则返回0
 
         // 从接受到数据头部不停的向后移动，直到获取指令类型
         while (receivedArray.isNotEmpty() && !supportCMDs.contains(command)) {
@@ -971,43 +972,36 @@ class BlueToothKit @Inject constructor(
             return null
         }
 
-        // 取此段指令所有数据: CMD + NBF + DB + CKS
-        var nbf: Int = 0
-        try {
-            val iterator = receivedArray.iterator()
-            if (iterator.hasNext()) {
-                iterator.next() // 跳过第一个元素
-                if (iterator.hasNext()) {
-                    val secondElement = iterator.next()
-                    // 处理 secondElement
-                    nbf = secondElement.get(0).toUByte().toInt() ?: 0 // 获取NBF长度
-                }
-            }
-        } catch (e: NullPointerException) {
-            println("wswTest NullPointerException: ${e.message}")
-            // 处理空指针异常，例如返回空列表或默认值
-            return null
-        } catch (e: IndexOutOfBoundsException) {
-            println("wswTest IndexOutOfBoundsException: ${e.message}")
-            // 处理索引越界异常
-            return null
-        } catch (e: NumberFormatException) {
-            println("wswTest NumberFormatException: ${e.message}")
-            // 处理数字格式异常
-            return null
-        } catch (e: Exception) {
-            println("wswTest Exception: ${e.message}")
-            // 处理其他异常
-            return null
+        val tmpList = receivedArray.toList()
+        if (tmpList.size <= 1) {
+            return  null
         }
+        // 取此段指令所有数据: CMD + NBF + DB + CKS
+        val nbf: Int = tmpList[1].toUByte().toInt() ?: 0
         val endIndex = nbf + 2
 
         if (receivedArray.size >= endIndex) {
-            // TODO: 这里没有明白，为什么会返回单个的
-            return receivedArray.take().toList()
+            val getedArray = receivedArray.take(endIndex)
+            removeFromBlockingQueue(receivedArray, endIndex)
+            return getedArray
         }
 
         return null
+    }
+
+    private fun removeFromBlockingQueue(queue: BlockingQueue<Byte>, endIndex: Int) {
+        val iterator = queue.iterator()
+        var count = 0
+
+        // 使用锁保证线程安全
+        val lock = ReentrantLock()
+        lock.withLock {
+            while (iterator.hasNext() && count < endIndex) {
+                iterator.next() // 获取元素，但不移除
+                iterator.remove() // 移除当前元素
+                count++
+            }
+        }
     }
 
     /** 从蓝牙返回数据中解析返回值 */
@@ -1060,11 +1054,11 @@ class BlueToothKit @Inject constructor(
                 }
                 ISBState80H.ETCO2Value.value -> {
                     currentETCO2.value = (data[6].toUByte().toFloat() * 128 + (data[7].toUByte().toFloat())) / 10f
-                    println("wswTest currentETCO2 ${currentETCO2} ")
+                    // println("wswTest currentETCO2 ${currentETCO2} ")
                 }
                 ISBState80H.RRValue.value -> {
                     currentRespiratoryRate.value = data[6].toUByte().toInt() * 128 + (data[7].toUByte().toInt())
-                    println("wswTest 呼吸率 ${currentRespiratoryRate} ")
+                    // println("wswTest 呼吸率 ${currentRespiratoryRate} ")
                 }
                 ISBState80H.FiCO2Value.value -> {
                     currentFiCO2 = ((data[6].toUByte().toInt().toInt() and 0xFF * 128 + (data[7].toUByte().toInt().toInt() and 0xFF)).toFloat() / 10)
@@ -1101,6 +1095,7 @@ class BlueToothKit @Inject constructor(
         if (receivedCO2WavedData.size >= maxXPoints) {
             receivedCO2WavedData.removeAt(0)
         }
+//        println("wswTest 正在更新 $currentCO2.value")
         updateReceivedData(currentPoint)
     }
 
