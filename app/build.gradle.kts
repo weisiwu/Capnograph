@@ -96,6 +96,8 @@ dependencies {
     kapt("androidx.room:room-compiler:2.5.0")
     // 引入Gson
     implementation("com.google.code.gson:gson:2.10.1")
+    // https://github.com/itext/itextpdf
+    implementation("com.itextpdf:itextpdf:5.5.13.4")
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
