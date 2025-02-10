@@ -119,13 +119,7 @@ fun EtCo2LineChart(
 
                         // 设置 X 轴格式化器
                         xAxis.valueFormatter = object : ValueFormatter() {
-                            override fun getFormattedValue(value: Float): String {
-                                val data = entries[entries.size - 1]
-                                return when {
-                                    (data.x.toInt()) % 100 == 0 -> (data.x.toInt() / 100).toString() + "S"
-                                    else -> ""
-                                }
-                            }
+                            override fun getFormattedValue(value: Float): String { return "" }
                         }
 
                         chart.value = this
@@ -134,6 +128,8 @@ fun EtCo2LineChart(
                 update = {
                     // 设置数据
                     val dataSet = LineDataSet(entries, "ETCO2")
+                    dataSet.lineWidth = 2f
+                    dataSet.setDrawCircles(false) // 不绘制圆点
                     val lineData = LineData(dataSet)
                     dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
                     chart.value?.data = lineData

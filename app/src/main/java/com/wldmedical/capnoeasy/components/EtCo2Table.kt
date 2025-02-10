@@ -34,6 +34,7 @@ import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.patientAgeRange
 import kotlin.math.absoluteValue
+import kotlin.math.ceil
 
 val baseRowHeight = 56.dp
 
@@ -46,7 +47,7 @@ fun AttributeLine(
 ) {
     val value = when(attribute.viewModelName) {
         "rr" -> blueToothKit.currentRespiratoryRate.value.toString()
-        "etCO2" -> blueToothKit.currentETCO2.value.toString()
+        "etCO2" -> blueToothKit.currentETCO2.value.toInt().toString()
         "patientName" -> viewModel.patientName.value ?: ""
         "patientGender" -> if(viewModel.patientGender.value == null) "" else viewModel.patientGender.value!!.title
         "patientAge" -> if(viewModel.patientAge.value == null) "" else viewModel.patientAge.value.toString()
@@ -180,7 +181,9 @@ fun AttributeLine(
                     .height(baseRowHeight)
             ) {
                 Text(
-                    text = if (attribute.viewModelName == "rr") blueToothKit.currentRespiratoryRate.value.toString() else blueToothKit.currentCO2.value.toString(),
+                    text = if (attribute.viewModelName == "rr")
+                        blueToothKit.currentRespiratoryRate.value.toString()
+                        else ceil(blueToothKit.currentETCO2.value).toInt().toString(),
                     fontWeight = valueFontWeight,
                     fontSize = 16.sp,
                     color = valueColor,
