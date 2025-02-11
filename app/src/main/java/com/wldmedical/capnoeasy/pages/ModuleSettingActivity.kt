@@ -83,28 +83,30 @@ class ModuleSettingActivity : BaseActivity() {
                 Card (
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.clickable {
-                        viewModel.updateAsphyxiationTime(asphyxiationTime)
-                        viewModel.updateO2Compensation(o2Compensation)
-                        viewModel.updateLoadingData(
-                            LoadingData(
-                                text = "正在设置",
-                                duration = InfinityDuration,
-                            )
-                        )
-                        blueToothKit.updateNoBreathAndCompensation(
-                            asphyxiationTime,
-                            o2Compensation,
-                            callback = {
-                                viewModel.clearXData()
-                                viewModel.updateToastData(
-                                    ToastData(
-                                        text = "设置成功",
-                                        showMask = false,
-                                        duration = 800,
-                                    )
+                        checkHasConnectDevice {
+                            viewModel.updateAsphyxiationTime(asphyxiationTime)
+                            viewModel.updateO2Compensation(o2Compensation)
+                            viewModel.updateLoadingData(
+                                LoadingData(
+                                    text = "正在设置",
+                                    duration = InfinityDuration,
                                 )
-                            }
-                        )
+                            )
+                            blueToothKit.updateNoBreathAndCompensation(
+                                asphyxiationTime,
+                                o2Compensation,
+                                callback = {
+                                    viewModel.clearXData()
+                                    viewModel.updateToastData(
+                                        ToastData(
+                                            text = "设置成功",
+                                            showMask = false,
+                                            duration = 800,
+                                        )
+                                    )
+                                }
+                            )
+                        }
                     }
                 ) {
                     Text(

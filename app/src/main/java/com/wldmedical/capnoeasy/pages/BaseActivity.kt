@@ -15,6 +15,7 @@ import com.wldmedical.capnoeasy.components.BaseLayout
 import com.wldmedical.capnoeasy.components.ConfirmModal
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.Toast
+import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.kits.BlueToothKitManager
 import com.wldmedical.capnoeasy.kits.LocalStorageKit
@@ -120,6 +121,21 @@ open class BaseActivity : ComponentActivity() {
 
     open fun onNavBarRightClick() {}
 
+    // 检查是否已经链接上CannoEasy
+    public fun checkHasConnectDevice(cb: (() -> Unit)? = null) {
+        if (blueToothKit.connectedCapnoEasy.value != null) {
+            cb?.invoke()
+        } else {
+            viewModel.updateToastData(
+                ToastData(
+                    text = "未连接设备，请链接后再试",
+                    showMask = false,
+                    duration = 1000,
+                )
+            )
+        }
+    }
+
     /***
      * 生命周期函数
      */
@@ -137,8 +153,8 @@ open class BaseActivity : ComponentActivity() {
         LocalStorageKitManager.initialize(this, (application as CapnoEasyApplication))
         localStorageKit = LocalStorageKitManager.localStorageKit
 
+        // mock数据，本地测试时候打开
         // lifecycleScope.launch {
-        //     // 后续删除，临时mock数据
         //     localStorageKit.mock()
         // }
 

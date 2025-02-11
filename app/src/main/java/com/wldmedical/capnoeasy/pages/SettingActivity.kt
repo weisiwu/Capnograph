@@ -23,22 +23,6 @@ import com.wldmedical.capnoeasy.components.settings
 class SettingActivity : BaseActivity() {
     override val pageScene = PageScene.SETTING_PAGE
 
-    // 检查是否已经链接上CannoEasy
-    private fun checkHasConnectDevice(cb: (() -> Unit)? = null) {
-        if (blueToothKit.connectedCapnoEasy.value != null) {
-            cb?.invoke()
-        } else {
-            viewModel.updateToastData(
-                ToastData(
-                    text = "未连接设备，请链接后再试",
-                    showMask = false,
-                    duration = 1000,
-                )
-            )
-        }
-    }
-
-
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @Composable
     override fun Content() {

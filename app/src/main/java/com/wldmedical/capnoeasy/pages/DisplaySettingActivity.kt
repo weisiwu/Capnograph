@@ -116,30 +116,32 @@ class DisplaySettingActivity : BaseActivity() {
                 Card (
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.clickable {
-                        viewModel.updateCO2Unit(defaultUnit.value)
-                        viewModel.updateCo2Scales(co2Scales)
-                        viewModel.updateCO2Scale(defaultScale.value)
-                        viewModel.updateWFSpeed(defaultWFSpeed.value)
-                        viewModel.updateLoadingData(
-                            LoadingData(
-                                text = "正在设置",
-                                duration = InfinityDuration,
-                            )
-                        )
-                        blueToothKit.updateCO2UnitScale(
-                            co2Scale = defaultScale.value,
-                            co2Unit = defaultUnit.value,
-                            callback = {
-                                viewModel.clearXData()
-                                viewModel.updateToastData(
-                                    ToastData(
-                                        text = "设置成功",
-                                        showMask = false,
-                                        duration = 600,
-                                    )
+                        checkHasConnectDevice {
+                            viewModel.updateCO2Unit(defaultUnit.value)
+                            viewModel.updateCo2Scales(co2Scales)
+                            viewModel.updateCO2Scale(defaultScale.value)
+                            viewModel.updateWFSpeed(defaultWFSpeed.value)
+                            viewModel.updateLoadingData(
+                                LoadingData(
+                                    text = "正在设置",
+                                    duration = InfinityDuration,
                                 )
-                            }
-                        )
+                            )
+                            blueToothKit.updateCO2UnitScale(
+                                co2Scale = defaultScale.value,
+                                co2Unit = defaultUnit.value,
+                                callback = {
+                                    viewModel.clearXData()
+                                    viewModel.updateToastData(
+                                        ToastData(
+                                            text = "设置成功",
+                                            showMask = false,
+                                            duration = 600,
+                                        )
+                                    )
+                                }
+                            )
+                        }
                     }
                 ) {
                     Text(

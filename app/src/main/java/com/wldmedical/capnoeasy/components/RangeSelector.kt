@@ -119,13 +119,11 @@ fun RangeSelector(
             Slider(
                 value = singlePosition.floatValue,
                 valueRange = valueRange,
-                // TODO: 滑块带有白色的背景，无法去除
                 thumb = {
                     Image(
                         painterResource(id = R.drawable.oneside_range_thumb),"选择器滑块",
                         modifier = Modifier
                             .size(30.dp)
-                            .background(Color.Red)
                     )
                 },
                 colors = thumbColors,
