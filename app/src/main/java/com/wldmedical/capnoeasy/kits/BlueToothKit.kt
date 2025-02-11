@@ -116,6 +116,38 @@ class BlueToothKit @Inject constructor(
 
     private val bluetoothLeScanner: BluetoothLeScanner? = bluetoothAdapter?.bluetoothLeScanner
 
+    private val classicBlueToothReceiver = object : BroadcastReceiver() {
+        @SuppressLint("MissingPermission")
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            if (action != null) {
+                when(action) {
+                    BluetoothDevice.ACTION_FOUND -> {
+                        // Discovery has found a device. Get the BluetoothDevice
+                        // object and its info from the Intent.
+                        val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                        if (device != null) {
+                            val deviceName = device.name
+                            val deviceHardwareAddress = device.address // MAC address
+                            // TODO: 这里直接加逻辑，去做链接
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 注册经典蓝牙扫描
+    public fun installClassicBluetoothScanner(context: Activity) {
+        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+        context.registerReceiver(classicBlueToothReceiver, filter)
+    }
+
+    // 取消经典蓝牙扫描注册
+    public fun uninstallClassicBluetoothScanner(context: Activity) {
+        context.unregisterReceiver(classicBlueToothReceiver)
+    }
+
     @SuppressLint("MissingPermission", "NewApi")
     private fun writeDataToDevice(
         data: ByteArray? = sendArray.toByteArray(),
@@ -130,8 +162,8 @@ class BlueToothKit @Inject constructor(
         println("wswTest 写入结果 ${result}")
     }
 
-    // 是否正在扫描
-    private var scanning = false
+    // 是否正在扫描蓝牙设备
+    private var isBLEScanning = false
 
     private val SCAN_PERIOD: Long = 5000
 
@@ -472,27 +504,27 @@ class BlueToothKit @Inject constructor(
     // https://developer.android.com/develop/connectivity/bluetooth/find-bluetooth-devices?hl=zh-cn
     @SuppressLint("MissingPermission")
     private fun scanBleDevices() {
-        if (scanning) { return }
+        if (isBLEScanning) { return }
 
-        scanning = true
+        isBLEScanning = true
         bluetoothLeScanner?.startScan(leScanCallback)
     }
 
     // 停止扫描低功耗蓝牙设备
     @SuppressLint("MissingPermission")
     private fun stopScanBleDevices() {
-        if (!scanning) { return }
+        if (!isBLEScanning) { return }
 
-        scanning = false
+        isBLEScanning = false
         bluetoothLeScanner?.stopScan(leScanCallback)
     }
 
     // 扫描经典蓝牙
     @SuppressLint("MissingPermission")
     private fun scanClassicDevices() {
-        if (scanning) { return }
+        if (isBLEScanning) { return }
 
-        scanning = true
+        isBLEScanning = true
         val filter = IntentFilter()
         filter.addAction(BluetoothDevice.ACTION_FOUND)
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
@@ -504,9 +536,9 @@ class BlueToothKit @Inject constructor(
     // 停止扫描经典蓝牙
     @SuppressLint("MissingPermission")
     private fun stopScanClassicDevices() {
-        if (!scanning) { return }
+        if (!isBLEScanning) { return }
 
-        scanning = false
+        isBLEScanning = false
         activity.unregisterReceiver(discoveryReceiver)
         bluetoothAdapter?.cancelDiscovery()
     }
