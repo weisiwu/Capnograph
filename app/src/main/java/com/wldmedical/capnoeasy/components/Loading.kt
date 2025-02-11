@@ -31,6 +31,7 @@ import kotlinx.coroutines.delay
 data class LoadingData(
     val text: String,
     val duration: Long = 0,
+    val cancelable: Boolean = true,
     val callback:  (() -> Unit)? = null,
 )
 

@@ -64,6 +64,7 @@ class SettingActivity : BaseActivity() {
                                 LoadingData(
                                     text = "正在校零",
                                     duration = InfinityDuration,
+                                    cancelable = false
                                 )
                             )
                             blueToothKit.correctZero() {

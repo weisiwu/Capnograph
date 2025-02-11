@@ -13,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityOptionsCompat
+import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.DeviceList
 import com.wldmedical.capnoeasy.components.DeviceType
@@ -62,7 +63,9 @@ class SearchActivity : BaseActivity() {
                 viewModel.updateDiscoveredPeripherals(null, true)
                 viewModel.updateLoadingData(
                     LoadingData(
-                        text = "开始搜索${it.name ?: unkownName}"
+                        text = "开始搜索${it.name ?: unkownName}",
+                        duration = InfinityDuration,
+                        cancelable = false
                     )
                 )
                 blueToothKit.searchDevices(

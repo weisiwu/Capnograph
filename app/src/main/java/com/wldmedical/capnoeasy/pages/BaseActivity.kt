@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.AlertModal
@@ -24,7 +23,6 @@ import com.wldmedical.capnoeasy.kits.PrintProtocalKitManager
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 /***
  * 所有页面基类
@@ -42,8 +40,9 @@ open class BaseActivity : ComponentActivity() {
             Loading(
                 data = loadingData,
                 onClick = {
-                    // TODO: 这里可以细化，比如链接中的，点击也不应该消失
-                    viewModel.updateLoadingData(null)
+                    if (loadingData.cancelable) {
+                        viewModel.updateLoadingData(null)
+                    }
                 },
                 onTimeout = {
                     viewModel.updateLoadingData(null)
