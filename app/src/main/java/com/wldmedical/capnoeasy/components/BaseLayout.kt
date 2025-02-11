@@ -65,8 +65,20 @@ fun BaseLayout(
         ActionBar(
             viewModel = viewModel,
             onTabClick = { index ->
-                val shouldContinue = onTabClick?.invoke(index) ?: true
-                if (!shouldContinue) { return@ActionBar }
+                // 如果当前正在记录中，不允许跳转
+                if (viewModel.isRecording.value) {
+                    viewModel.updateAlertData(
+                        AlertData(
+                            text = "正在记录中，请先停止",
+                            ok_btn_text = "停止",
+                            cancel_btn_text = "再想想",
+                            onOk = { onNavBarRightClick?.invoke() },
+                            onCancel = { viewModel.updateAlertData(null) },
+                        )
+                    )
+                    return@ActionBar
+                }
+                onTabClick?.invoke(index)
                 var intent = Intent(context, MainActivity::class.java)
                 when(index) {
                     0 -> intent = Intent(context, SearchActivity::class.java)

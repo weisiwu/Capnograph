@@ -51,7 +51,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun showAlert() {
-        if(viewModel.isRecording.value) {
+        if(!viewModel.isRecording.value) {
             viewModel.updateConfirmData(
                 ConfirmData(
                     title = "记录保存成功",

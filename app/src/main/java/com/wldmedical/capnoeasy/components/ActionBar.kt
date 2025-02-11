@@ -43,7 +43,7 @@ val tabs = listOf(
 @Composable
 fun ActionBar(
     viewModel: AppStateModel,
-    onTabClick: ((index: Int) -> Unit)? = null,
+    onTabClick: ((index: Int) -> Unit)? = { viewModel.updateCurrentTab(it) },
     isInPreview: Boolean = false
 ) {
     Column(
@@ -60,7 +60,6 @@ fun ActionBar(
                     selected = selected,
                     selectedContentColor = selectedColor,
                     onClick = {
-                        viewModel.updateCurrentTab(index)
                         onTabClick?.invoke(index)
                     },
                     icon = { tab.icon?.let {
