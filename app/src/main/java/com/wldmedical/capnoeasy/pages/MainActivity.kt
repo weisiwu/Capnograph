@@ -48,6 +48,13 @@ class MainActivity : BaseActivity() {
         } catch (e: Exception) {
             println("wswTest 捕获到自动链接BLE配对设备异常: ${e.message}")
         }
+
+        // TODO: 临时写法
+        // 目前有个问题，paired的值，似乎应该作为用户偏好存储，而不是写在UI变量里
+        // if (blueToothKit.pairedPrinter.value != null && blueToothKit.pairedCapnoEasy.value != null) {
+        if (blueToothKit.connectedCapnoEasy.value != null && blueToothKit.connectedPrinter.value != null) {
+            blueToothKit.gpPrinterManager.print()
+        }
     }
 
     private fun showAlert() {

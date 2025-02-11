@@ -14,6 +14,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
+import android.bluetooth.BluetoothSocket
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
@@ -39,6 +40,7 @@ import com.wldmedical.capnoeasy.PAIRED_DEVICE_KEY
 import com.wldmedical.capnoeasy.USER_PREF_NS
 import com.wldmedical.capnoeasy.WF_SPEED
 import com.wldmedical.capnoeasy.models.AppStateModel
+import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +50,7 @@ import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.text.SimpleDateFormat
+import java.util.UUID
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
@@ -116,38 +119,6 @@ class BlueToothKit @Inject constructor(
 
     private val bluetoothLeScanner: BluetoothLeScanner? = bluetoothAdapter?.bluetoothLeScanner
 
-    private val classicBlueToothReceiver = object : BroadcastReceiver() {
-        @SuppressLint("MissingPermission")
-        override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-            if (action != null) {
-                when(action) {
-                    BluetoothDevice.ACTION_FOUND -> {
-                        // Discovery has found a device. Get the BluetoothDevice
-                        // object and its info from the Intent.
-                        val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                        if (device != null) {
-                            val deviceName = device.name
-                            val deviceHardwareAddress = device.address // MAC address
-                            // TODO: 这里直接加逻辑，去做链接
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // 注册经典蓝牙扫描
-    public fun installClassicBluetoothScanner(context: Activity) {
-        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-        context.registerReceiver(classicBlueToothReceiver, filter)
-    }
-
-    // 取消经典蓝牙扫描注册
-    public fun uninstallClassicBluetoothScanner(context: Activity) {
-        context.unregisterReceiver(classicBlueToothReceiver)
-    }
-
     @SuppressLint("MissingPermission", "NewApi")
     private fun writeDataToDevice(
         data: ByteArray? = sendArray.toByteArray(),
@@ -159,21 +130,27 @@ class BlueToothKit @Inject constructor(
             data!!,
             type
         )
-        println("wswTest 写入结果 ${result}")
+//        println("wswTest 写入结果 ${result}")
     }
 
-    // 是否正在扫描蓝牙设备
+    // 是否正在扫描BLE蓝牙设备
     private var isBLEScanning = false
+
+    // 是否正在扫描经典蓝牙设备
+    private var isClassicScanning = false
 
     private val SCAN_PERIOD: Long = 5000
 
     // BLE蓝牙-扫描回调
     private val leScanCallback = object : ScanCallback() {
+        @SuppressLint("MissingPermission")
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val device = result.device
             if (device != null && !discoveredPeripherals.contains(device)) {
-                discoveredPeripherals.add(device)
-                scanFind?.invoke(device)
+                if (device.name != null) {
+                    discoveredPeripherals.add(device)
+                    scanFind?.invoke(device)
+                }
             }
         }
 
@@ -287,7 +264,6 @@ class BlueToothKit @Inject constructor(
                 receivedArray.addAll(characteristic.value.toList())
 
                 CoroutineScope(Dispatchers.Default).launch {
-//                    println("wswTest 是否在接受数据V1  ${receivedArray.size}")
                     if (receivedArray.size >= 20) {
                         val firstArray = getCMDDataArray()
                         if (firstArray != null) {
@@ -313,13 +289,25 @@ class BlueToothKit @Inject constructor(
 
     // 经典蓝牙-扫描回调
     private val discoveryReceiver = object : BroadcastReceiver() {
+        @SuppressLint("MissingPermission")
         override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-            if (BluetoothDevice.ACTION_FOUND == action) {
-                val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                if (device != null && !discoveredPeripherals.contains(device)) {
-                    discoveredPeripherals.add(device)
-                    scanFind?.invoke(device)
+            val action = intent.action ?: return
+
+            when(action) {
+                BluetoothDevice.ACTION_FOUND -> {
+                    val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                    if (device != null && !discoveredPeripherals.contains(device)) {
+                        if (device.name == null) { return }
+                        println("wswTest 设备名称 ${device.name} === ${isGPPrinterName(device.name)}")
+                        // GP蓝牙打印机存在问题，
+                        if (isGPPrinterName(device.name)) {
+                            autoConnectPrinter(device)
+                        }
+                        // 目前没有涌上经典蓝牙的设备，所以不需要展示他们和连接他们
+                        // 蓝牙打印机虽然使用了经典蓝牙的链接方式，但是为自动连接
+                        // discoveredPeripherals.add(device)
+                        // scanFind?.invoke(device)
+                    }
                 }
             }
         }
@@ -356,6 +344,9 @@ class BlueToothKit @Inject constructor(
 
     // 已链接设备-打印机
     public val connectedPrinter = mutableStateOf<BluetoothDevice?>(null)
+
+    // 佳博打印机SKD
+    public val gpPrinterManager = HotmeltPinter()
 
     // 历史配对设备-CapnoEasy
     public val pairedCapnoEasy = mutableStateOf<BluetoothDevice?>(null)
@@ -522,9 +513,9 @@ class BlueToothKit @Inject constructor(
     // 扫描经典蓝牙
     @SuppressLint("MissingPermission")
     private fun scanClassicDevices() {
-        if (isBLEScanning) { return }
+        if (isClassicScanning) { return }
 
-        isBLEScanning = true
+        isClassicScanning = true
         val filter = IntentFilter()
         filter.addAction(BluetoothDevice.ACTION_FOUND)
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
@@ -536,9 +527,9 @@ class BlueToothKit @Inject constructor(
     // 停止扫描经典蓝牙
     @SuppressLint("MissingPermission")
     private fun stopScanClassicDevices() {
-        if (!isBLEScanning) { return }
+        if (!isClassicScanning) { return }
 
-        isBLEScanning = false
+        isClassicScanning = false
         activity.unregisterReceiver(discoveryReceiver)
         bluetoothAdapter?.cancelDiscovery()
     }
@@ -577,6 +568,7 @@ class BlueToothKit @Inject constructor(
         }
 
         if (type == BluetoothType.ALL || type == BluetoothType.CLASSIC) {
+            println("wswTest 开始经典蓝牙扫描")
             // 开始扫描经典蓝牙
             scanClassicDevices()
         }
@@ -601,6 +593,21 @@ class BlueToothKit @Inject constructor(
     public fun getSavedBLEDeviceAddress(context: Activity): String? {
         val sharedPreferences: SharedPreferences = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
         return sharedPreferences.getString(PAIRED_DEVICE_KEY, null)
+    }
+
+    /***
+     * 自动连接打印机，目前按照值链接佳博打印机，按照名字做匹配
+     */
+    private fun autoConnectPrinter(device: BluetoothDevice) {
+        if (connectedPrinter.value != null) { return }
+        connectedPrinter.value = bluetoothAdapter?.getRemoteDevice(device.address)
+        gpPrinterManager.connect(device.address, false)
+    }
+
+    // 判断设备名称是否满足佳博规则
+    private fun isGPPrinterName(name: String): Boolean {
+        val regex = Regex("^GP-(.+)_([\\w\\d\\p{Punct}]+)$")
+        return regex.matches(name)
     }
 
     // 链接上CapnoEasy后，需要尽快发送初始化信息，否则会断开
@@ -1126,6 +1133,9 @@ class BlueToothKit @Inject constructor(
         if (receivedCO2WavedData.size >= maxXPoints) {
             receivedCO2WavedData.removeAt(0)
         }
+
+        // TODO: 临时这么写，后续不这么写，临时把波形打印出来
+        gpPrinterManager.update(currentCO2.value)
 
         updateReceivedData(currentPoint)
     }
