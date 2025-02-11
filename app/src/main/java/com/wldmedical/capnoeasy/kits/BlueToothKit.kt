@@ -38,6 +38,7 @@ import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.PAIRED_DEVICE_KEY
 import com.wldmedical.capnoeasy.USER_PREF_NS
 import com.wldmedical.capnoeasy.WF_SPEED
+import com.wldmedical.capnoeasy.models.AppStateModel
 import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,7 +54,6 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.regex.Pattern
 import javax.inject.Inject
 import kotlin.concurrent.withLock
-import kotlin.math.absoluteValue
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
@@ -82,18 +82,6 @@ data class CO2WavePointData(
     val index: Int = 0
 )
 
-/**
- * 报警类型
- */
-enum class AudioType {
-    // 低级报警
-    // 技术报警: 需要零点校准/无适配器/适配器污染
-    LowLevelAlert,
-    // 中级报警
-    // 生理报警: ETCO2值低/ETCO2值高/RR 值高/RR值低/窒息/电池电量低
-    MiddleLevelAlert
-}
-
 const val CHECK_SUCCESS = 0
 const val NOT_SUPPORT_BLUETOOTH = 1
 const val REQUEST_ENABLE_BT = 2
@@ -112,12 +100,15 @@ const val unkownName = "未知设备"
  */
 class BlueToothKit @Inject constructor(
     @ActivityContext private val activity: Activity,
+    private val appState: AppStateModel
 ) {
     /******************* 属性 *******************/
     // 获取主线程的 Handler
     val handler = Handler(Looper.getMainLooper())
 
     val taskQueue = BluetoothTaskQueue()
+
+    private val audioIns = AudioPlayer(activity)
 
     private val bluetoothManager: BluetoothManager = activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 
@@ -792,7 +783,6 @@ class BlueToothKit @Inject constructor(
             sendArray.add(SensorCommand.Expand.value.toByte())
             sendArray.add(0x03)
             sendArray.add(ISBStateF2H.CO2Scale.value.toByte())
-            // TODO:(wsw) zheli
             if (
                 listOf(
                     CO2_SCALE.MIDDLE,
@@ -1042,7 +1032,9 @@ class BlueToothKit @Inject constructor(
     /** 处理CO2波形数据 */
     private fun handleCO2Waveform(data: ByteArray, NBFM: Int) {
         val DPIM = data[5].toUByte().toInt()
-        currentCO2.value = (128 * data[3].toUByte().toInt() + (data[4].toUByte().toInt()) - 1000).toFloat() / 100
+        var isValidETCO2 = true
+        var isValidRR = true
+        currentCO2.value = (128 * data[3].toUByte().toInt() + (data[4].toUByte().toInt()) - 1000).toFloat() / 100f
 
         if (NBFM > 4) {
             when (DPIM) {
@@ -1050,15 +1042,20 @@ class BlueToothKit @Inject constructor(
                     handleCO2Status(data, NBFM)
                     isNeedZeroCorrect = (data[7].toUByte().toInt() and 0x0C) == 0x0C
                     isAdaptorInvalid = (data[6].toUByte().toInt() and 0x02) == 0x02
-                    isAdaptorPolluted = currentCO2.value < 0 && (data[6].toUByte().toInt() and 0x01) == 1
+                    isAdaptorPolluted = currentCO2.value < 0 && (data[6].toUByte().toInt() and 0x01) == 0x01
                 }
                 ISBState80H.ETCO2Value.value -> {
                     currentETCO2.value = (data[6].toUByte().toFloat() * 128 + (data[7].toUByte().toFloat())) / 10f
-                    // println("wswTest currentETCO2 ${currentETCO2} ")
+                    // 检测到呼吸。才能计算是否异常。
+                    isValidETCO2 = !currentBreathe || (
+                        currentETCO2.value <= appState.alertETCO2Range.value.start && currentETCO2.value >= appState.alertETCO2Range.value.endInclusive
+                    )
                 }
                 ISBState80H.RRValue.value -> {
                     currentRespiratoryRate.value = data[6].toUByte().toInt() * 128 + (data[7].toUByte().toInt())
-                    // println("wswTest 呼吸率 ${currentRespiratoryRate} ")
+                    isValidRR = !currentBreathe || (
+                        currentRespiratoryRate.value <= appState.alertRRRange.value.endInclusive && currentRespiratoryRate.value >= appState.alertRRRange.value.endInclusive
+                    )
                 }
                 ISBState80H.FiCO2Value.value -> {
                     currentFiCO2 = ((data[6].toUByte().toInt().toInt() and 0xFF * 128 + (data[7].toUByte().toInt().toInt() and 0xFF)).toFloat() / 10)
@@ -1068,13 +1065,15 @@ class BlueToothKit @Inject constructor(
             }
 
             // TODO: 报警的逻辑，后续再加
-            // if (!isAsphyxiation && isValidETCO2 && isValidRR && !isLowerEnergy && !isNeedZeroCorrect && !isAdaptorInvalid && !isAdaptorPolluted) {
-            //     audioIns.stopAudio()
-            // } else if (isAsphyxiation || !isValidETCO2 || !isValidRR || isLowerEnergy) {
-            //     audioIns.playAlertAudio(AudioType.MiddleLevelAlert)
-            // } else if (isNeedZeroCorrect || isAdaptorInvalid || isAdaptorPolluted) {
-            //     audioIns.playAlertAudio(AudioType.LowLevelAlert)
-            // }
+             if (!isAsphyxiation && isValidETCO2 && isValidRR && !isLowerEnergy && !isNeedZeroCorrect && !isAdaptorInvalid && !isAdaptorPolluted) {
+                 audioIns.stopAudio()
+             } else if (isAsphyxiation || !isValidETCO2 || !isValidRR || isLowerEnergy) {
+                 audioIns.playAlertAudio(AlertAudioType.MiddleLevelAlert)
+             } else if (isNeedZeroCorrect || isAdaptorInvalid) {
+                 // TODO: 临时将  isAdaptorPolluted 删除，因为其值恒为true
+                // } else if (isNeedZeroCorrect || isAdaptorInvalid || isAdaptorPolluted) {
+                 audioIns.playAlertAudio(AlertAudioType.LowLevelAlert)
+             }
         }
 
         val currentPoint = DataPoint(
@@ -1095,7 +1094,7 @@ class BlueToothKit @Inject constructor(
         if (receivedCO2WavedData.size >= maxXPoints) {
             receivedCO2WavedData.removeAt(0)
         }
-//        println("wswTest 正在更新 $currentCO2.value")
+
         updateReceivedData(currentPoint)
     }
 
@@ -1219,13 +1218,15 @@ object BlueToothKitManager {
     lateinit var blueToothKit: BlueToothKit
 
     fun initialize(
-        activity: Activity
+        activity: Activity,
+        appState: AppStateModel
     ) {
         if (::blueToothKit.isInitialized) {
             return
         }
         blueToothKit = BlueToothKit(
             activity = activity,
+            appState = appState,
         )
     }
 }

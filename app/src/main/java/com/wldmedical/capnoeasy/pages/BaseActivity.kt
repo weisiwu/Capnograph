@@ -128,7 +128,7 @@ open class BaseActivity : ComponentActivity() {
 
         viewModel = ViewModelProvider(this)[AppStateModel::class.java]
 
-        BlueToothKitManager.initialize(this)
+        BlueToothKitManager.initialize(this, viewModel)
         blueToothKit = BlueToothKitManager.blueToothKit
 
         PrintProtocalKitManager.initialize()
