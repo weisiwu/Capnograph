@@ -127,6 +127,7 @@ class BlueToothKit @Inject constructor(
             data!!,
             type
         )
+        println("wswTest 写入结果 ${result}")
     }
 
     // 是否正在扫描
@@ -414,6 +415,8 @@ class BlueToothKit @Inject constructor(
 
     // 生产日期
     public var productionDate: MutableState<String> = mutableStateOf("")
+
+    private var correctZeroCallback: (() -> Unit)? = null
 
     /******************* 方法 *******************/
     // 判断蓝牙状态
@@ -711,6 +714,7 @@ class BlueToothKit @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun correctZero(callback: (() -> Unit)? = null) {
+        correctZeroCallback = callback
         taskQueue.addTasks(
             listOf(
                 Runnable { sendStopContinuous() },
@@ -720,10 +724,6 @@ class BlueToothKit @Inject constructor(
                     sendSavedData()
                 },
                 Runnable { sendContinuous() },
-                Runnable {
-                    Thread.sleep(10000)
-                    callback?.invoke()
-                }
             )
         )
         taskQueue.executeTask()
@@ -1109,8 +1109,7 @@ class BlueToothKit @Inject constructor(
         when (ZSBM) {
             ZSBState.NOZeroning.value -> {
                 if (isCorrectZero) {
-                    // TODO: 这里加一个矫零的回调
-//                    correctZeroCallback?.invoke()
+                    correctZeroCallback?.invoke()
                     isCorrectZero = false
                 }
             }
@@ -1120,7 +1119,7 @@ class BlueToothKit @Inject constructor(
             else -> isCorrectZero = false
         }
 
-        isAsphyxiation = (data[6].toUByte().toInt().toInt() and 0x40) == 0x40 // 检查是否置位
+        isAsphyxiation = (data[6].toUByte().toInt() and 0x40) == 0x40 // 检查是否置位
     }
 
     /** 处理设置： 序列号、硬件版本、设备名称 */
