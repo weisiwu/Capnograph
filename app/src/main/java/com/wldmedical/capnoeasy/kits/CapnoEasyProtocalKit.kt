@@ -1,6 +1,5 @@
 package com.wldmedical.capnoeasy.kits
 
-import android.provider.Contacts.Intents.UI
 import java.util.UUID
 
 /**

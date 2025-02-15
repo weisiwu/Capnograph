@@ -28,11 +28,11 @@ class MainActivity : BaseActivity() {
     override fun onTabClick(index: Int): Boolean {
         super.onTabClick(index)
 
-//        // 正在记录，且跳往非主页
-//        if (viewModel.isRecording.value && index != 1) {
-//            showAlert()
-//            return false
-//        }
+       // 正在记录，且跳往非主页
+       if (viewModel.isRecording.value && index != 1) {
+           showAlert()
+           return false
+       }
         return true
     }
 
@@ -66,6 +66,7 @@ class MainActivity : BaseActivity() {
                     confirm_btn_text = "确认",
                     onClick = {
                         viewModel.updateConfirmData(null)
+                        viewModel.updateTotalCO2WavedData()
                     }
                 )
             )
@@ -74,6 +75,7 @@ class MainActivity : BaseActivity() {
 
     override fun onNavBarRightClick() {
         val isRecording = viewModel.isRecording.value
+        val context = this
         startRecordTime = LocalDateTime.now()
 
         // 正在记录中，点击为保存动作
@@ -86,7 +88,9 @@ class MainActivity : BaseActivity() {
                 )
                 localStorageKit.savePatient(patient)
                 localStorageKit.saveRecord(
+                    context = context,
                     patient = patient,
+                    data = viewModel.totalCO2WavedData.toList(),
                     startTime = startRecordTime ?: LocalDateTime.now(),
                     endTime = endRecordTime ?: LocalDateTime.now()
                 )

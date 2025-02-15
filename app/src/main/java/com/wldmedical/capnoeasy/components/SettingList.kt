@@ -1,7 +1,5 @@
 package com.wldmedical.capnoeasy.components
 
-import android.content.Intent
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,13 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.R
-import com.wldmedical.capnoeasy.pages.AlertSettingActivity
-import com.wldmedical.capnoeasy.pages.DisplaySettingActivity
-import com.wldmedical.capnoeasy.pages.HistoryRecordsActivity
-import com.wldmedical.capnoeasy.pages.ModuleSettingActivity
-import com.wldmedical.capnoeasy.pages.PrintSettingActivity
-import com.wldmedical.capnoeasy.pages.SettingActivity
-import com.wldmedical.capnoeasy.pages.SystemSettingActivity
 
 enum class SettingType(value: Int) {
     ZERO(0), // 校零

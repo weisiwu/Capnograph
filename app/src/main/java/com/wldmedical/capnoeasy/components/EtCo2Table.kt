@@ -33,7 +33,6 @@ import com.wldmedical.capnoeasy.kits.BlueToothKitManager.blueToothKit
 import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.patientAgeRange
-import kotlin.math.absoluteValue
 import kotlin.math.ceil
 
 val baseRowHeight = 56.dp

@@ -1,12 +1,9 @@
 package com.wldmedical.capnoeasy.components
 
 import android.app.Activity.RESULT_OK
-import android.app.Instrumentation
 import android.content.Intent
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth

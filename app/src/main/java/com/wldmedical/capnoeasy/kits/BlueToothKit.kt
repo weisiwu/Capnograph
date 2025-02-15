@@ -14,7 +14,6 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
-import android.bluetooth.BluetoothSocket
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
@@ -40,6 +39,7 @@ import com.wldmedical.capnoeasy.PAIRED_DEVICE_KEY
 import com.wldmedical.capnoeasy.USER_PREF_NS
 import com.wldmedical.capnoeasy.WF_SPEED
 import com.wldmedical.capnoeasy.models.AppStateModel
+import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.CoroutineScope
@@ -50,7 +50,6 @@ import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.text.SimpleDateFormat
-import java.util.UUID
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
@@ -75,15 +74,6 @@ enum class BluetoothType {
 
 // 接收到的数据
 data class DataPoint(val index: Int, val value: Float)
-
-// 记录波形数据用格式
-data class CO2WavePointData(
-    val co2: Float = 0f,
-    val RR: Int = 0,
-    val ETCO2: Float = 0f,
-    val FiCO2: Float = 0f,
-    val index: Int = 0
-)
 
 const val CHECK_SUCCESS = 0
 const val NOT_SUPPORT_BLUETOOTH = 1
@@ -384,9 +374,6 @@ class BlueToothKit @Inject constructor(
 
     // 当前CO2值
     public var currentCO2: MutableState<Float> = mutableStateOf(0f)
-
-    // 本次记录的所有波形数据
-    public var totalCO2WavedData = mutableListOf<CO2WavePointData>()
 
     // 当前ETCO2值
     public var currentETCO2: MutableState<Float> = mutableStateOf(0f)
@@ -1120,13 +1107,15 @@ class BlueToothKit @Inject constructor(
             value = currentCO2.value,
         )
         receivedCO2WavedData.add(currentPoint)
-        totalCO2WavedData.add(
+
+        // 是否保存这个数据，按照用户是否点击了开始记录开始算
+        appState.updateTotalCO2WavedData(
             CO2WavePointData(
                 co2 = currentCO2.value,
                 RR = currentRespiratoryRate.value,
                 ETCO2 = currentETCO2.value,
                 FiCO2 = currentFiCO2,
-                index = totalCO2WavedData.size
+                index = appState.totalCO2WavedData.size
             )
         )
 
@@ -1135,6 +1124,7 @@ class BlueToothKit @Inject constructor(
         }
 
         // TODO: 临时这么写，后续不这么写，临时把波形打印出来
+        // 后续要将波形打印做成筛选后打印
         gpPrinterManager.update(currentCO2.value)
 
         updateReceivedData(currentPoint)

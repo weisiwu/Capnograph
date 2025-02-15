@@ -98,6 +98,11 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     // https://github.com/itext/itextpdf
     implementation("com.itextpdf:itextpdf:5.5.13.4")
+    // https://github.com/DImuthuUpe/AndroidPdfViewer
+    implementation("com.github.barteksc:android-pdf-viewer:3.2.0-beta.1") {
+        exclude(group = "com.android.support")
+    }
+    implementation("androidx.collection:collection:1.2.0")
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

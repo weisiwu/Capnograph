@@ -1,11 +1,8 @@
 package com.wldmedical.capnoeasy.kits
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.Application
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
+import android.os.Environment
 import androidx.compose.runtime.mutableStateOf
 import androidx.room.Dao
 import androidx.room.Database
@@ -18,16 +15,16 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.DATABASE_NS
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.components.formatter
-import com.wldmedical.capnoeasy.pages.BaseActivity
+import com.wldmedical.capnoeasy.models.CO2WavePointData
 import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.time.LocalDateTime
 import javax.inject.Inject
 import java.io.Serializable
@@ -52,6 +49,8 @@ data class Record(
     val dateIndex: Int = 0,
     val patientIndex: String = "",
     val isGroupTitle: Boolean = false,
+    var pdfFilePath: String? = null,
+    val data: List<CO2WavePointData> = listOf(),
     val groupTitle: String = "",
 ): Serializable
 
@@ -96,6 +95,22 @@ class PatientConverters {
     }
 }
 
+// CO2WavePointData类型转换器
+class CO2WavePointDataConverters {
+    private val gson = Gson()
+
+    @TypeConverter
+    fun fromCO2WavePointData(waveData: List<CO2WavePointData>?): String? {
+        return waveData?.let { gson.toJson(it) }
+    }
+
+    @TypeConverter
+    fun toCO2WavePointData(json: String?): List<CO2WavePointData>? {
+        val type = object : TypeToken<List<CO2WavePointData>>() {}.type
+        return json?.let { gson.fromJson(it, type) }
+    }
+}
+
 @Dao
 interface RecordDao {
     @Insert
@@ -103,6 +118,9 @@ interface RecordDao {
 
     @Query("SELECT * FROM records")
     fun getAllRecords(): List<Record>
+
+    @Query("SELECT * FROM records WHERE id = :id")
+    fun queryRecordById(id: UUID): Record?
 }
 
 class RecordConverters {
@@ -134,7 +152,14 @@ class LocalDateTimeConverters {
 }
 
 @Database(entities = [Patient::class, Record::class], version = 1)
-@TypeConverters(value = [PatientConverters::class, RecordConverters::class, LocalDateTimeConverters::class])
+@TypeConverters(
+    value = [
+        PatientConverters::class,
+        RecordConverters::class,
+        LocalDateTimeConverters::class,
+        CO2WavePointDataConverters::class,
+    ]
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun patientDto(): PatientDao
     abstract fun recordDao(): RecordDao
@@ -205,18 +230,39 @@ class LocalStorageKit @Inject constructor(
      * 在主页保存记录时候调用
      */
     suspend fun saveRecord(
+        context: Context? = null,
         patient: Patient,
         startTime: LocalDateTime,
+        data: List<CO2WavePointData> = listOf(),
         endTime: LocalDateTime,
         ) {
         withContext(Dispatchers.IO) {
+            val dateIndex = generateDateIndex(startTime)
+            val patientIndex = generatePatientIndex(patient)
+            var pdfFilePath: String? = null
+
+            if (context != null) {
+                pdfFilePath = File(
+                    context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
+                    "${patientIndex}_${dateIndex}.pdf"
+                ).absolutePath
+            }
+
             val record = Record(
                 patient = patient,
                 startTime = startTime,
                 endTime = endTime,
-                dateIndex = generateDateIndex(startTime),
-                patientIndex = generatePatientIndex(patient),
+                data = data,
+                dateIndex = dateIndex,
+                patientIndex = patientIndex,
+                pdfFilePath = pdfFilePath,
             )
+
+            if (pdfFilePath != null) {
+                createPdf(data.toList(), pdfFilePath, "万联达仪器有限公司")
+                println("wswTest 保存pdf文件的地址是什么 ${pdfFilePath}")
+            }
+
             database.recordDao().insertRecord(record)
             records.add(record)
         }

@@ -23,8 +23,18 @@ import com.wldmedical.capnoeasy.components.ToastData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.io.Serializable
 import javax.inject.Inject
 import javax.inject.Singleton
+
+// 记录波形数据用格式
+data class CO2WavePointData(
+    val co2: Float = 0f,
+    val RR: Int = 0,
+    val ETCO2: Float = 0f,
+    val FiCO2: Float = 0f,
+    val index: Int = 0
+): Serializable
 
 /**
  * app运行时状态
@@ -89,6 +99,9 @@ class AppState @Inject constructor() {
     // 年龄
     val patientAge: MutableState<Int?> = mutableStateOf(null)
     
+    // 本次记录的所有capnoeasy波形数据, 此数据和app状态相关，所以放在这里。
+    var totalCO2WavedData = mutableListOf<CO2WavePointData>()
+
     /***
      * 设置相关
      */
@@ -270,6 +283,19 @@ class AppStateModel @Inject constructor(
     val patientAge = appState.patientAge
     fun updatePatientAge(newVal: Int) {
         appState.patientAge.value = newVal
+    }
+
+    // 本次记录的蓝牙波形数据
+    val totalCO2WavedData = appState.totalCO2WavedData
+    fun updateTotalCO2WavedData(newVal: CO2WavePointData? = null) {
+        // 有值且在记录中
+        if (appState.isRecording.value && newVal != null) {
+            appState.totalCO2WavedData.add(newVal)
+        }
+        // 未传入值且停止记录了，对数据做清空（本次记录已经完成）
+        if (!appState.isRecording.value && newVal == null) {
+            appState.totalCO2WavedData.clear()
+        }
     }
 
     /***

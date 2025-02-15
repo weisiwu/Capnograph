@@ -54,7 +54,7 @@ import com.wldmedical.capnoeasy.kits.Groups
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.pages.HistoryRecordDetailActivity
-import com.wldmedical.capnoeasy.patientParams
+import com.wldmedical.capnoeasy.recordIdParams
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -215,7 +215,7 @@ fun HistoryList(
                                     context,
                                     HistoryRecordDetailActivity::class.java
                                 )
-                                intent.putExtra(patientParams, record)
+                                intent.putExtra(recordIdParams, record.id.toString())
                                 launcher.launch(intent, options)
                             }
                     ) {
