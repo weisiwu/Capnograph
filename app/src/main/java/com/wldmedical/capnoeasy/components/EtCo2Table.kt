@@ -33,7 +33,7 @@ import com.wldmedical.capnoeasy.kits.BlueToothKitManager.blueToothKit
 import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.patientAgeRange
-import kotlin.math.ceil
+import kotlin.math.floor
 
 val baseRowHeight = 56.dp
 
@@ -184,7 +184,7 @@ fun AttributeLine(
                 Text(
                     text = if (attribute.viewModelName == "rr")
                         blueToothKit.currentRespiratoryRate.value.toString()
-                        else ceil(blueToothKit.currentETCO2.value).toInt().toString(),
+                        else floor(blueToothKit.currentETCO2.value).toInt().toString(),
                     fontWeight = valueFontWeight,
                     fontSize = 16.sp,
                     color = valueColor,

@@ -17,6 +17,7 @@ import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.itextpdf.text.Document
 import com.itextpdf.text.Element
 import com.itextpdf.text.Image
@@ -147,7 +148,9 @@ class SaveChartToPdfTask(
                 copyLineChart.description.isEnabled = originalLineChart.description.isEnabled
                 copyLineChart.axisLeft.axisMinimum = originalLineChart.axisLeft.axisMinimum
                 copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
-                copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
+                copyLineChart.xAxis.valueFormatter = object : ValueFormatter() {
+                    override fun getFormattedValue(value: Float): String { return "" }
+                }
                 copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
                 copyLineChart.measure(
                     View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),

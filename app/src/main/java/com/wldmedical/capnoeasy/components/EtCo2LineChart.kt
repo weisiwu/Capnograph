@@ -48,7 +48,9 @@ fun EtCo2LineChart(
     var index = 0f
     val chart: MutableState<LineChart?> = remember { mutableStateOf(null) }
     val entries = remember { mutableStateListOf<Entry>() }.apply {
-        repeat(maxXPoints) { add(Entry(it.toFloat(), 0f)) }
+        if (this.size < maxXPoints) {
+            repeat(maxXPoints) { add(Entry(it.toFloat(), 0f)) }
+        }
     }
     viewModel.lineChart = chart.value
 
