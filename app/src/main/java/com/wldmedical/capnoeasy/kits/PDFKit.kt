@@ -6,33 +6,22 @@ package com.wldmedical.capnoeasy.kits
  * 2、保存为PDF格式
  */
 
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.AsyncTask
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.itextpdf.text.BaseColor
-import com.itextpdf.text.Chunk
 import com.itextpdf.text.Document
 import com.itextpdf.text.Element
-import com.itextpdf.text.Font
 import com.itextpdf.text.Image
-import com.itextpdf.text.Phrase
 import com.itextpdf.text.Rectangle
 import com.itextpdf.text.pdf.BaseFont
-import com.itextpdf.text.pdf.ColumnText
-import com.itextpdf.text.pdf.PdfContentByte
 import com.itextpdf.text.pdf.PdfGState
 import com.itextpdf.text.pdf.PdfWriter
 import com.wldmedical.capnoeasy.models.CO2WavePointData
@@ -55,52 +44,7 @@ class SaveChartToPdfTask(
     override fun onPreExecute() {
         Handler(Looper.getMainLooper()).post {
             try {
-                val copyLineChart = LineChart(originalLineChart.context)
-                val chartWidth  = Resources.getSystem().displayMetrics.widthPixels
-                val width = 1000 // 设置宽度
-                val height = 800 // 设置高度
-
-                copyLineChart.setBackgroundColor(Color.Transparent.value.toInt())
-                copyLineChart.xAxis.position = originalLineChart.xAxis.position
-                copyLineChart.axisRight.isEnabled = originalLineChart.axisRight.isEnabled
-                copyLineChart.description.isEnabled = originalLineChart.description.isEnabled
-                copyLineChart.axisLeft.axisMinimum = originalLineChart.axisLeft.axisMinimum
-                copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
-                copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
-                copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
-                copyLineChart.measure(
-                    View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
-                )
-                copyLineChart.layout(0, 0, width, height)
-                copyLineChart.requestLayout()
-
-                val processedData = if (data.size < segmentSize) {
-                    data.toMutableList().apply {
-                        val padding = segmentSize - data.size
-                        addAll(List(padding) { CO2WavePointData(0f, 0, 0f, 0f, 0) })
-                    }
-                } else {
-                    data
-                }
-
-                for (i in processedData.indices step segmentSize) {
-                    val segment = processedData.subList(i, minOf(i + segmentSize, processedData.size)).map {
-                        Entry(it.index.toFloat(), it.co2)
-                    }
-                    val dataSet = LineDataSet(segment, "ETCO2")
-                    dataSet.lineWidth = 2f
-                    dataSet.setDrawCircles(false) // 不绘制圆点
-                    val lineData = LineData(dataSet)
-                    copyLineChart.data = lineData
-                    copyLineChart.invalidate()
-                    copyLineChart.requestLayout()
-                }
-
-                val bitmap = Bitmap.createBitmap(width , height, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(bitmap)
-                copyLineChart.draw(canvas)
-                this.bitmap = bitmap // 将 bitmap 赋值给成员变量
+                convertBitmapToPdf(filePath)
                 latch.countDown()
             } catch (e: Exception) {
                 println("wswTest 遇到了错误")
@@ -120,7 +64,6 @@ class SaveChartToPdfTask(
             return false
         }
         return try {
-            convertBitmapToPdf(bitmap, filePath)
             true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -170,37 +113,84 @@ class SaveChartToPdfTask(
         }
 
         canvas.endText()
-        canvas.restoreState() // 🟢 恢复状态（必须与 saveState 成对出现）
+        // 恢复状态（必须与 saveState 成对出现）
+        canvas.restoreState()
     }
 
-    private fun convertBitmapToPdf(bitmap: Bitmap, filePath: String) {
+    private fun convertBitmapToPdf(filePath: String) {
         val document = Document()
         try {
             val writer = PdfWriter.getInstance(document, FileOutputStream(filePath))
             document.open()
 
-            val stream = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-            val image = Image.getInstance(stream.toByteArray())
+            val totalPoints = data.size
+            val pointsPerPage = segmentSize
+            val totalPages = (totalPoints + pointsPerPage - 1) / pointsPerPage
 
-            val pageWidth = document.pageSize.width
-            val imageHeight = document.pageSize.height
-            image.scaleToFit(pageWidth, imageHeight)
-            image.setAbsolutePosition(
-                (pageWidth - image.scaledWidth) / 2,
-                (imageHeight - image.scaledHeight) / 2
-            )
+            for (pageIndex in 0 until totalPages) {
+                // 获取当前页的数据段
+                val startIndex = pageIndex * pointsPerPage
+                val endIndex = minOf(startIndex + pointsPerPage, totalPoints)
+                val currentPageData = data.subList(startIndex, endIndex)
+                val width = 1000 // 设置宽度
+                val height = 800 // 设置高度
 
-            document.add(image)
+                // 生成当前页的 Bitmap
+                val currentPageBitmap = Bitmap.createBitmap(1000, 800, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(currentPageBitmap)
 
-            // 添加重复水印
-            try {
+                // 绘制当前页的图表
+                val copyLineChart = LineChart(originalLineChart.context)
+                copyLineChart.setBackgroundColor(Color.Transparent.value.toInt())
+                copyLineChart.xAxis.position = originalLineChart.xAxis.position
+                copyLineChart.axisRight.isEnabled = originalLineChart.axisRight.isEnabled
+                copyLineChart.description.isEnabled = originalLineChart.description.isEnabled
+                copyLineChart.axisLeft.axisMinimum = originalLineChart.axisLeft.axisMinimum
+                copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
+                copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
+                copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
+                copyLineChart.measure(
+                    View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+                )
+                copyLineChart.layout(0, 0, width, height)
+                copyLineChart.requestLayout()
+
+                // 绘制当前页的数据
+                val segment = currentPageData.map {
+                    Entry(it.index.toFloat(), it.co2)
+                }
+                val dataSet = LineDataSet(segment, "ETCO2")
+                dataSet.lineWidth = 2f
+                dataSet.setDrawCircles(false) // 不绘制圆点
+                val lineData = LineData(dataSet)
+                copyLineChart.data = lineData
+                copyLineChart.invalidate()
+                copyLineChart.measure(
+                    View.MeasureSpec.makeMeasureSpec(1000, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(800, View.MeasureSpec.EXACTLY)
+                )
+                copyLineChart.layout(0, 0, 1000, 800)
+                copyLineChart.draw(canvas)
+
+                // 添加图像到文档
+                val stream = ByteArrayOutputStream()
+                currentPageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                val image = Image.getInstance(stream.toByteArray())
+                image.scaleToFit(document.pageSize.width, document.pageSize.height)
+                image.setAbsolutePosition(
+                    (document.pageSize.width - image.scaledWidth) / 2,
+                    (document.pageSize.height - image.scaledHeight) / 2
+                )
+
+                document.add(image)
+
+                // 添加重复水印
                 addRepeatedWatermark(writer, document.pageSize)
-            } catch (e: Exception) {
-                println("wswTest 一大批； 是， 刺配")
-                e.printStackTrace()
-            }
 
+                // 结束当前页
+                document.newPage()
+            }
 
             document.close()
             println("wswTest 绘制结束")
@@ -209,7 +199,6 @@ class SaveChartToPdfTask(
         }
     }
 }
-
 
 fun saveChartToPdfInBackground(
     lineChart: LineChart,
