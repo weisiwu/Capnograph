@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModelProvider
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.components.ActionModal
 import com.wldmedical.capnoeasy.components.AlertModal
 import com.wldmedical.capnoeasy.components.BaseLayout
 import com.wldmedical.capnoeasy.components.ConfirmModal
@@ -90,6 +91,20 @@ open class BaseActivity : ComponentActivity() {
             )
         }
     }
+
+        // 通用ActionModal弹框
+        @Composable
+        open fun ShowActionModal() {
+            val showActionModal = viewModel.showActionModal.value
+            if (showActionModal) {
+                ActionModal(
+                    viewModel = viewModel,
+                    onCancelClick = {  },
+                    onPrintPDFClick = {  },
+                    onPrintTicketClick = {  }
+                )
+            }
+        }
 
     @Composable
     open fun Content() {}
@@ -172,6 +187,8 @@ open class BaseActivity : ComponentActivity() {
                     ShowConfirm()
 
                     ShowLoading()
+
+                    ShowActionModal()
                 },
                 onTabClick = { onTabClick(it) },
                 onNavBarRightClick = { onNavBarRightClick() }

@@ -71,6 +71,9 @@ class AppState @Inject constructor() {
     // Loading数据
     val loadingData: MutableState<LoadingData?> = mutableStateOf(null)
 
+    // 通用ActionModal弹框是否展示
+    val showActionModal: MutableState<Boolean> = mutableStateOf(false)
+
     // 是否保持屏幕常量
     val isKeepScreenOn = mutableStateOf(false)
 
@@ -219,6 +222,13 @@ class AppStateModel @Inject constructor(
     fun updateLoadingData(newVal: LoadingData?) {
         clearXData()
         appState.loadingData.value = newVal
+    }
+
+    // 通用ActionModal弹框是否展示
+    val showActionModal: State<Boolean> = appState.showActionModal
+    fun updateShowActionModal(newVal: Boolean = false) {
+        clearXData()
+        appState.showActionModal.value = newVal
     }
 
     // X 指代全局组件

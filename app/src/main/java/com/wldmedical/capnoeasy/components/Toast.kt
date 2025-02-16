@@ -84,7 +84,6 @@ fun Toast(
         modifier = Modifier
             .zIndex(maxMaskZIndex)
             .fillMaxSize()
-            .zIndex(999f)
             .background(Color.Black.copy(alpha = alpha))
             .clickable {
                 onClick?.invoke()

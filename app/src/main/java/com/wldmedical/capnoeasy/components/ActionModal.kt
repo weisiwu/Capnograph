@@ -19,6 +19,7 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,6 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.maskOpacity
+import com.wldmedical.capnoeasy.maxMaskZIndex
+import com.wldmedical.capnoeasy.models.AppState
+import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import kotlinx.coroutines.launch
 
@@ -44,11 +49,11 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActionModal(
+    viewModel: AppStateModel,
     onCancelClick: (() -> Unit)? = null,
     onPrintPDFClick: (() -> Unit)? = null,
     onPrintTicketClick: (() -> Unit)? = null
 ) {
-    val showBottomSheet = remember { mutableStateOf(true) }
     //起初以为是m3的ModalBottomSheet在Preview模式下不展示
     //https://issuetracker.google.com/issues/283843380
     //按照问题描述，问题已经修复，但实际上我的机器仍然会展示（我的m3版本是正确的）
@@ -57,23 +62,28 @@ fun ActionModal(
     // 在preview模式就可以展示，
     // val sheetState = rememberModalBottomSheetState()
     val sheetState = rememberStandardBottomSheetState(
-        initialValue = SheetValue.Expanded
+        initialValue = SheetValue.Expanded,
+        skipHiddenState = false
     )
     val scope = rememberCoroutineScope()
+    val alpha = if (viewModel.showActionModal.value) maskOpacity else 0f
 
-    if (!showBottomSheet.value) {
+    if (!viewModel.showActionModal.value) {
         return
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .zIndex(999f)
-            .background(Color.Black.copy(alpha = 0.2f))
+            .zIndex(maxMaskZIndex)
+            .background(Color.Black.copy(alpha = alpha))
+            .clickable {
+                viewModel.updateShowActionModal(false)
+            }
     ) {
         ModalBottomSheet(
             onDismissRequest = {
-                showBottomSheet.value = false
+                viewModel.updateShowActionModal(false)
             },
             sheetState = sheetState,
             content = {
@@ -133,7 +143,7 @@ fun ActionModal(
                         onCancelClick?.invoke()
                         scope.launch { sheetState.hide() }.invokeOnCompletion {
                             if (!sheetState.isVisible) {
-                                showBottomSheet.value = false
+                                viewModel.updateShowActionModal(false)
                             }
                         }
                     },
@@ -152,6 +162,8 @@ fun ActionModal(
 @Composable
 fun ActionModalPreview() {
     CapnoEasyTheme {
-        ActionModal()
+        ActionModal(
+            viewModel = AppStateModel(AppState())
+        )
     }
 }

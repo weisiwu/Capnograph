@@ -59,8 +59,8 @@ fun NavBar(
     onRightClick: (() -> Unit)? = null
 ) {
     val currentPage = viewModel.currentPage
-    val isFocus = remember { mutableStateOf(false) }
-    val showSearch = remember { derivedStateOf { currentPage.value.currentPage == PageScene.HISTORY_LIST_PAGE } }
+//    val showSearch = remember { derivedStateOf { currentPage.value.currentPage == PageScene.HISTORY_LIST_PAGE } }
+    val showSearch = remember { derivedStateOf { false } }
     val showBack = remember { derivedStateOf { currentPage.value.currentPage != PageScene.HOME_PAGE } }
     var rightIcon: ImageVector? = null
     val rightImage: MutableState<Int?> = remember { mutableStateOf(null) }
@@ -90,7 +90,7 @@ fun NavBar(
 
     TopAppBar(
         navigationIcon = {
-            if (showBack.value && !isFocus.value) {
+            if (showBack.value) {
                 IconButton(onClick = {
                     onLeftClick?.invoke(currentPage.value)
                 }) {
@@ -99,7 +99,7 @@ fun NavBar(
             }
         },
         title = {
-            if (showSearch.value && isFocus.value) {
+            if (showSearch.value) {
                 SearchBar(
                     query = "",
                     onQueryChange = {},
@@ -135,46 +135,42 @@ fun NavBar(
             }
         },
         actions = {
-            if (!isFocus.value) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable {
-                        onRightClick?.invoke()
-                    }
-                ) {
-                    if (rightIcon != null) {
-                        IconButton(
-                            modifier = Modifier.padding(0.dp),
-                            onClick = {
-                                isFocus.value = !isFocus.value
-                            }
-                        ) {
-                            Icon(
-                                imageVector = rightIcon,
-                                contentDescription = rightDesc.value
-                            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                if (rightIcon != null) {
+                    IconButton(
+                        modifier = Modifier.padding(0.dp),
+                        onClick = {
+                            onRightClick?.invoke()
                         }
-                    } else if(rightImage.value != null) {
-                        Image(
-                            painter = painterResource(id = rightImage.value!!),
+                    ) {
+                        Icon(
+                            imageVector = rightIcon,
                             contentDescription = rightDesc.value
                         )
-                        Text(
-                            text = rightDesc.value,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Light,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    } else {
-                        Spacer(
-                            modifier = Modifier.width(60.dp)
-                        )
                     }
+                } else if(rightImage.value != null) {
+                    Image(
+                        painter = painterResource(id = rightImage.value!!),
+                        contentDescription = rightDesc.value,
+                        modifier = Modifier.clickable {
+                            onRightClick?.invoke()
+                        }
+                    )
+                    Text(
+                        text = rightDesc.value,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Light,
+                        modifier = Modifier.padding(top = 4.dp).clickable {
+                            onRightClick?.invoke()
+                        }
+                    )
+                } else {
+                    Spacer(
+                        modifier = Modifier.width(60.dp)
+                    )
                 }
-            } else {
-                Spacer(
-                    modifier = Modifier.width(150.dp)
-                )
             }
         },
     )

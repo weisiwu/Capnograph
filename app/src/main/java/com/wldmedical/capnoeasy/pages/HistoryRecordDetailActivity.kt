@@ -25,11 +25,14 @@ import java.util.UUID
 class HistoryRecordDetailActivity : BaseActivity() {
     override var pageScene = PageScene.HISTORY_DETAIL_PAGE
 
+    override fun onNavBarRightClick() {
+        viewModel.updateShowActionModal(true)
+    }
+
     @Composable
     override fun Content() {
         val pdfFilePath: MutableState<String> = remember { mutableStateOf<String>("") }
         val recordId = intent.getStringExtra(recordIdParams)
-        println("wswTest recordId $recordId")
 
         LaunchedEffect(recordId) {
             lifecycleScope.launch {
@@ -59,7 +62,6 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     .fillMaxSize()
             )
         } else {
-            // TODO: 历史
             Text("正在加载中")
         }
     }
