@@ -51,7 +51,6 @@ fun EtCo2LineChart(
         repeat(maxXPoints) { add(Entry(it.toFloat(), 0f)) }
     }
     viewModel.lineChart = chart.value
-    println("wswTest 这里已经传递了 ${chart.value}")
 
     // TODO: 临时mock500个虚拟点
 //    LaunchedEffect(a) {

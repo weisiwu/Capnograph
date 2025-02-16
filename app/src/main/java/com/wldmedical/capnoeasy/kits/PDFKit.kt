@@ -6,8 +6,7 @@ package com.wldmedical.capnoeasy.kits
  * 2、保存为PDF格式
  */
 
-import android.app.Activity
-import android.app.Application
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.AsyncTask
@@ -15,9 +14,11 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.LinearLayout
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -45,11 +46,16 @@ class SaveChartToPdfTask(
         Handler(Looper.getMainLooper()).post {
             try {
                 val copyLineChart = LineChart(originalLineChart.context)
+                val chartWidth  = Resources.getSystem().displayMetrics.widthPixels
                 val width = 1000 // 设置宽度
                 val height = 800 // 设置高度
 
-                copyLineChart.description.isEnabled = false
-                copyLineChart.legend.isEnabled = false
+                copyLineChart.setBackgroundColor(Color.Transparent.value.toInt())
+                copyLineChart.xAxis.position = originalLineChart.xAxis.position
+                copyLineChart.axisRight.isEnabled = originalLineChart.axisRight.isEnabled
+                copyLineChart.description.isEnabled = originalLineChart.description.isEnabled
+                copyLineChart.axisLeft.axisMinimum = originalLineChart.axisLeft.axisMinimum
+                copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
                 copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
                 copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
                 copyLineChart.measure(
@@ -73,14 +79,15 @@ class SaveChartToPdfTask(
                         Entry(it.index.toFloat(), it.co2)
                     }
                     val dataSet = LineDataSet(segment, "ETCO2")
+                    dataSet.lineWidth = 2f
+                    dataSet.setDrawCircles(false) // 不绘制圆点
                     val lineData = LineData(dataSet)
                     copyLineChart.data = lineData
                     copyLineChart.invalidate()
                     copyLineChart.requestLayout()
                 }
 
-                // 创建 OffscreenCanvas
-                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val bitmap = Bitmap.createBitmap(width , height, Bitmap.Config.ARGB_8888)
                 val canvas = Canvas(bitmap)
                 copyLineChart.draw(canvas)
                 this.bitmap = bitmap // 将 bitmap 赋值给成员变量
