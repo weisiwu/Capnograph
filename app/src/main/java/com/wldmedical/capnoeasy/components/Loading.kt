@@ -2,6 +2,7 @@ package com.wldmedical.capnoeasy.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,6 +48,7 @@ fun Loading(
     onTimeout: (() -> Unit)? = null,
 ) {
     val isTimeout = remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
 
     if (data == null) {
         return
@@ -60,7 +62,7 @@ fun Loading(
     }
 
     if (data.duration > 0) {
-        LaunchedEffect(Unit) {
+        LaunchedEffect(data) {
             delay(data.duration)
             data.callback?.invoke()
             isTimeout.value = true
@@ -72,10 +74,12 @@ fun Loading(
             .fillMaxSize()
             .zIndex(maxMaskZIndex)
             .background(Color.Black.copy(alpha = maskOpacity))
-            .clickable {
-                if (data.cancelable) {
-                    onClick?.invoke()
-                }
+            .clickable(
+                enabled = data.cancelable,
+                indication = null, // 取消点击时的视觉反馈
+                interactionSource = interactionSource // 避免系统默认的按压效果
+            ) {
+                onClick?.invoke()
             },
     ) {
         Column {
