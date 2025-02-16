@@ -22,8 +22,18 @@ import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import com.itextpdf.text.BaseColor
+import com.itextpdf.text.Chunk
 import com.itextpdf.text.Document
+import com.itextpdf.text.Element
+import com.itextpdf.text.Font
 import com.itextpdf.text.Image
+import com.itextpdf.text.Phrase
+import com.itextpdf.text.Rectangle
+import com.itextpdf.text.pdf.BaseFont
+import com.itextpdf.text.pdf.ColumnText
+import com.itextpdf.text.pdf.PdfContentByte
+import com.itextpdf.text.pdf.PdfGState
 import com.itextpdf.text.pdf.PdfWriter
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import java.io.ByteArrayOutputStream
@@ -123,8 +133,44 @@ class SaveChartToPdfTask(
         onComplete(result) // 调用回调函数
     }
 
-    private fun getChartBitmap(lineChart: LineChart): Bitmap {
-        return lineChart.chartBitmap
+    private fun addRepeatedWatermark(writer: PdfWriter, pageSize: Rectangle) {
+        val fontPath = "assets/fonts/SimSun.ttf" // 确保路径正确
+        val baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
+        val fontSize = 24f
+
+        val text = "万联达仪器"
+        val watermarkWidth = baseFont.getWidthPoint(text, fontSize) // 计算文本宽度
+        val watermarkHeight = fontSize * 1.2f // 粗略计算文本高度
+        val rotation = 45f // 旋转角度
+
+        val xSpacing = watermarkWidth * 2f // 水印之间的水平间距
+        val ySpacing = watermarkHeight * 5f  // 水印之间的垂直间距
+
+        val startX = -pageSize.width / 4 // 起始位置
+        val startY = -pageSize.height / 4 // 起始位置
+
+        val canvas = writer.directContentUnder
+
+        // 设置字体透明度
+        val gState = PdfGState()
+        gState.setFillOpacity(0.3f) // 设置填充透明度，0.0（完全透明）到 1.0（不透明）
+        gState.setStrokeOpacity(0.3f) // 设置描边透明度（可选）
+
+        // 应用透明度
+        canvas.saveState()
+        canvas.setGState(gState)
+
+        canvas.beginText()
+        canvas.setFontAndSize(baseFont, fontSize)
+
+        for (x in generateSequence(startX) { it + xSpacing }.takeWhile { it < pageSize.width * 1.5 }) {
+            for (y in generateSequence(startY) { it + ySpacing }.takeWhile { it < pageSize.height * 1.5 }) {
+                canvas.showTextAligned(Element.ALIGN_CENTER, text, x, y, rotation)
+            }
+        }
+
+        canvas.endText()
+        canvas.restoreState() // 🟢 恢复状态（必须与 saveState 成对出现）
     }
 
     private fun convertBitmapToPdf(bitmap: Bitmap, filePath: String) {
@@ -146,6 +192,16 @@ class SaveChartToPdfTask(
             )
 
             document.add(image)
+
+            // 添加重复水印
+            try {
+                addRepeatedWatermark(writer, document.pageSize)
+            } catch (e: Exception) {
+                println("wswTest 一大批； 是， 刺配")
+                e.printStackTrace()
+            }
+
+
             document.close()
             println("wswTest 绘制结束")
         } catch (e: Exception) {

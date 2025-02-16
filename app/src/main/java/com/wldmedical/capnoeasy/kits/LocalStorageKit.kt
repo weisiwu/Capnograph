@@ -240,13 +240,14 @@ class LocalStorageKit @Inject constructor(
     ) {
         withContext(Dispatchers.IO) {
             val dateIndex = generateDateIndex(startTime)
+            val timeIndex = generateTimeIndex(startTime)
             val patientIndex = generatePatientIndex(patient)
             var pdfFilePath: String? = null
 
             if (context != null) {
                 pdfFilePath = File(
                     context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
-                    "${patientIndex}_${dateIndex}.pdf"
+                    "${patientIndex}_${dateIndex}${timeIndex}.pdf"
                 ).absolutePath
             }
 
@@ -301,13 +302,23 @@ class LocalStorageKit @Inject constructor(
     }
 
     /***
-     * 生成记录的时间分组索引：姓名+性别+年龄
+     * 生成记录的时间分组索引：年月日
      */
     private fun generateDateIndex(startTime: LocalDateTime): Int {
         val year = startTime.year
         val month = startTime.monthValue
         val day= startTime.dayOfMonth
         return year * 10000 + month * 100 + day
+    }
+
+    /***
+     * 生成记录的时间分组索引：时分秒
+     */
+    private fun generateTimeIndex(startTime: LocalDateTime): Int {
+        val hour = startTime.hour
+        val minute = startTime.minute
+        val second= startTime.second
+        return hour * 10000 + minute * 100 + second
     }
 
     /***
