@@ -16,6 +16,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import com.github.barteksc.pdfviewer.PDFView
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.recordIdParams
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,6 +37,8 @@ class HistoryRecordDetailActivity : BaseActivity() {
     }
 
     private var saveFileName: String = ""
+
+    private var currentRecord: Record? = null
 
     val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -76,7 +79,15 @@ class HistoryRecordDetailActivity : BaseActivity() {
         }
     }
 
-    override fun onPrintTicketClick() {}
+    override fun onPrintTicketClick() {
+        if (currentRecord?.data == null) { return }
+        if (currentRecord?.data!!.size <= 0) { return }
+        val allPoints: List<Float> = currentRecord!!.data!!.map {
+            it.co2
+        }
+        println("wswTest 一共有多少点 point ${allPoints.size}")
+        blueToothKit.gpPrinterManager.print(this, allPoints)
+    }
 
     @Composable
     override fun Content() {
@@ -94,6 +105,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                                 pdfFilePath.value = record.pdfFilePath!!
                                 context.sourceFilePath = pdfFilePath.value
                                 context.saveFileName = "${record.patientIndex}_${record.dateIndex}"
+                                context.currentRecord = record
                             }
                         }
                     }

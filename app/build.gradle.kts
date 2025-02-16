@@ -78,6 +78,9 @@ dependencies {
     implementation(libs.identity.jvm)
     implementation(libs.androidx.bluetooth)
     implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0-alpha01")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -87,10 +90,8 @@ dependencies {
     implementation("com.google.accompanist:accompanist-drawablepainter:0.37.0")
     // MPAndroidChart: https://github.com/PhilJay/MPAndroidChart
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    // 引用佳博SDK和自定义打印SDK
-    implementation(fileTree(mapOf("include" to listOf("*.jar"), "dir" to "libs")))
-    implementation(files("libs/SDKLib.jar"))
-    implementation(files("libs/HotMeltPrint.jar"))
+    // 引用自定义打印SDK hotmeltprint
+    implementation(project(":hotmeltprint"))
     // Room Persistence Library
     implementation("androidx.room:room-runtime:2.5.0")
     kapt("androidx.room:room-compiler:2.5.0")
@@ -103,6 +104,9 @@ dependencies {
         exclude(group = "com.android.support")
     }
     implementation("androidx.collection:collection:1.2.0")
+    // 轮播
+    implementation("com.google.accompanist:accompanist-pager:0.28.0")
+    implementation("com.google.accompanist:accompanist-pager-indicators:0.28.0")
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

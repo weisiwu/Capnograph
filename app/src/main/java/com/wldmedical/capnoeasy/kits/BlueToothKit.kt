@@ -113,9 +113,9 @@ class BlueToothKit @Inject constructor(
     private fun writeDataToDevice(
         data: ByteArray? = sendArray.toByteArray(),
         type: Int = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
-        characteristic: BluetoothGattCharacteristic? = sendDataCharacteristic
+        characteristic: BluetoothGattCharacteristic? = sendDataCharacteristic[connectedCapnoEasyIndex]
     ) {
-        val result = connectedCapnoEasyGATT?.writeCharacteristic(
+        val result = connectedCapnoEasyGATT.get(connectedCapnoEasyIndex)?.writeCharacteristic(
             characteristic!!,
             data!!,
             type
@@ -177,9 +177,9 @@ class BlueToothKit @Inject constructor(
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 // 设备成功连接，开始注册服务、特征值
-                connectedCapnoEasyGATT = gatt
+                connectedCapnoEasyGATT.add(gatt)
 
-                val services = connectedCapnoEasyGATT!!.services
+                val services = connectedCapnoEasyGATT[connectedCapnoEasyIndex]!!.services
                 val sortedServices = mutableListOf<BluetoothGattService>()
 
                 // 根据 Service 的 UUID 进行排序
@@ -195,22 +195,22 @@ class BlueToothKit @Inject constructor(
                     when(service.uuid) {
                         // 反劫持
                         BLEServersUUID.BLEAntihijackSer.value -> {
-                            antiHijackService = service
+                            antiHijackService.add(service)
                             catchCharacteristic.addAll(service.characteristics)
                         }
                         // 接受数据
                         BLEServersUUID.BLEReceiveDataSer.value -> {
-                            receiveDataService = service
+                            receiveDataService.add(service)
                             catchCharacteristic.addAll(service.characteristics)
                         }
                         // 发送数据
                         BLEServersUUID.BLESendDataSer.value -> {
-                            sendDataService = service
+                            sendDataService.add(service)
                             catchCharacteristic.addAll(service.characteristics)
                         }
                         // 模块
                         BLEServersUUID.BLEModuleParamsSer.value -> {
-                            moduleParamsService = service
+                            moduleParamsService.add(service)
                             catchCharacteristic.addAll(service.characteristics)
                         }
                     }
@@ -220,22 +220,22 @@ class BlueToothKit @Inject constructor(
                 var filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEAntihijackCha.value }
                 // 反劫持
                 if (filterList.isNotEmpty()) {
-                    antiHijackCharacteristic = filterList[0]
-                    connectedCapnoEasyGATT!!.writeCharacteristic(filterList[0], antiHijackData, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+                    antiHijackCharacteristic.add(filterList[0])
+                    connectedCapnoEasyGATT[connectedCapnoEasyIndex]!!.writeCharacteristic(filterList[0], antiHijackData, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
                 }
 
                 filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEAntihijackChaNofi.value }
                 // 监听反劫持广播
                 if (filterList.isNotEmpty()) {
-                    antiHijackNotifyCharacteristic = filterList[0]
-                    connectedCapnoEasyGATT!!.setCharacteristicNotification(filterList[0], true)
+                    antiHijackNotifyCharacteristic.add(filterList[0])
+                    connectedCapnoEasyGATT[connectedCapnoEasyIndex]!!.setCharacteristicNotification(filterList[0], true)
                 }
 
                 filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEReceiveDataCha.value }
                 // 接受数据
                 if (filterList.isNotEmpty()) {
-                    receiveDataCharacteristic = filterList[0]
-                    connectedCapnoEasyGATT!!.setCharacteristicNotification(filterList[0], true)
+                    receiveDataCharacteristic.add(filterList[0])
+                    connectedCapnoEasyGATT[connectedCapnoEasyIndex]!!.setCharacteristicNotification(filterList[0], true)
                 }
 
                 // 将任务注册进入，等待onCharacteristicWrite回调触发任务队列
@@ -304,21 +304,21 @@ class BlueToothKit @Inject constructor(
     }
 
     // 扫描的设备、服务、特征
-    var sendDataService: BluetoothGattService? = null
+    var sendDataService = mutableListOf<BluetoothGattService?>()
     
-    var sendDataCharacteristic: BluetoothGattCharacteristic? = null
+    var sendDataCharacteristic = mutableListOf<BluetoothGattCharacteristic?>()
     
-    var receiveDataService: BluetoothGattService? = null
+    var receiveDataService = mutableListOf<BluetoothGattService?>()
     
-    var receiveDataCharacteristic: BluetoothGattCharacteristic? = null
+    var receiveDataCharacteristic = mutableListOf<BluetoothGattCharacteristic?>()
 
-    var antiHijackService: BluetoothGattService? = null
+    var antiHijackService = mutableListOf<BluetoothGattService?>()
     
-    var antiHijackCharacteristic: BluetoothGattCharacteristic? = null
+    var antiHijackCharacteristic = mutableListOf<BluetoothGattCharacteristic?>()
 
-    var antiHijackNotifyCharacteristic: BluetoothGattCharacteristic? = null
+    var antiHijackNotifyCharacteristic = mutableListOf<BluetoothGattCharacteristic?>()
 
-    var moduleParamsService: BluetoothGattService? = null
+    var moduleParamsService = mutableListOf<BluetoothGattService?>()
 
     // 蓝牙启动后需要监听的特征值列表
     val catchCharacteristic = mutableListOf<BluetoothGattCharacteristic>()
@@ -327,10 +327,13 @@ class BlueToothKit @Inject constructor(
     public val discoveredPeripherals = mutableListOf<BluetoothDevice>()
 
     // 已链接设备-CapnoEasy
-    public val connectedCapnoEasy = mutableStateOf<BluetoothDevice?>(null)
+    public val connectedCapnoEasy = mutableListOf<BluetoothDevice?>()
 
     // 已链接设备-CapnoEasy GATT
-    public var connectedCapnoEasyGATT: BluetoothGatt? = null
+    public var connectedCapnoEasyGATT = mutableListOf<BluetoothGatt?>()
+
+    // 当前正在展示的capnoEasy设备的序号
+    public var connectedCapnoEasyIndex: Int = 0
 
     // 已链接设备-打印机
     public val connectedPrinter = mutableStateOf<BluetoothDevice?>(null)
@@ -588,7 +591,7 @@ class BlueToothKit @Inject constructor(
     private fun autoConnectPrinter(device: BluetoothDevice) {
         if (connectedPrinter.value != null) { return }
         connectedPrinter.value = bluetoothAdapter?.getRemoteDevice(device.address)
-        gpPrinterManager.connect(device.address, false)
+        gpPrinterManager.connect(device.address)
     }
 
     // 判断设备名称是否满足佳博规则
@@ -605,7 +608,7 @@ class BlueToothKit @Inject constructor(
         val filterList = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLESendDataCha.value }
         // 发送数据
         if (filterList.isNotEmpty()) {
-            sendDataCharacteristic = filterList[0]
+            sendDataCharacteristic.add(filterList[0])
             // TODO: 默认值需要修改
             taskQueue.addTasks(
                 listOf(
@@ -622,7 +625,7 @@ class BlueToothKit @Inject constructor(
                     // 设置结束后，开始尝试接受数据
                     Runnable { sendContinuous() },
                     // 返回首页&&保存配对设备信息到本地
-                    Runnable { onDeviceConnectSuccess?.invoke(connectedCapnoEasy.value) },
+                    Runnable { onDeviceConnectSuccess?.invoke(connectedCapnoEasy[connectedCapnoEasyIndex]) },
                 )
             )
         }
@@ -671,7 +674,7 @@ class BlueToothKit @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun sendSavedData() {
-        if (connectedCapnoEasyGATT == null || sendDataCharacteristic == null) {
+        if (connectedCapnoEasyGATT.isEmpty() || sendDataCharacteristic[connectedCapnoEasyIndex] == null) {
             resetSendData()
             return
         }
@@ -957,14 +960,22 @@ class BlueToothKit @Inject constructor(
             return
         }
         onDeviceConnectSuccess = onSuccess
+
+        // 已连接设备中，存在相同mac地址的，放弃保存
+        val isSaved = connectedCapnoEasy.find { it?.address  == device.address } != null
+
+        if (isSaved) {
+            return
+        }
+
         // 链接后，需要将设备存到不同的属性中
         // 这里做了兼容：我的一加手机会把BLE设备偶尔识别为未知类型
         if (device.type == DEVICE_TYPE_LE || device.type == DEVICE_TYPE_UNKNOWN) {
             connectBleDevice(device)
-            connectedCapnoEasy.value = device
+            connectedCapnoEasy.add(device)
         } else if (device.type == DEVICE_TYPE_CLASSIC) {
             connectClassicDevice(device)
-            connectedCapnoEasy.value = device
+            connectedCapnoEasy.add(device)
         }
     }
 
@@ -1130,10 +1141,6 @@ class BlueToothKit @Inject constructor(
         if (receivedCO2WavedData.size >= maxXPoints) {
             receivedCO2WavedData.removeAt(0)
         }
-
-        // TODO: 临时这么写，后续不这么写，临时把波形打印出来
-        // 后续要将波形打印做成筛选后打印
-        gpPrinterManager.update(currentCO2.value)
 
         updateReceivedData(currentPoint)
     }

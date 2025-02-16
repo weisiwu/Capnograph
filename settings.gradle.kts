@@ -28,4 +28,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "CapnoEasy"
 include(":app")
- 
+include(":hotmeltprint")
