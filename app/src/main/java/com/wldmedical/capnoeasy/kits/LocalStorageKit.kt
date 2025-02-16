@@ -14,6 +14,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import com.github.mikephil.charting.charts.LineChart
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.wldmedical.capnoeasy.CapnoEasyApplication
@@ -235,7 +236,8 @@ class LocalStorageKit @Inject constructor(
         startTime: LocalDateTime,
         data: List<CO2WavePointData> = listOf(),
         endTime: LocalDateTime,
-        ) {
+        lineChart: LineChart? = null
+    ) {
         withContext(Dispatchers.IO) {
             val dateIndex = generateDateIndex(startTime)
             val patientIndex = generatePatientIndex(patient)
@@ -258,8 +260,13 @@ class LocalStorageKit @Inject constructor(
                 pdfFilePath = pdfFilePath,
             )
 
-            if (pdfFilePath != null) {
-                createPdf(data.toList(), pdfFilePath, "万联达仪器有限公司")
+            if (pdfFilePath != null && lineChart != null) {
+                saveChartToPdfInBackground(
+                    lineChart = lineChart,
+                    data = data,
+                    segmentSize = maxXPoints,
+                    filePath = pdfFilePath,
+                )
                 println("wswTest 保存pdf文件的地址是什么 ${pdfFilePath}")
             }
 

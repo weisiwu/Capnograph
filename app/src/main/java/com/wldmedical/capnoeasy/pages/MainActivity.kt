@@ -90,6 +90,7 @@ class MainActivity : BaseActivity() {
                 localStorageKit.saveRecord(
                     context = context,
                     patient = patient,
+                    lineChart = viewModel.lineChart,
                     data = viewModel.totalCO2WavedData.toList(),
                     startTime = startRecordTime ?: LocalDateTime.now(),
                     endTime = endRecordTime ?: LocalDateTime.now()

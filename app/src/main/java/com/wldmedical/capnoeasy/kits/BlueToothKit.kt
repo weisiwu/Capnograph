@@ -1047,7 +1047,15 @@ class BlueToothKit @Inject constructor(
         }
 
         when (commandM) {
-            SensorCommand.CO2Waveform.value -> handleCO2Waveform(firstArray, NBFM)
+            SensorCommand.CO2Waveform.value -> {
+                val result = kotlin.runCatching {
+                    handleCO2Waveform(firstArray, NBFM)
+                }
+                result.onFailure {
+                    println("wswTest 解析co2波形数据，发生异常 ${it.message} ")
+                    it.printStackTrace()
+                }
+            }
             SensorCommand.Settings.value -> handleSettings(firstArray)
             SensorCommand.GetSoftwareRevision.value -> handleSofrWareVersion(firstArray)
             SensorCommand.Expand.value -> handleSystemExpand(firstArray)

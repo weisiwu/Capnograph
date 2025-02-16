@@ -45,12 +45,13 @@ fun EtCo2LineChart(
     blueToothKit: BlueToothKit,
     viewModel: AppStateModel
 ) {
-    val a = 1;
+    var index = 0f
     val chart: MutableState<LineChart?> = remember { mutableStateOf(null) }
     val entries = remember { mutableStateListOf<Entry>() }.apply {
         repeat(maxXPoints) { add(Entry(it.toFloat(), 0f)) }
     }
-    var index = 0f
+    viewModel.lineChart = chart.value
+    println("wswTest 这里已经传递了 ${chart.value}")
 
     // TODO: 临时mock500个虚拟点
 //    LaunchedEffect(a) {

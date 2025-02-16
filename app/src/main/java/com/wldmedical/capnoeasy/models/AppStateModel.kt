@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.models
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -7,6 +8,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.github.mikephil.charting.charts.LineChart
 import com.wldmedical.capnoeasy.CO2_SCALE
 import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.GENDER
@@ -434,4 +436,8 @@ class AppStateModel @Inject constructor(
             appState.discoveredPeripherals.value = mutableListOf()
         }
     }
+
+    // 折线图节点，保存PDF使用
+    @SuppressLint("StaticFieldLeak")
+    var lineChart: LineChart? = null
 }
