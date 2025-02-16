@@ -92,19 +92,19 @@ open class BaseActivity : ComponentActivity() {
         }
     }
 
-        // 通用ActionModal弹框
-        @Composable
-        open fun ShowActionModal() {
-            val showActionModal = viewModel.showActionModal.value
-            if (showActionModal) {
-                ActionModal(
-                    viewModel = viewModel,
-                    onCancelClick = {  },
-                    onPrintPDFClick = {  },
-                    onPrintTicketClick = {  }
-                )
-            }
+    // 通用ActionModal弹框
+    @Composable
+    open fun ShowActionModal() {
+        val showActionModal = viewModel.showActionModal.value
+        if (showActionModal) {
+            ActionModal(
+                viewModel = viewModel,
+                onCancelClick = {  },
+                onSavePDFClick = { onSavePDFClick() },
+                onPrintTicketClick = { onPrintTicketClick() }
+            )
         }
+    }
 
     @Composable
     open fun Content() {}
@@ -119,6 +119,9 @@ open class BaseActivity : ComponentActivity() {
     lateinit var printProtocalKit: HotmeltPinter
 
     lateinit var localStorageKit: LocalStorageKit
+
+    // 需要保存的pdf源文件路径
+    lateinit var sourceFilePath: String
 
     open var pageScene = PageScene.HOME_PAGE
 
@@ -136,6 +139,10 @@ open class BaseActivity : ComponentActivity() {
     }
 
     open fun onNavBarRightClick() {}
+
+    open fun onSavePDFClick() {}
+
+    open fun onPrintTicketClick() {}
 
     // 检查是否已经链接上CannoEasy
     public fun checkHasConnectDevice(cb: (() -> Unit)? = null) {

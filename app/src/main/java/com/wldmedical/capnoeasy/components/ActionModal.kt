@@ -51,7 +51,7 @@ import kotlinx.coroutines.launch
 fun ActionModal(
     viewModel: AppStateModel,
     onCancelClick: (() -> Unit)? = null,
-    onPrintPDFClick: (() -> Unit)? = null,
+    onSavePDFClick: (() -> Unit)? = null,
     onPrintTicketClick: (() -> Unit)? = null
 ) {
     //起初以为是m3的ModalBottomSheet在Preview模式下不展示
@@ -105,7 +105,7 @@ fun ActionModal(
                     Column(
                         verticalArrangement = Arrangement.Center,
                         modifier = Modifier.padding(end = 40.dp).clickable {
-                            onPrintPDFClick?.invoke()
+                            onSavePDFClick?.invoke()
                         }
                     ) {
                         Image(

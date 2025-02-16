@@ -1,5 +1,9 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +21,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileInputStream
+import java.io.OutputStream
 import java.util.UUID
 
 /***
@@ -29,10 +35,54 @@ class HistoryRecordDetailActivity : BaseActivity() {
         viewModel.updateShowActionModal(true)
     }
 
+    private var saveFileName: String = ""
+
+    val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val uri = result.data?.data
+            if (uri != null) {
+                savePdfToUri(sourceFilePath, uri)
+            }
+        }
+    }
+
+    fun createPdfDocument() {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/pdf"
+            putExtra(Intent.EXTRA_TITLE, "${saveFileName}.pdf") // 设置默认文件名
+        }
+        createDocumentLauncher.launch(intent)
+    }
+
+    fun savePdfToUri(sourceFilePath: String, uri: Uri) {
+        var outputStream: OutputStream? = null
+        var inputStream: FileInputStream? = null
+        try {
+            outputStream = contentResolver.openOutputStream(uri)
+            inputStream = FileInputStream(File(sourceFilePath))
+            inputStream.copyTo(outputStream!!)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            outputStream?.close()
+            inputStream?.close()
+        }
+    }
+
+    override fun onSavePDFClick() {
+        if (this.sourceFilePath.isNotEmpty()) {
+            createPdfDocument()
+        }
+    }
+
+    override fun onPrintTicketClick() {}
+
     @Composable
     override fun Content() {
         val pdfFilePath: MutableState<String> = remember { mutableStateOf<String>("") }
         val recordId = intent.getStringExtra(recordIdParams)
+        val context = this;
 
         LaunchedEffect(recordId) {
             lifecycleScope.launch {
@@ -42,6 +92,8 @@ class HistoryRecordDetailActivity : BaseActivity() {
                         if (record.pdfFilePath != null) {
                             if (record.pdfFilePath!!.isNotEmpty()) {
                                 pdfFilePath.value = record.pdfFilePath!!
+                                context.sourceFilePath = pdfFilePath.value
+                                context.saveFileName = "${record.patientIndex}_${record.dateIndex}"
                             }
                         }
                     }
