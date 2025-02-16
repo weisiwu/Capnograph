@@ -53,7 +53,7 @@ import java.io.File
  * 设置二级页 - 打印
  */
 class PrintSettingActivity : BaseActivity() {
-    override val pageScene = PageScene.PRINT_CONFIG_PAGE
+    override var pageScene = PageScene.PRINT_CONFIG_PAGE
 
     var printAddress: String = ""
     var printPhone: String = ""

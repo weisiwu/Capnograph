@@ -43,7 +43,7 @@ import com.wldmedical.capnoeasy.wheelPickerConfig
  * 设置二级页 - 展示
  */
 class DisplaySettingActivity : BaseActivity() {
-    override val pageScene = PageScene.DISPLAY_CONFIG_PAGE
+    override var pageScene = PageScene.DISPLAY_CONFIG_PAGE
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("UnrememberedMutableState")

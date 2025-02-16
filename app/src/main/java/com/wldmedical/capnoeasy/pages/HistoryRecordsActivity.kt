@@ -16,7 +16,7 @@ import kotlinx.coroutines.withContext
  * 历史记录列表页
  */
 class HistoryRecordsActivity : BaseActivity() {
-    override val pageScene = PageScene.HISTORY_LIST_PAGE
+    override var pageScene = PageScene.HISTORY_LIST_PAGE
 
     @Composable
     override fun Content() {

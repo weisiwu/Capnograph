@@ -36,7 +36,7 @@ import kotlin.math.floor
  * 设置二级页 - 报警
  */
 class AlertSettingActivity : BaseActivity() {
-    override val pageScene = PageScene.ALERT_CONFIG_PAGE
+    override var pageScene = PageScene.ALERT_CONFIG_PAGE
 
     var minETCO2: Float = 0f
     var maxETCO2: Float = 0f

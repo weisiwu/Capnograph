@@ -105,7 +105,7 @@ open class BaseActivity : ComponentActivity() {
 
     lateinit var localStorageKit: LocalStorageKit
 
-    open val pageScene = PageScene.HOME_PAGE
+    open var pageScene = PageScene.HOME_PAGE
 
     open fun updatePageScene() {
         this.viewModel.updateCurrentPage(this.pageScene)
@@ -186,5 +186,12 @@ open class BaseActivity : ComponentActivity() {
         if (resultCode === RESULT_OK) {
             updatePageScene()
         }
+    }
+
+    // 上级页返回后，重置
+    override fun onResume() {
+        super.onResume()
+        updatePageScene()
+        pageScene = viewModel.currentPage.value.currentPage
     }
 }

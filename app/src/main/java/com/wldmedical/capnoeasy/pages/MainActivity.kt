@@ -19,7 +19,7 @@ import java.time.LocalDateTime
  * 主页
  */
 class MainActivity : BaseActivity() {
-    override val pageScene = PageScene.HOME_PAGE
+    override var pageScene = PageScene.HOME_PAGE
 
     private  var startRecordTime: LocalDateTime? = null
 

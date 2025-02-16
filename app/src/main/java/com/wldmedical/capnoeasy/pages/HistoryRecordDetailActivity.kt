@@ -1,8 +1,6 @@
 package com.wldmedical.capnoeasy.pages
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -10,9 +8,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.lifecycleScope
 import com.github.barteksc.pdfviewer.PDFView
 import com.wldmedical.capnoeasy.PageScene
@@ -27,7 +23,7 @@ import java.util.UUID
  * 历史记录详情页
  */
 class HistoryRecordDetailActivity : BaseActivity() {
-    override val pageScene = PageScene.HISTORY_DETAIL_PAGE
+    override var pageScene = PageScene.HISTORY_DETAIL_PAGE
 
     @Composable
     override fun Content() {

@@ -148,9 +148,7 @@ class SaveChartToPdfTask(
                 copyLineChart.description.isEnabled = originalLineChart.description.isEnabled
                 copyLineChart.axisLeft.axisMinimum = originalLineChart.axisLeft.axisMinimum
                 copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
-                copyLineChart.xAxis.valueFormatter = object : ValueFormatter() {
-                    override fun getFormattedValue(value: Float): String { return "" }
-                }
+                copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
                 copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
                 copyLineChart.measure(
                     View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),

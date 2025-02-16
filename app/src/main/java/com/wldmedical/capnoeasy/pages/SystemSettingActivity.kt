@@ -31,7 +31,7 @@ import com.wldmedical.capnoeasy.SystemIno
  * 设置二级页 - 系统
  */
 class SystemSettingActivity : BaseActivity() {
-    override val pageScene = PageScene.SYSTEM_CONFIG_PAGE
+    override var pageScene = PageScene.SYSTEM_CONFIG_PAGE
 
     val infoHeight = 60.dp
 

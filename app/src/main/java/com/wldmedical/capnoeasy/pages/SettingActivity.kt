@@ -21,7 +21,7 @@ import com.wldmedical.capnoeasy.components.settings
  */
 // TODO: 这里的中英文需要思考如何解决
 class SettingActivity : BaseActivity() {
-    override val pageScene = PageScene.SETTING_PAGE
+    override var pageScene = PageScene.SETTING_PAGE
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @Composable

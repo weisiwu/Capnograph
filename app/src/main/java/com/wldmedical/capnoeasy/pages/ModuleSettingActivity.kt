@@ -37,7 +37,7 @@ import com.wldmedical.capnoeasy.o2CompensationRange
  * 设置二级页 - 模块
  */
 class ModuleSettingActivity : BaseActivity() {
-    override val pageScene = PageScene.MODULE_CONFIG_PAGE
+    override var pageScene = PageScene.MODULE_CONFIG_PAGE
 
     var asphyxiationTime: Int = 0
     var o2Compensation: Float = 0f

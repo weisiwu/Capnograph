@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
  * 搜素列表
  */
 class SearchActivity : BaseActivity() {
-    override val pageScene = PageScene.DEVICES_LIST_PAGE
+    override var pageScene = PageScene.DEVICES_LIST_PAGE
 
     @SuppressLint("MissingPermission")
     @RequiresApi(Build.VERSION_CODES.S)
