@@ -162,7 +162,8 @@ fun NavBar(
                         Text(
                             text = rightDesc.value,
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.Light
+                            fontWeight = FontWeight.Light,
+                            modifier = Modifier.padding(top = 4.dp)
                         )
                     } else {
                         Spacer(

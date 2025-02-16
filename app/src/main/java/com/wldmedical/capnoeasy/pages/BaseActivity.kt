@@ -116,6 +116,7 @@ open class BaseActivity : ComponentActivity() {
     }
 
     open fun onTabClick(index: Int): Boolean {
+        viewModel.updateCurrentTab(index)
         return true
     }
 

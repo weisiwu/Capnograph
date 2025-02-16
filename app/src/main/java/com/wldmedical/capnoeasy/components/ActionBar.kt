@@ -56,6 +56,7 @@ fun ActionBar(
             tabs.forEachIndexed { index, tab ->
                 val selected = viewModel.currentTab.value == index
                 val selectedColor = if (selected) Color(0xFF0256FF) else Color(0xff86909C)
+                println("wswTest 点击后当前选中  ${viewModel.currentTab.value}")
                 Tab(
                     selected = selected,
                     selectedContentColor = selectedColor,

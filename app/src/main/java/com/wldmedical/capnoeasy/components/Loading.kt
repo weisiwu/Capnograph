@@ -73,7 +73,9 @@ fun Loading(
             .zIndex(maxMaskZIndex)
             .background(Color.Black.copy(alpha = maskOpacity))
             .clickable {
-                onClick?.invoke()
+                if (data.cancelable) {
+                    onClick?.invoke()
+                }
             },
     ) {
         Column {
