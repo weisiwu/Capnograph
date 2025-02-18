@@ -113,9 +113,10 @@ class BlueToothKit @Inject constructor(
     private fun writeDataToDevice(
         data: ByteArray? = sendArray.toByteArray(),
         type: Int = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
-        characteristic: BluetoothGattCharacteristic? = sendDataCharacteristic[connectedCapnoEasyIndex]
+        characteristic: BluetoothGattCharacteristic? = currentSendDataCharacteristic
     ) {
-        val result = connectedCapnoEasyGATT.get(connectedCapnoEasyIndex)?.writeCharacteristic(
+        println("wswTest 准备向设备 ${currentDeviceMacAddress} 写入")
+        val result = currentGatt?.writeCharacteristic(
             characteristic!!,
             data!!,
             type
@@ -179,7 +180,7 @@ class BlueToothKit @Inject constructor(
                 // 设备成功连接，开始注册服务、特征值
                 connectedCapnoEasyGATT.add(gatt)
 
-                val services = connectedCapnoEasyGATT[connectedCapnoEasyIndex]!!.services
+                val services = gatt.services
                 val sortedServices = mutableListOf<BluetoothGattService>()
 
                 // 根据 Service 的 UUID 进行排序
@@ -221,21 +222,21 @@ class BlueToothKit @Inject constructor(
                 // 反劫持
                 if (filterList.isNotEmpty()) {
                     antiHijackCharacteristic.add(filterList[0])
-                    connectedCapnoEasyGATT[connectedCapnoEasyIndex]!!.writeCharacteristic(filterList[0], antiHijackData, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+                    currentGatt!!.writeCharacteristic(filterList[0], antiHijackData, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
                 }
 
                 filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEAntihijackChaNofi.value }
                 // 监听反劫持广播
                 if (filterList.isNotEmpty()) {
                     antiHijackNotifyCharacteristic.add(filterList[0])
-                    connectedCapnoEasyGATT[connectedCapnoEasyIndex]!!.setCharacteristicNotification(filterList[0], true)
+                    currentGatt!!.setCharacteristicNotification(filterList[0], true)
                 }
 
                 filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEReceiveDataCha.value }
                 // 接受数据
                 if (filterList.isNotEmpty()) {
                     receiveDataCharacteristic.add(filterList[0])
-                    connectedCapnoEasyGATT[connectedCapnoEasyIndex]!!.setCharacteristicNotification(filterList[0], true)
+                    currentGatt!!.setCharacteristicNotification(filterList[0], true)
                 }
 
                 // 将任务注册进入，等待onCharacteristicWrite回调触发任务队列
@@ -335,6 +336,82 @@ class BlueToothKit @Inject constructor(
     // 当前正在展示的capnoEasy设备的序号
     public var connectedCapnoEasyIndex: Int = 0
 
+    /***
+     * 这些是跟随connectedCapnoEasyIndex变化一起变化的设备属性。对设备的操作、数据读取，都是通过这些属性
+     */
+    // 当前链接设备地址
+    public val currentDeviceMacAddress: String?
+        get() {
+            val connectDevice = connectedCapnoEasy.getOrNull(connectedCapnoEasyIndex)
+            return connectDevice?.address
+        }
+
+    // 当前gatt
+    public val currentGatt: BluetoothGatt?
+        get() {
+            if (connectedCapnoEasyGATT.size != 0) {
+                return connectedCapnoEasyGATT.getOrNull(connectedCapnoEasyIndex)
+                return connectedCapnoEasyGATT?.find { it?.device?.address == currentDeviceMacAddress }
+            }
+            return null
+        }
+
+    val currentSendDataService: BluetoothGattService?
+        get() {
+            if (currentGatt != null) {
+                return currentGatt?.services?.find { it.uuid == BLEServersUUID.BLESendDataSer.value }
+            }
+            return null
+        }
+
+    val currentSendDataCharacteristic: BluetoothGattCharacteristic?
+        get() {
+            if (currentSendDataService != null) {
+                return currentSendDataService?.characteristics?.find { it.uuid == BLECharacteristicUUID.BLESendDataCha.value }
+            }
+            return null
+        }
+
+    val currentReceiveDataService: BluetoothGattService?
+        get() {
+            if (currentGatt != null) {
+                return currentGatt?.services?.find { it.uuid == BLEServersUUID.BLEReceiveDataSer.value }
+            }
+            return null
+        }
+
+    val currentReceiveDataCharacteristic: BluetoothGattCharacteristic?
+        get() {
+            if (currentReceiveDataService != null) {
+                return currentReceiveDataService?.characteristics?.find { it.uuid == BLECharacteristicUUID.BLEReceiveDataCha.value }
+            }
+            return null
+        }
+
+    val currentAntiHijackService: BluetoothGattService?
+        get() {
+            if (currentGatt != null) {
+                return currentGatt?.services?.find { it.uuid == BLEServersUUID.BLEAntihijackSer.value }
+            }
+            return null
+        }
+
+    val currentAntiHijackCharacteristic: BluetoothGattCharacteristic?
+        get() {
+            if (currentAntiHijackService != null) {
+                return currentAntiHijackService?.characteristics?.find { it.uuid == BLECharacteristicUUID.BLEAntihijackCha.value }
+            }
+            return null
+        }
+
+    val currentModuleParamsService: BluetoothGattService?
+        get() {
+            if (currentGatt != null) {
+                return currentGatt?.services?.find { it.uuid == BLEServersUUID.BLEModuleParamsSer.value }
+            }
+            return null
+        }
+
     // 已链接设备-打印机
     public val connectedPrinter = mutableStateOf<BluetoothDevice?>(null)
 
@@ -348,7 +425,12 @@ class BlueToothKit @Inject constructor(
     public val pairedPrinter = mutableStateOf<BluetoothDevice?>(null)
 
     // 已经接收到的数据 - 已经解析出来的
-    private val receivedCO2WavedData = mutableListOf<DataPoint>()
+    val receivedCO2WavedDataMap = HashMap<String, MutableList<DataPoint>>()
+
+    private val receivedCO2WavedData: MutableList<DataPoint>?
+        get() {
+            return receivedCO2WavedDataMap[currentDeviceMacAddress]
+        }
 
     // 内部值可变
     private val _dataFlow = MutableStateFlow<List<DataPoint>>(emptyList())
@@ -674,7 +756,7 @@ class BlueToothKit @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun sendSavedData() {
-        if (connectedCapnoEasyGATT.isEmpty() || sendDataCharacteristic[connectedCapnoEasyIndex] == null) {
+        if (connectedCapnoEasyGATT.isEmpty() || currentSendDataCharacteristic == null) {
             resetSendData()
             return
         }
@@ -973,9 +1055,11 @@ class BlueToothKit @Inject constructor(
         if (device.type == DEVICE_TYPE_LE || device.type == DEVICE_TYPE_UNKNOWN) {
             connectBleDevice(device)
             connectedCapnoEasy.add(device)
+            receivedCO2WavedDataMap[device.address] = mutableListOf()
         } else if (device.type == DEVICE_TYPE_CLASSIC) {
             connectClassicDevice(device)
             connectedCapnoEasy.add(device)
+            receivedCO2WavedDataMap[device.address] = mutableListOf()
         }
     }
 
@@ -1122,10 +1206,12 @@ class BlueToothKit @Inject constructor(
         }
 
         val currentPoint = DataPoint(
-            index = receivedCO2WavedData.size,
+            index = receivedCO2WavedData?.size ?: 0,
             value = currentCO2.value,
         )
-        receivedCO2WavedData.add(currentPoint)
+        receivedCO2WavedDataMap[currentDeviceMacAddress]?.add(currentPoint)
+        println("wswTest 当前在保存的是什么数据 ${currentDeviceMacAddress}")
+//        receivedCO2WavedData.add(currentPoint)
 
         // 是否保存这个数据，按照用户是否点击了开始记录开始算
         appState.updateTotalCO2WavedData(
@@ -1138,8 +1224,8 @@ class BlueToothKit @Inject constructor(
             )
         )
 
-        if (receivedCO2WavedData.size >= maxXPoints) {
-            receivedCO2WavedData.removeAt(0)
+        if ((receivedCO2WavedData?.size ?: 0) >= maxXPoints) {
+            receivedCO2WavedDataMap[currentDeviceMacAddress]?.removeAt(0)
         }
 
         updateReceivedData(currentPoint)
