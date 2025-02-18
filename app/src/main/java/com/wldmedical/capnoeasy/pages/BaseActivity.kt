@@ -146,8 +146,10 @@ open class BaseActivity : ComponentActivity() {
 
     // 检查是否已经链接上CannoEasy
     public fun checkHasConnectDevice(cb: (() -> Unit)? = null) {
-        if (blueToothKit.connectedCapnoEasy[blueToothKit.connectedCapnoEasyIndex] != null) {
-            cb?.invoke()
+        if (blueToothKit.connectedCapnoEasy.size > 0) {
+            if (blueToothKit.connectedCapnoEasy[blueToothKit.connectedCapnoEasyIndex] != null) {
+                cb?.invoke()
+            }
         } else {
             viewModel.updateToastData(
                 ToastData(
