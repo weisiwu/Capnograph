@@ -1243,7 +1243,7 @@ class BlueToothKit @Inject constructor(
         // 用于在app主页展示的波形数据，是比最终保存的数据更完整
         // 但是只存在于应用运行期间
         receivedCO2WavedDataMap[currentDeviceMacAddress]?.add(currentPoint)
-        println("wswTest 当前在保存的是什么数据 ${currentDeviceMacAddress}")
+        // println("wswTest 当前在保存的是什么数据 ${currentDeviceMacAddress}")
 //        receivedCO2WavedData.add(currentPoint)
 
         // 保存到pdf中的数据和最终打印出来的数据

@@ -255,7 +255,6 @@ class HotmeltPinter {
 
         // 配置 Bitmap 加载选项
         val options = BitmapFactory.Options().apply {
-//            inSampleSize = calculateInSampleSize(originalWidth, originalHeight, targetWidth, targetHeight)
             inPreferredConfig = Bitmap.Config.RGB_565 // 减少内存占用
         }
 
@@ -266,19 +265,6 @@ class HotmeltPinter {
             }
         }
     }
-
-//    private fun calculateInSampleSize(
-//        originalWidth: Int,
-//        originalHeight: Int,
-//        reqWidth: Int,
-//        reqHeight: Int
-//    ): Int {
-//        var inSampleSize = 1
-//        while (originalWidth / inSampleSize > reqWidth || originalHeight / inSampleSize > reqHeight) {
-//            inSampleSize *= 2
-//        }
-//        return inSampleSize
-//    }
 
     /**
      * 打印数据
@@ -305,10 +291,12 @@ class HotmeltPinter {
             esc.drawImage(bitImg, maxSize)
         }
         esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT)
+        println("wswTest config.printPhone ${config.printPhone}")
         config.printPhone?.let {
             esc.addText("电话: ${it}\n")
         }
         config.printAddress?.let {
+            println("wswTest 这个是什么 ${it}")
             esc.addText("地址: ${it}\n")
         }
         config.printUrl?.let {

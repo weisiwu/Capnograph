@@ -168,18 +168,18 @@ class PrintSettingActivity : BaseActivity() {
                             modifier = Modifier
                                 .align(Alignment.Center)
                         )
-                    }
-                    // 显示选择的图片
-                    if (selectedImageUri.value != null) {
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Image(
-                                modifier = Modifier.height(150.dp),
-                                painter = rememberAsyncImagePainter(model = selectedImageUri.value),
-                                contentDescription = "选择的图片"
-                            )
+                        // 显示选择的图片
+                        if (selectedImageUri.value != null) {
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Image(
+                                    modifier = Modifier.height(150.dp),
+                                    painter = rememberAsyncImagePainter(model = selectedImageUri.value),
+                                    contentDescription = "选择的图片"
+                                )
+                            }
                         }
                     }
                     HorizontalDivider(
@@ -226,12 +226,12 @@ class PrintSettingActivity : BaseActivity() {
                                 // 将数据存储到用户偏好中
                                 localStorageKit.saveUserPrintSettingToPreferences(
                                     context = context,
-                                    macAddress  = blueToothKit.currentDeviceMacAddress,
-                                    printPhone = viewModel.printPhone.value,
-                                    printAddress = viewModel.printAddress.value,
-                                    printUrl = viewModel.printUrl.value,
+                                    macAddress = printPhone,
+                                    printPhone = printPhone,
+                                    printAddress = printAddress,
+                                    printUrl = printUrl,
                                     printLogo = file.toUri(),
-                                    printUrlQRCode  = viewModel.printUrlQRCode.value,
+                                    printUrlQRCode = printUrlQRCode.value,
                                 )
                                 
                                 viewModel.updateToastData(
