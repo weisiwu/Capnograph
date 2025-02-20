@@ -50,6 +50,7 @@ import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.text.SimpleDateFormat
+import java.util.WeakHashMap
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
@@ -58,6 +59,24 @@ import javax.inject.Inject
 import kotlin.concurrent.withLock
 import kotlin.math.pow
 import kotlin.math.roundToInt
+
+// 对 BluetoothDevice 进行扩展，下面是附加类
+class BLEDeviceExtra {
+    var gatt: BluetoothGatt? = null
+    var sendDataService: BluetoothGattService? = null
+    var sendDataCharacteristic: BluetoothGattCharacteristic? = null
+    var receiveDataService: BluetoothGattService? = null
+    var receiveDataCharacteristic: BluetoothGattCharacteristic? = null
+    var antiHijackService: BluetoothGattService? = null
+    var antiHijackCharacteristic: BluetoothGattCharacteristic? = null
+    var antiHijackNotifyCharacteristic: BluetoothGattCharacteristic? = null
+    var moduleParamsService: BluetoothGattService? = null
+    var catchCharacteristic: MutableList<BluetoothGattCharacteristic?> = mutableListOf()
+    var receivedArray: BlockingQueue<Byte> = LinkedBlockingQueue()
+    val taskQueue = BluetoothTaskQueue()
+    val sendArray = mutableListOf<Byte>()
+    val receivedCO2WavedData: MutableList<DataPoint>? = mutableListOf()
+}
 
 // 反劫持传
 val antiHijackStr = "301001301001"
@@ -95,6 +114,15 @@ class BlueToothKit @Inject constructor(
     @ActivityContext private val activity: Activity,
     private val appState: AppStateModel
 ) {
+    // 扩展低功耗蓝牙设备属性，全局存储（WeakHashMap 自动管理内存）
+    private val deviceExtras = WeakHashMap<BluetoothDevice, BLEDeviceExtra>()
+
+    // 扩展属性，下面为使用示例
+    // val gatt = device.connectGatt(context, false, gattCallback)
+    // device.extra.gatt = gatt // 保存 GATT
+    val BluetoothDevice.extra: BLEDeviceExtra
+        get() = deviceExtras.getOrPut(this) { BLEDeviceExtra() }
+
     /******************* 属性 *******************/
     // 获取主线程的 Handler
     val handler = Handler(Looper.getMainLooper())
@@ -713,6 +741,7 @@ class BlueToothKit @Inject constructor(
         }
     }
 
+    // 计算发送数据的校验和
     private fun calculateCKS(arr: ByteArray): Byte {
         var cks: Int = 0
         for (i in arr.indices) {
@@ -725,10 +754,12 @@ class BlueToothKit @Inject constructor(
         return cks.toByte()
     }
 
+    // 将cks放到发送数据的队尾
     private fun appendCKS() {
         sendArray.add(calculateCKS(sendArray.toByteArray()));
     }
 
+    // 清空发送数据队列
     private fun resetSendData() {
         sendArray.clear()
     }
@@ -1194,25 +1225,28 @@ class BlueToothKit @Inject constructor(
             }
 
             // TODO: 报警的逻辑，后续再加
-             if (!isAsphyxiation && isValidETCO2 && isValidRR && !isLowerEnergy && !isNeedZeroCorrect && !isAdaptorInvalid && !isAdaptorPolluted) {
-                 audioIns.stopAudio()
-             } else if (isAsphyxiation || !isValidETCO2 || !isValidRR || isLowerEnergy) {
-                 audioIns.playAlertAudio(AlertAudioType.MiddleLevelAlert)
-             } else if (isNeedZeroCorrect || isAdaptorInvalid) {
-                 // TODO: 临时将  isAdaptorPolluted 删除，因为其值恒为true
-                // } else if (isNeedZeroCorrect || isAdaptorInvalid || isAdaptorPolluted) {
-                 audioIns.playAlertAudio(AlertAudioType.LowLevelAlert)
-             }
+            if (!isAsphyxiation && isValidETCO2 && isValidRR && !isLowerEnergy && !isNeedZeroCorrect && !isAdaptorInvalid && !isAdaptorPolluted) {
+                audioIns.stopAudio()
+            } else if (isAsphyxiation || !isValidETCO2 || !isValidRR || isLowerEnergy) {
+                audioIns.playAlertAudio(AlertAudioType.MiddleLevelAlert)
+            } else if (isNeedZeroCorrect || isAdaptorInvalid) {
+                // TODO: 临时将  isAdaptorPolluted 删除，因为其值恒为true
+            // } else if (isNeedZeroCorrect || isAdaptorInvalid || isAdaptorPolluted) {
+                audioIns.playAlertAudio(AlertAudioType.LowLevelAlert)
+            }
         }
 
         val currentPoint = DataPoint(
             index = receivedCO2WavedData?.size ?: 0,
             value = currentCO2.value,
         )
+        // 用于在app主页展示的波形数据，是比最终保存的数据更完整
+        // 但是只存在于应用运行期间
         receivedCO2WavedDataMap[currentDeviceMacAddress]?.add(currentPoint)
         println("wswTest 当前在保存的是什么数据 ${currentDeviceMacAddress}")
 //        receivedCO2WavedData.add(currentPoint)
 
+        // 保存到pdf中的数据和最终打印出来的数据
         // 是否保存这个数据，按照用户是否点击了开始记录开始算
         appState.updateTotalCO2WavedData(
             CO2WavePointData(
