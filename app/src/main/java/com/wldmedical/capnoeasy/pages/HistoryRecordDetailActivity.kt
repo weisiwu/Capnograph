@@ -49,7 +49,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
         }
     }
 
-    fun createPdfDocument() {
+    private fun createPdfDocument() {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "application/pdf"
@@ -85,8 +85,12 @@ class HistoryRecordDetailActivity : BaseActivity() {
         val allPoints: List<Float> = currentRecord!!.data!!.map {
             it.co2
         }
-        println("wswTest 一共有多少点 point ${allPoints.size}")
-        blueToothKit.gpPrinterManager.print(this, allPoints)
+
+        blueToothKit.gpPrinterManager.print(
+            this,
+            allPoints,
+            localStorageKit.loadPrintSettingFromPreferences(this)
+        )
     }
 
     @Composable

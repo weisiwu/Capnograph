@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.net.Uri
 import com.gprinter.bean.PrinterDevices
 import com.gprinter.command.EscCommand
 import com.gprinter.io.BluetoothPort
@@ -18,7 +19,16 @@ import java.io.IOException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.concurrent.thread
+import kotlin.math.min
 
+public object PrintSetting {
+    var macAddress: String? = null
+    var printAddress: String? = null
+    var printPhone: String? = null
+    var printUrl: String? = null
+    var printLogo: Uri? = null
+    var printUrlQRCode: Boolean? = true
+}
 
 object Printer {
     private var portManager: PortManager? = null
@@ -138,34 +148,127 @@ class HotmeltPinter {
          }
      }
 
+    /***
+     * 获取原始图片尺寸（不加载到内存）
+     */
+    private fun getBitmapDimensions(context: Context, uri: Uri): Pair<Int, Int>? {
+        val options = BitmapFactory.Options().apply {
+            inJustDecodeBounds = true // 只解析边界信息
+        }
+        return context.contentResolver.openInputStream(uri)?.use { stream ->
+            BitmapFactory.decodeStream(stream, null, options)
+            Pair(options.outWidth, options.outHeight)
+        }
+    }
+
+    /**
+     * 计算合适的缩放比例
+     */
+    private fun calculateScaleFactor(
+        originalWidth: Int,
+        originalHeight: Int,
+        maxWidth: Int = 384,
+        maxHeight: Int = 384
+    ): Float {
+        val widthRatio = maxWidth.toFloat() / originalWidth
+        val heightRatio = maxHeight.toFloat() / originalHeight
+        // 取最小比例，确保图片不超出目标尺寸
+        return min(widthRatio, heightRatio)
+    }
+
+    /**
+     * 将用户上传的图片按照规格加载为bitmap
+     */
+    private fun loadScaledBitmap(context: Context, uri: Uri, maxWidth: Int, maxHeight: Int): Bitmap? {
+        val (originalWidth, originalHeight) = getBitmapDimensions(context, uri) ?: return null
+
+        // 计算实际缩放比例
+        val scale = calculateScaleFactor(originalWidth, originalHeight, maxWidth, maxHeight)
+        val targetWidth = (originalWidth * scale).toInt()
+        val targetHeight = (originalHeight * scale).toInt()
+
+        // 配置 Bitmap 加载选项
+        val options = BitmapFactory.Options().apply {
+//            inSampleSize = calculateInSampleSize(originalWidth, originalHeight, targetWidth, targetHeight)
+            inPreferredConfig = Bitmap.Config.RGB_565 // 减少内存占用
+        }
+
+        return context.contentResolver.openInputStream(uri)?.use { stream ->
+            BitmapFactory.decodeStream(stream, null, options)?.let { bitmap ->
+                // 精确缩放至目标尺寸（避免 inSampleSize 的取整误差）
+                Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+            }
+        }
+    }
+
+//    private fun calculateInSampleSize(
+//        originalWidth: Int,
+//        originalHeight: Int,
+//        reqWidth: Int,
+//        reqHeight: Int
+//    ): Int {
+//        var inSampleSize = 1
+//        while (originalWidth / inSampleSize > reqWidth || originalHeight / inSampleSize > reqHeight) {
+//            inSampleSize *= 2
+//        }
+//        return inSampleSize
+//    }
+
     /**
      * 打印数据
+     * @param context App上下文
+     * @param allPoints 波形数据Y轴值列表
+     * @param config 用户打印配置
      */
-    fun print(context: Context, allPoints: List<Float>) {
+    fun print(
+        context: Context,
+        allPoints: List<Float>,
+        config: PrintSetting = PrintSetting,
+    ) {
         esc.addInitializePrinter()
         esc.addSetLineSpacing(100)
-        val bitImg = BitmapFactory.decodeResource(context.resources, R.drawable.logo) //二维码图片，图片类型bitmap
-        // 打印图片,58打印机图片宽度最大为384dot  1mm=8dot 用尺子量取图片的宽度单位为Xmm  传入宽度值为 X*8
-        esc.drawImage(bitImg, 384)
+        val maxSize = 384;
+        config.printLogo?.let {
+            val bitImg = loadScaledBitmap(context, config.printLogo!!, maxSize, maxSize)
+            // 打印图片,58打印机图片宽度最大为384dot  1mm=8dot 用尺子量取图片的宽度单位为Xmm  传入宽度值为 X*8
+            esc.drawImage(bitImg, maxSize)
+        } ?: run {
+            // 默认打印万联达公司logo
+            val bitImg = BitmapFactory.decodeResource(context.resources, R.drawable.logo) //二维码图片，图片类型bitmap
+            // 打印图片,58打印机图片宽度最大为384dot  1mm=8dot 用尺子量取图片的宽度单位为Xmm  传入宽度值为 X*8
+            esc.drawImage(bitImg, maxSize)
+        }
         esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT)
-        esc.addText("电话: 13501129344\n")
-        esc.addText("地址: 北京市北京经济技术开发区宏达南路3号院2号楼3层301室\n")
-        esc.addText("网址: https://www.wldyq.com\n")
+        config.printPhone?.let {
+            esc.addText("电话: ${it}\n")
+        }
+        config.printAddress?.let {
+            esc.addText("地址: ${it}\n")
+        }
+        config.printUrl?.let {
+            esc.addText("网址: ${it}\n")
+        }
         esc.addSelectJustification(EscCommand.JUSTIFICATION.CENTER)
         // 设置纠错等级
         esc.addSelectErrorCorrectionLevelForQRCode(0x31.toByte())
         // 设置qrcode模块大小
         esc.addSelectSizeOfModuleForQRCode(4.toByte())
         // 设置qrcode内容
-        esc.addStoreQRCodeData("https://www.wldyq.com")
-        // 打印QRCode
-        esc.addPrintQRCode()
+        config.printUrlQRCode?.let {
+            config.printUrl?.let {
+                esc.addStoreQRCodeData(it)
+                // 打印QRCode
+                esc.addPrintQRCode()
+            }
+        }
         esc.addText("\n")
         esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT)
         esc.addText("********************************\n")
         esc.addText("时间: ${getCurrentFormattedDateTime()}\n")
         esc.addText("设备: CapnoEasy\n")
-        esc.addText("序号: $macAddress\n")
+        config.macAddress?.let {
+            esc.addText("序号: $it\n")
+        }
         esc.addText("********************************\n")
         esc.addText("\n")
         esc.addCutPaper()

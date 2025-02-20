@@ -1,6 +1,7 @@
 package com.wldmedical.capnoeasy.kits
 
 import com.wldmedical.hotmeltprint.HotmeltPinter
+import dagger.hilt.android.qualifiers.ActivityContext
 
 /**
  * 打印相关

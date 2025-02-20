@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.CustomTextField
@@ -58,7 +59,7 @@ class PrintSettingActivity : BaseActivity() {
     var printAddress: String = ""
     var printPhone: String = ""
     var printUrl: String = ""
-    var printLogo: String = ""
+    var printLogo: Uri? = null
 
     @Composable
     override fun Content() {
@@ -67,7 +68,7 @@ class PrintSettingActivity : BaseActivity() {
         printUrl = viewModel.printUrl.value
         printLogo = viewModel.printLogo.value
         val printUrlQRCode = remember { mutableStateOf(viewModel.printUrlQRCode.value) }
-        val selectedImageUri = remember { mutableStateOf<Uri?>(Uri.fromFile(File(viewModel.printLogo.value))) }
+        val selectedImageUri = remember { mutableStateOf<Uri?>(viewModel.printLogo.value) }
 
         val launcher = rememberLauncherForActivityResult(
             ActivityResultContracts.StartActivityForResult()
@@ -221,7 +222,18 @@ class PrintSettingActivity : BaseActivity() {
                                 viewModel.updatePrintPhone(printPhone)
                                 viewModel.updatePrintUrl(printUrl)
                                 viewModel.updatePrintUrlQRCode(printUrlQRCode.value)
-                                viewModel.updatePrintLogo(imagePath)
+                                viewModel.updatePrintLogo(file.toUri())
+                                // 将数据存储到用户偏好中
+                                localStorageKit.saveUserPrintSettingToPreferences(
+                                    context = context,
+                                    macAddress  = blueToothKit.currentDeviceMacAddress,
+                                    printPhone = viewModel.printPhone.value,
+                                    printAddress = viewModel.printAddress.value,
+                                    printUrl = viewModel.printUrl.value,
+                                    printLogo = file.toUri(),
+                                    printUrlQRCode  = viewModel.printUrlQRCode.value,
+                                )
+                                
                                 viewModel.updateToastData(
                                     ToastData(
                                         text = "设置成功",

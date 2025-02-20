@@ -12,6 +12,7 @@ import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
+import com.wldmedical.hotmeltprint.PrintSetting
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
@@ -38,12 +39,22 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val context = this;
         try {
             val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)
             if (deviceAddress != null) {
                 val device = blueToothKit.bluetoothAdapter?.getRemoteDevice(deviceAddress)
                 // 尝试自动连接已经配对设备
                 blueToothKit.connectDevice(device)
+            }
+            // 从用户偏好里读取默认打印设置
+            val printSetting: PrintSetting = localStorageKit.loadPrintSettingFromPreferences(this)
+            printSetting.printAddress?.let { viewModel.updatePrintAddress(it) }
+            printSetting.printPhone?.let { viewModel.updatePrintPhone(it) }
+            printSetting.printUrl?.let { viewModel.updatePrintUrl(it) }
+            printSetting.printUrlQRCode?.let { viewModel.updatePrintUrlQRCode(it) }
+            printSetting.printLogo?.let {
+                viewModel.updatePrintLogo(it)
             }
         } catch (e: Exception) {
             println("wswTest 捕获到自动链接BLE配对设备异常: ${e.message}")

@@ -2,6 +2,7 @@ package com.wldmedical.capnoeasy.models
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
+import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableFloatStateOf
@@ -158,6 +159,9 @@ class AppState @Inject constructor() {
     // 模块名称
     val moduleName: MutableState<String> = mutableStateOf("CapnoGraph")
 
+    /***
+     * 打印相关数据
+     */
     // 打印设置-地址
     val printAddress: MutableState<String> = mutableStateOf("")
 
@@ -171,7 +175,7 @@ class AppState @Inject constructor() {
     val printUrlQRCode: MutableState<Boolean> = mutableStateOf(true)
 
     // 打印设置-Logo
-    val printLogo: MutableState<String> = mutableStateOf("")
+    val printLogo: MutableState<Uri?> = mutableStateOf(null)
 
     /***
      * 实时蓝牙设备数据
@@ -431,7 +435,7 @@ class AppStateModel @Inject constructor(
 
     // 打印设置-Logo
     val printLogo = appState.printLogo
-    fun updatePrintLogo(newVal: String) {
+    fun updatePrintLogo(newVal: Uri?) {
         appState.printLogo.value = newVal
     }
 

@@ -2,6 +2,7 @@ package com.wldmedical.capnoeasy.kits
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.net.Uri
 import android.os.Environment
 import androidx.compose.runtime.mutableStateOf
 import androidx.room.Dao
@@ -20,8 +21,10 @@ import com.google.gson.reflect.TypeToken
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.DATABASE_NS
 import com.wldmedical.capnoeasy.GENDER
+import com.wldmedical.capnoeasy.USER_PREF_NS
 import com.wldmedical.capnoeasy.components.formatter
 import com.wldmedical.capnoeasy.models.CO2WavePointData
+import com.wldmedical.hotmeltprint.PrintSetting
 import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -194,6 +197,13 @@ class LocalStorageKit @Inject constructor(
     @ActivityContext private val activity: Context,
     application: CapnoEasyApplication
 ) {
+    // 打印设置相关key
+    private val KEY_MAC_ADDRESS = "mac_address"
+    private val KEY_PRINT_ADDRESS = "print_address"
+    private val KEY_PRINT_PHONE = "print_phone"
+    private val KEY_PRINT_URL = "print_url"
+    private val KEY_PRINT_LOGO_URI = "print_logo_uri"
+    private val KEY_PRINT_URL_QR_CODE = "print_url_qr_code"
 
     var patients: MutableList<Patient> = mutableListOf()
 
@@ -324,7 +334,51 @@ class LocalStorageKit @Inject constructor(
     /***
      * 将用户保存在本地的数据，持久化存储到本地。防止App升级，更新导致丢失
      */
-    public fun saveUserDataPersistent() {  }
+    fun saveUserPrintSettingToPreferences(
+        context: Context,
+        macAddress: String? = "",
+        printPhone: String = "",
+        printAddress: String = "",
+        printUrl: String = "",
+        printLogo: Uri? = null,
+        printUrlQRCode: Boolean? = true,
+    ) {
+        val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
+        prefs.edit().apply {
+            // 处理可空字符串
+            macAddress?.let { putString(KEY_MAC_ADDRESS, it) } ?: remove(KEY_MAC_ADDRESS)
+            putString(KEY_PRINT_ADDRESS, printAddress) // 直接存储（可空值自动处理）
+            putString(KEY_PRINT_PHONE, printPhone)
+            putString(KEY_PRINT_URL, printUrl)
+
+            // 处理 Uri 类型
+            printLogo?.let { uri ->
+                putString(KEY_PRINT_LOGO_URI, uri.toString())
+            } ?: remove(KEY_PRINT_LOGO_URI)
+
+            // Boolean 类型（非空）
+            putBoolean(KEY_PRINT_URL_QR_CODE, printUrlQRCode ?: true)
+        }.apply() // 异步提交
+    }
+
+    // 读取用户偏好打印设置
+    fun loadPrintSettingFromPreferences(context: Context): PrintSetting {
+        val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
+        PrintSetting.macAddress = prefs.getString(KEY_MAC_ADDRESS, null)
+        PrintSetting.printAddress = prefs.getString(KEY_PRINT_ADDRESS, null)
+        PrintSetting.printPhone = prefs.getString(KEY_PRINT_PHONE, null)
+        PrintSetting.printUrl = prefs.getString(KEY_PRINT_URL, null)
+
+        // 还原 Uri
+        prefs.getString(KEY_PRINT_LOGO_URI, null)?.let { uriStr ->
+            PrintSetting.printLogo = Uri.parse(uriStr)
+        }
+
+        // Boolean 类型（需处理兼容性，旧版本可能无此键）
+        PrintSetting.printUrlQRCode = prefs.getBoolean(KEY_PRINT_URL_QR_CODE, true)
+
+        return PrintSetting
+    }
 
     suspend fun mock() {
         // 添加两个病人

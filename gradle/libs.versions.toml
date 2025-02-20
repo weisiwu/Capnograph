@@ -19,6 +19,7 @@ foundationLayoutAndroid = "1.7.2"
 jetbrainsKotlinJvm = "2.0.0"
 material = "1.12.0"
 foundationAndroid = "1.7.8"
+hiltAndroid = "2.51.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -45,6 +46,7 @@ androidx-bluetooth = { group = "androidx.bluetooth", name = "bluetooth", version
 androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundationLayoutAndroid" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-foundation-android = { group = "androidx.compose.foundation", name = "foundation-android", version.ref = "foundationAndroid" }
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hiltAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
