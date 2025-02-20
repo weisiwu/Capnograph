@@ -20,6 +20,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.concurrent.thread
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 public object PrintSetting {
     var macAddress: String? = null
@@ -127,8 +128,73 @@ class HotmeltPinter {
     var macAddress: String = ""
     private var esc: EscCommand = EscCommand()
 
-     fun startProcessingData(allPoints: MutableList<Float>) {
+    /***
+     * 压缩波形数据中为0的数据到原来数量的5%
+     */
+    private fun compressZeroSegments(allPoints: MutableList<Float>, compressRatio: Float = 0.05f): MutableList<Float> {
+        // 定义段的数据类
+        data class Segment(val isWaveform: Boolean, var points: MutableList<Float>)
+
+        val segments = mutableListOf<Segment>()
+        var currentSegment: Segment? = null
+
+        // 分割原始数据为连续的波形段和零段
+        for (point in allPoints) {
+            if (point == 0f) {
+                if (currentSegment?.isWaveform != false) { // 当前是波形段或null，创建新的零段
+                    currentSegment?.let { segments.add(it) }
+                    currentSegment = Segment(false, mutableListOf(point))
+                } else {
+                    currentSegment.points.add(point)
+                }
+            } else {
+                if (currentSegment?.isWaveform != true) { // 当前是零段或null，创建新的波形段
+                    currentSegment?.let { segments.add(it) }
+                    currentSegment = Segment(true, mutableListOf(point))
+                } else {
+                    currentSegment.points.add(point)
+                }
+            }
+        }
+        currentSegment?.let { segments.add(it) }
+
+        // 处理每个零段
+        segments.forEachIndexed { index, segment ->
+            if (!segment.isWaveform) {
+                val originalSize = segment.points.size
+                var newSize = (originalSize * compressRatio).roundToInt()
+
+                // 如果是位于两个波形段之间的零段，至少保留1个点
+                val isMiddleZero = index > 0 && index < segments.size - 1 &&
+                        segments[index - 1].isWaveform && segments[index + 1].isWaveform
+                if (isMiddleZero) {
+                    newSize = newSize.coerceAtLeast(1)
+                }
+                segment.points = segment.points.take(newSize).toMutableList()
+            }
+        }
+
+        // 合并所有处理后的段
+        val newList = mutableListOf<Float>()
+        segments.forEach { segment ->
+            newList.addAll(segment.points)
+        }
+        return newList
+    }
+
+
+    /***
+     * 格式化数据
+     * 1、将所有数值为0的数据全部清除
+     */
+    private fun washData(allPoints: MutableList<Float>): MutableList<Float> {
+        // 目前只有这个策略
+        return compressZeroSegments(allPoints)
+    }
+
+     private fun startProcessingData(wavePoints: MutableList<Float>) {
          GlobalScope.launch {
+             val allPoints = washData(wavePoints)
              while (allPoints.size > 0) {
                  val dataToPrint = mutableListOf<Float>()
                  while (dataToPrint.size <= 500 && allPoints.size != 0) {
