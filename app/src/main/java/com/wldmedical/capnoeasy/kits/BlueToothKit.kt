@@ -46,6 +46,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -78,6 +79,10 @@ class BLEDeviceExtra {
     val sendArray = mutableListOf<Byte>()
     // 已经接收到的数据
     var receivedCO2WavedData: MutableList<DataPoint>? = mutableListOf()
+    // 内部值可变
+    val _dataFlow = MutableStateFlow<List<DataPoint>>(emptyList())
+    // 对外值不可变
+    val dataFlow: StateFlow<List<DataPoint>> = _dataFlow
 }
 
 // 反劫持传
@@ -148,7 +153,7 @@ class BlueToothKit @Inject constructor(
             data!!,
             type
         )
-//        println("wswTest 写入结果 ${result}")
+        println("wswTest 写入结果 ${result}")
     }
 
     // 是否正在扫描BLE蓝牙设备
@@ -377,23 +382,26 @@ class BlueToothKit @Inject constructor(
     // 历史配对设备-打印机
     public val pairedPrinter = mutableStateOf<BluetoothDevice?>(null)
 
-    // 内部值可变
-    private val _dataFlow = MutableStateFlow<List<DataPoint>>(emptyList())
-
-    // 对外值不可变
-    val dataFlow: StateFlow<List<DataPoint>> = _dataFlow
+    suspend fun updateDataFlow(callback: ((List<DataPoint>) -> Unit)?) {
+        println("wswTest 设备连接地址是否变化了 ${currentCapnoGraph?.address}")
+        currentCapnoGraph?.extra?.dataFlow?.collectLatest { newData ->
+            callback?.invoke(newData)
+        }
+    }
 
     // 更细内部的值，触发数据更新
     fun updateReceivedData(newData: DataPoint) {
-        val currentList = _dataFlow.value.toMutableList() // 获取当前列表并创建新的 MutableList
+        val currentList = currentCapnoGraph?.extra?._dataFlow?.value?.toMutableList() // 获取当前列表并创建新的 MutableList
 
         // 更新 Flow 的值
-        if (_dataFlow.value.size >= maxXPoints) {
-            currentList.removeAt(0) // 删除头部元素
+        if ((currentCapnoGraph?.extra?._dataFlow?.value?.size ?: 0) >= maxXPoints) {
+            currentList?.removeAt(0) // 删除头部元素
         }
 
-        currentList.add(newData)
-        _dataFlow.value = currentList // 更新 StateFlow
+        currentList?.add(newData)
+        currentList?.toList()?.let {
+            currentCapnoGraph?.extra?._dataFlow?.value = it // 更新 StateFlow
+        }
     }
 
     // 当前CO2值
@@ -693,6 +701,7 @@ class BlueToothKit @Inject constructor(
     private fun sendStopContinuous() {
         currentCapnoGraph?.extra?.sendArray?.add(SensorCommand.StopContinuous.value.toByte())
         currentCapnoGraph?.extra?.sendArray?.add(0x01)
+        println("wswTest 发送停止字符串 1")
         sendSavedData()
     }
 
@@ -701,12 +710,17 @@ class BlueToothKit @Inject constructor(
     @SuppressLint("MissingPermission")
     fun sendSavedData() {
         if (currentGatt == null || currentSendDataCharacteristic == null) {
+            println("wswTest 发送停止字符串 2")
             resetSendData()
             return
         }
+        println("wswTest 发送停止字符串 3")
         appendCKS()
+        println("wswTest 发送停止字符串 4")
         writeDataToDevice()
+        println("wswTest 发送停止字符串 5")
         resetSendData()
+        println("wswTest 发送停止字符串 6")
     }
 
     /**
