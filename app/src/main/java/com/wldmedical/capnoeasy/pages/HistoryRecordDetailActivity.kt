@@ -86,7 +86,6 @@ class HistoryRecordDetailActivity : BaseActivity() {
             it.co2
         }
 
-        println("wswTest 本地春初了什么 ${localStorageKit.loadPrintSettingFromPreferences(this)}")
         blueToothKit.gpPrinterManager.print(
             this,
             allPoints,
