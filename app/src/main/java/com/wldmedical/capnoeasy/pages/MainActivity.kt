@@ -42,7 +42,9 @@ class MainActivity : BaseActivity() {
         val context = this;
         try {
             val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)
-            if (deviceAddress != null) {
+            // 本地有保存配置设备，且当前未连接其他设备时，自动连接配对设备
+            if (deviceAddress != null && blueToothKit.currentDeviceMacAddress == null) {
+                println("wswTest 自动连接已配对设备 ")
                 val device = blueToothKit.bluetoothAdapter?.getRemoteDevice(deviceAddress)
                 // 尝试自动连接已经配对设备
                 blueToothKit.connectDevice(device)
