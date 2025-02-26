@@ -296,6 +296,7 @@ class HotmeltPinter {
             esc.addText("电话: ${it}\n")
         }
         config.printAddress?.let {
+            println("wswTest 这个是什么 ${it}")
             esc.addText("地址: ${it}\n")
         }
         config.printUrl?.let {
