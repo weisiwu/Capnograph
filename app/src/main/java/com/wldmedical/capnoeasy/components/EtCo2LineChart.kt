@@ -40,6 +40,7 @@ import com.wldmedical.capnoeasy.kits.BlueToothKitManager.blueToothKit
 import com.wldmedical.capnoeasy.kits.maxXPoints
 import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
+import kotlinx.coroutines.flow.collectLatest
 
 /**
  * App底部导航条
@@ -70,14 +71,14 @@ fun EtCo2LineChart(
 //    }
 
     // 处理折线图动画效果
-    LaunchedEffect(blueToothKit.currentCapnoGraph) { // 监听 bluetoothKit 实例的变化
-        blueToothKit.updateDataFlow {
-            if (it.isNotEmpty()) {
+    LaunchedEffect(blueToothKit.dataFlow) { // 监听 bluetoothKit 实例的变化
+        blueToothKit.dataFlow.collectLatest { newData -> // 收集 Flow 的数据
+            if (newData.isNotEmpty()) {
                 if (entries.size >= maxXPoints) {
                     entries.removeAt(0) // 删除头部元素
                 }
                 index += 1f
-                entries.add(Entry(index, it.last().value))
+                entries.add(Entry(index, newData.last().value))
             }
         }
     }
@@ -107,6 +108,7 @@ fun EtCo2LineChart(
             if (blueToothKit.connectedCapnoEasy.size > pagerState.currentPage) {
                 blueToothKit.currentCapnoGraph = blueToothKit.connectedCapnoEasy[pagerState.currentPage]
             }
+
             if (blueToothKit.connectedCapnoEasy.size > 0) {
                 val currentDevice = blueToothKit.currentCapnoGraph;
 
