@@ -19,7 +19,6 @@ import com.wldmedical.capnoeasy.components.settings
 /***
  * 设置一级页
  */
-// TODO: 这里的中英文需要思考如何解决
 class SettingActivity : BaseActivity() {
     override var pageScene = PageScene.SETTING_PAGE
 

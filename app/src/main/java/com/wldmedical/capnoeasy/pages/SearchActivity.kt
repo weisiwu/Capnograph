@@ -42,20 +42,20 @@ class SearchActivity : BaseActivity() {
         val options = ActivityOptionsCompat.makeCustomAnimation(this, 0, 0)
         val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
-        TypeSwitch(
-            selectedIndex = selectedIndex,
-            types = DeviceTypes,
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 16.dp),
-            onTypeClick = {
-                viewModel.updateLoadingData(
-                    LoadingData(
-                        text = "切换搜索方式为${it.name}",
-                        duration = 300,
-                    )
-                )
-                viewModel.updateConnectType(it as DeviceType)
-            }
-        )
+//        TypeSwitch(
+//            selectedIndex = selectedIndex,
+//            types = DeviceTypes,
+//            modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 16.dp),
+//            onTypeClick = {
+//                viewModel.updateLoadingData(
+//                    LoadingData(
+//                        text = "切换搜索方式为${it.name}",
+//                        duration = 300,
+//                    )
+//                )
+//                viewModel.updateConnectType(it as DeviceType)
+//            }
+//        )
 
         DeviceList(
             devices = discoveredPeripherals.value,

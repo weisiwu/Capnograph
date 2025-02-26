@@ -42,6 +42,7 @@ fun AttributeLine(
     viewModel: AppStateModel,
     blueToothKit: BlueToothKit,
     attribute: Atribute,
+    modifier: Modifier = Modifier,
     onInputChange: ((newVal: String) -> Unit)? = null,
 ) {
     val value = when(attribute.viewModelName) {
@@ -50,15 +51,8 @@ fun AttributeLine(
         "patientName" -> viewModel.patientName.value ?: ""
         "patientGender" -> if(viewModel.patientGender.value == null) "" else viewModel.patientGender.value!!.title
         "patientAge" -> if(viewModel.patientAge.value == null) "" else viewModel.patientAge.value.toString()
+        "patientID" -> if(viewModel.patientID.value == null) "" else viewModel.patientID.value.toString()
         else -> viewModel.rr.value.toString()
-    }
-    // 由于jet compose 中的TextField组件内padding无法设置调整，所以通过调整外padding来控制
-    val rowModifier = if(attribute.isSelect) {
-        Modifier.padding(start = 28.dp, end = 29.dp)
-    } else if (attribute.editable) {
-        Modifier.padding(start = 28.dp, end = 13.dp)
-    } else {
-        Modifier.padding(start = 28.dp, end = 28.dp)
     }
 
     var valueFontWeight = FontWeight.Bold
@@ -74,8 +68,8 @@ fun AttributeLine(
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = rowModifier
-            .fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth(if (attribute.fullRow) 1f else 0.4f)
             .wrapContentHeight()
             .background(Color.Transparent)
     ) {
@@ -128,8 +122,6 @@ fun AttributeLine(
             TextField(
                 value = value,
                 singleLine = true,
-                // TODO: 开始记录后，给个特殊样式 
-//                enabled = !viewModel.isRecording.value,
                 modifier = Modifier
                     .height(baseRowHeight)
                     .padding(0.dp)
@@ -140,6 +132,7 @@ fun AttributeLine(
                 onValueChange = { newVal ->
                     when(attribute.viewModelName) {
                         "patientName" -> viewModel.updatePatientName(newVal)
+                        "patientID" -> viewModel.updatePatientID(newVal)
                         "patientAge" -> {
                             val intVal = newVal.toIntOrNull() ?: 0
                             if (intVal >= patientAgeRange.start && intVal <= patientAgeRange.last) {
@@ -171,7 +164,7 @@ fun AttributeLine(
                         text = valueText,
                         color = valueColor,
                         fontWeight = valueFontWeight,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.weight(1f)
                     )
                 },
             )
@@ -201,16 +194,25 @@ data class Atribute(
     val viewModelName: String,
     val editable: Boolean,
     val isNumber: Boolean = false,
-    val isSelect: Boolean = false
+    val isSelect: Boolean = false,
+    val fullRow: Boolean = false,
 )
 
 val attributes = listOf(
-    Atribute(title = "RR", viewModelName = "rr", placeholder = "--", editable = false),
-    Atribute(title = "ETCO2", viewModelName = "etCO2", placeholder = "0 mmHg", editable = false),
+    Atribute(title = "RR", viewModelName = "rr", placeholder = "--", editable = false, fullRow = true),
+    Atribute(title = "ETCO2", viewModelName = "etCO2", placeholder = "0 mmHg", editable = false, fullRow = true),
+)
+
+val attributesGroupA = listOf(
     Atribute(title = "姓名", viewModelName = "patientName", placeholder = "请填写", editable = true),
     Atribute(title = "性别", viewModelName = "patientGender", placeholder = "请选择", editable = true, isSelect = true),
-    Atribute(title = "年龄", viewModelName = "patientAge", placeholder = "请输入", editable = true, isNumber = true),
 )
+
+val attributesGroupB = listOf(
+    Atribute(title = "年龄", viewModelName = "patientAge", placeholder = "请输入", editable = true, isNumber = true),
+    Atribute(title = "ID", viewModelName = "patientID", placeholder = "请输入", editable = true),
+)
+
 
 /**
  * App 主页，展示呼吸率、ETCO2、姓名、性别、年龄等文字数据
@@ -219,7 +221,6 @@ val attributes = listOf(
 fun EtCo2Table(
     viewModel: AppStateModel,
     blueToothKit: BlueToothKit,
-    onTypeClick: ((device: DeviceType) -> UInt)? = null,
 ) {
     LazyColumn {
         items(attributes) { attribute ->
@@ -227,8 +228,45 @@ fun EtCo2Table(
                 viewModel = viewModel,
                 blueToothKit = blueToothKit,
                 attribute = attribute,
+                modifier = Modifier.padding(start = 28.dp, end = 28.dp)
             )
         }
+    }
+
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        AttributeLine(
+            viewModel = viewModel,
+            blueToothKit = blueToothKit,
+            attribute = attributesGroupA[0],
+            modifier = Modifier.padding(start = 28.dp).weight(1f)
+        )
+        AttributeLine(
+            viewModel = viewModel,
+            blueToothKit = blueToothKit,
+            attribute = attributesGroupA[1],
+            modifier = Modifier.padding(end = 29.dp).weight(1f)
+        )
+    }
+
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        AttributeLine(
+            viewModel = viewModel,
+            blueToothKit = blueToothKit,
+            attribute = attributesGroupB[0],
+            modifier = Modifier.padding(start = 28.dp).weight(1f)
+        )
+        AttributeLine(
+            viewModel = viewModel,
+            blueToothKit = blueToothKit,
+            attribute = attributesGroupB[1],
+            modifier = Modifier.padding(end = 13.dp).weight(1f)
+        )
     }
 }
 

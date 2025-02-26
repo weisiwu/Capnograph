@@ -119,14 +119,14 @@ class MainActivity : BaseActivity() {
     @Composable
     override fun Content() {
         CapnoEasyTheme {
-            EtCo2LineChart(
-                blueToothKit = blueToothKit,
-                viewModel = viewModel
-            )
-
             EtCo2Table(
                 viewModel = viewModel,
                 blueToothKit = blueToothKit
+            )
+
+            EtCo2LineChart(
+                blueToothKit = blueToothKit,
+                viewModel = viewModel
             )
         }
     }

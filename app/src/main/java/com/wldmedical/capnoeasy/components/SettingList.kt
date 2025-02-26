@@ -119,18 +119,18 @@ fun SettingList(
                 ) {
                     Text(
                         text = setting.name,
-                        fontSize = 20.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Light
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Image(
-                        modifier = Modifier.size(24.dp).align(Alignment.CenterVertically),
+                        modifier = Modifier.size(20.dp).align(Alignment.CenterVertically),
                         painter = painterResource(setting.icon),
                         contentDescription = setting.name
                     )
                 }
                 HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth().height(2.dp).background(Color(0xffDFE6E9)).alpha(0.4f).padding(horizontal = 18.dp)
+                    modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xffDFE6E9)).alpha(0.4f).padding(horizontal = 16.dp)
                 )
             }
         }

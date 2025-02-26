@@ -1,6 +1,5 @@
 package com.wldmedical.capnoeasy.components
 
-import android.app.Activity.RESULT_OK
 import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -34,31 +33,6 @@ fun BaseLayout(
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
     Column {
-        NavBar(
-            viewModel = viewModel,
-            onLeftClick = {
-                val intent = Intent()
-                intent.putExtra("result", "back")
-                context.setResult(RESULT_OK, intent)
-                context.finish()
-            },
-            onRightClick = {
-                onNavBarRightClick?.invoke()
-            }
-        )
-
-        Surface(
-            modifier = modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
-            Column {
-                content(
-                    viewModel
-                )
-            }
-        }
-
         ActionBar(
             viewModel = viewModel,
             onTabClick = { index ->
@@ -83,9 +57,36 @@ fun BaseLayout(
                     2 -> intent = Intent(context, SettingActivity::class.java)
                 }
                 launcher.launch(intent, options)
+                context.finish()
             },
             isInPreview = true
         )
+
+        Surface(
+            modifier = modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            Column {
+                content(
+                    viewModel
+                )
+            }
+        }
+
+        NavBar(
+            viewModel = viewModel,
+//            onLeftClick = {
+//                val intent = Intent()
+//                intent.putExtra("result", "back")
+//                context.setResult(RESULT_OK, intent)
+//                context.finish()
+//            },
+            onRightClick = {
+                onNavBarRightClick?.invoke()
+            }
+        )
+
     }
     float(viewModel)
 }

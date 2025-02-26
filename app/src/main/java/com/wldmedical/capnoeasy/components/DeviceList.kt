@@ -82,7 +82,7 @@ fun DeviceList(
                 )
                 Text(
                     text = emptyAlert,
-                    fontSize = 20.sp,
+                    fontSize = 16.sp,
                     color = Color(0xFF687383)
                 )
                 Spacer(modifier = Modifier.fillMaxWidth().height(16.dp))
@@ -164,7 +164,7 @@ fun DeviceList(
                 content = {
                     Text(
                         text = "重新搜索",
-                        modifier = Modifier.clip(RoundedCornerShape(15.dp)),
+                        modifier = Modifier.clip(RoundedCornerShape(14.dp)),
                         color = Color(0xff165DFF),
                     )
                 }

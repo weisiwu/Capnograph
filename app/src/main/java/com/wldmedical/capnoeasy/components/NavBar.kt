@@ -59,7 +59,6 @@ fun NavBar(
     onRightClick: (() -> Unit)? = null
 ) {
     val currentPage = viewModel.currentPage
-//    val showSearch = remember { derivedStateOf { currentPage.value.currentPage == PageScene.HISTORY_LIST_PAGE } }
     val showSearch = remember { derivedStateOf { false } }
     val showBack = remember { derivedStateOf { currentPage.value.currentPage != PageScene.HOME_PAGE } }
     var rightIcon: ImageVector? = null
@@ -126,52 +125,68 @@ fun NavBar(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = currentPage.value.currentPage.title,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    if(rightImage.value != null) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Image(
+                                painter = painterResource(id = rightImage.value!!),
+                                contentDescription = rightDesc.value,
+                                modifier = Modifier.clickable {
+                                    onRightClick?.invoke()
+                                }
+                            )
+                            Text(
+                                text = rightDesc.value,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Light,
+                                modifier = Modifier.padding(top = 4.dp).clickable {
+                                    onRightClick?.invoke()
+                                }
+                            )
+                        }
+                    }
                 }
             }
         },
         actions = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                if (rightIcon != null) {
-                    IconButton(
-                        modifier = Modifier.padding(0.dp),
-                        onClick = {
-                            onRightClick?.invoke()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = rightIcon,
-                            contentDescription = rightDesc.value
-                        )
-                    }
-                } else if(rightImage.value != null) {
-                    Image(
-                        painter = painterResource(id = rightImage.value!!),
-                        contentDescription = rightDesc.value,
-                        modifier = Modifier.clickable {
-                            onRightClick?.invoke()
-                        }
-                    )
-                    Text(
-                        text = rightDesc.value,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Light,
-                        modifier = Modifier.padding(top = 4.dp).clickable {
-                            onRightClick?.invoke()
-                        }
-                    )
-                } else {
-                    Spacer(
-                        modifier = Modifier.width(60.dp)
-                    )
-                }
-            }
+//            Column(
+//                horizontalAlignment = Alignment.CenterHorizontally,
+//            ) {
+//                if (rightIcon != null) {
+//                    IconButton(
+//                        modifier = Modifier.padding(0.dp),
+//                        onClick = {
+//                            onRightClick?.invoke()
+//                        }
+//                    ) {
+//                        Icon(
+//                            imageVector = rightIcon,
+//                            contentDescription = rightDesc.value
+//                        )
+//                    }
+//                } else if(rightImage.value != null) {
+//                    Image(
+//                        painter = painterResource(id = rightImage.value!!),
+//                        contentDescription = rightDesc.value,
+//                        modifier = Modifier.clickable {
+//                            onRightClick?.invoke()
+//                        }
+//                    )
+//                    Text(
+//                        text = rightDesc.value,
+//                        fontSize = 12.sp,
+//                        fontWeight = FontWeight.Light,
+//                        modifier = Modifier.padding(top = 4.dp).clickable {
+//                            onRightClick?.invoke()
+//                        }
+//                    )
+//                } else {
+//                    Spacer(
+//                        modifier = Modifier.width(60.dp)
+//                    )
+//                }
+//            }
         },
     )
 }
