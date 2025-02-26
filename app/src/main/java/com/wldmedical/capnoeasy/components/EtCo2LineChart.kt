@@ -1,9 +1,6 @@
 package com.wldmedical.capnoeasy.components
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothDevice
-import android.os.Handler
-import android.os.Looper
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.compose.foundation.background
@@ -14,26 +11,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource.Companion.SideEffect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
@@ -52,18 +40,6 @@ import com.wldmedical.capnoeasy.kits.BlueToothKitManager.blueToothKit
 import com.wldmedical.capnoeasy.kits.maxXPoints
 import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
-import kotlinx.coroutines.flow.collectLatest
-
-fun getLatest500Entries(entries: SnapshotStateList<Entry>): SnapshotStateList<Entry> {
-    val size = entries.size
-    if (size <= maxXPoints) {
-        return entries
-    }
-    return SnapshotStateList<Entry>().apply {
-        addAll(entries.subList(size - maxXPoints, size))
-    }
-}
-
 
 /**
  * App底部导航条
@@ -76,85 +52,35 @@ fun EtCo2LineChart(
     blueToothKit: BlueToothKit,
     viewModel: AppStateModel
 ) {
+    var index = 0f
     val chart: MutableState<LineChart?> = remember { mutableStateOf(null) }
-    val shownCapnoGraph: MutableState<BluetoothDevice?> = remember { mutableStateOf(null) }
-    val currentDeviceEntries = remember { mutableStateListOf<Entry>() }
+    val entries = remember { mutableStateListOf<Entry>() }.apply {
+        if (this.size < maxXPoints) {
+            repeat(maxXPoints) { add(Entry(it.toFloat(), 0f)) }
+        }
+    }
     val pagerState = rememberPagerState()
     viewModel.lineChart = chart.value
 
-    LaunchedEffect(blueToothKit.currentCapnoGraph) {
-        val entiesName = blueToothKit.currentCapnoGraph?.address
+    // TODO: 临时mock500个虚拟点
+//    LaunchedEffect(a) {
+//        RandomCurveGenerator(
+//            updateGraph = { blueToothKit.updateReceivedData(DataPoint(index = 1, value = it)) }
+//        )
+//    }
 
-        if (entiesName != null) {
-//            viewModel.entriesMap.getOrPut(entiesName) { // 使用 getOrPut 初始化
-//                SnapshotStateList<Entry>().apply {
-//                    repeat(maxXPoints) {
-//                        add(Entry(0f, 0f))
-//                    }
-//                }
-//            }
-
-            var curentEntries = viewModel.entriesMap.getOrPut(entiesName) { // 使用 getOrPut 初始化
-                SnapshotStateList<Entry>().apply {
-                    repeat(maxXPoints) {
-                        add(Entry(0f, 0f))
-                    }
+    // 处理折线图动画效果
+    LaunchedEffect(blueToothKit.currentCapnoGraph) { // 监听 bluetoothKit 实例的变化
+        blueToothKit.updateDataFlow {
+            if (it.isNotEmpty()) {
+                if (entries.size >= maxXPoints) {
+                    entries.removeAt(0) // 删除头部元素
                 }
-            }
-            currentDeviceEntries.clear()
-            curentEntries = getLatest500Entries(curentEntries)
-            currentDeviceEntries.addAll(curentEntries)
-        }
-    }
-
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.collectLatest { page ->
-            // 页面切换后的回调
-            if (blueToothKit.connectedCapnoEasy.size > page) {
-                val nextDevice = blueToothKit.connectedCapnoEasy[page]
-
-                // 修改设备的时候，同时修改渲染变量
-                if (nextDevice != null) {
-                    val entiesName = nextDevice.address
-                    var curentEntries = viewModel.entriesMap.getOrPut(entiesName) { // 使用 getOrPut 初始化
-                        SnapshotStateList<Entry>().apply {
-                            repeat(maxXPoints) {
-                                add(Entry(0f, 0f))
-                            }
-                        }
-                    }
-                    blueToothKit.currentCapnoGraph = nextDevice
-                    shownCapnoGraph.value = nextDevice
-
-                    currentDeviceEntries.clear()
-                    curentEntries = getLatest500Entries(curentEntries)
-                    currentDeviceEntries.addAll(curentEntries)
-
-                    // 添加设备后，开始接受数据流
-                    blueToothKit.updateDataFlow { it ->
-                        val entiesName = blueToothKit.currentCapnoGraph?.address
-                        val curIndex = viewModel.entriesIndexMap[entiesName] ?: 0f
-                        if (currentDeviceEntries.size >= maxXPoints) {
-                            val len = currentDeviceEntries.size - maxXPoints + 1
-                            currentDeviceEntries.removeRange(0, len) // 删除头部元素
-                        }
-
-                        if (it.isNotEmpty()) {
-                            it.last().let {
-                                println("wswTest 数据接受 ${blueToothKit.currentCapnoGraph?.name}_${it.value}_${curIndex + 1f}====${currentDeviceEntries.size}")
-                                currentDeviceEntries.add(Entry(curIndex + 1f, it.value))
-                                if (entiesName != null) {
-                                    viewModel.entriesIndexMap[entiesName] = curIndex.plus(1f)
-                                }
-                            }
-                        }
-                    }
-                }
+                index += 1f
+                entries.add(Entry(index, it.last().value))
             }
         }
     }
-
-    println("wswTest 当前的index  ${viewModel.entriesIndexMap}")
 
     Column(
         modifier = Modifier
@@ -178,11 +104,18 @@ fun EtCo2LineChart(
                 .fillMaxWidth()
                 .height(400.dp)
         ) { page ->
+            if (blueToothKit.connectedCapnoEasy.size > pagerState.currentPage) {
+                blueToothKit.currentCapnoGraph = blueToothKit.connectedCapnoEasy[pagerState.currentPage]
+            }
             if (blueToothKit.connectedCapnoEasy.size > 0) {
-                Text(
-                    text = shownCapnoGraph.value?.name ?: "未知设备",
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                val currentDevice = blueToothKit.currentCapnoGraph;
+
+                if (currentDevice != null) {
+                    Text(
+                        text = if(currentDevice.name == null) "未知设备" else currentDevice.name,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
             }
 
             Column(
@@ -221,22 +154,12 @@ fun EtCo2LineChart(
                                 override fun getFormattedValue(value: Float): String { return "" }
                             }
 
-                            val handler = Handler(Looper.getMainLooper())
-                            val runnable = object : Runnable {
-                                override fun run() {
-                                    chart.value?.invalidate()
-                                    handler.postDelayed(this, 20) // 1000ms / 50次 = 20ms
-                                }
-                            }
-                            handler.post(runnable)
-
-
                             chart.value = this
                         }
                     },
                     update = {
                         // 设置数据
-                        val dataSet = LineDataSet(currentDeviceEntries, "ETCO2")
+                        val dataSet = LineDataSet(entries, "ETCO2")
                         dataSet.lineWidth = 2f
                         dataSet.setDrawCircles(false) // 不绘制圆点
                         val lineData = LineData(dataSet)
@@ -246,7 +169,7 @@ fun EtCo2LineChart(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp),
+                        .height(300.dp)
                 )
             }
         }

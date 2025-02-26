@@ -44,15 +44,9 @@ import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -138,7 +132,7 @@ class BlueToothKit @Inject constructor(
 
     /******************* 属性 *******************/
     // 获取主线程的 Handler
-    private val handler = Handler(Looper.getMainLooper())
+    val handler = Handler(Looper.getMainLooper())
 
     private val audioIns = AudioPlayer(activity)
 
@@ -159,7 +153,7 @@ class BlueToothKit @Inject constructor(
             data!!,
             type
         )
-//        println("wswTest 写入结果 ${result}")
+        println("wswTest 写入结果 ${result}")
     }
 
     // 是否正在扫描BLE蓝牙设备
@@ -201,8 +195,7 @@ class BlueToothKit @Inject constructor(
                     gatt.discoverServices()
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
-                    // 设备已断开连接 ，从已经连接的设备中去除
-//                    connectedCapnoEasy
+                    // 设备已断开连接
                 }
                 else -> {
                     // 其他状态
@@ -281,14 +274,11 @@ class BlueToothKit @Inject constructor(
                 }
 
                 // 将任务注册进入，等待onCharacteristicWrite回调触发任务队列
-                println("wswTest 开始初始化设备")
-//                currentCapnoGraph = device
                 initCapnoEasyConection(gatt)
             }
         }
 
         // 用于接收设备发送的通知数据。
-        @Deprecated("Deprecated in Java")
         @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt?,
@@ -311,7 +301,6 @@ class BlueToothKit @Inject constructor(
         }
 
         // 处理特征值写入操作的结果，包括设置订阅状态
-        @SuppressLint("MissingPermission")
         @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         override fun onCharacteristicWrite(
             gatt: BluetoothGatt?,
@@ -336,6 +325,7 @@ class BlueToothKit @Inject constructor(
                     val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
                     if (device != null && !discoveredPeripherals.contains(device)) {
                         if (device.name == null) { return }
+                        // println("wswTest 设备名称 ${device.name} === ${isGPPrinterName(device.name)}")
                         // GP蓝牙打印机存在问题，
                         if (isGPPrinterName(device.name)) {
                             autoConnectPrinter(device)
@@ -392,17 +382,15 @@ class BlueToothKit @Inject constructor(
     // 历史配对设备-打印机
     public val pairedPrinter = mutableStateOf<BluetoothDevice?>(null)
 
-    private val scope: CoroutineScope = MainScope() // 或 CoroutineScope(Dispatchers.Main)
-
-    @OptIn(FlowPreview::class)
-    suspend fun updateDataFlow(switchNewDevice: Boolean = false, callback: ((List<DataPoint>) -> Unit)?) {
-        currentCapnoGraph?.extra?.dataFlow?.debounce(20)?.collectLatest { newData ->
+    suspend fun updateDataFlow(callback: ((List<DataPoint>) -> Unit)?) {
+        println("wswTest 设备连接地址是否变化了 ${currentCapnoGraph?.address}")
+        currentCapnoGraph?.extra?.dataFlow?.collectLatest { newData ->
             callback?.invoke(newData)
         }
     }
 
     // 更细内部的值，触发数据更新
-    private fun updateReceivedData(newData: DataPoint) {
+    fun updateReceivedData(newData: DataPoint) {
         val currentList = currentCapnoGraph?.extra?._dataFlow?.value?.toMutableList() // 获取当前列表并创建新的 MutableList
 
         // 更新 Flow 的值
@@ -650,6 +638,7 @@ class BlueToothKit @Inject constructor(
         // 发送数据
         if (filterList != null) {
             device.extra.sendDataCharacteristic = filterList[0]
+            // TODO: 默认值需要修改
             device.extra.taskQueue.addTasks(
                 listOf(
                     // 读取单位前，必须要先停止设置
@@ -665,11 +654,7 @@ class BlueToothKit @Inject constructor(
                     // 设置结束后，开始尝试接受数据
                     Runnable { sendContinuous() },
                     // 返回首页&&保存配对设备信息到本地
-                   Runnable {
-                       // TODO: 后续修改格式
-//                        currentCapnoGraph = device
-                        onDeviceConnectSuccess?.invoke(device)
-                    },
+                   Runnable { onDeviceConnectSuccess?.invoke(device) },
                 )
             )
         }
@@ -704,7 +689,6 @@ class BlueToothKit @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     private fun sendContinuous() {
-        println("wswTest 开始接受数据 ${currentCapnoGraph?.name}")
         currentCapnoGraph?.extra?.sendArray?.add(SensorCommand.CO2Waveform.value.toByte())
         currentCapnoGraph?.extra?.sendArray?.add(0x02)
         currentCapnoGraph?.extra?.sendArray?.add(0x00)
@@ -715,9 +699,9 @@ class BlueToothKit @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     private fun sendStopContinuous() {
-        println("wswTest 停止接受数据 ${currentCapnoGraph?.name}")
         currentCapnoGraph?.extra?.sendArray?.add(SensorCommand.StopContinuous.value.toByte())
         currentCapnoGraph?.extra?.sendArray?.add(0x01)
+        println("wswTest 发送停止字符串 1")
         sendSavedData()
     }
 
@@ -726,12 +710,17 @@ class BlueToothKit @Inject constructor(
     @SuppressLint("MissingPermission")
     fun sendSavedData() {
         if (currentGatt == null || currentSendDataCharacteristic == null) {
+            println("wswTest 发送停止字符串 2")
             resetSendData()
             return
         }
+        println("wswTest 发送停止字符串 3")
         appendCKS()
+        println("wswTest 发送停止字符串 4")
         writeDataToDevice()
+        println("wswTest 发送停止字符串 5")
         resetSendData()
+        println("wswTest 发送停止字符串 6")
     }
 
     /**
@@ -1015,24 +1004,22 @@ class BlueToothKit @Inject constructor(
         // 已连接设备中，存在相同mac地址的，放弃保存
         val isSaved = connectedCapnoEasy.find { it?.address  == device.address } != null
 
-        println("wswTest 尝试链接 ${device.name} 是否已经保存过->$isSaved")
         if (isSaved) {
             return
         }
 
         // 链接后，需要将设备存到不同的属性中
         // 这里做了兼容：我的一加手机会把BLE设备偶尔识别为未知类型
-        // 点击链接后，就要将当前设备设置为用户点击的设备，链接失败后，将当前设备设置为已连接设备的第一个。
         if (device.type == DEVICE_TYPE_LE || device.type == DEVICE_TYPE_UNKNOWN) {
-            connectedCapnoEasy.add(device)
-            currentCapnoGraph = device
             connectBleDevice(device)
             device.extra.receivedCO2WavedData = mutableListOf()
-        } else if (device.type == DEVICE_TYPE_CLASSIC) {
             connectedCapnoEasy.add(device)
             currentCapnoGraph = device
+        } else if (device.type == DEVICE_TYPE_CLASSIC) {
             connectClassicDevice(device)
             device.extra.receivedCO2WavedData = mutableListOf()
+            connectedCapnoEasy.add(device)
+            currentCapnoGraph = device
         }
     }
 
@@ -1056,16 +1043,9 @@ class BlueToothKit @Inject constructor(
             return null
         }
 
-        var tmpList: List<Byte> = listOf()
-        try {
-            tmpList = currentCapnoGraph?.extra?.receivedArray?.toList() ?: listOf()
-        } catch (e: Exception) {
-            println("wswTest 这里繁盛异常 ${e.message}")
-            return null
-        }
-
+        val tmpList = currentCapnoGraph?.extra?.receivedArray?.toList() ?: listOf()
         if (tmpList.size <= 1) {
-            return null
+            return  null
         }
         // 取此段指令所有数据: CMD + NBF + DB + CKS
         val nbf: Int = tmpList[1].toUByte().toInt() ?: 0
@@ -1324,11 +1304,6 @@ class BlueToothKit @Inject constructor(
             else -> println("扩展指令未知场景")
         }
     }
-
-    /** 主页切换设备时，断开旧设备链接并链接新设备 */
-//    fun swithDevice(newDevice: BluetoothDevice) {
-//        sendStopContinuous()
-//    }
 }
 
 object BlueToothKitManager {

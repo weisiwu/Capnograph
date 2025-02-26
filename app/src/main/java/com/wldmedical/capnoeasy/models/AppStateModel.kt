@@ -7,12 +7,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.data.Entry
 import com.wldmedical.capnoeasy.CO2_SCALE
 import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.GENDER
@@ -89,12 +86,6 @@ class AppState @Inject constructor() {
 
     // 是否正在记录波形数据
     val isRecording: MutableState<Boolean> = mutableStateOf(false)
-
-    // 保存多个设备的数据
-    val entriesMap = mutableStateMapOf<String, SnapshotStateList<Entry>>()
-
-    // 保存多个设备的数据的序号
-    val entriesIndexMap = mutableStateMapOf<String, Float>()
 
     /***
      * 主页表格相关数据
@@ -463,8 +454,4 @@ class AppStateModel @Inject constructor(
     // 折线图节点，保存PDF使用
     @SuppressLint("StaticFieldLeak")
     var lineChart: LineChart? = null
-
-
-    val entriesMap = appState.entriesMap
-    val entriesIndexMap = appState.entriesIndexMap
 }
