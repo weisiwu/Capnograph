@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -26,13 +25,11 @@ import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,8 +42,6 @@ data class NavBarComponentState(
     val currentPage: PageScene = PageScene.HOME_PAGE
 )
 
-// TODO: 加返回按钮的交互
-// TODO: 记录按钮的交互
 /**
  * App顶部导航条
  * 所有一级页和二级页使用
@@ -61,17 +56,14 @@ fun NavBar(
     val currentPage = viewModel.currentPage
     val showSearch = remember { derivedStateOf { false } }
     val showBack = remember { derivedStateOf { currentPage.value.currentPage != PageScene.HOME_PAGE } }
-    var rightIcon: ImageVector? = null
     val rightImage: MutableState<Int?> = remember { mutableStateOf(null) }
     val rightDesc: MutableState<String> = remember { mutableStateOf("") }
 
     when(currentPage.value.currentPage) {
         PageScene.HISTORY_LIST_PAGE -> {
-            rightIcon = Icons.Filled.Search
             rightDesc.value = "搜索"
         }
         PageScene.HISTORY_DETAIL_PAGE -> {
-            rightIcon = Icons.Filled.MoreVert
             rightDesc.value = "更多操作"
         }
         PageScene.HOME_PAGE ->
@@ -132,62 +124,26 @@ fun NavBar(
                             Image(
                                 painter = painterResource(id = rightImage.value!!),
                                 contentDescription = rightDesc.value,
-                                modifier = Modifier.clickable {
-                                    onRightClick?.invoke()
-                                }
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clickable {
+                                        onRightClick?.invoke()
+                                    }
                             )
                             Text(
                                 text = rightDesc.value,
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Light,
-                                modifier = Modifier.padding(top = 4.dp).clickable {
-                                    onRightClick?.invoke()
-                                }
+                                modifier = Modifier
+                                    .clickable {
+                                        onRightClick?.invoke()
+                                    }
                             )
                         }
                     }
                 }
             }
-        },
-        actions = {
-//            Column(
-//                horizontalAlignment = Alignment.CenterHorizontally,
-//            ) {
-//                if (rightIcon != null) {
-//                    IconButton(
-//                        modifier = Modifier.padding(0.dp),
-//                        onClick = {
-//                            onRightClick?.invoke()
-//                        }
-//                    ) {
-//                        Icon(
-//                            imageVector = rightIcon,
-//                            contentDescription = rightDesc.value
-//                        )
-//                    }
-//                } else if(rightImage.value != null) {
-//                    Image(
-//                        painter = painterResource(id = rightImage.value!!),
-//                        contentDescription = rightDesc.value,
-//                        modifier = Modifier.clickable {
-//                            onRightClick?.invoke()
-//                        }
-//                    )
-//                    Text(
-//                        text = rightDesc.value,
-//                        fontSize = 12.sp,
-//                        fontWeight = FontWeight.Light,
-//                        modifier = Modifier.padding(top = 4.dp).clickable {
-//                            onRightClick?.invoke()
-//                        }
-//                    )
-//                } else {
-//                    Spacer(
-//                        modifier = Modifier.width(60.dp)
-//                    )
-//                }
-//            }
-        },
+        }
     )
 }
 

@@ -90,14 +90,6 @@ fun EtCo2LineChart(
             .padding(horizontal = 16.dp)
             .background(Color.Transparent)
     ) {
-//        Text(
-//            text = "实时ETCO2",
-//            fontSize = 20.sp,
-//            fontWeight = FontWeight.Bold,
-//            color = Color(0xff1D2129),
-//            modifier = Modifier.padding(bottom = 16.dp)
-//        )
-
         HorizontalPager(
             count = blueToothKit.connectedCapnoEasy.size,
             state = pagerState,

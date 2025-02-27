@@ -222,17 +222,6 @@ fun EtCo2Table(
     viewModel: AppStateModel,
     blueToothKit: BlueToothKit,
 ) {
-    LazyColumn {
-        items(attributes) { attribute ->
-            AttributeLine(
-                viewModel = viewModel,
-                blueToothKit = blueToothKit,
-                attribute = attribute,
-                modifier = Modifier.padding(start = 28.dp, end = 28.dp)
-            )
-        }
-    }
-
     Row (
         modifier = Modifier
             .fillMaxWidth()
@@ -267,6 +256,17 @@ fun EtCo2Table(
             attribute = attributesGroupB[1],
             modifier = Modifier.padding(end = 13.dp).weight(1f)
         )
+    }
+
+    LazyColumn {
+        items(attributes) { attribute ->
+            AttributeLine(
+                viewModel = viewModel,
+                blueToothKit = blueToothKit,
+                attribute = attribute,
+                modifier = Modifier.padding(start = 28.dp, end = 28.dp)
+            )
+        }
     }
 }
 
