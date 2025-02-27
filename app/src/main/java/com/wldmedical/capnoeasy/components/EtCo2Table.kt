@@ -59,7 +59,7 @@ fun AttributeLine(
     var valueText = value
     var valueColor = Color(0xff1D2129)
 
-    if (value.isEmpty() || value == null) {
+    if (value.isEmpty()) {
         valueFontWeight = FontWeight.Light
         valueText = attribute.placeholder
         valueColor = Color.Gray

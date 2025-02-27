@@ -47,6 +47,9 @@ enum class RangeType{
     ONESIDE
 }
 
+val titleFontSize = 16.sp
+val thumbFontSize = 14.sp
+
 /**
  * App 通用范围选择器
  * 适用于
@@ -103,17 +106,18 @@ fun RangeSelector(
             ) {
                 Text(
                     text = title,
-                    fontSize = 18.sp,
+                    fontSize = titleFontSize,
                     fontWeight = FontWeight.Bold
                 )
             }
-            // 因为滑块值会向上移动-30.dp，所以要预留空间出来
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(16.dp)
-            )
         }
+
+        // 因为滑块值会向上移动-30.dp，所以要预留空间出来
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(30.dp)
+        )
 
         if(type == RangeType.ONESIDE) {
             Slider(
@@ -141,7 +145,7 @@ fun RangeSelector(
                         textMeasurer = startTextMeasurer,
                         text = FloatToFixed.format(singlePosition.floatValue) + unit,
                         topLeft = Offset(thumbX - offset, -30f),
-                        style = TextStyle(fontSize = 16.sp)
+                        style = TextStyle(fontSize = thumbFontSize)
                     )
                 }
             )
@@ -150,7 +154,7 @@ fun RangeSelector(
                 value = bothPosition.value,
                 valueRange = valueRange,
                 colors = thumbColors,
-                modifier = Modifier.drawWithContent {
+                modifier = Modifier.height(60.dp).drawWithContent {
                     drawContent()
 
                     // TODO: 这里正确的思路是，thumbStart 值存在问题，而不是估算偏移来弥补误差
@@ -161,8 +165,8 @@ fun RangeSelector(
                     drawText(
                         textMeasurer = startTextMeasurer,
                         text = FloatToFixed.format(bothPosition.value.start) + unit,
-                        topLeft = Offset(thumbStart - startOffset, -30f),
-                        style = TextStyle(fontSize = 16.sp)
+                        topLeft = Offset(thumbStart - startOffset, -20f),
+                        style = TextStyle(fontSize = thumbFontSize)
                     )
 
                     val thumbEnd = (bothPosition.value.endInclusive - valueRange.start) / (valueRange.endInclusive - valueRange.start) * size.width
@@ -170,8 +174,8 @@ fun RangeSelector(
                     drawText(
                         textMeasurer = endTextMeasurer,
                         text = FloatToFixed.format(bothPosition.value.endInclusive) + unit,
-                        topLeft = Offset(thumbEnd - endOffset, -30f),
-                        style = TextStyle(fontSize = 16.sp)
+                        topLeft = Offset(thumbEnd - endOffset, 130f),
+                        style = TextStyle(fontSize = thumbFontSize)
                     )
                 },
                 startThumb = {
@@ -200,7 +204,7 @@ fun RangeSelector(
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(32.dp)
+                .height(16.dp)
         )
     }
 }

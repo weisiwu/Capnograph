@@ -2,26 +2,10 @@ package com.wldmedical.capnoeasy.pages
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.O2_UNIT
 import com.wldmedical.capnoeasy.PageScene
@@ -41,14 +25,27 @@ class ModuleSettingActivity : BaseActivity() {
 
     var asphyxiationTime: Int = 0
     var o2Compensation: Float = 0f
+    var airPressure: Float = 0f
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @Composable
     override fun Content() {
         asphyxiationTime = viewModel.asphyxiationTime.value
         o2Compensation = viewModel.o2Compensation.value
+        airPressure = viewModel.airPressure.value
 
         Column {
+            RangeSelector(
+                title = "大气压(${viewModel.CO2Unit.value.rawValue})",
+                unit = viewModel.CO2Unit.value.rawValue,
+                value = o2Compensation,
+                type = RangeType.ONESIDE,
+                valueRange = o2CompensationRange,
+                onValueChange = { newVal, _ ->
+                    o2Compensation = newVal
+                }
+            )
+
             RangeSelector(
                 title = "窒息时间(${TIME_UNIT})",
                 value = asphyxiationTime.toFloat(),
@@ -75,60 +72,32 @@ class ModuleSettingActivity : BaseActivity() {
                 modifier = Modifier.weight(1f)
             )
 
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                Card (
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.clickable {
-                        checkHasConnectDevice {
-                            viewModel.updateAsphyxiationTime(asphyxiationTime)
-                            viewModel.updateO2Compensation(o2Compensation)
-                            viewModel.updateLoadingData(
-                                LoadingData(
-                                    text = "正在设置",
-                                    duration = InfinityDuration,
+            SaveButton {
+                checkHasConnectDevice {
+                    viewModel.updateAsphyxiationTime(asphyxiationTime)
+                    viewModel.updateO2Compensation(o2Compensation)
+                    viewModel.updateLoadingData(
+                        LoadingData(
+                            text = "正在设置",
+                            duration = InfinityDuration,
+                        )
+                    )
+                    blueToothKit.updateNoBreathAndCompensation(
+                        asphyxiationTime,
+                        o2Compensation,
+                        callback = {
+                            viewModel.clearXData()
+                            viewModel.updateToastData(
+                                ToastData(
+                                    text = "设置成功",
+                                    showMask = false,
+                                    duration = 800,
                                 )
                             )
-                            blueToothKit.updateNoBreathAndCompensation(
-                                asphyxiationTime,
-                                o2Compensation,
-                                callback = {
-                                    viewModel.clearXData()
-                                    viewModel.updateToastData(
-                                        ToastData(
-                                            text = "设置成功",
-                                            showMask = false,
-                                            duration = 800,
-                                        )
-                                    )
-                                }
-                            )
                         }
-                    }
-                ) {
-                    Text(
-                        text = "保存",
-                        letterSpacing = 5.sp,
-                        color = Color(0xff165DFF),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .background(Color(0xffE0EAFF))
-                            .padding(horizontal = 30.dp, vertical = 16.dp)
-                            .wrapContentWidth()
-                            .wrapContentHeight()
                     )
                 }
             }
-
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(16.dp)
-            )
         }
     }
 }

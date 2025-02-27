@@ -115,10 +115,10 @@ class AppState @Inject constructor() {
      * 设置相关
      */
     // 报警ETCO2范围
-    val alertETCO2Range: MutableState<ClosedRange<Float>> = mutableStateOf(0f..10f)
+    val alertETCO2Range: MutableState<ClosedRange<Float>> = mutableStateOf(25f..50f)
 
     // 报警呼吸率范围
-    val alertRRRange: MutableState<ClosedRange<Float>> = mutableStateOf(0f..10f)
+    val alertRRRange: MutableState<ClosedRange<Float>> = mutableStateOf(5f..30f)
 
     // CO2单位
     val CO2Unit: MutableState<CO2_UNIT> = mutableStateOf(CO2_UNIT.MMHG)
@@ -137,6 +137,9 @@ class AppState @Inject constructor() {
 
     // 氧气补偿
     val o2Compensation: MutableState<Float> = mutableFloatStateOf(16f)
+
+    // 大气压
+    val airPressure: MutableState<Float> = mutableFloatStateOf(760f)
 
     /***
      * 系统相关设置
@@ -326,8 +329,6 @@ class AppStateModel @Inject constructor(
     /***
      * 设置相关
      */
-    // TODO: 需要有一个默认单位的。ETCO2，需要加上
-
     // 报警ETCO2范围
     val alertETCO2Range = appState.alertETCO2Range
     fun updateAlertETCO2Range(start: Float, end: Float) {
@@ -374,6 +375,12 @@ class AppStateModel @Inject constructor(
     val o2Compensation = appState.o2Compensation
     fun updateO2Compensation(newVal: Float) {
         appState.o2Compensation.value = newVal
+    }
+
+    // 大气压
+    val airPressure = appState.airPressure
+    fun updateAirPressure(newVal: Float) {
+        appState.airPressure.value = newVal
     }
 
     // 语言

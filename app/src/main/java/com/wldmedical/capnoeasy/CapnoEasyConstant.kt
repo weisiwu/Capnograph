@@ -57,13 +57,9 @@ enum class WF_SPEED(val rawValue: Float):BaseEnmu<Float> {
 val wfSpeeds = listOf(WF_SPEED.SMALL, WF_SPEED.MIDDLE, WF_SPEED.LARGE)
 val wfSpeedsObj = wheelPickerConfig(items = wfSpeeds, title = "WF Speed", defaultValue = WF_SPEED.MIDDLE)
 
-val maxETCO2Range = 25f..50f
-val minETCO2Range = 0f..25f
-val ETCO2Range = 0f..50f
+val ETCO2Range = 0f..150f
 
-val maxRRRange = 0f..60f
-val minRRRange = 0f..30f
-val RRRange = 0f..60f
+val RRRange = 0f..150f
 
 val asphyxiationTimeRange = 10f..60f
 val o2CompensationRange = 0f..100f
