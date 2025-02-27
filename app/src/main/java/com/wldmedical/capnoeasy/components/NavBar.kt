@@ -22,11 +22,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -47,12 +51,9 @@ data class NavBarComponentState(
 @Composable
 fun NavBar(
     viewModel: AppStateModel,
-    onLeftClick: ((NavBarComponentState) -> Unit)? = null,
     onRightClick: (() -> Unit)? = null
 ) {
     val currentPage = viewModel.currentPage
-    val showSearch = remember { derivedStateOf { false } }
-    val showBack = remember { derivedStateOf { currentPage.value.currentPage != PageScene.HOME_PAGE } }
     val rightImage: MutableState<Int?> = remember { mutableStateOf(null) }
     val rightDesc: MutableState<String> = remember { mutableStateOf("") }
 
@@ -61,6 +62,7 @@ fun NavBar(
             rightDesc.value = "搜索"
         }
         PageScene.HISTORY_DETAIL_PAGE -> {
+            rightImage.value = R.drawable.pull_up
             rightDesc.value = "更多操作"
         }
         PageScene.HOME_PAGE ->
@@ -78,56 +80,32 @@ fun NavBar(
 
     TopAppBar(
         title = {
-            if (showSearch.value) {
-                SearchBar(
-                    query = "",
-                    onQueryChange = {},
-                    onSearch = {},
-                    active = false,
-                    onActiveChange = {},
-                    enabled = true,
-                    leadingIcon = { Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "ArrowBack") },
-                    trailingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = "Search") },
-                    placeholder = {
-                        Text(
-                            text = "请输入要搜索的病人名称或者日期",
-                            modifier = Modifier.fillMaxWidth(),
-                            fontSize = 16.sp,
-                            color = Color.Gray,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if(rightImage.value != null) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Image(
+                            painter = painterResource(id = rightImage.value!!),
+                            contentDescription = rightDesc.value,
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clickable {
+                                    onRightClick?.invoke()
+                                }
                         )
-                    },
-                    content = {},
-                )
-            } else {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    if(rightImage.value != null) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Image(
-                                painter = painterResource(id = rightImage.value!!),
-                                contentDescription = rightDesc.value,
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .clickable {
-                                        onRightClick?.invoke()
-                                    }
-                            )
-                            Text(
-                                text = rightDesc.value,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Light,
-                                modifier = Modifier
-                                    .clickable {
-                                        onRightClick?.invoke()
-                                    }
-                            )
-                        }
+                        Text(
+                            text = rightDesc.value,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Light,
+                            modifier = Modifier
+                                .clickable {
+                                    onRightClick?.invoke()
+                                }
+                        )
                     }
                 }
             }
@@ -145,30 +123,6 @@ fun NavBarPreview() {
                     AppState()
                 )
             )
-
-//            NavBar(
-//                viewModel = AppStateModel(
-//                    AppState(currentPage = PageScene.HOME_PAGE)
-//                )
-//            )
-
-//            NavBar(
-//                viewModel = AppStateModel(
-//                    AppState(currentPage = PageScene.SETTING_PAGE)
-//                )
-//            )
-//
-//            NavBar(
-//                viewModel = AppStateModel(
-//                    AppState(currentPage = PageScene.HISTORY_LIST_PAGE)
-//                )
-//            )
-//
-//            NavBar(
-//                viewModel = AppStateModel(
-//                    AppState(currentPage = PageScene.HISTORY_DETAIL_PAGE)
-//                )
-//            )
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.os.Build
 import android.os.Bundle
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
 import com.wldmedical.capnoeasy.GENDER
@@ -10,6 +12,7 @@ import com.wldmedical.capnoeasy.components.EtCo2LineChart
 import com.wldmedical.capnoeasy.components.EtCo2Table
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
+import com.wldmedical.capnoeasy.kits.BluetoothType
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
@@ -37,6 +40,7 @@ class MainActivity : BaseActivity() {
         return true
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val context = this;
@@ -56,6 +60,8 @@ class MainActivity : BaseActivity() {
             printSetting.printLogo?.let {
                 viewModel.updatePrintLogo(it)
             }
+            // 默认扫描，连接周围打印机
+            blueToothKit.searchDevices(BluetoothType.CLASSIC)
         } catch (e: Exception) {
             println("wswTest 捕获到自动链接BLE配对设备异常: ${e.message}")
         }
