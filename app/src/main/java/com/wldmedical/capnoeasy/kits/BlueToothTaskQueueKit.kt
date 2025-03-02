@@ -29,6 +29,7 @@ class BluetoothTaskQueue {
         lock.lock()
         try {
             taskQueue.addAll(tasks)
+            println("wswTEst taskQueue ${taskQueue.size}")
         } finally {
             lock.unlock()
         }
