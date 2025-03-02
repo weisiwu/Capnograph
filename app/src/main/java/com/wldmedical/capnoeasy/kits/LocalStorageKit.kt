@@ -36,6 +36,13 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.UUID
 
+public object PDFSetting {
+    var pdfHospitalName: String? = null
+    var pdfDepart: String? = null
+    var pdfBedNumber: String? = null
+    var pdfIDNumber: String? = null
+}
+
 @Entity(tableName = "patients")
 data class Patient(
     val name: String,
@@ -206,6 +213,12 @@ class LocalStorageKit @Inject constructor(
     private val KEY_PRINT_LOGO_URI = "print_logo_uri"
     private val KEY_PRINT_URL_QR_CODE = "print_url_qr_code"
 
+    // PDF设置
+    private val KEY_PDFHOSPITALNAME = "pdfHospitalName"
+    private val KEY_PDFDEPART = "pdfDepart"
+    private val KEY_PDFBEDNUMBER = "pdfBedNumber"
+    private val KEY_PDFIDNUMBER = "pdfIDNumber"
+
     var patients: MutableList<Patient> = mutableListOf()
 
     var records: MutableList<Record> = mutableListOf()
@@ -255,6 +268,7 @@ class LocalStorageKit @Inject constructor(
             val timeIndex = generateTimeIndex(startTime)
             val patientIndex = generatePatientIndex(patient)
             var pdfFilePath: String? = null
+            val pdfSetting: PDFSetting? = context?.let { loadPDFSettingFromPreferences(it) }
 
             if (context != null) {
                 pdfFilePath = File(
@@ -280,7 +294,8 @@ class LocalStorageKit @Inject constructor(
                     data = data,
                     filePath = pdfFilePath,
                     record = record,
-                    maxETCO2 = maxETCO2
+                    maxETCO2 = maxETCO2,
+                    pdfSetting = pdfSetting
                 )
             }
 
@@ -335,7 +350,37 @@ class LocalStorageKit @Inject constructor(
     }
 
     /***
-     * 将用户保存在本地的数据，持久化存储到本地。防止App升级，更新导致丢失
+     * 用户PDF偏好，保存到本地
+     */
+    fun saveUserPDFSettingToPreferences(
+        context: Context,
+        pdfHospitalName: String? = "",
+        pdfDepart: String? = "",
+        pdfBedNumber: String? = "",
+        pdfIDNumber: String? = "",
+    ) {
+        val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
+        prefs.edit().apply {
+            pdfHospitalName?.let { putString(KEY_PDFHOSPITALNAME, it) } ?: remove(KEY_PDFHOSPITALNAME)
+            pdfDepart?.let { putString(KEY_PDFDEPART, it) } ?: remove(KEY_PDFDEPART)
+            pdfBedNumber?.let { putString(KEY_PDFBEDNUMBER, it) } ?: remove(KEY_PDFBEDNUMBER)
+            pdfIDNumber?.let { putString(KEY_PDFIDNUMBER, it) } ?: remove(KEY_PDFIDNUMBER)
+        }.apply()
+    }
+
+    // 读取PDF偏好打印设置
+    fun loadPDFSettingFromPreferences(context: Context): PDFSetting {
+        val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
+        PDFSetting.pdfHospitalName = prefs.getString(KEY_PDFHOSPITALNAME, null)
+        PDFSetting.pdfDepart = prefs.getString(KEY_PDFDEPART, null)
+        PDFSetting.pdfBedNumber = prefs.getString(KEY_PDFBEDNUMBER, null)
+        PDFSetting.pdfIDNumber = prefs.getString(KEY_PDFIDNUMBER, null)
+
+        return PDFSetting
+    }
+
+    /***
+     * 用户打印偏好，保存到本地
      */
     fun saveUserPrintSettingToPreferences(
         context: Context,

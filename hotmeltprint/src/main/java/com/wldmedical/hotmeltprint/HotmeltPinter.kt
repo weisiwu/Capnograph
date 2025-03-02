@@ -291,7 +291,6 @@ class HotmeltPinter {
             esc.drawImage(bitImg, maxSize)
         }
         esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT)
-        println("wswTest config.printPhone ${config.printPhone}")
         config.printPhone?.let {
             esc.addText("电话: ${it}\n")
         }

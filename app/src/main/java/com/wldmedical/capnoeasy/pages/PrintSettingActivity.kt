@@ -8,6 +8,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +22,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
@@ -56,6 +60,10 @@ import java.io.File
 class PrintSettingActivity : BaseActivity() {
     override var pageScene = PageScene.PRINT_CONFIG_PAGE
 
+    var pdfHospitalName: String = ""
+    var pdfDepart: String = ""
+    var pdfBedNumber: String = ""
+    var pdfIDNumber: String = ""
     var printAddress: String = ""
     var printPhone: String = ""
     var printUrl: String = ""
@@ -63,6 +71,11 @@ class PrintSettingActivity : BaseActivity() {
 
     @Composable
     override fun Content() {
+        pdfHospitalName = viewModel.pdfHospitalName.value
+        pdfDepart = viewModel.pdfDepart.value
+        pdfBedNumber = viewModel.pdfBedNumber.value
+        pdfIDNumber = viewModel.pdfIDNumber.value
+        
         printAddress = viewModel.printAddress.value
         printPhone = viewModel.printPhone.value
         printUrl = viewModel.printUrl.value
@@ -79,201 +92,254 @@ class PrintSettingActivity : BaseActivity() {
         }
         val context = this
 
-        Column {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .verticalScroll(rememberScrollState()) // 使用 verticalScroll
+        ) {
+            CustomTextField(
+                title = "【PDF】医院名称",
+                defaultText = "请输入名称",
+                value = pdfHospitalName,
+                onValueChange = {
+                    pdfHospitalName = it
+                }
+            )
+            CustomTextField(
+                title = "【PDF】科室",
+                defaultText = "请输入科室",
+                value = pdfDepart,
+                onValueChange = {
+                    pdfDepart = it
+                }
+            )
+            CustomTextField(
+                title = "【PDF】床号",
+                defaultText = "请输入床号",
+                value = pdfBedNumber,
+                onValueChange = {
+                    pdfBedNumber = it
+                }
+            )
+            CustomTextField(
+                title = "【PDF】ID号",
+                defaultText = "请输入ID号",
+                value = pdfIDNumber,
+                onValueChange = {
+                    pdfIDNumber = it
+                }
+            )
+            CustomTextField(
+                title = "【小票】地址",
+                defaultText = "请输入地址",
+                value = printAddress,
+                onValueChange = {
+                    printAddress = it
+                }
+            )
+            CustomTextField(
+                title = "【小票】电话",
+                defaultText = "请输入电话",
+                value = printPhone,
+                onValueChange = {
+                    printPhone = it
+                }
+            )
+            if (printUrlQRCode.value) {
                 CustomTextField(
-                    title = "地址",
-                    defaultText = "请输入地址",
-                    value = printAddress,
+                    title = "【小票】网址",
+                    defaultText = "请输入网址",
+                    value = printUrl,
                     onValueChange = {
-                        printAddress = it
+                        printUrl = it
                     }
-                )
-                CustomTextField(
-                    title = "电话",
-                    defaultText = "请输入电话",
-                    value = printPhone,
-                    onValueChange = {
-                        printPhone = it
-                    }
-                )
-                if (printUrlQRCode.value) {
-                    CustomTextField(
-                        title = "网址",
-                        defaultText = "请输入网址",
-                        value = printUrl,
-                        onValueChange = {
-                            printUrl = it
-                        }
-                    )
-                }
-                Column {
-                    Text(
-                        text = "是否展示网址二维码",
-                        color = Color(0xff666666),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp)
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.Transparent)
-                            .padding(bottom = 18.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        TypeSwitch(
-                            selectedIndex = if (printUrlQRCode.value) 0 else 1,
-                            onTypeClick = { type ->
-                                printUrlQRCode.value = type.id == "是"
-                            },
-                            types = SupportQRCodeTypes
-                        )
-                    }
-                    HorizontalDivider(
-                        modifier = Modifier.run {
-                            fillMaxWidth()
-                                .height(2.dp)
-                                .alpha(0.4f)
-                                .padding(horizontal = 18.dp)
-                        }
-                    )
-                }
-                Column {
-                    Text(
-                        text = "Logo上传",
-                        color = Color(0xff666666),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(horizontal = 18.dp)
-                            .padding(top = 18.dp)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .background(Color(0xffF5F5F5))
-                            .align(Alignment.CenterHorizontally)
-                            .clickable {
-                                val intent = Intent(Intent.ACTION_GET_CONTENT)
-                                intent.type = "image/*"
-                                launcher.launch(intent)
-                            }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "选择图片",
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                        )
-                        // 显示选择的图片
-                        if (selectedImageUri.value != null) {
-                            Row(
-                                horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Image(
-                                    modifier = Modifier.height(150.dp),
-                                    painter = rememberAsyncImagePainter(model = selectedImageUri.value),
-                                    contentDescription = "选择的图片"
-                                )
-                            }
-                        }
-                    }
-                    HorizontalDivider(
-                        modifier = Modifier.run {
-                            fillMaxWidth()
-                                .height(2.dp)
-                                .alpha(0.4f)
-                                .padding(top = 18.dp)
-                                .padding(horizontal = 18.dp)
-                        }
-                    )
-                }
-
-                Spacer(
-                    modifier = Modifier.weight(1f)
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Card (
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.clickable {
-                            viewModel.updateLoadingData(
-                                LoadingData(
-                                    text = "正在设置",
-                                    duration = 800,
-                                )
-                            )
-                            // 保存图片到本地
-                            val success = saveImageToInternalStorage(context, selectedImageUri.value!!, logoImgName)
-                            if (success) {
-                                val directory = context.getDir("images", Context.MODE_PRIVATE)
-                                val file = File(directory, logoImgName)
-                                val imagePath = file.absolutePath
-
-                                viewModel.updatePrintAddress(printAddress)
-                                viewModel.updatePrintPhone(printPhone)
-                                viewModel.updatePrintUrl(printUrl)
-                                viewModel.updatePrintUrlQRCode(printUrlQRCode.value)
-                                viewModel.updatePrintLogo(file.toUri())
-                                // 将数据存储到用户偏好中
-                                localStorageKit.saveUserPrintSettingToPreferences(
-                                    context = context,
-                                    macAddress = printPhone,
-                                    printPhone = printPhone,
-                                    printAddress = printAddress,
-                                    printUrl = printUrl,
-                                    printLogo = file.toUri(),
-                                    printUrlQRCode = printUrlQRCode.value,
-                                )
-                                
-                                viewModel.updateToastData(
-                                    ToastData(
-                                        text = "设置成功",
-                                        showMask = false,
-                                        duration = 600,
-                                    )
-                                )
-                            } else {
-                                viewModel.updateToastData(
-                                    ToastData(
-                                        text = "设置失败",
-                                        type = ToastType.FAIL,
-                                        showMask = false,
-                                        duration = 600,
-                                    )
-                                )
-                            }
-                        }
-                    ) {
-                        Text(
-                            text = "保存",
-                            letterSpacing = 5.sp,
-                            color = Color(0xff165DFF),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .background(Color(0xffE0EAFF))
-                                .padding(horizontal = 30.dp, vertical = 16.dp)
-                                .wrapContentWidth()
-                                .wrapContentHeight()
-                        )
-                    }
-                }
-
-                Spacer(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(16.dp)
                 )
             }
+            Column {
+                Text(
+                    text = "【小票】是否展示网址二维码",
+                    color = Color(0xff666666),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Transparent)
+                        .padding(bottom = 18.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    TypeSwitch(
+                        selectedIndex = if (printUrlQRCode.value) 0 else 1,
+                        onTypeClick = { type ->
+                            printUrlQRCode.value = type.id == "是"
+                        },
+                        types = SupportQRCodeTypes
+                    )
+                }
+                HorizontalDivider(
+                    modifier = Modifier.run {
+                        fillMaxWidth()
+                            .height(2.dp)
+                            .alpha(0.4f)
+                            .padding(horizontal = 18.dp)
+                    }
+                )
+            }
+            Column {
+                Text(
+                    text = "【小票】Logo",
+                    color = Color(0xff666666),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .padding(horizontal = 18.dp)
+                        .padding(top = 18.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .background(Color(0xffF5F5F5))
+                        .align(Alignment.CenterHorizontally)
+                        .clickable {
+                            val intent = Intent(Intent.ACTION_GET_CONTENT)
+                            intent.type = "image/*"
+                            launcher.launch(intent)
+                        }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "选择图片",
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                    )
+                    // 显示选择的图片
+                    if (selectedImageUri.value != null) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Image(
+                                modifier = Modifier.height(150.dp),
+                                painter = rememberAsyncImagePainter(model = selectedImageUri.value),
+                                contentDescription = "选择的图片"
+                            )
+                        }
+                    }
+                }
+                HorizontalDivider(
+                    modifier = Modifier.run {
+                        fillMaxWidth()
+                            .height(2.dp)
+                            .alpha(0.4f)
+                            .padding(top = 18.dp)
+                            .padding(horizontal = 18.dp)
+                    }
+                )
+            }
+
+            Spacer(
+                modifier = Modifier.weight(1f).padding(bottom = 16.dp)
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Card (
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.clickable {
+                        viewModel.updateLoadingData(
+                            LoadingData(
+                                text = "正在设置",
+                                duration = 800,
+                            )
+                        )
+                        var success: Boolean = true
+                        // 保存图片到本地
+                        try {
+                            if (selectedImageUri.value != null) {
+                                success = saveImageToInternalStorage(context, selectedImageUri.value!!, logoImgName)
+                            }
+                        } catch (e: Exception) {
+                            success = false
+                        }
+                        if (success) {
+                            val directory = context.getDir("images", Context.MODE_PRIVATE)
+                            val file = File(directory, logoImgName)
+                            val imagePath = file.absolutePath
+
+                            viewModel.updatePdfHospitalName(pdfHospitalName)
+                            viewModel.updatePdfDepart(pdfDepart)
+                            viewModel.updatePdfBedNumber(pdfBedNumber)
+                            viewModel.updatePdfIDNumber(pdfIDNumber)
+
+                            viewModel.updatePrintAddress(printAddress)
+                            viewModel.updatePrintPhone(printPhone)
+                            viewModel.updatePrintUrl(printUrl)
+                            viewModel.updatePrintUrlQRCode(printUrlQRCode.value)
+                            viewModel.updatePrintLogo(file.toUri())
+                            // 将打印设置存储到用户偏好中
+                            localStorageKit.saveUserPrintSettingToPreferences(
+                                context = context,
+                                macAddress = printPhone,
+                                printPhone = printPhone,
+                                printAddress = printAddress,
+                                printUrl = printUrl,
+                                printLogo = file.toUri(),
+                                printUrlQRCode = printUrlQRCode.value,
+                            )
+                            // PDF偏好存储到用户偏好中
+                            localStorageKit.saveUserPDFSettingToPreferences(
+                                context = context,
+                                pdfHospitalName = pdfHospitalName,
+                                pdfDepart = pdfDepart,
+                                pdfBedNumber = pdfBedNumber,
+                                pdfIDNumber = pdfIDNumber,
+                            )
+
+                            viewModel.updateToastData(
+                                ToastData(
+                                    text = "设置成功",
+                                    showMask = false,
+                                    duration = 600,
+                                )
+                            )
+                        } else {
+                            viewModel.updateToastData(
+                                ToastData(
+                                    text = "设置失败",
+                                    type = ToastType.FAIL,
+                                    showMask = false,
+                                    duration = 600,
+                                )
+                            )
+                        }
+                    }
+                ) {
+                    Text(
+                        text = "保存",
+                        letterSpacing = 5.sp,
+                        color = Color(0xff165DFF),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .background(Color(0xffE0EAFF))
+                            .padding(horizontal = 30.dp, vertical = 16.dp)
+                            .wrapContentWidth()
+                            .wrapContentHeight()
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(16.dp)
+            )
         }
     }
 }

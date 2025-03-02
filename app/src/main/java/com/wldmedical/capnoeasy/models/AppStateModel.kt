@@ -166,11 +166,23 @@ class AppState @Inject constructor() {
     val moduleName: MutableState<String> = mutableStateOf("CapnoGraph")
 
     /***
-     * 打印相关数据
+     * PDF相关设置
      */
     // 医院名称
-    val hospitalName: MutableState<String> = mutableStateOf("")
+    val pdfHospitalName: MutableState<String> = mutableStateOf("")
 
+    // 科室
+    val pdfDepart: MutableState<String> = mutableStateOf("")
+
+    // 床号
+    val pdfBedNumber: MutableState<String> = mutableStateOf("")
+
+    // id号
+    val pdfIDNumber: MutableState<String> = mutableStateOf("")
+
+    /***
+     * 打印相关数据
+     */
     // 打印设置-地址
     val printAddress: MutableState<String> = mutableStateOf("")
 
@@ -428,10 +440,28 @@ class AppStateModel @Inject constructor(
         appState.moduleName.value = newVal
     }
 
-    // 医院名称
-    val hospitalName = appState.hospitalName
-    fun updateHospitalName(newVal: String) {
-        appState.hospitalName.value = newVal
+    // pdf设置-医院名称
+    val pdfHospitalName = appState.pdfHospitalName
+    fun updatePdfHospitalName(newVal: String) {
+        appState.pdfHospitalName.value = newVal
+    }
+
+    // pdf设置-科室
+    val pdfDepart = appState.pdfDepart
+    fun updatePdfDepart(newVal: String) {
+        appState.pdfDepart.value = newVal
+    }
+
+    // pdf设置-床号
+    val pdfBedNumber = appState.pdfBedNumber
+    fun updatePdfBedNumber(newVal: String) {
+        appState.pdfBedNumber.value = newVal
+    }
+
+    // pdf设置-医院名称
+    val pdfIDNumber = appState.pdfIDNumber
+    fun updatePdfIDNumber(newVal: String) {
+        appState.pdfIDNumber.value = newVal
     }
 
     // 打印设置-地址

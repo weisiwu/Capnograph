@@ -13,6 +13,7 @@ import com.wldmedical.capnoeasy.components.EtCo2Table
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.kits.BluetoothType
+import com.wldmedical.capnoeasy.kits.PDFSetting
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
@@ -51,6 +52,7 @@ class MainActivity : BaseActivity() {
                 // 尝试自动连接已经配对设备
                 blueToothKit.connectDevice(device)
             }
+
             // 从用户偏好里读取默认打印设置
             val printSetting: PrintSetting = localStorageKit.loadPrintSettingFromPreferences(this)
             printSetting.printAddress?.let { viewModel.updatePrintAddress(it) }
@@ -60,6 +62,14 @@ class MainActivity : BaseActivity() {
             printSetting.printLogo?.let {
                 viewModel.updatePrintLogo(it)
             }
+
+            // 读取默认pdf设置
+            val pdfSetting: PDFSetting = localStorageKit.loadPDFSettingFromPreferences(this)
+            pdfSetting.pdfHospitalName?.let { viewModel.updatePdfHospitalName(it) }
+            pdfSetting.pdfDepart?.let { viewModel.updatePdfDepart(it) }
+            pdfSetting.pdfBedNumber?.let { viewModel.updatePdfBedNumber(it) }
+            pdfSetting.pdfIDNumber?.let { viewModel.updatePdfIDNumber(it) }
+
             // 默认扫描，连接周围打印机
             blueToothKit.searchDevices(BluetoothType.CLASSIC)
         } catch (e: Exception) {
@@ -86,7 +96,6 @@ class MainActivity : BaseActivity() {
     override fun onNavBarRightClick() {
         val isRecording = viewModel.isRecording.value
         val context = this
-        startRecordTime = LocalDateTime.now()
 
         // 正在记录中，点击为保存动作
         if (isRecording) {
@@ -107,6 +116,8 @@ class MainActivity : BaseActivity() {
                     maxETCO2 = viewModel.CO2Scale.value.value
                 )
             }
+        } else {
+            startRecordTime = LocalDateTime.now()
         }
 
         viewModel.updateToastData(

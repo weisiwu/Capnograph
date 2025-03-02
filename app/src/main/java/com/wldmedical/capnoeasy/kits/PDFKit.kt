@@ -33,35 +33,8 @@ import com.itextpdf.text.pdf.PdfWriter
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.CountDownLatch
-
-class FooterPageEvent(private val baseFont: BaseFont, private val record: Record?) : PdfPageEventHelper() {
-    override fun onEndPage(writer: PdfWriter, document: Document) {
-        val contentFont = Font(baseFont, 12f, Font.NORMAL)
-
-        val table = PdfPTable(2)
-        table.widthPercentage = 100f
-        table.setWidths(floatArrayOf(1f, 1f))
-
-        val doctorCell = PdfPCell(Paragraph("报告者：", contentFont))
-        doctorCell.horizontalAlignment = Element.ALIGN_CENTER
-        doctorCell.border = Rectangle.NO_BORDER
-        table.addCell(doctorCell)
-
-        val timeCell = PdfPCell(Paragraph("报告时间：${record?.patient?.gender ?: ""}", contentFont))
-        timeCell.horizontalAlignment = Element.ALIGN_CENTER
-        timeCell.border = Rectangle.NO_BORDER
-        table.addCell(timeCell)
-
-        // 计算页脚的位置
-        val footerHeight = table.totalHeight
-        val x = document.leftMargin()
-        val y = document.bottomMargin()
-
-        // 将页脚添加到文档中
-        table.writeSelectedRows(0, -1, x, y + footerHeight, writer.directContent)
-    }
-}
 
 class SaveChartToPdfTask(
     private val originalLineChart: LineChart,
@@ -69,6 +42,7 @@ class SaveChartToPdfTask(
     private val filePath: String,
     private val maxETCO2: Float,
     private val record: Record? = null,
+    private val pdfSetting: PDFSetting? = null,
     private val onComplete: (Boolean) -> Unit // 添加回调
 ) : AsyncTask<Void, Void, Boolean>() {
 
@@ -116,19 +90,17 @@ class SaveChartToPdfTask(
 
     private fun addPDFHeader(
         document: Document,
-        hospitalName: String = "",
-        recordName: String = ""
     ) {
         val titleFont = Font(baseFont, 20f, Font.BOLD)
         val contentFont = Font(baseFont, 12f, Font.NORMAL)
 
         // 医院名称
-        val title1 = Paragraph("医院名称：$hospitalName", titleFont)
+        val title1 = Paragraph("医院名称：${pdfSetting?.pdfHospitalName ?: ""}", titleFont)
         title1.alignment = Element.ALIGN_CENTER
         document.add(title1)
 
         // 记录名称
-        val title2 = Paragraph("报告名称：$recordName", titleFont)
+        val title2 = Paragraph("报告名称：${record?.patientIndex ?: ""}", titleFont)
         title2.alignment = Element.ALIGN_CENTER
         document.add(title2)
 
@@ -187,7 +159,7 @@ class SaveChartToPdfTask(
         nameCell.border = Rectangle.NO_BORDER
         table.addCell(nameCell)
 
-        val genderCell = PdfPCell(Paragraph("性别：${record?.patient?.gender ?: ""}", contentFont))
+        val genderCell = PdfPCell(Paragraph("性别：${record?.patient?.gender?.title ?: ""}", contentFont))
         genderCell.horizontalAlignment = Element.ALIGN_CENTER
         genderCell.border = Rectangle.NO_BORDER
         table.addCell(genderCell)
@@ -197,17 +169,17 @@ class SaveChartToPdfTask(
         ageCell.border = Rectangle.NO_BORDER
         table.addCell(ageCell)
 
-        val departCell = PdfPCell(Paragraph("科室：${record?.patient?.age ?: ""}", contentFont))
+        val departCell = PdfPCell(Paragraph("科室：${pdfSetting?.pdfDepart ?: ""}", contentFont))
         departCell.horizontalAlignment = Element.ALIGN_CENTER
         departCell.border = Rectangle.NO_BORDER
         table.addCell(departCell)
 
-        val idCell = PdfPCell(Paragraph("ID号：${record?.patient?.age ?: ""}", contentFont))
+        val idCell = PdfPCell(Paragraph("ID号：${pdfSetting?.pdfIDNumber ?: ""}", contentFont))
         idCell.horizontalAlignment = Element.ALIGN_CENTER
         idCell.border = Rectangle.NO_BORDER
         table.addCell(idCell)
 
-        val bedCell = PdfPCell(Paragraph("床号：${record?.patient?.age ?: ""}", contentFont))
+        val bedCell = PdfPCell(Paragraph("床号：${pdfSetting?.pdfBedNumber ?: ""}", contentFont))
         bedCell.horizontalAlignment = Element.ALIGN_CENTER
         bedCell.border = Rectangle.NO_BORDER
         table.addCell(bedCell)
@@ -216,6 +188,7 @@ class SaveChartToPdfTask(
         document.add(table)
     }
 
+// TODO:(wsw) 这里需要调整ETCO2的取值逻辑
     private fun addPDFETCO2(document: Document) {
         val contentFont = Font(baseFont, 12f, Font.NORMAL)
 
@@ -283,7 +256,6 @@ class SaveChartToPdfTask(
     }
 
     private fun addETCO2LineChart(document: Document) {
-        println("wswTest 送过来记录的有多少 ${data.size}")
         val filteredData = filterData(data, maxETCO2)
         val totalPoints = filteredData.size
         val currentPageData = data.subList(0, totalPoints)
@@ -351,7 +323,10 @@ class SaveChartToPdfTask(
         doctorCell.border = Rectangle.NO_BORDER
         table.addCell(doctorCell)
 
-        val timeCell = PdfPCell(Paragraph("报告时间：${record?.patient?.gender ?: ""}", contentFont))
+        val formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH时mm分ss秒")
+        val startTimeStr = if (record?.startTime != null) record.startTime.format(formatter) else ""
+        val endTimeStr = if (record?.endTime != null) record.endTime.format(formatter) else ""
+        val timeCell = PdfPCell(Paragraph("报告时间：${startTimeStr}-${endTimeStr}", contentFont))
         timeCell.horizontalAlignment = Element.ALIGN_CENTER
         timeCell.border = Rectangle.NO_BORDER
         table.addCell(timeCell)
@@ -403,6 +378,7 @@ fun saveChartToPdfInBackground(
     data: List<CO2WavePointData>,
     filePath: String,
     maxETCO2: Float = 0f,
+    pdfSetting: PDFSetting? = null,
     record: Record? = null
 ) {
     val reverseData = data.asReversed()
@@ -412,6 +388,7 @@ fun saveChartToPdfInBackground(
         filePath = filePath,
         record = record,
         maxETCO2 = maxETCO2,
+        pdfSetting = pdfSetting,
         onComplete = {}
     ).execute()
 }

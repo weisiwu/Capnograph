@@ -307,7 +307,7 @@ class BlueToothKit @Inject constructor(
     }
 
     // 经典蓝牙-扫描回调
-    private val discoveryReceiver = object : BroadcastReceiver() {
+    private var discoveryReceiver = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action ?: return
@@ -322,10 +322,6 @@ class BlueToothKit @Inject constructor(
                         if (isGPPrinterName(device.name)) {
                             autoConnectPrinter(device)
                         }
-                        // 目前没有涌上经典蓝牙的设备，所以不需要展示他们和连接他们
-                        // 蓝牙打印机虽然使用了经典蓝牙的链接方式，但是为自动连接
-                        // discoveredPeripherals.add(device)
-                        // scanFind?.invoke(device)
                     }
                 }
             }
@@ -620,6 +616,7 @@ class BlueToothKit @Inject constructor(
         filter.addAction(BluetoothDevice.ACTION_FOUND)
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
         registerReceiver(activity, discoveryReceiver, filter, ContextCompat.RECEIVER_VISIBLE_TO_INSTANT_APPS)
+        isReceiverRegistered = true // 注册成功后，将标志位设置为 true
 
         bluetoothAdapter?.startDiscovery()
     }
@@ -630,9 +627,19 @@ class BlueToothKit @Inject constructor(
         if (!isClassicScanning) { return }
 
         isClassicScanning = false
-        activity.unregisterReceiver(discoveryReceiver)
+        if (isReceiverRegistered) { // 检查是否已注册
+            try {
+                activity.unregisterReceiver(discoveryReceiver)
+                isReceiverRegistered = false // 取消注册成功后，将标志位设置为 false
+            } catch (e: Exception) {
+                Log.e("wswTest", "取消注册广播失败", e)
+            }
+        }
+
         bluetoothAdapter?.cancelDiscovery()
     }
+
+    private var isReceiverRegistered = false // 用于跟踪注册状态的标志位
 
     // 扫描流程集合
     @RequiresApi(Build.VERSION_CODES.S)
