@@ -58,9 +58,9 @@ fun NavBar(
     val rightDesc: MutableState<String> = remember { mutableStateOf("") }
 
     when(currentPage.value.currentPage) {
-        PageScene.HISTORY_LIST_PAGE -> {
-            rightDesc.value = "搜索"
-        }
+//        PageScene.HISTORY_LIST_PAGE -> {
+//            rightDesc.value = "搜索"
+//        }
         PageScene.HISTORY_DETAIL_PAGE -> {
             rightImage.value = R.drawable.pull_up
             rightDesc.value = "更多操作"
