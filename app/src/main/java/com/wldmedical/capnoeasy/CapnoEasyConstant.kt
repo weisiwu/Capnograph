@@ -63,6 +63,7 @@ val RRRange = 0f..150f
 
 val asphyxiationTimeRange = 10f..60f
 val o2CompensationRange = 0f..100f
+val airPressureRange = 600f..1200f
 
 val maxMaskZIndex = 9999f
 val maskOpacity = 0.2f

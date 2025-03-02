@@ -10,6 +10,7 @@ import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.O2_UNIT
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.TIME_UNIT
+import com.wldmedical.capnoeasy.airPressureRange
 import com.wldmedical.capnoeasy.asphyxiationTimeRange
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.RangeSelector
@@ -25,25 +26,21 @@ class ModuleSettingActivity : BaseActivity() {
 
     var asphyxiationTime: Int = 0
     var o2Compensation: Float = 0f
-    var airPressure: Float = 0f
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @Composable
     override fun Content() {
         asphyxiationTime = viewModel.asphyxiationTime.value
         o2Compensation = viewModel.o2Compensation.value
-        airPressure = viewModel.airPressure.value
 
         Column {
             RangeSelector(
                 title = "大气压(${viewModel.CO2Unit.value.rawValue})",
                 unit = viewModel.CO2Unit.value.rawValue,
-                value = o2Compensation,
+                enabled = false,
+                value = blueToothKit.airPressure.value,
                 type = RangeType.ONESIDE,
-                valueRange = o2CompensationRange,
-                onValueChange = { newVal, _ ->
-                    o2Compensation = newVal
-                }
+                valueRange = airPressureRange,
             )
 
             RangeSelector(

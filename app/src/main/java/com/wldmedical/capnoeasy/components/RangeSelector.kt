@@ -62,6 +62,7 @@ val thumbFontSize = 14.sp
 fun RangeSelector(
     title: String = "",
     unit: String = "",
+    enabled: Boolean = true,
     type: RangeType = RangeType.ONESIDE,
     value: Float = 0f,
     startValue: Float = 0f,
@@ -121,6 +122,7 @@ fun RangeSelector(
 
         if(type == RangeType.ONESIDE) {
             Slider(
+                enabled = enabled,
                 value = singlePosition.floatValue,
                 valueRange = valueRange,
                 thumb = {

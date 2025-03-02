@@ -113,7 +113,8 @@ fun AttributeLine(
                     fontWeight = valueFontWeight,
                     fontSize = 16.sp,
                     color = valueColor,
-                    modifier = Modifier
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Start // 设置 Text 内部文本居左对齐
                 )
             }
         }  else if (attribute.editable) {
@@ -177,7 +178,7 @@ fun AttributeLine(
                 Text(
                     text = if (attribute.viewModelName == "rr")
                         blueToothKit.currentRespiratoryRate.value.toString()
-                        else floor(blueToothKit.currentETCO2.value).toInt().toString(),
+                        else floor(blueToothKit.currentETCO2.value).toString(),
                     fontWeight = valueFontWeight,
                     fontSize = 16.sp,
                     color = valueColor,

@@ -44,7 +44,6 @@ import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -554,6 +553,9 @@ class BlueToothKit @Inject constructor(
     // 设备序列号
     public var sSerialNumber: MutableState<String> = mutableStateOf("")
 
+    // 大气压
+    public var airPressure: MutableState<Float> = mutableStateOf(760f)
+
     // 设备硬件版本
     public var sHardwareVersion: MutableState<String> = mutableStateOf("")
 
@@ -770,6 +772,15 @@ class BlueToothKit @Inject constructor(
                     // 拉取设备信息
                     Runnable {
                         if (!isSettingInit) {
+                            // ISB=1 大气压
+                            sendArray.add(SensorCommand.Settings.value.toByte())
+                            sendArray.add(0x02)
+                            sendArray.add(ISBState84H.AirPressure.value.toByte())
+                            sendSavedData()
+                        }
+                    },
+                    Runnable {
+                        if (!isSettingInit) {
                             // ISB=21
                             sendArray.add(SensorCommand.Settings.value.toByte())
                             sendArray.add(0x02)
@@ -803,10 +814,9 @@ class BlueToothKit @Inject constructor(
                             sendArray.add(0x00)
                             sendSavedData()
                         }
-                        println("wswTest 命令发送完毕")
                     },
                     // 设置结束后，开始尝试接受数据
-//                    Runnable { sendContinuous() },
+                    Runnable { sendContinuous() },
                     // 返回首页&&保存配对设备信息到本地
                     Runnable { onDeviceConnectSuccess?.invoke(connectedCapnoEasy[connectedCapnoEasyIndex]) },
                 )
@@ -1352,6 +1362,11 @@ class BlueToothKit @Inject constructor(
                 val DB3 = data[5].toUByte().toInt()
                 sHardwareVersion.value = "${DB1.toChar()}.${DB2.toChar()}.${DB3.toChar()}"
                 isSettingInit = true
+            }
+            ISBState84H.AirPressure.value -> {
+                val DB1 = data[3].toUByte().toFloat()
+                val DB2 = data[4].toUByte().toFloat()
+                airPressure.value = 128 * DB1 + DB2
             }
             else -> println("模块参数设置 未知ISB")
         }
