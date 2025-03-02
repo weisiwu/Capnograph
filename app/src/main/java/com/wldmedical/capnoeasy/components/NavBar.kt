@@ -5,15 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SearchBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -22,17 +17,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
@@ -58,9 +46,6 @@ fun NavBar(
     val rightDesc: MutableState<String> = remember { mutableStateOf("") }
 
     when(currentPage.value.currentPage) {
-//        PageScene.HISTORY_LIST_PAGE -> {
-//            rightDesc.value = "搜索"
-//        }
         PageScene.HISTORY_DETAIL_PAGE -> {
             rightImage.value = R.drawable.pull_up
             rightDesc.value = "更多操作"
@@ -74,6 +59,8 @@ fun NavBar(
                 rightDesc.value = "开始记录"
             }
         else -> {
+            rightImage.value = null
+            rightDesc.value = ""
             println("No Use")
         }
     }
