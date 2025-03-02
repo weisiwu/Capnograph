@@ -246,6 +246,7 @@ class LocalStorageKit @Inject constructor(
         startTime: LocalDateTime,
         data: List<CO2WavePointData> = listOf(),
         endTime: LocalDateTime,
+        maxETCO2: Float = 0f,
         lineChart: LineChart? = null
     ) {
         withContext(Dispatchers.IO) {
@@ -272,13 +273,15 @@ class LocalStorageKit @Inject constructor(
             )
 
             if (pdfFilePath != null && lineChart != null) {
+                println("wswTest 保存pdf文件的地址是什么 ${pdfFilePath}")
                 saveChartToPdfInBackground(
                     lineChart = lineChart,
                     data = data,
                     segmentSize = maxXPoints,
                     filePath = pdfFilePath,
+                    record = record,
+                    maxETCO2 = maxETCO2
                 )
-                println("wswTest 保存pdf文件的地址是什么 ${pdfFilePath}")
             }
 
             database.recordDao().insertRecord(record)

@@ -103,7 +103,8 @@ class MainActivity : BaseActivity() {
                     lineChart = viewModel.lineChart,
                     data = viewModel.totalCO2WavedData.toList(),
                     startTime = startRecordTime ?: LocalDateTime.now(),
-                    endTime = endRecordTime ?: LocalDateTime.now()
+                    endTime = endRecordTime ?: LocalDateTime.now(),
+                    maxETCO2 = viewModel.CO2Scale.value.value
                 )
             }
         }
