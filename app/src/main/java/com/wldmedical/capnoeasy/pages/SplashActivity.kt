@@ -13,10 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -25,10 +22,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.R
 import kotlinx.coroutines.delay
 
@@ -75,20 +70,6 @@ fun SplashScreen(onNavigateToMain: () -> Unit) {
             painter = painterResource(id = R.drawable.wld_logo),
             contentDescription = "万联达信科",
             modifier = Modifier.width(logoWidth)
-        )
-        Text(
-            text = "万联达信科",
-            style = MaterialTheme.typography.headlineMedium,
-            fontSize = 24.sp,
-            color = Color(0xff3D3D3D),
-            modifier = Modifier.padding(top = 16.dp)
-        )
-        Text(
-            text = "WLD Instruments Co., Ltd",
-            style = MaterialTheme.typography.headlineMedium,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Light,
-            color = Color(0xff3D3D3D)
         )
     }
 }

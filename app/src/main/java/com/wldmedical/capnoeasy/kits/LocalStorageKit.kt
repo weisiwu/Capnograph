@@ -199,6 +199,7 @@ class LocalStorageKit @Inject constructor(
 ) {
     // 打印设置相关key
     private val KEY_MAC_ADDRESS = "mac_address"
+    private val KEY_HOSPITAL_NAME = "hospital_name"
     private val KEY_PRINT_ADDRESS = "print_address"
     private val KEY_PRINT_PHONE = "print_phone"
     private val KEY_PRINT_URL = "print_url"
@@ -277,7 +278,6 @@ class LocalStorageKit @Inject constructor(
                 saveChartToPdfInBackground(
                     lineChart = lineChart,
                     data = data,
-                    segmentSize = maxXPoints,
                     filePath = pdfFilePath,
                     record = record,
                     maxETCO2 = maxETCO2
@@ -350,7 +350,7 @@ class LocalStorageKit @Inject constructor(
         prefs.edit().apply {
             // 处理可空字符串
             macAddress?.let { putString(KEY_MAC_ADDRESS, it) } ?: remove(KEY_MAC_ADDRESS)
-            putString(KEY_PRINT_ADDRESS, printAddress) // 直接存储（可空值自动处理）
+            putString(KEY_PRINT_ADDRESS, printAddress)
             putString(KEY_PRINT_PHONE, printPhone)
             putString(KEY_PRINT_URL, printUrl)
 

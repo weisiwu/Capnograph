@@ -337,9 +337,7 @@ class SaveChartToPdfTask(
         document.add(image)
     }
 
-    private fun addETCO2TrendChart(document: Document) {
-
-    }
+    private fun addETCO2TrendChart(document: Document) {}
 
     private fun addPDFFooter(document: Document) {
         val contentFont = Font(baseFont, 12f, Font.NORMAL)
@@ -395,7 +393,6 @@ class SaveChartToPdfTask(
 
             document.close()
         } catch (e: Exception) {
-            println("wswTest DAO ZHELIDL >>${e.message}")
             e.printStackTrace()
         }
     }
@@ -404,14 +401,14 @@ class SaveChartToPdfTask(
 fun saveChartToPdfInBackground(
     lineChart: LineChart,
     data: List<CO2WavePointData>,
-    segmentSize: Int,
     filePath: String,
     maxETCO2: Float = 0f,
     record: Record? = null
 ) {
+    val reverseData = data.asReversed()
     SaveChartToPdfTask(
         lineChart,
-        data,
+        data = reverseData,
         filePath = filePath,
         record = record,
         maxETCO2 = maxETCO2,

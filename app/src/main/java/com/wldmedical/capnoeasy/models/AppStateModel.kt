@@ -168,6 +168,9 @@ class AppState @Inject constructor() {
     /***
      * 打印相关数据
      */
+    // 医院名称
+    val hospitalName: MutableState<String> = mutableStateOf("")
+
     // 打印设置-地址
     val printAddress: MutableState<String> = mutableStateOf("")
 
@@ -423,6 +426,12 @@ class AppStateModel @Inject constructor(
     val moduleName = appState.moduleName
     fun updateModuleName(newVal: String) {
         appState.moduleName.value = newVal
+    }
+
+    // 医院名称
+    val hospitalName = appState.hospitalName
+    fun updateHospitalName(newVal: String) {
+        appState.hospitalName.value = newVal
     }
 
     // 打印设置-地址

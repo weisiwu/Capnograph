@@ -40,7 +40,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     private var currentRecord: Record? = null
 
-    val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    private val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val uri = result.data?.data
             if (uri != null) {
@@ -58,7 +58,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
         createDocumentLauncher.launch(intent)
     }
 
-    fun savePdfToUri(sourceFilePath: String, uri: Uri) {
+    private fun savePdfToUri(sourceFilePath: String, uri: Uri) {
         var outputStream: OutputStream? = null
         var inputStream: FileInputStream? = null
         try {
@@ -86,7 +86,6 @@ class HistoryRecordDetailActivity : BaseActivity() {
             it.co2
         }
 
-        println("wswTest 本地春初了什么 ${localStorageKit.loadPrintSettingFromPreferences(this)}")
         blueToothKit.gpPrinterManager.print(
             this,
             allPoints,
