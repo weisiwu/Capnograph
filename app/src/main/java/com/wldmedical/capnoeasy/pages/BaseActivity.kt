@@ -1,16 +1,28 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.Manifest
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.components.ActionModal
+import com.wldmedical.capnoeasy.components.AlertData
 import com.wldmedical.capnoeasy.components.AlertModal
 import com.wldmedical.capnoeasy.components.BaseLayout
 import com.wldmedical.capnoeasy.components.ConfirmModal
@@ -25,6 +37,10 @@ import com.wldmedical.capnoeasy.kits.PrintProtocalKitManager
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlin.collections.any
+import kotlin.collections.filter
+import kotlin.collections.isNotEmpty
+import kotlin.collections.toTypedArray
 
 /***
  * 所有页面基类
@@ -161,9 +177,68 @@ open class BaseActivity : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun checkBluetoothPermissions(): Boolean {
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            arrayOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+        }
+
+        val permissionsToRequest = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }.toTypedArray()
+
+        if (permissionsToRequest.isNotEmpty()) {
+            // 检查权限是否被拒绝
+            val shouldShowRationale = permissionsToRequest.any {
+                ActivityCompat.shouldShowRequestPermissionRationale(this, it)
+            }
+            if (shouldShowRationale) {
+                //引导用户手动开启权限
+                viewModel.updateAlertData(
+                    AlertData(
+                        text = "请开启蓝牙权限",
+                        ok_btn_text = "去开启",
+                        onOk = {
+                            viewModel.updateAlertData(null)
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            intent.data = Uri.parse("package:$packageName")
+                            startActivity(intent)
+                        }
+                    )
+                )
+            } else {
+                // 3. 如果没有权限，则请求权限
+                ActivityCompat.requestPermissions(this, permissionsToRequest, 100)
+            }
+            return false
+        }
+        return true
+    }
+
+    private fun initializeBlueToothKit() {
+        // 5. 延迟初始化 BlueToothKit
+        Handler(Looper.getMainLooper()).postDelayed({
+            Log.d("BaseActivity", "Initializing BlueToothKit...")
+            BlueToothKitManager.initialize(this, viewModel, true)
+            blueToothKit = BlueToothKitManager.blueToothKit
+            Log.d("BaseActivity", "BlueToothKit initialized.")
+        }, 300) // 延迟 1 秒
+    }
+
     /***
      * 生命周期函数
      */
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -171,6 +246,10 @@ open class BaseActivity : ComponentActivity() {
 
         BlueToothKitManager.initialize(this, viewModel)
         blueToothKit = BlueToothKitManager.blueToothKit
+
+        if (checkBluetoothPermissions()) {
+            initializeBlueToothKit()
+        }
 
         PrintProtocalKitManager.initialize()
         printProtocalKit = PrintProtocalKitManager.printProtocalKit

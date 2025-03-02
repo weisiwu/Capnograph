@@ -173,6 +173,7 @@ class BlueToothKit @Inject constructor(
         @SuppressLint("MissingPermission")
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val device = result.device
+            println("wswTest 工号蓝牙点点点  ${device.name}")
             if (device != null && !discoveredPeripherals.contains(device)) {
                 if (device.name != null) {
                     discoveredPeripherals.add(device)
@@ -182,7 +183,9 @@ class BlueToothKit @Inject constructor(
         }
 
         // 扫描失败
-        override fun onScanFailed(errorCode: Int) {}
+        override fun onScanFailed(errorCode: Int) {
+            println("wswTest 萨米哦啊失败 $errorCode")
+        }
     }
 
     private var scanFind: ((BluetoothDevice)-> Unit)? = null
@@ -286,14 +289,18 @@ class BlueToothKit @Inject constructor(
                             Log.d("initCapnoEasyConection", "wswTest All initialization completed!")
                             // 所有初始化完成，执行后续操作
                             sendContinuous()
+                            // 返回首页&&保存配对设备信息到本地
+                            onDeviceConnectSuccess?.invoke(connectedCapnoEasy[connectedCapnoEasyIndex])
                             return // 退出循环
                         } else {
                             // 至少有一个属性为 false，继续循环检查
                             Log.d("initCapnoEasyConection", "wswTest Initialization not completed yet. isSettingInit: $isSettingInit, isExpandInit: $isExpandInit, isSoftInfoInit: $isSoftInfoInit")
-                            initCapnoEasyConection()
+                            if (taskQueue.taskQueueSize == 0) {
+                                initCapnoEasyConection()
+                            }
                             taskQueue.executeTask()
                             // 延迟 500 毫秒后再次执行
-                            handler.postDelayed(this, 300)
+                            handler.postDelayed(this, 100)
                         }
                     }
                 })
@@ -621,6 +628,8 @@ class BlueToothKit @Inject constructor(
     // https://developer.android.com/develop/connectivity/bluetooth/find-bluetooth-devices?hl=zh-cn
     @SuppressLint("MissingPermission")
     private fun scanBleDevices() {
+        println("wswTest isBLEScanning $isBLEScanning")
+        println("wswTestA片达特事实吗 ${bluetoothManager}")
         if (isBLEScanning) { return }
 
         isBLEScanning = true
@@ -699,13 +708,13 @@ class BlueToothKit @Inject constructor(
             scanFinish?.invoke()
         }, SCAN_PERIOD)
 
+        println("wswTest 蓝牙类型 ${type}")
         if (type == BluetoothType.ALL || type == BluetoothType.BLE) {
             // 开始扫描低功耗蓝牙
             scanBleDevices()
         }
 
         if (type == BluetoothType.ALL || type == BluetoothType.CLASSIC) {
-            println("wswTest 开始经典蓝牙扫描")
             // 开始扫描经典蓝牙
             scanClassicDevices()
         }
@@ -754,7 +763,6 @@ class BlueToothKit @Inject constructor(
         // 写服务注册就绪，开始发送设备初初始化命令
         val filterList = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLESendDataCha.value }
         // 发送数据
-        println("wswTest filterList ${filterList.size}")
         if (filterList.isNotEmpty()) {
             sendDataCharacteristic.add(filterList[0])
             taskQueue.addTasks(
@@ -817,8 +825,6 @@ class BlueToothKit @Inject constructor(
                     },
                     // 设置结束后，开始尝试接受数据
                     Runnable { sendContinuous() },
-                    // 返回首页&&保存配对设备信息到本地
-                    Runnable { onDeviceConnectSuccess?.invoke(connectedCapnoEasy[connectedCapnoEasyIndex]) },
                 )
             )
         }
@@ -1441,9 +1447,10 @@ object BlueToothKitManager {
 
     fun initialize(
         activity: Activity,
-        appState: AppStateModel
+        appState: AppStateModel,
+        reInit: Boolean = false
     ) {
-        if (::blueToothKit.isInitialized) {
+        if (::blueToothKit.isInitialized && !reInit) {
             return
         }
         blueToothKit = BlueToothKit(

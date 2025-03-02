@@ -7,6 +7,10 @@ import kotlin.concurrent.thread
 class BluetoothTaskQueue {
 
     private val taskQueue = LinkedList<Runnable>()
+    public val taskQueueSize: Int
+        get() {
+            return taskQueue.size
+        }
     private val lock = ReentrantLock()
     private var isExecuting = false
 
