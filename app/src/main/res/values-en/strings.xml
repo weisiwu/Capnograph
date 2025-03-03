@@ -39,8 +39,11 @@
     <string name="module_is_setting">Setting</string>
     <string name="module_setting_success">Setting Success</string>
     <!-- PrintSettingActivity.kt-->
+    <string name="print_output_pdf">PDF</string>
+    <string name="print_output_hotmelt">Hotmelt Print</string>
     <string name="print_pdf_hospital_name">Hospital Name</string>
     <string name="print_input_name">Please enter the name</string>
+    <string name="print_pdf_report_name">Report Name</string>
     <string name="print_pdf_depart">Department</string>
     <string name="print_input_depart">Please enter the department</string>
     <string name="print_pdf_id">ID Number</string>

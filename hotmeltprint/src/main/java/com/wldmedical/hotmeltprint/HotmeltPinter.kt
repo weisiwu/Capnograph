@@ -23,12 +23,9 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 public object PrintSetting {
-    var macAddress: String? = null
-    var printAddress: String? = null
-    var printPhone: String? = null
-    var printUrl: String? = null
-    var printLogo: Uri? = null
-    var printUrlQRCode: Boolean? = true
+    var hospitalName: String? = null
+    var reportName: String? = null
+    var isPDF: Boolean = true
 }
 
 object Printer {
@@ -279,49 +276,19 @@ class HotmeltPinter {
     ) {
         esc.addInitializePrinter()
         esc.addSetLineSpacing(100)
-        val maxSize = 384;
-        config.printLogo?.let {
-            val bitImg = loadScaledBitmap(context, config.printLogo!!, maxSize, maxSize)
-            // 打印图片,58打印机图片宽度最大为384dot  1mm=8dot 用尺子量取图片的宽度单位为Xmm  传入宽度值为 X*8
-            esc.drawImage(bitImg, maxSize)
-        } ?: run {
-            // 默认打印万联达公司logo
-            val bitImg = BitmapFactory.decodeResource(context.resources, R.drawable.logo) //二维码图片，图片类型bitmap
-            // 打印图片,58打印机图片宽度最大为384dot  1mm=8dot 用尺子量取图片的宽度单位为Xmm  传入宽度值为 X*8
-            esc.drawImage(bitImg, maxSize)
-        }
         esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT)
-        config.printPhone?.let {
-            esc.addText("电话: ${it}\n")
+        config.hospitalName?.let {
+            esc.addText("${it}\n")
         }
-        config.printAddress?.let {
-            println("wswTest 这个是什么 ${it}")
-            esc.addText("地址: ${it}\n")
-        }
-        config.printUrl?.let {
-            esc.addText("网址: ${it}\n")
+        config.reportName?.let {
+            esc.addText("${it}\n")
         }
         esc.addSelectJustification(EscCommand.JUSTIFICATION.CENTER)
-        // 设置纠错等级
-        esc.addSelectErrorCorrectionLevelForQRCode(0x31.toByte())
-        // 设置qrcode模块大小
-        esc.addSelectSizeOfModuleForQRCode(4.toByte())
-        // 设置qrcode内容
-        config.printUrlQRCode?.let {
-            config.printUrl?.let {
-                esc.addStoreQRCodeData(it)
-                // 打印QRCode
-                esc.addPrintQRCode()
-            }
-        }
         esc.addText("\n")
         esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT)
         esc.addText("********************************\n")
         esc.addText("时间: ${getCurrentFormattedDateTime()}\n")
         esc.addText("设备: CapnoEasy\n")
-        config.macAddress?.let {
-            esc.addText("序号: $it\n")
-        }
         esc.addText("********************************\n")
         esc.addText("\n")
         esc.addCutPaper()

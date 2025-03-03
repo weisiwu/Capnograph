@@ -38,6 +38,7 @@ import java.io.Serializable
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.UUID
+import kotlin.text.lowercase
 
 public object PDFSetting {
     var pdfHospitalName: String? = null
@@ -208,8 +209,12 @@ class LocalStorageKit @Inject constructor(
     application: CapnoEasyApplication
 ) {
     // 打印设置相关key
-    private val KEY_MAC_ADDRESS = "mac_address"
     private val KEY_HOSPITAL_NAME = "hospital_name"
+    private val KEY_REPORT_NAME = "report_name"
+    private val KEY_OUTPUT_PDF = "is_output_pdf"
+
+    // TODO: 这些都可以废除
+    private val KEY_MAC_ADDRESS = "mac_address"
     private val KEY_PRINT_ADDRESS = "print_address"
     private val KEY_PRINT_PHONE = "print_phone"
     private val KEY_PRINT_URL = "print_url"
@@ -414,47 +419,26 @@ class LocalStorageKit @Inject constructor(
      */
     fun saveUserPrintSettingToPreferences(
         context: Context,
-        macAddress: String? = "",
-        printPhone: String = "",
-        printAddress: String = "",
-        printUrl: String = "",
-        printLogo: Uri? = null,
-        printUrlQRCode: Boolean? = true,
+        hospitalName: String?,
+        reportName: String?,
+        isPDF: Boolean = true
     ) {
         val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
         prefs.edit().apply {
-            // 处理可空字符串
-            macAddress?.let { putString(KEY_MAC_ADDRESS, it) } ?: remove(KEY_MAC_ADDRESS)
-            putString(KEY_PRINT_ADDRESS, printAddress)
-            putString(KEY_PRINT_PHONE, printPhone)
-            putString(KEY_PRINT_URL, printUrl)
+            hospitalName?.let { putString(KEY_HOSPITAL_NAME, it) } ?: remove(KEY_MAC_ADDRESS)
+            reportName?.let { putString(KEY_REPORT_NAME, it) } ?: remove(KEY_MAC_ADDRESS)
 
-            // 处理 Uri 类型
-            printLogo?.let { uri ->
-                putString(KEY_PRINT_LOGO_URI, uri.toString())
-            } ?: remove(KEY_PRINT_LOGO_URI)
-
-            // Boolean 类型（非空）
-            putBoolean(KEY_PRINT_URL_QR_CODE, printUrlQRCode ?: true)
+            putBoolean(KEY_OUTPUT_PDF, isPDF)
         }.apply() // 异步提交
     }
 
     // 读取用户偏好打印设置
     fun loadPrintSettingFromPreferences(context: Context): PrintSetting {
         val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
-        PrintSetting.macAddress = prefs.getString(KEY_MAC_ADDRESS, null)
-        PrintSetting.printAddress = prefs.getString(KEY_PRINT_ADDRESS, null)
-        PrintSetting.printPhone = prefs.getString(KEY_PRINT_PHONE, null)
-        PrintSetting.printUrl = prefs.getString(KEY_PRINT_URL, null)
-
-        // 还原 Uri
-        prefs.getString(KEY_PRINT_LOGO_URI, null)?.let { uriStr ->
-            PrintSetting.printLogo = Uri.parse(uriStr)
-        }
-
-        // Boolean 类型（需处理兼容性，旧版本可能无此键）
-        PrintSetting.printUrlQRCode = prefs.getBoolean(KEY_PRINT_URL_QR_CODE, true)
-
+        PrintSetting.hospitalName = prefs.getString(KEY_HOSPITAL_NAME, null)
+        PrintSetting.reportName = prefs.getString(KEY_REPORT_NAME, null)
+        PrintSetting.isPDF = prefs.getBoolean(KEY_OUTPUT_PDF, true)
+        println("wswTest 打印设置是什么 ${PrintSetting}")
         return PrintSetting
     }
 

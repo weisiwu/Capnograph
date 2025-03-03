@@ -176,6 +176,12 @@ class AppState @Inject constructor() {
     // 医院名称
     val pdfHospitalName: MutableState<String> = mutableStateOf("")
 
+    // 报告名称
+    val pdfReportName: MutableState<String> = mutableStateOf("")
+
+    // 是否以PDF格式输出
+    val isPDF: MutableState<Boolean> = mutableStateOf(true)
+
     // 科室
     val pdfDepart: MutableState<String> = mutableStateOf("")
 
@@ -460,6 +466,18 @@ class AppStateModel @Inject constructor(
     val pdfHospitalName = appState.pdfHospitalName
     fun updatePdfHospitalName(newVal: String) {
         appState.pdfHospitalName.value = newVal
+    }
+
+    // pdf设置-报告名称
+    val pdfReportName = appState.pdfReportName
+    fun updatePdfReportName(newVal: String) {
+        appState.pdfReportName.value = newVal
+    }
+
+    // pdf设置-是否以PDF格式输出
+    val isPDF = appState.isPDF
+    fun updateIsPDF(newVal: Boolean) {
+        appState.isPDF.value = newVal
     }
 
     // pdf设置-科室

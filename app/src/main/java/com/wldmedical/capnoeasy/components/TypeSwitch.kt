@@ -77,11 +77,11 @@ fun DeviceType(
                 contentDescription = getString(R.string.typeswitch_selected),
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier
-                    .width(108.dp)
-                    .height(36.dp)
-                    .padding(0.dp)
-                    .align(Alignment.Center)
-                    .clip(RoundedCornerShape(2.dp)) // 裁剪图片
+                    .width(58.dp)
+                    .height(19.dp)
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 0.dp, end = 0.dp)
+                    .clip(RoundedCornerShape(2.dp))
             )
         }
         Text(

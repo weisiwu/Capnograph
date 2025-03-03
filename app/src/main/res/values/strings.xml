@@ -39,9 +39,12 @@
     <string name="module_is_setting">正在设置</string>
     <string name="module_setting_success">设置成功</string>
     <!-- PrintSettingActivity.kt-->
+    <string name="print_output_pdf">PDF</string>
+    <string name="print_output_hotmelt">热熔打印</string>
     <string name="print_pdf_hospital_name">医院名称</string>
     <string name="print_input_name">请输入名称</string>
-    <string name="print_pdf_depart">【科室</string>
+    <string name="print_pdf_report_name">报告名称</string>
+    <string name="print_pdf_depart">科室</string>
     <string name="print_input_depart">请输入科室</string>
     <string name="print_pdf_id">ID号</string>
     <string name="print_input_id">请输入ID号</string>

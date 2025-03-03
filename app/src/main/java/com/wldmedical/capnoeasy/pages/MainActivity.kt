@@ -53,28 +53,37 @@ class MainActivity : BaseActivity() {
                 // 尝试自动连接已经配对设备
                 blueToothKit.connectDevice(device)
             }
+        } catch (e: Exception) {
+            println("wswTest 捕获到自动链接BLE配对设备异常: ${e.message}")
+        }
 
+        try {
             // 从用户偏好里读取默认打印设置
             val printSetting: PrintSetting = localStorageKit.loadPrintSettingFromPreferences(this)
-            printSetting.printAddress?.let { viewModel.updatePrintAddress(it) }
-            printSetting.printPhone?.let { viewModel.updatePrintPhone(it) }
-            printSetting.printUrl?.let { viewModel.updatePrintUrl(it) }
-            printSetting.printUrlQRCode?.let { viewModel.updatePrintUrlQRCode(it) }
-            printSetting.printLogo?.let {
-                viewModel.updatePrintLogo(it)
-            }
+            printSetting.hospitalName?.let { viewModel.updatePdfHospitalName(it) }
+            printSetting.reportName?.let { viewModel.updatePdfReportName(it) }
+            printSetting.isPDF.let { viewModel.updateIsPDF(it) }
+        } catch (e: Exception) {
+            println("wswTest 从用户偏好里读取默认打印设置异常 : ${e.message}")
+            e.printStackTrace()
+        }
 
+        try {
             // 读取默认pdf设置
             val pdfSetting: PDFSetting = localStorageKit.loadPDFSettingFromPreferences(this)
             pdfSetting.pdfHospitalName?.let { viewModel.updatePdfHospitalName(it) }
             pdfSetting.pdfDepart?.let { viewModel.updatePdfDepart(it) }
             pdfSetting.pdfBedNumber?.let { viewModel.updatePdfBedNumber(it) }
             pdfSetting.pdfIDNumber?.let { viewModel.updatePdfIDNumber(it) }
+        } catch (e: Exception) {
+            println("wswTest 读取默认pdf设置异常 : ${e.message}")
+        }
 
+        try {
             // 默认扫描，连接周围打印机
             blueToothKit.searchDevices(BluetoothType.CLASSIC)
         } catch (e: Exception) {
-            println("wswTest 捕获到自动链接BLE配对设备异常: ${e.message}")
+            println("wswTest 默认扫描，连接周围打印机异常 : ${e.message}")
         }
     }
 
