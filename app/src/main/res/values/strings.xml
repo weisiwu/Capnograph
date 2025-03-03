@@ -32,6 +32,7 @@
     <string name="main_confirm">确认</string>
     <string name="main_stop_record">停止记录</string>
     <string name="main_start_record">启动记录</string>
+    <string name="main_cant_record_msg">请填写所有信息后再开始记录</string>
     <!-- ModuleSettingActivity.kt-->
     <string name="module_atmospheric_pressure">大气压</string>
     <string name="module_asphyxia_time">窒息时间</string>
@@ -131,6 +132,8 @@
     <string name="etco2table_name">姓名</string>
     <string name="etco2table_gender">性别</string>
     <string name="etco2table_age">年龄</string>
+    <string name="etco2table_depart">科室</string>
+    <string name="etco2table_bed">床号</string>
     <string name="etco2table_fill_in">请填写</string>
     <string name="etco2table_select">请选择</string>
     <string name="etco2table_input">请输入</string>

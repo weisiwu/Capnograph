@@ -54,6 +54,8 @@ fun AttributeLine(
         "patientGender" -> if(viewModel.patientGender.value == null) "" else viewModel.patientGender.value!!.title
         "patientAge" -> if(viewModel.patientAge.value == null) "" else viewModel.patientAge.value.toString()
         "patientID" -> if(viewModel.patientID.value == null) "" else viewModel.patientID.value.toString()
+        "department" -> if(viewModel.patientDepartment.value == null) "" else viewModel.patientDepartment.value.toString()
+        "bedNumber" -> if(viewModel.patientBedNumber.value == null) "" else viewModel.patientBedNumber.value.toString()
         else -> viewModel.rr.value.toString()
     }
 
@@ -134,6 +136,8 @@ fun AttributeLine(
                 keyboardOptions = if(attribute.isNumber) KeyboardOptions(keyboardType = KeyboardType.Number) else KeyboardOptions.Default,
                 onValueChange = { newVal ->
                     when(attribute.viewModelName) {
+                        "department" -> viewModel.updatePatientDepartment(newVal)
+                        "bedNumber" -> viewModel.updatePatientBedNumber(newVal)
                         "patientName" -> viewModel.updatePatientName(newVal)
                         "patientID" -> viewModel.updatePatientID(newVal)
                         "patientAge" -> {
@@ -237,6 +241,22 @@ val attributesGroupB = listOf(
     ),
 )
 
+val attributesGroupC = listOf(
+    Atribute(
+        title = getString(R.string.etco2table_depart),
+        viewModelName = "department",
+        placeholder = getString(R.string.etco2table_input),
+        editable = true,
+        isNumber = true
+    ),
+    Atribute(
+        title = getString(R.string.etco2table_bed),
+        viewModelName = "bedNumber",
+        placeholder = getString(R.string.etco2table_input),
+        editable = true,
+        isNumber = true
+    ),
+)
 
 /**
  * App 主页，展示呼吸率、ETCO2、姓名、性别、年龄等文字数据
@@ -278,6 +298,24 @@ fun EtCo2Table(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupB[1],
+            modifier = Modifier.padding(end = 13.dp).weight(1f)
+        )
+    }
+
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        AttributeLine(
+            viewModel = viewModel,
+            blueToothKit = blueToothKit,
+            attribute = attributesGroupC[0],
+            modifier = Modifier.padding(start = 28.dp).weight(1f)
+        )
+        AttributeLine(
+            viewModel = viewModel,
+            blueToothKit = blueToothKit,
+            attribute = attributesGroupC[1],
             modifier = Modifier.padding(end = 13.dp).weight(1f)
         )
     }

@@ -131,7 +131,7 @@ class PrintSettingActivity : BaseActivity() {
                             context = context,
                             hospitalName = pdfHospitalName,
                             reportName = pdfReportName,
-                            isPDF = isPDF.value
+                            isPDF = isPDF.value,
                         )
 
                         viewModel.updateToastData(

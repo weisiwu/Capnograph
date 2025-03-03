@@ -14,7 +14,6 @@ import com.wldmedical.capnoeasy.components.EtCo2Table
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.kits.BluetoothType
-import com.wldmedical.capnoeasy.kits.PDFSetting
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
@@ -63,20 +62,12 @@ class MainActivity : BaseActivity() {
             printSetting.hospitalName?.let { viewModel.updatePdfHospitalName(it) }
             printSetting.reportName?.let { viewModel.updatePdfReportName(it) }
             printSetting.isPDF.let { viewModel.updateIsPDF(it) }
+            printSetting.pdfDepart?.let { viewModel.updatePdfDepart(it) }
+            printSetting.pdfBedNumber?.let { viewModel.updatePdfBedNumber(it) }
+            printSetting.pdfIDNumber?.let { viewModel.updatePdfIDNumber(it) }
         } catch (e: Exception) {
             println("wswTest 从用户偏好里读取默认打印设置异常 : ${e.message}")
             e.printStackTrace()
-        }
-
-        try {
-            // 读取默认pdf设置
-            val pdfSetting: PDFSetting = localStorageKit.loadPDFSettingFromPreferences(this)
-            pdfSetting.pdfHospitalName?.let { viewModel.updatePdfHospitalName(it) }
-            pdfSetting.pdfDepart?.let { viewModel.updatePdfDepart(it) }
-            pdfSetting.pdfBedNumber?.let { viewModel.updatePdfBedNumber(it) }
-            pdfSetting.pdfIDNumber?.let { viewModel.updatePdfIDNumber(it) }
-        } catch (e: Exception) {
-            println("wswTest 读取默认pdf设置异常 : ${e.message}")
         }
 
         try {
@@ -106,6 +97,39 @@ class MainActivity : BaseActivity() {
     override fun onNavBarRightClick() {
         val isRecording = viewModel.isRecording.value
         val context = this
+
+        // 如果基础信息没有填写完毕，不允许录播数据
+        if (
+            viewModel.patientName.value == null ||
+            viewModel.patientGender.value == null ||
+            viewModel.patientAge.value == null ||
+            viewModel.patientID.value == null ||
+            viewModel.patientDepartment.value == null ||
+            viewModel.patientBedNumber.value == null
+        ) {
+            viewModel.updateToastData(
+                ToastData(
+                    text = getString(R.string.main_cant_record_msg),
+                    duration = 2000,
+                    showMask = false,
+                    type = ToastType.FAIL,
+                    callback = {
+                        viewModel.updateToastData(null)
+                    }
+                )
+            )
+            return
+        }
+
+        localStorageKit.saveUserPrintSettingToPreferences(
+            context = context,
+            name = viewModel.patientName.value,
+            gender = viewModel.patientGender.value?.title,
+            age = viewModel.patientAge.value,
+            idNumber = viewModel.patientID.value,
+            depart = viewModel.patientDepartment.value,
+            bedNumber = viewModel.patientBedNumber.value,
+        )
 
         // 正在记录中，点击为保存动作
         if (isRecording) {

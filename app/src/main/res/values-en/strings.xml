@@ -32,6 +32,7 @@
     <string name="main_confirm">Confirm</string>
     <string name="main_stop_record">Stop Recording</string>
     <string name="main_start_record">Start Recording</string>
+    <string name="main_cant_record_msg">Plz fill all data</string>
     <!-- ModuleSettingActivity.kt-->
     <string name="module_atmospheric_pressure">Atmospheric Pressure</string>
     <string name="module_asphyxia_time">Asphyxiation Time</string>
@@ -131,6 +132,8 @@
     <string name="etco2table_name">Name</string>
     <string name="etco2table_gender">Gender</string>
     <string name="etco2table_age">Age</string>
+    <string name="etco2table_depart">Department</string>
+    <string name="etco2table_bed">Bed Number</string>
     <string name="etco2table_fill_in">Please fill in</string>
     <string name="etco2table_select">Please select</string>
     <string name="etco2table_input">Please enter</string>

@@ -113,6 +113,12 @@ class AppState @Inject constructor() {
     // ID
     val patientID: MutableState<String?> = mutableStateOf(null)
 
+    // 科室
+    val patientDepartment: MutableState<String?> = mutableStateOf(null)
+
+    // 病床号
+    val patientBedNumber: MutableState<String?> = mutableStateOf(null)
+
     // 本次记录的所有capnoeasy波形数据, 此数据和app状态相关，所以放在这里。
     var totalCO2WavedData = mutableListOf<CO2WavePointData>()
 
@@ -337,6 +343,18 @@ class AppStateModel @Inject constructor(
     val patientID = appState.patientID
     fun updatePatientID(newVal: String) {
         appState.patientID.value = newVal
+    }
+
+    // 科室
+    val patientDepartment = appState.patientDepartment
+    fun updatePatientDepartment(newVal: String) {
+        appState.patientDepartment.value = newVal
+    }
+
+    // 床号
+    val patientBedNumber = appState.patientBedNumber
+    fun updatePatientBedNumber(newVal: String) {
+        appState.patientBedNumber.value = newVal
     }
 
     // 本次记录的蓝牙波形数据

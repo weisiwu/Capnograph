@@ -26,6 +26,12 @@ public object PrintSetting {
     var hospitalName: String? = null
     var reportName: String? = null
     var isPDF: Boolean = true
+    var pdfDepart: String? = null
+    var pdfBedNumber: String? = null
+    var pdfIDNumber: String? = null
+    var name: String? = null
+    var gender: String? = null
+    var age: Int? = null
 }
 
 object Printer {

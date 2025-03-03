@@ -40,13 +40,6 @@ import java.time.format.DateTimeParseException
 import java.util.UUID
 import kotlin.text.lowercase
 
-public object PDFSetting {
-    var pdfHospitalName: String? = null
-    var pdfDepart: String? = null
-    var pdfBedNumber: String? = null
-    var pdfIDNumber: String? = null
-}
-
 @Entity(tableName = "patients")
 data class Patient(
     val name: String,
@@ -212,20 +205,12 @@ class LocalStorageKit @Inject constructor(
     private val KEY_HOSPITAL_NAME = "hospital_name"
     private val KEY_REPORT_NAME = "report_name"
     private val KEY_OUTPUT_PDF = "is_output_pdf"
-
-    // TODO: 这些都可以废除
-    private val KEY_MAC_ADDRESS = "mac_address"
-    private val KEY_PRINT_ADDRESS = "print_address"
-    private val KEY_PRINT_PHONE = "print_phone"
-    private val KEY_PRINT_URL = "print_url"
-    private val KEY_PRINT_LOGO_URI = "print_logo_uri"
-    private val KEY_PRINT_URL_QR_CODE = "print_url_qr_code"
-
-    // PDF设置
-    private val KEY_PDFHOSPITALNAME = "pdfHospitalName"
     private val KEY_PDFDEPART = "pdfDepart"
     private val KEY_PDFBEDNUMBER = "pdfBedNumber"
     private val KEY_PDFIDNUMBER = "pdfIDNumber"
+    private val KEY_PATIENT_NAME = "patient_name"
+    private val KEY_PATIENT_GENDER = "patient_gender"
+    private val KEY_PATIENT_AGE = "patient_age"
 
     // 用户语言偏好
     private val KEY_LANGUAGE = "userLanguage"
@@ -279,7 +264,7 @@ class LocalStorageKit @Inject constructor(
             val timeIndex = generateTimeIndex(startTime)
             val patientIndex = generatePatientIndex(patient)
             var pdfFilePath: String? = null
-            val pdfSetting: PDFSetting? = context?.let { loadPDFSettingFromPreferences(it) }
+            val printSetting: PrintSetting? = context?.let { loadPrintSettingFromPreferences(it) }
 
             if (context != null) {
                 pdfFilePath = File(
@@ -306,7 +291,7 @@ class LocalStorageKit @Inject constructor(
                     filePath = pdfFilePath,
                     record = record,
                     maxETCO2 = maxETCO2,
-                    pdfSetting = pdfSetting
+                    printSetting = printSetting
                 )
             }
 
@@ -385,51 +370,32 @@ class LocalStorageKit @Inject constructor(
     }
 
     /***
-     * 用户PDF偏好，保存到本地
-     */
-    fun saveUserPDFSettingToPreferences(
-        context: Context,
-        pdfHospitalName: String? = "",
-        pdfDepart: String? = "",
-        pdfBedNumber: String? = "",
-        pdfIDNumber: String? = "",
-    ) {
-        val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
-        prefs.edit().apply {
-            pdfHospitalName?.let { putString(KEY_PDFHOSPITALNAME, it) } ?: remove(KEY_PDFHOSPITALNAME)
-            pdfDepart?.let { putString(KEY_PDFDEPART, it) } ?: remove(KEY_PDFDEPART)
-            pdfBedNumber?.let { putString(KEY_PDFBEDNUMBER, it) } ?: remove(KEY_PDFBEDNUMBER)
-            pdfIDNumber?.let { putString(KEY_PDFIDNUMBER, it) } ?: remove(KEY_PDFIDNUMBER)
-        }.apply()
-    }
-
-    // 读取PDF偏好打印设置
-    fun loadPDFSettingFromPreferences(context: Context): PDFSetting {
-        val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
-        PDFSetting.pdfHospitalName = prefs.getString(KEY_PDFHOSPITALNAME, null)
-        PDFSetting.pdfDepart = prefs.getString(KEY_PDFDEPART, null)
-        PDFSetting.pdfBedNumber = prefs.getString(KEY_PDFBEDNUMBER, null)
-        PDFSetting.pdfIDNumber = prefs.getString(KEY_PDFIDNUMBER, null)
-
-        return PDFSetting
-    }
-
-    /***
      * 用户打印偏好，保存到本地
      */
     fun saveUserPrintSettingToPreferences(
         context: Context,
-        hospitalName: String?,
-        reportName: String?,
-        isPDF: Boolean = true
+        hospitalName: String? = null,
+        reportName: String? = null,
+        isPDF: Boolean = true,
+        depart: String? = null,
+        bedNumber: String? = null,
+        idNumber: String? = null,
+        name: String? = null,
+        gender: String? = null,
+        age: Int? = null,
     ) {
         val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
         prefs.edit().apply {
-            hospitalName?.let { putString(KEY_HOSPITAL_NAME, it) } ?: remove(KEY_MAC_ADDRESS)
-            reportName?.let { putString(KEY_REPORT_NAME, it) } ?: remove(KEY_MAC_ADDRESS)
-
+            hospitalName?.let { putString(KEY_HOSPITAL_NAME, it) }
+            reportName?.let { putString(KEY_REPORT_NAME, it) }
             putBoolean(KEY_OUTPUT_PDF, isPDF)
-        }.apply() // 异步提交
+            depart?.let { putString(KEY_PDFDEPART, it) }
+            bedNumber?.let { putString(KEY_PDFBEDNUMBER, it) }
+            idNumber?.let { putString(KEY_PDFIDNUMBER, it) }
+            name?.let { putString(KEY_PATIENT_NAME, it) }
+            gender?.let { putString(KEY_PATIENT_GENDER, it) }
+            age?.let { putInt(KEY_PATIENT_AGE, it) }
+        }.apply()
     }
 
     // 读取用户偏好打印设置
@@ -438,7 +404,13 @@ class LocalStorageKit @Inject constructor(
         PrintSetting.hospitalName = prefs.getString(KEY_HOSPITAL_NAME, null)
         PrintSetting.reportName = prefs.getString(KEY_REPORT_NAME, null)
         PrintSetting.isPDF = prefs.getBoolean(KEY_OUTPUT_PDF, true)
-        println("wswTest 打印设置是什么 ${PrintSetting}")
+        PrintSetting.pdfDepart = prefs.getString(KEY_PDFDEPART, null)
+        PrintSetting.pdfBedNumber = prefs.getString(KEY_PDFBEDNUMBER, null)
+        PrintSetting.pdfIDNumber = prefs.getString(KEY_PDFIDNUMBER, null)
+        PrintSetting.name = prefs.getString(KEY_PATIENT_NAME, null)
+        PrintSetting.gender = prefs.getString(KEY_PATIENT_GENDER, null)
+        PrintSetting.age = prefs.getInt(KEY_PATIENT_AGE, 0)
+
         return PrintSetting
     }
 
