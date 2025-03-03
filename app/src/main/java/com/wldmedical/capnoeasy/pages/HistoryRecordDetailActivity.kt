@@ -34,7 +34,11 @@ class HistoryRecordDetailActivity : BaseActivity() {
     override var pageScene = PageScene.HISTORY_DETAIL_PAGE
 
     override fun onNavBarRightClick() {
-        viewModel.updateShowActionModal(true)
+        if (viewModel.isPDF.value) {
+            this.onSavePDFClick()
+        } else {
+            this.onPrintTicketClick()
+        }
     }
 
     private var saveFileName: String = ""
@@ -105,10 +109,10 @@ class HistoryRecordDetailActivity : BaseActivity() {
                 withContext(Dispatchers.IO) {
                     val record = localStorageKit.database.recordDao().queryRecordById(UUID.fromString(recordId))
                     if (record != null) {
-                        if (record.pdfFilePath != null) {
-                            if (record.pdfFilePath!!.isNotEmpty()) {
-                                pdfFilePath.value = record.pdfFilePath!!
-                                context.sourceFilePath = pdfFilePath.value
+                        if (record.previewPdfFilePath != null) {
+                            if (record.previewPdfFilePath!!.isNotEmpty()) {
+                                pdfFilePath.value = record.previewPdfFilePath!!
+                                context.sourceFilePath = record.pdfFilePath!!
                                 context.saveFileName = "${record.patientIndex}_${record.dateIndex}"
                                 context.currentRecord = record
                             }

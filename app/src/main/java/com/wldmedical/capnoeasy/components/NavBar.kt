@@ -49,7 +49,11 @@ fun NavBar(
     when(currentPage.value.currentPage) {
         PageScene.HISTORY_DETAIL_PAGE -> {
             rightImage.value = R.drawable.pull_up
-            rightDesc.value = getString(R.string.navbar_more_actions)
+            if (viewModel.isPDF.value) {
+                rightDesc.value = getString(R.string.actionmodal_export_pdf)
+            } else {
+                rightDesc.value = getString(R.string.actionmodal_print_ticket)
+            }
         }
         PageScene.HOME_PAGE ->
             if (viewModel.isRecording.value) {

@@ -58,6 +58,7 @@ data class Record(
     val patientIndex: String = "",
     val isGroupTitle: Boolean = false,
     var pdfFilePath: String? = null,
+    var previewPdfFilePath: String? = null,
     val data: List<CO2WavePointData> = listOf(),
     val groupTitle: String = "",
 ): Serializable
@@ -264,12 +265,18 @@ class LocalStorageKit @Inject constructor(
             val timeIndex = generateTimeIndex(startTime)
             val patientIndex = generatePatientIndex(patient)
             var pdfFilePath: String? = null
+            var previewPdfFilePath: String? = null
             val printSetting: PrintSetting? = context?.let { loadPrintSettingFromPreferences(it) }
 
             if (context != null) {
                 pdfFilePath = File(
                     context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
                     "${patientIndex}_${dateIndex}${timeIndex}.pdf"
+                ).absolutePath
+
+                previewPdfFilePath = File(
+                    context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
+                    "${patientIndex}_${dateIndex}${timeIndex}_preview.pdf"
                 ).absolutePath
             }
 
@@ -281,6 +288,7 @@ class LocalStorageKit @Inject constructor(
                 dateIndex = dateIndex,
                 patientIndex = patientIndex,
                 pdfFilePath = pdfFilePath,
+                previewPdfFilePath = previewPdfFilePath
             )
 
             if (pdfFilePath != null && lineChart != null) {
@@ -293,6 +301,14 @@ class LocalStorageKit @Inject constructor(
                     maxETCO2 = maxETCO2,
                     printSetting = printSetting
                 )
+                if (previewPdfFilePath != null) {
+                    saveChartToPreviewPDFInBackground(
+                        lineChart = lineChart,
+                        data = data,
+                        segmentSize = maxXPoints,
+                        filePath = previewPdfFilePath,
+                    )
+                }
             }
 
             database.recordDao().insertRecord(record)
