@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import kotlinx.coroutines.delay
 
 /***
@@ -68,7 +69,7 @@ fun SplashScreen(onNavigateToMain: () -> Unit) {
     ) {
         Image(
             painter = painterResource(id = R.drawable.wld_logo),
-            contentDescription = "万联达信科",
+            contentDescription = getString(R.string.splash_company_name),
             modifier = Modifier.width(logoWidth)
         )
     }

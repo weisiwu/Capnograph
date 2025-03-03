@@ -13,6 +13,7 @@ import com.wldmedical.capnoeasy.CO2_SCALE
 import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.co2Units
 import com.wldmedical.capnoeasy.co2UnitsObj
 import com.wldmedical.capnoeasy.components.LoadingData
@@ -39,7 +40,11 @@ class DisplaySettingActivity : BaseActivity() {
 
         Column {
             WheelPicker(
-                config = wheelPickerConfig(items = co2Units, title = "CO2 单位", defaultValue = defaultUnit.value),
+                config = wheelPickerConfig(
+                    items = co2Units,
+                    title = getString(R.string.display_co2_unit),
+                    defaultValue = defaultUnit.value
+                ),
                 onValueChange = {
                     if (it >= 0 && it < co2UnitsObj.items.size) {
                         defaultUnit.value = co2UnitsObj.items[it]
@@ -98,7 +103,7 @@ class DisplaySettingActivity : BaseActivity() {
                     viewModel.updateWFSpeed(defaultWFSpeed.value)
                     viewModel.updateLoadingData(
                         LoadingData(
-                            text = "正在设置",
+                            text = getString(R.string.display_is_setting),
                             duration = InfinityDuration,
                         )
                     )
@@ -109,7 +114,7 @@ class DisplaySettingActivity : BaseActivity() {
                             viewModel.clearXData()
                             viewModel.updateToastData(
                                 ToastData(
-                                    text = "设置成功",
+                                    text = getString(R.string.display_setting_success),
                                     showMask = false,
                                     duration = 600,
                                 )

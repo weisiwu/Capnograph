@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.kits.unkownName
 
 data class Device(
@@ -42,7 +43,7 @@ data class Device(
     val type: CustomType = DeviceTypeList.BLE.deviceType
 )
 
-val emptyAlert = "附近没有可配对设备！"
+val emptyAlert = getString(R.string.devicelist_no_devices)
 
 /**
  * App 设备列表页 - 设备列表
@@ -126,7 +127,7 @@ fun DeviceList(
                             contentPadding = PaddingValues(0.dp),
                             content = {
                                 Text(
-                                    text = "链接",
+                                    text = getString(R.string.devicelist_connect),
                                     modifier = Modifier.clip(RoundedCornerShape(2.dp)),
                                     color = Color(0xff165DFF),
                                 )
@@ -163,7 +164,7 @@ fun DeviceList(
                 contentPadding = PaddingValues(0.dp),
                 content = {
                     Text(
-                        text = "重新搜索",
+                        text = getString(R.string.devicelist_rescan),
                         modifier = Modifier.clip(RoundedCornerShape(14.dp)),
                         color = Color(0xff165DFF),
                     )

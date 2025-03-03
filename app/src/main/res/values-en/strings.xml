@@ -1,0 +1,152 @@
+<resources>
+    <string name="app_name">CapnoEasy</string>
+    <string name="app_version">v1.0.0</string>
+    <!-- CapnoEasyConstant.kt-->
+    <string name="constant_setting">Settings</string>
+    <string name="constant_nearby_devices">Nearby Devices</string>
+    <string name="constant_system_setting">System Settings</string>
+    <string name="constant_alert_setting">Alert Parameters</string>
+    <string name="constant_display_setting">Display Parameters</string>
+    <string name="constant_module_setting">Module Parameters</string>
+    <string name="constant_print_setting">Print Settings</string>
+    <string name="constant_history_records">History Records</string>
+    <string name="constant_record_detail">Record Details</string>
+    <!-- AlertSettingActivity.kt-->
+    <string name="alertsetting_etco2_range">ETCO2 Range</string>
+    <string name="alertsetting_rr_range">RR Range</string>
+    <string name="alertsetting_is_setting">Setting</string>
+    <string name="alertsetting_setting_success">Setting Success</string>
+    <!-- BaseActivity.kt-->
+    <string name="base_noconnect_msg">Device not connected, please connect and try again</string>
+    <string name="base_infobl_msg">Please turn on Bluetooth</string>
+    <string name="base_go_open">Go to open</string>
+    <!-- DisplaySettingActivity.kt-->
+    <string name="display_co2_unit">CO2 Unit</string>
+    <string name="display_is_setting">Setting</string>
+    <string name="display_setting_success">Setting Success</string>
+    <!-- HistoryRecordDetailActivity.kt-->
+    <string name="recorddetail_loading">Loading</string>
+    <!-- MainActivity.kt-->
+    <string name="main_record_save_success">Record saved successfully</string>
+    <string name="main_record_save_check">Saved records can be viewed in Settings > History Records</string>
+    <string name="main_confirm">Confirm</string>
+    <string name="main_stop_record">Stop Recording</string>
+    <string name="main_start_record">Start Recording</string>
+    <!-- ModuleSettingActivity.kt-->
+    <string name="module_atmospheric_pressure">Atmospheric Pressure</string>
+    <string name="module_asphyxia_time">Asphyxiation Time</string>
+    <string name="module_oxygen_compensation">Oxygen Compensation</string>
+    <string name="module_is_setting">Setting</string>
+    <string name="module_setting_success">Setting Success</string>
+    <!-- PrintSettingActivity.kt-->
+    <string name="print_pdf_hospital_name">Hospital Name</string>
+    <string name="print_input_name">Please enter the name</string>
+    <string name="print_pdf_depart">Department</string>
+    <string name="print_input_depart">Please enter the department</string>
+    <string name="print_pdf_id">ID Number</string>
+    <string name="print_input_id">Please enter the ID number</string>
+    <string name="print_pdf_bed_number">Bed Number</string>
+    <string name="print_input_bed_number">Please enter the bed number</string>
+    <string name="print_is_setting">Setting</string>
+    <string name="print_setting_success">Setting Success</string>
+    <string name="print_setting_fail">Setting Failed</string>
+    <string name="print_save">Save</string>
+    <!-- SearchActivity.kt-->
+    <string name="search_start">Start Searching</string>
+    <string name="search_finish">Search Finished</string>
+    <string name="search_fail">Search Failed</string>
+    <string name="search_start_connect">Start Connecting Device</string>
+    <!-- SettingActivity.kt-->
+    <string name="setting_zeroing">Zeroing</string>
+    <string name="setting_zeroing_success">Zeroing Success</string>
+    <string name="setting_screen_constant_success">Screen Constant Setting Success</string>
+    <string name="setting_shutdown">Shutting Down</string>
+    <string name="setting_shutdown_success">Shutdown Success</string>
+    <!-- SplashActivity.kt-->
+    <string name="splash_company_name">WLD Medical</string>
+    <!-- SystemSettingActivity.kt-->
+    <string name="system_language">Language</string>
+    <string name="system_firmware_version">Firmware Version</string>
+    <string name="system_hardware_version">Hardware Version</string>
+    <string name="system_software_version">Software Version</string>
+    <string name="system_production_date">Production Date</string>
+    <string name="system_serial_number">Serial Number</string>
+    <string name="system_module_name">Module Name</string>
+    <!-- BlueToothKit -->
+    <string name="bluetooth_unknown_device">Unknown Device</string>
+    <!-- PDFKit -->
+    <string name="pdf_patient_name">Name:</string>
+    <string name="pdf_patient_gender">Gender:</string>
+    <string name="pdf_patient_age">Age:</string>
+    <string name="pdf_department">Department:</string>
+    <string name="pdf_id_number">ID Number:</string>
+    <string name="pdf_bed_number">Bed Number:</string>
+    <string name="pdf_respiratory_rate">Respiratory Rate:</string>
+    <string name="pdf_reporter">Reporter:</string>
+    <string name="pdf_report_time">Report Time:</string>
+    <string name="pdf_date_format">yyyy-MM-dd HH:mm:ss</string>
+    <!-- LocalStorageKit -->
+    <string name="localstorage_all">All</string>
+    <string name="localstorage_patient">Patient</string>
+    <string name="localstorage_time">Time</string>
+    <!-- TypeSwitch -->
+    <string name="typeswitch_bluetooth">Bluetooth</string>
+    <string name="typeswitch_classic_bluetooth">Classic Bluetooth</string>
+    <string name="typeswitch_selected">Selected</string>
+    <!-- Toast -->
+    <string name="toast_success">Success</string>
+    <string name="toast_fail">Fail</string>
+    <!-- SettingList -->
+    <string name="settinglist_zeroing">Zeroing</string>
+    <string name="settinglist_screen_constant">Keep Screen On</string>
+    <string name="settinglist_alert_setting">Alert Parameters</string>
+    <string name="settinglist_display_setting">Display Parameters</string>
+    <string name="settinglist_module_setting">Module Parameters</string>
+    <string name="settinglist_system_setting">System Settings</string>
+    <string name="settinglist_print_setting">Print Settings</string>
+    <string name="settinglist_history_records">History Records</string>
+    <string name="settinglist_shutdown">Shutdown</string>
+    <!-- SaveButton -->
+    <string name="savebutton_save">Save</string>
+    <!-- NavBar -->
+    <string name="navbar_more_actions">More Actions</string>
+    <string name="navbar_recording">Recording</string>
+    <string name="navbar_start_record">Start Recording</string>
+    <!-- HistoryList -->
+    <string name="historylist_no_data">No historical waveform data</string>
+    <string name="historylist_date_format">yyyy-MM-dd HH:mm:ss</string>
+    <string name="historylist_year">Year</string>
+    <string name="historylist_month">Month</string>
+    <string name="historylist_day">Day</string>
+    <string name="historylist_age">Years Old</string>
+    <string name="historylist_male">Male</string>
+    <string name="historylist_female">Female</string>
+    <!-- EtCo2Table -->
+    <string name="etco2table_select_gender">Please select the patient\'s gender</string>
+    <string name="etco2table_male">Male</string>
+    <string name="etco2table_female">Female</string>
+    <string name="etco2table_name">Name</string>
+    <string name="etco2table_gender">Gender</string>
+    <string name="etco2table_age">Age</string>
+    <string name="etco2table_fill_in">Please fill in</string>
+    <string name="etco2table_select">Please select</string>
+    <string name="etco2table_input">Please enter</string>
+    <!-- EtCo2LineChart -->
+    <string name="etco2linechart_unknown_device">Unknown Device</string>
+    <!-- DeviceList -->
+    <string name="devicelist_no_devices">No pairable devices nearby!</string>
+    <string name="devicelist_connect">Connect</string>
+    <string name="devicelist_rescan">Rescan</string>
+    <!-- CustomTextField -->
+    <string name="customtextfield_yes">Yes</string>
+    <string name="customtextfield_no">No</string>
+    <!-- BaseLayout -->
+    <string name="baselayout_recording_in_progress">Recording in progress, please stop first</string>
+    <string name="baselayout_stop">Stop</string>
+    <string name="baselayout_think_again">Think again</string>
+    <!-- ActionModal -->
+    <string name="actionmodal_operation">Operation</string>
+    <string name="actionmodal_export_pdf">Export PDF</string>
+    <string name="actionmodal_print_ticket">Thermal Print</string>
+    <string name="actionmodal_cancel">Cancel</string>
+</resources>

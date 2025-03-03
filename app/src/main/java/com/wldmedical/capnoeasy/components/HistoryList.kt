@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityOptionsCompat
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.kits.GROUP_BY
 import com.wldmedical.capnoeasy.kits.Group
 import com.wldmedical.capnoeasy.kits.Groups
@@ -61,8 +62,8 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.Locale
 
-val emptyRecordAlert = "没有历史波形数据"
-val formatter = DateTimeFormatter.ofPattern("yyyy年M月d日HH:mm:ss", Locale.CHINA)
+val emptyRecordAlert = getString(R.string.historylist_no_data)
+val formatter = DateTimeFormatter.ofPattern(getString(R.string.historylist_date_format), Locale.CHINA)
 
 /**
  * App 历史列表，内容为设备上记录的整体历史记录数据
@@ -176,7 +177,7 @@ fun HistoryList(
                                     startTime = records[0].startTime,
                                     endTime = records[0].endTime,
                                     isGroupTitle = true,
-                                    groupTitle = patient.name + " " + patient.gender.title + " " + patient.age + "岁"
+                                    groupTitle = patient.name + " " + patient.gender.title + " " + patient.age + getString(R.string.historylist_age)
                                 )
                             )
                         } else {
@@ -187,7 +188,7 @@ fun HistoryList(
                                     startTime = startDate,
                                     endTime = records[0].endTime,
                                     isGroupTitle = true,
-                                    groupTitle = startDate.year.toString() + "年" + startDate.monthValue + "月" + startDate.dayOfMonth + "日"
+                                    groupTitle = startDate.year.toString() + getString(R.string.historylist_year) + startDate.monthValue + getString(R.string.historylist_month) + startDate.dayOfMonth + getString(R.string.historylist_day)
                                 )
                             )
                         }
@@ -239,13 +240,13 @@ fun HistoryList(
                                     modifier = Modifier.padding(end = 8.dp)
                                 )
                                 Text(
-                                    text = "${record.patient.age}岁",
+                                    text = "${record.patient.age}${getString(R.string.historylist_age)}",
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(end = 8.dp)
                                 )
                                 Text(
-                                    text = if (record.patient.gender == GENDER.MALE) "男" else "女",
+                                    text = if (record.patient.gender == GENDER.MALE) getString(R.string.historylist_male) else getString(R.string.historylist_female),
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                 )

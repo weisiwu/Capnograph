@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.pages
 
+import com.wldmedical.capnoeasy.getString
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.LanguageTypes
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.SystemIno
 
 /***
@@ -36,14 +38,17 @@ class SystemSettingActivity : BaseActivity() {
     val infoHeight = 60.dp
 
     private fun updateLanguage(newLanguage: LanguageTypes) {
-        viewModel.updateLanguage(newLanguage)
+        viewModel.updateLanguage(newLanguage, this)
+        // 存储到本地，启动的时候读取
+        val language = if (newLanguage == LanguageTypes.CHINESE) "zh" else "en"
+        localStorageKit.saveUserLanguageToPreferences(context = this, language)
     }
 
     @Composable
     override fun Content() {
         val systeminfos = arrayOf(
             SystemIno(
-                name = "语言",
+                name = com.wldmedical.capnoeasy.getString(R.string.system_language),
                 value = viewModel.language.value.cname,
                 isRadio = true,
                 radios = arrayOf(
@@ -51,12 +56,30 @@ class SystemSettingActivity : BaseActivity() {
                     LanguageTypes.ENGLISH
                 )
             ),
-            SystemIno(name = "固件版本", value = viewModel.firmVersion.value),
-            SystemIno(name = "硬件版本", value = blueToothKit.sHardwareVersion.value),
-            SystemIno(name = "软件版本", value = blueToothKit.sSoftwareVersion.value),
-            SystemIno(name = "生产日期", value = blueToothKit.productionDate.value),
-            SystemIno(name = "序列号", value = blueToothKit.sSerialNumber.value),
-            SystemIno(name = "模块名称", value = blueToothKit.deviceName.value),
+            SystemIno(
+                name = com.wldmedical.capnoeasy.getString(R.string.system_firmware_version),
+                value = viewModel.firmVersion.value
+            ),
+            SystemIno(
+                name = com.wldmedical.capnoeasy.getString(R.string.system_hardware_version),
+                value = blueToothKit.sHardwareVersion.value
+            ),
+            SystemIno(
+                name = com.wldmedical.capnoeasy.getString(R.string.system_software_version),
+                value = blueToothKit.sSoftwareVersion.value
+            ),
+            SystemIno(
+                name = com.wldmedical.capnoeasy.getString(R.string.system_production_date),
+                value = blueToothKit.productionDate.value
+            ),
+            SystemIno(
+                name = com.wldmedical.capnoeasy.getString(R.string.system_serial_number),
+                value = blueToothKit.sSerialNumber.value
+            ),
+            SystemIno(
+                name = com.wldmedical.capnoeasy.getString(R.string.system_module_name),
+                value = blueToothKit.deviceName.value
+            ),
         )
 
         Column(
@@ -89,7 +112,7 @@ class SystemSettingActivity : BaseActivity() {
                                         Modifier
                                             .height(56.dp)
                                             .selectable(
-                                                selected =  isSelected,
+                                                selected = isSelected,
                                                 onClick = {
                                                     updateLanguage(radio)
                                                 },

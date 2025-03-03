@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityOptionsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.pages.MainActivity
 import com.wldmedical.capnoeasy.pages.SearchActivity
@@ -40,9 +42,9 @@ fun BaseLayout(
                 if (viewModel.isRecording.value) {
                     viewModel.updateAlertData(
                         AlertData(
-                            text = "正在记录中，请先停止",
-                            ok_btn_text = "停止",
-                            cancel_btn_text = "再想想",
+                            text = getString(R.string.baselayout_recording_in_progress),
+                            ok_btn_text = getString(R.string.baselayout_stop),
+                            cancel_btn_text = getString(R.string.baselayout_think_again),
                             onOk = { onNavBarRightClick?.invoke() },
                             onCancel = { viewModel.updateAlertData(null) },
                         )

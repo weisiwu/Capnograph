@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.maskOpacity
 import com.wldmedical.capnoeasy.maxMaskZIndex
 import com.wldmedical.capnoeasy.models.AppState
@@ -92,7 +93,7 @@ fun ActionModal(
                     contentAlignment = Alignment.TopCenter
                 ) {
                     Text(
-                        text = "操作",
+                        text = getString(R.string.actionmodal_operation),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.align(Alignment.Center)
@@ -111,10 +112,10 @@ fun ActionModal(
                         Image(
                             painter = painterResource(id = R.drawable.print_pdf),
                             modifier = Modifier.height(62.dp).padding(bottom = 12.dp),
-                            contentDescription = "导出PDF"
+                            contentDescription = getString(R.string.actionmodal_export_pdf)
                         )
                         Text(
-                            text = "导出PDF",
+                            text = getString(R.string.actionmodal_export_pdf),
                             color = Color(0xFF86909C)
                         )
                     }
@@ -127,10 +128,10 @@ fun ActionModal(
                         Image(
                             painter = painterResource(id = R.drawable.print_ticket),
                             modifier = Modifier.height(62.dp).padding(bottom = 12.dp),
-                            contentDescription = "导出PDF"
+                            contentDescription = getString(R.string.actionmodal_print_ticket)
                         )
                         Text(
-                            text = "打印小票",
+                            text = getString(R.string.actionmodal_print_ticket),
                             color = Color(0xFF86909C)
                         )
                     }
@@ -149,7 +150,7 @@ fun ActionModal(
                     },
                 ) {
                     Text(
-                        text = "取消",
+                        text = getString(R.string.actionmodal_cancel),
                         color = Color(0xFF86909C),
                     )
                 }

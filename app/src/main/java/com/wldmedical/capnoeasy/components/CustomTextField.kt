@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 
 data class SupportQRCodeType(
     override val name: String,
@@ -28,8 +30,16 @@ data class SupportQRCodeType(
 ): CustomType
 
 val SupportQRCodeTypes: Array<CustomType> = arrayOf(
-    SupportQRCodeType(name = "是", id = "是", index = 0),
-    SupportQRCodeType(name = "否", id = "否", index = 1),
+    SupportQRCodeType(
+        name = getString(R.string.customtextfield_yes),
+        id = getString(R.string.customtextfield_yes),
+        index = 0
+    ),
+    SupportQRCodeType(
+        name = getString(R.string.customtextfield_no),
+        id = getString(R.string.customtextfield_no),
+        index = 1
+    ),
 )
 
 // TODO: 缺少一个选择图片的能力

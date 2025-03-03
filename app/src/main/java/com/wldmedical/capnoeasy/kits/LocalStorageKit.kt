@@ -21,8 +21,11 @@ import com.google.gson.reflect.TypeToken
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.DATABASE_NS
 import com.wldmedical.capnoeasy.GENDER
+import com.wldmedical.capnoeasy.LanguageTypes
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.USER_PREF_NS
 import com.wldmedical.capnoeasy.components.formatter
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.PrintSetting
 import dagger.hilt.android.qualifiers.ActivityContext
@@ -77,9 +80,9 @@ data class Group(
 )
 
 val Groups = listOf(
-    Group(name = "全部", type = GROUP_BY.ALL),
-    Group(name = "病人", type = GROUP_BY.PATIENT),
-    Group(name = "时间", type = GROUP_BY.DATE),
+    Group(name = getString(R.string.localstorage_all), type = GROUP_BY.ALL),
+    Group(name = getString(R.string.localstorage_patient), type = GROUP_BY.PATIENT),
+    Group(name = getString(R.string.localstorage_time), type = GROUP_BY.DATE),
 )
 
 @Dao
@@ -219,6 +222,9 @@ class LocalStorageKit @Inject constructor(
     private val KEY_PDFBEDNUMBER = "pdfBedNumber"
     private val KEY_PDFIDNUMBER = "pdfIDNumber"
 
+    // 用户语言偏好
+    private val KEY_LANGUAGE = "userLanguage"
+
     var patients: MutableList<Patient> = mutableListOf()
 
     var records: MutableList<Record> = mutableListOf()
@@ -347,6 +353,30 @@ class LocalStorageKit @Inject constructor(
         val minute = startTime.minute
         val second= startTime.second
         return hour * 10000 + minute * 100 + second
+    }
+
+    /***
+     * 保存用户语言选择
+     */
+    fun saveUserLanguageToPreferences(
+        context: Context,
+        language: String = "zh",
+    ) {
+        val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
+        prefs.edit().apply {
+            language?.let { putString(KEY_LANGUAGE, it) } ?: remove(KEY_LANGUAGE)
+        }.apply()
+    }
+
+    // 读取用户语言
+    fun loadUserLanguageFromPreferences(context: Context): LanguageTypes {
+        val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
+        val language = prefs.getString(KEY_LANGUAGE, null)
+
+        if (language == "en") {
+            return LanguageTypes.ENGLISH
+        }
+        return LanguageTypes.CHINESE
     }
 
     /***

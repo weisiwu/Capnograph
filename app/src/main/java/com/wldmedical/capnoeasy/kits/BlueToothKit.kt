@@ -36,8 +36,10 @@ import androidx.core.content.ContextCompat.registerReceiver
 import com.wldmedical.capnoeasy.CO2_SCALE
 import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.PAIRED_DEVICE_KEY
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.USER_PREF_NS
 import com.wldmedical.capnoeasy.WF_SPEED
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.HotmeltPinter
@@ -100,7 +102,7 @@ const val REQUEST_ENABLE_BT = 2
 const val REQUEST_BLUETOOTH_CONNECT_PERMISSION = 3
 const val REQUEST_BLUETOOTH_SCAN_PERMISSION = 4
 
-const val unkownName = "未知设备"
+val unkownName: String = getString(R.string.bluetooth_unknown_device)
 
 /***
  * 蓝牙模块
@@ -173,7 +175,6 @@ class BlueToothKit @Inject constructor(
         @SuppressLint("MissingPermission")
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val device = result.device
-            println("wswTest 工号蓝牙点点点  ${device.name}")
             if (device != null && !discoveredPeripherals.contains(device)) {
                 if (device.name != null) {
                     discoveredPeripherals.add(device)
@@ -183,9 +184,7 @@ class BlueToothKit @Inject constructor(
         }
 
         // 扫描失败
-        override fun onScanFailed(errorCode: Int) {
-            println("wswTest 萨米哦啊失败 $errorCode")
-        }
+        override fun onScanFailed(errorCode: Int) {}
     }
 
     private var scanFind: ((BluetoothDevice)-> Unit)? = null
@@ -628,8 +627,6 @@ class BlueToothKit @Inject constructor(
     // https://developer.android.com/develop/connectivity/bluetooth/find-bluetooth-devices?hl=zh-cn
     @SuppressLint("MissingPermission")
     private fun scanBleDevices() {
-        println("wswTest isBLEScanning $isBLEScanning")
-        println("wswTestA片达特事实吗 ${bluetoothManager}")
         if (isBLEScanning) { return }
 
         isBLEScanning = true
@@ -708,7 +705,6 @@ class BlueToothKit @Inject constructor(
             scanFinish?.invoke()
         }, SCAN_PERIOD)
 
-        println("wswTest 蓝牙类型 ${type}")
         if (type == BluetoothType.ALL || type == BluetoothType.BLE) {
             // 开始扫描低功耗蓝牙
             scanBleDevices()
@@ -1213,7 +1209,6 @@ class BlueToothKit @Inject constructor(
             return
         }
 
-        println("wswTest接收到的是什么命令 ${commandM}")
         if (NBFM != firstArray.size - 2) {
             println("内存中长度不对 commandM:$commandM NBFM:$NBFM Total:${firstArray.size - 2}")
             return

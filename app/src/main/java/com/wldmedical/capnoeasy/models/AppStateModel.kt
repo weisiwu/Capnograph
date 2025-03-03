@@ -1,13 +1,17 @@
 package com.wldmedical.capnoeasy.models
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.bluetooth.BluetoothDevice
+import android.content.Context
 import android.net.Uri
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import com.github.mikephil.charting.charts.LineChart
 import com.wldmedical.capnoeasy.CO2_SCALE
@@ -27,6 +31,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.Serializable
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -400,8 +405,19 @@ class AppStateModel @Inject constructor(
 
     // 语言
     val language = appState.language
-    fun updateLanguage(newVal: LanguageTypes) {
+    fun updateLanguage(newVal: LanguageTypes, context: Activity) {
+        if (newVal == appState.language.value) {
+            return
+        }
         appState.language.value = newVal
+        val languageCode = if (newVal == LanguageTypes.CHINESE) "zh" else "en"
+        println("wswTest languageCode ${languageCode}")
+        // 更新语言的同时，切换整个APP语言设置
+        val locale = Locale(languageCode)
+        Locale.setDefault(locale)
+        val localeList = LocaleListCompat.create(locale)
+        AppCompatDelegate.setApplicationLocales(localeList)
+        context.recreate()
     }
 
     // 固件版本

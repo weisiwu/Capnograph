@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import com.wldmedical.capnoeasy.ETCO2Range
 import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.RRRange
 import com.wldmedical.capnoeasy.RR_UNIT
 import com.wldmedical.capnoeasy.components.LoadingData
@@ -37,7 +38,7 @@ class AlertSettingActivity : BaseActivity() {
 
         Column {
             RangeSelector(
-                title = "ETCO2 范围",
+                title = getString(R.string.alertsetting_etco2_range),
                 unit = viewModel.CO2Unit.value.rawValue,
                 type = RangeType.BOTH,
                 startValue = minETCO2,
@@ -52,7 +53,7 @@ class AlertSettingActivity : BaseActivity() {
             )
 
             RangeSelector(
-                title = "RR 范围",
+                title = getString(R.string.alertsetting_rr_range),
                 unit = RR_UNIT,
                 type = RangeType.BOTH,
                 startValue = minRR,
@@ -76,7 +77,7 @@ class AlertSettingActivity : BaseActivity() {
                     viewModel.updateAlertETCO2Range(minETCO2, maxETCO2)
                     viewModel.updateLoadingData(
                         LoadingData(
-                            text = "正在设置",
+                            text = getString(R.string.alertsetting_is_setting),
                             duration = InfinityDuration,
                         )
                     )
@@ -89,7 +90,7 @@ class AlertSettingActivity : BaseActivity() {
                             viewModel.clearXData()
                             viewModel.updateToastData(
                                 ToastData(
-                                    text = "设置成功",
+                                    text = getString(R.string.alertsetting_setting_success),
                                     showMask = false,
                                     duration = 800,
                                 )

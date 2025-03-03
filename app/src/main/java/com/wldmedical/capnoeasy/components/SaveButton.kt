@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 
 /***
  * 保存按钮
@@ -39,7 +41,7 @@ fun SaveButton(
             }
         ) {
             Text(
-                text = "保存",
+                text = getString(R.string.savebutton_save),
                 letterSpacing = 5.sp,
                 color = Color(0xff165DFF),
                 fontSize = 16.sp,

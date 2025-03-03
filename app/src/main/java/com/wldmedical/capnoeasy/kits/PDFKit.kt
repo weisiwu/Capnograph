@@ -30,6 +30,8 @@ import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfPageEventHelper
 import com.itextpdf.text.pdf.PdfWriter
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
@@ -59,7 +61,7 @@ class SaveChartToPdfTask(
                 savePDF(filePath)
                 latch.countDown()
             } catch (e: Exception) {
-                println("wswTest 遇到了错误")
+                println("wswTest PDFKit 遇到了错误 ${e.message}")
                 e.printStackTrace()
                 latch.countDown()
             }
@@ -95,14 +97,18 @@ class SaveChartToPdfTask(
         val contentFont = Font(baseFont, 12f, Font.NORMAL)
 
         // 医院名称
-        val title1 = Paragraph("医院名称：${pdfSetting?.pdfHospitalName ?: ""}", titleFont)
-        title1.alignment = Element.ALIGN_CENTER
-        document.add(title1)
+        pdfSetting?.pdfHospitalName?.let {
+            val title1 = Paragraph(it ?: "", titleFont)
+            title1.alignment = Element.ALIGN_CENTER
+            document.add(title1)
+        }
 
         // 记录名称
-        val title2 = Paragraph("报告名称：${record?.patientIndex ?: ""}", titleFont)
-        title2.alignment = Element.ALIGN_CENTER
-        document.add(title2)
+        record?.patientIndex?.let {
+            val title2 = Paragraph(it ?: "", titleFont)
+            title2.alignment = Element.ALIGN_CENTER
+            document.add(title2)            
+        }
 
         // 添加标题和表格之间的间距
         val spacingParagraph = Paragraph(" ", contentFont)
@@ -154,32 +160,32 @@ class SaveChartToPdfTask(
         table.setWidths(floatArrayOf(1f, 1f, 1f))
 
         // 添加表头单元格
-        val nameCell = PdfPCell(Paragraph("姓名：${record?.patient?.name ?: ""}", contentFont))
+        val nameCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_name)}${record?.patient?.name ?: ""}", contentFont))
         nameCell.horizontalAlignment = Element.ALIGN_CENTER
         nameCell.border = Rectangle.NO_BORDER
         table.addCell(nameCell)
 
-        val genderCell = PdfPCell(Paragraph("性别：${record?.patient?.gender?.title ?: ""}", contentFont))
+        val genderCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_gender)}${record?.patient?.gender?.title ?: ""}", contentFont))
         genderCell.horizontalAlignment = Element.ALIGN_CENTER
         genderCell.border = Rectangle.NO_BORDER
         table.addCell(genderCell)
 
-        val ageCell = PdfPCell(Paragraph("年龄：${record?.patient?.age ?: ""}", contentFont))
+        val ageCell = PdfPCell(Paragraph("getString(R.string.pdf_patient_age)${record?.patient?.age ?: ""}", contentFont))
         ageCell.horizontalAlignment = Element.ALIGN_CENTER
         ageCell.border = Rectangle.NO_BORDER
         table.addCell(ageCell)
 
-        val departCell = PdfPCell(Paragraph("科室：${pdfSetting?.pdfDepart ?: ""}", contentFont))
+        val departCell = PdfPCell(Paragraph("getString(R.string.pdf_department)${pdfSetting?.pdfDepart ?: ""}", contentFont))
         departCell.horizontalAlignment = Element.ALIGN_CENTER
         departCell.border = Rectangle.NO_BORDER
         table.addCell(departCell)
 
-        val idCell = PdfPCell(Paragraph("ID号：${pdfSetting?.pdfIDNumber ?: ""}", contentFont))
+        val idCell = PdfPCell(Paragraph("getString(R.string.pdf_id_number)${pdfSetting?.pdfIDNumber ?: ""}", contentFont))
         idCell.horizontalAlignment = Element.ALIGN_CENTER
         idCell.border = Rectangle.NO_BORDER
         table.addCell(idCell)
 
-        val bedCell = PdfPCell(Paragraph("床号：${pdfSetting?.pdfBedNumber ?: ""}", contentFont))
+        val bedCell = PdfPCell(Paragraph("getString(R.string.pdf_bed_number)${pdfSetting?.pdfBedNumber ?: ""}", contentFont))
         bedCell.horizontalAlignment = Element.ALIGN_CENTER
         bedCell.border = Rectangle.NO_BORDER
         table.addCell(bedCell)
@@ -206,7 +212,7 @@ class SaveChartToPdfTask(
         ETCO2Cell.border = Rectangle.NO_BORDER
         table.addCell(ETCO2Cell)
 
-        val RRCell = PdfPCell(Paragraph("呼吸率：${17 ?: ""}", contentFont))
+        val RRCell = PdfPCell(Paragraph("getString(R.string.pdf_respiratory_rate)${17 ?: ""}", contentFont))
         RRCell.horizontalAlignment = Element.ALIGN_CENTER
         RRCell.border = Rectangle.NO_BORDER
         table.addCell(RRCell)
@@ -318,15 +324,15 @@ class SaveChartToPdfTask(
         table.widthPercentage = 100f
         table.setWidths(floatArrayOf(1f, 1f))
 
-        val doctorCell = PdfPCell(Paragraph("报告者：", contentFont))
+        val doctorCell = PdfPCell(Paragraph("getString(R.string.pdf_reporter)", contentFont))
         doctorCell.horizontalAlignment = Element.ALIGN_CENTER
         doctorCell.border = Rectangle.NO_BORDER
         table.addCell(doctorCell)
 
-        val formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH时mm分ss秒")
+        val formatter = DateTimeFormatter.ofPattern(getString(R.string.pdf_date_format))
         val startTimeStr = if (record?.startTime != null) record.startTime.format(formatter) else ""
         val endTimeStr = if (record?.endTime != null) record.endTime.format(formatter) else ""
-        val timeCell = PdfPCell(Paragraph("报告时间：${startTimeStr}-${endTimeStr}", contentFont))
+        val timeCell = PdfPCell(Paragraph("getString(R.string.pdf_report_time)${startTimeStr}-${endTimeStr}", contentFont))
         timeCell.horizontalAlignment = Element.ALIGN_CENTER
         timeCell.border = Rectangle.NO_BORDER
         table.addCell(timeCell)

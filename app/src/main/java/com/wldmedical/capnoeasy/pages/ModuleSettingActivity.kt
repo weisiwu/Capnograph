@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.O2_UNIT
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.TIME_UNIT
 import com.wldmedical.capnoeasy.airPressureRange
 import com.wldmedical.capnoeasy.asphyxiationTimeRange
@@ -35,7 +36,7 @@ class ModuleSettingActivity : BaseActivity() {
 
         Column {
             RangeSelector(
-                title = "大气压(${viewModel.CO2Unit.value.rawValue})",
+                title = "${getString(R.string.module_atmospheric_pressure)}(${viewModel.CO2Unit.value.rawValue})",
                 unit = viewModel.CO2Unit.value.rawValue,
                 enabled = false,
                 value = blueToothKit.airPressure.value,
@@ -44,7 +45,7 @@ class ModuleSettingActivity : BaseActivity() {
             )
 
             RangeSelector(
-                title = "窒息时间(${TIME_UNIT})",
+                title = "${getString(R.string.module_asphyxia_time)}(${TIME_UNIT})",
                 value = asphyxiationTime.toFloat(),
                 unit = TIME_UNIT,
                 type = RangeType.ONESIDE,
@@ -55,7 +56,7 @@ class ModuleSettingActivity : BaseActivity() {
             )
 
             RangeSelector(
-                title = "氧气补偿(${O2_UNIT})",
+                title = "${getString(R.string.module_oxygen_compensation)}(${O2_UNIT})",
                 unit = O2_UNIT,
                 value = o2Compensation,
                 type = RangeType.ONESIDE,
@@ -75,7 +76,7 @@ class ModuleSettingActivity : BaseActivity() {
                     viewModel.updateO2Compensation(o2Compensation)
                     viewModel.updateLoadingData(
                         LoadingData(
-                            text = "正在设置",
+                            text = getString(R.string.module_is_setting),
                             duration = InfinityDuration,
                         )
                     )
@@ -86,7 +87,7 @@ class ModuleSettingActivity : BaseActivity() {
                             viewModel.clearXData()
                             viewModel.updateToastData(
                                 ToastData(
-                                    text = "设置成功",
+                                    text = getString(R.string.module_setting_success),
                                     showMask = false,
                                     duration = 800,
                                 )

@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 
 enum class SettingType(value: Int) {
     ZERO(0), // 校零
@@ -48,47 +49,47 @@ data class Setting(
 
 val settings = arrayOf(
     Setting(
-        name = "校零",
+        name = getString(R.string.settinglist_zeroing),
         icon = R.drawable.m3_refresh,
         type = SettingType.ZERO
     ),
     Setting(
-        name = "屏幕常亮",
+        name = getString(R.string.settinglist_screen_constant),
         icon = R.drawable.m3_lightbulb,
         type = SettingType.KEEP_LIGHT
     ),
     Setting(
-        name = "报警参数",
+        name = getString(R.string.settinglist_alert_setting),
         icon = R.drawable.m3_arrow_forward,
         type = SettingType.ALERT_PARAM
     ),
     Setting(
-        name = "显示参数",
+        name = getString(R.string.settinglist_display_setting),
         icon = R.drawable.m3_arrow_forward,
         type = SettingType.DISPLAY_PARAM
     ),
     Setting(
-        name = "模块参数",
+        name = getString(R.string.settinglist_module_setting),
         icon = R.drawable.m3_arrow_forward,
         type = SettingType.MODULE_PARAM
     ),
     Setting(
-        name = "系统设置",
+        name = getString(R.string.settinglist_system_setting),
         icon = R.drawable.m3_arrow_forward,
         type = SettingType.SYSTEM_SETTING
     ),
     Setting(
-        name = "打印设置",
+        name = getString(R.string.settinglist_print_setting),
         icon = R.drawable.m3_arrow_forward,
         type = SettingType.PRINT_SETTING
     ),
     Setting(
-        name = "历史记录",
+        name = getString(R.string.settinglist_history_records),
         icon = R.drawable.m3_arrow_forward,
         type = SettingType.HISTORY_RECORD
     ),
     Setting(
-        name = "关机",
+        name = getString(R.string.settinglist_shutdown),
         icon = R.drawable.m3_power_settings,
         type = SettingType.SHUTDOWN
     ),

@@ -28,6 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.GENDER
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.kits.BlueToothKitManager.blueToothKit
 import com.wldmedical.capnoeasy.models.AppState
@@ -93,9 +95,9 @@ fun AttributeLine(
                         // 直接换出alert弹框，让用户进行选择
                         viewModel.updateAlertData(
                             AlertData(
-                                text = "请选择病人性别",
-                                ok_btn_text = "男",
-                                cancel_btn_text = "女",
+                                text = getString(R.string.etco2table_select_gender),
+                                ok_btn_text = getString(R.string.etco2table_male),
+                                cancel_btn_text = getString(R.string.etco2table_female),
                                 onOk = {
                                     viewModel.updateAlertData(null)
                                     viewModel.updatePatientGender(GENDER.MALE)
@@ -205,13 +207,34 @@ val attributes = listOf(
 )
 
 val attributesGroupA = listOf(
-    Atribute(title = "姓名", viewModelName = "patientName", placeholder = "请填写", editable = true),
-    Atribute(title = "性别", viewModelName = "patientGender", placeholder = "请选择", editable = true, isSelect = true),
+    Atribute(
+        title = getString(R.string.etco2table_name), 
+        viewModelName = "patientName", 
+        placeholder = getString(R.string.etco2table_fill_in), 
+        editable = true
+    ),
+    Atribute(
+        title = getString(R.string.etco2table_gender), 
+        viewModelName = "patientGender", 
+        placeholder = getString(R.string.etco2table_select), 
+        editable = true,
+        isSelect = true
+    ),
 )
 
 val attributesGroupB = listOf(
-    Atribute(title = "年龄", viewModelName = "patientAge", placeholder = "请输入", editable = true, isNumber = true),
-    Atribute(title = "ID", viewModelName = "patientID", placeholder = "请输入", editable = true),
+    Atribute(
+        title = getString(R.string.etco2table_age), 
+        viewModelName = "patientAge", 
+        placeholder = getString(R.string.etco2table_input), 
+        editable = true, 
+        isNumber = true
+    ),
+    Atribute(title = "ID", 
+        viewModelName = "patientID", 
+        placeholder = getString(R.string.etco2table_input), 
+        editable = true
+    ),
 )
 
 

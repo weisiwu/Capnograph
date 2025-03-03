@@ -35,6 +35,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.kits.BlueToothKitManager.blueToothKit
 import com.wldmedical.capnoeasy.kits.maxXPoints
@@ -62,13 +64,6 @@ fun EtCo2LineChart(
     }
     val pagerState = rememberPagerState()
     viewModel.lineChart = chart.value
-
-    // TODO: 临时mock500个虚拟点
-//    LaunchedEffect(a) {
-//        RandomCurveGenerator(
-//            updateGraph = { blueToothKit.updateReceivedData(DataPoint(index = 1, value = it)) }
-//        )
-//    }
 
     // 处理折线图动画效果
     LaunchedEffect(blueToothKit.dataFlow) { // 监听 bluetoothKit 实例的变化
@@ -104,7 +99,7 @@ fun EtCo2LineChart(
 
                 if (currentDevice != null) {
                     Text(
-                        text = if(currentDevice.name == null) "未知设备" else currentDevice.name,
+                        text = if(currentDevice.name == null) getString(R.string.etco2linechart_unknown_device) else currentDevice.name,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                 }

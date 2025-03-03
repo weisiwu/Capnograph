@@ -24,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
 
@@ -48,15 +49,15 @@ fun NavBar(
     when(currentPage.value.currentPage) {
         PageScene.HISTORY_DETAIL_PAGE -> {
             rightImage.value = R.drawable.pull_up
-            rightDesc.value = "更多操作"
+            rightDesc.value = getString(R.string.navbar_more_actions)
         }
         PageScene.HOME_PAGE ->
             if (viewModel.isRecording.value) {
                 rightImage.value = R.drawable.nav_print_stop_btn
-                rightDesc.value = "记录中"
+                rightDesc.value = getString(R.string.navbar_recording)
             } else {
                 rightImage.value = R.drawable.nav_print_btn
-                rightDesc.value = "开始记录"
+                rightDesc.value = getString(R.string.navbar_start_record)
             }
         else -> {
             rightImage.value = null

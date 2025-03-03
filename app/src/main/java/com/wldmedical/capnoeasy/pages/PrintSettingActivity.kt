@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.CustomTextField
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.SupportQRCodeTypes
@@ -99,147 +100,37 @@ class PrintSettingActivity : BaseActivity() {
                 .verticalScroll(rememberScrollState()) // 使用 verticalScroll
         ) {
             CustomTextField(
-                title = "【PDF】医院名称",
-                defaultText = "请输入名称",
+                title = getString(R.string.print_pdf_bed_number),
+                defaultText = getString(R.string.print_input_name),
                 value = pdfHospitalName,
                 onValueChange = {
                     pdfHospitalName = it
                 }
             )
             CustomTextField(
-                title = "【PDF】科室",
-                defaultText = "请输入科室",
+                title = getString(R.string.print_pdf_depart),
+                defaultText = getString(R.string.print_input_depart),
                 value = pdfDepart,
                 onValueChange = {
                     pdfDepart = it
                 }
             )
             CustomTextField(
-                title = "【PDF】床号",
-                defaultText = "请输入床号",
+                title = getString(R.string.print_pdf_bed_number),
+                defaultText = getString(R.string.print_input_bed_number),
                 value = pdfBedNumber,
                 onValueChange = {
                     pdfBedNumber = it
                 }
             )
             CustomTextField(
-                title = "【PDF】ID号",
-                defaultText = "请输入ID号",
+                title = getString(R.string.print_pdf_id),
+                defaultText = getString(R.string.print_input_id),
                 value = pdfIDNumber,
                 onValueChange = {
                     pdfIDNumber = it
                 }
             )
-            CustomTextField(
-                title = "【小票】地址",
-                defaultText = "请输入地址",
-                value = printAddress,
-                onValueChange = {
-                    printAddress = it
-                }
-            )
-            CustomTextField(
-                title = "【小票】电话",
-                defaultText = "请输入电话",
-                value = printPhone,
-                onValueChange = {
-                    printPhone = it
-                }
-            )
-            if (printUrlQRCode.value) {
-                CustomTextField(
-                    title = "【小票】网址",
-                    defaultText = "请输入网址",
-                    value = printUrl,
-                    onValueChange = {
-                        printUrl = it
-                    }
-                )
-            }
-            Column {
-                Text(
-                    text = "【小票】是否展示网址二维码",
-                    color = Color(0xff666666),
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.Transparent)
-                        .padding(bottom = 18.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    TypeSwitch(
-                        selectedIndex = if (printUrlQRCode.value) 0 else 1,
-                        onTypeClick = { type ->
-                            printUrlQRCode.value = type.id == "是"
-                        },
-                        types = SupportQRCodeTypes
-                    )
-                }
-                HorizontalDivider(
-                    modifier = Modifier.run {
-                        fillMaxWidth()
-                            .height(2.dp)
-                            .alpha(0.4f)
-                            .padding(horizontal = 18.dp)
-                    }
-                )
-            }
-            Column {
-                Text(
-                    text = "【小票】Logo",
-                    color = Color(0xff666666),
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .padding(horizontal = 18.dp)
-                        .padding(top = 18.dp)
-                )
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .background(Color(0xffF5F5F5))
-                        .align(Alignment.CenterHorizontally)
-                        .clickable {
-                            val intent = Intent(Intent.ACTION_GET_CONTENT)
-                            intent.type = "image/*"
-                            launcher.launch(intent)
-                        }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "选择图片",
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                    )
-                    // 显示选择的图片
-                    if (selectedImageUri.value != null) {
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Image(
-                                modifier = Modifier.height(150.dp),
-                                painter = rememberAsyncImagePainter(model = selectedImageUri.value),
-                                contentDescription = "选择的图片"
-                            )
-                        }
-                    }
-                }
-                HorizontalDivider(
-                    modifier = Modifier.run {
-                        fillMaxWidth()
-                            .height(2.dp)
-                            .alpha(0.4f)
-                            .padding(top = 18.dp)
-                            .padding(horizontal = 18.dp)
-                    }
-                )
-            }
-
             Spacer(
                 modifier = Modifier.weight(1f).padding(bottom = 16.dp)
             )
@@ -254,7 +145,7 @@ class PrintSettingActivity : BaseActivity() {
                     modifier = Modifier.clickable {
                         viewModel.updateLoadingData(
                             LoadingData(
-                                text = "正在设置",
+                                text = getString(R.string.print_is_setting),
                                 duration = 800,
                             )
                         )
@@ -303,7 +194,7 @@ class PrintSettingActivity : BaseActivity() {
 
                             viewModel.updateToastData(
                                 ToastData(
-                                    text = "设置成功",
+                                    text = getString(R.string.print_setting_success),
                                     showMask = false,
                                     duration = 600,
                                 )
@@ -311,7 +202,7 @@ class PrintSettingActivity : BaseActivity() {
                         } else {
                             viewModel.updateToastData(
                                 ToastData(
-                                    text = "设置失败",
+                                    text = getString(R.string.print_setting_fail),
                                     type = ToastType.FAIL,
                                     showMask = false,
                                     duration = 600,
@@ -321,7 +212,7 @@ class PrintSettingActivity : BaseActivity() {
                     }
                 ) {
                     Text(
-                        text = "保存",
+                        text = getString(R.string.print_save),
                         letterSpacing = 5.sp,
                         color = Color(0xff165DFF),
                         fontSize = 18.sp,

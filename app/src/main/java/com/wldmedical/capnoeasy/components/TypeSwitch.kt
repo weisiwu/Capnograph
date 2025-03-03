@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 
 interface CustomType {
     val name: String
@@ -38,17 +39,16 @@ data class DeviceType(
 ): CustomType
 
 enum class DeviceTypeList(val deviceType: CustomType) {
-    BLE(DeviceType(name = "蓝牙", id = "BLUETOOTH_LOWENERGY", index = 0)),
+    BLE(DeviceType(name = getString(R.string.typeswitch_bluetooth), id = "BLUETOOTH_LOWENERGY", index = 0)),
     WIFI(DeviceType(name = "WIFI", id = "WIFI", index = 1)),
     USB(DeviceType(name = "USB", id = "USB", index = 2)),
-    BLUETHOOTH(DeviceType(name = "经典蓝牙", id = "BLUETOOTH_CLASSIC", index = 3)),
+    BLUETHOOTH(DeviceType(name = getString(R.string.typeswitch_classic_bluetooth), id = "BLUETOOTH_CLASSIC", index = 3)),
 }
 
 val DeviceTypes: Array<CustomType> = arrayOf(
     DeviceTypeList.BLE.deviceType,
     DeviceTypeList.WIFI.deviceType,
     DeviceTypeList.USB.deviceType,
-//    DeviceTypeList.BLUETHOOTH.deviceType,
 )
 
 @Composable
@@ -74,7 +74,7 @@ fun DeviceType(
         if (isSelected) {
             Image(
                 painter = painterResource(R.drawable.device_tyoe_mark),
-                contentDescription = "选中",
+                contentDescription = getString(R.string.typeswitch_selected),
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier
                     .width(108.dp)

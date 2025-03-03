@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityOptionsCompat
 import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.SettingList
 import com.wldmedical.capnoeasy.components.SettingType
@@ -45,7 +46,7 @@ class SettingActivity : BaseActivity() {
                             couldJump = false
                             viewModel.updateLoadingData(
                                 LoadingData(
-                                    text = "正在校零",
+                                    text = getString(R.string.setting_zeroing),
                                     duration = InfinityDuration,
                                     cancelable = false
                                 )
@@ -54,7 +55,7 @@ class SettingActivity : BaseActivity() {
                                 viewModel.clearXData()
                                 viewModel.updateToastData(
                                     ToastData(
-                                        text = "成功校零",
+                                        text = getString(R.string.setting_zeroing_success),
                                         showMask = false,
                                         duration = 800,
                                     )
@@ -67,7 +68,7 @@ class SettingActivity : BaseActivity() {
                         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                         viewModel.updateToastData(
                             ToastData(
-                                text = "成功设置屏幕常量",
+                                text = getString(R.string.setting_screen_constant_success),
                                 showMask = false,
                                 duration = 800
                             )
@@ -78,7 +79,7 @@ class SettingActivity : BaseActivity() {
                             couldJump = false
                             viewModel.updateLoadingData(
                                 LoadingData(
-                                    text = "正在关机",
+                                    text = getString(R.string.setting_shutdown),
                                     duration = InfinityDuration,
                                 )
                             )
@@ -86,7 +87,7 @@ class SettingActivity : BaseActivity() {
                                 viewModel.clearXData()
                                 viewModel.updateToastData(
                                     ToastData(
-                                        text = "成功关机",
+                                        text = getString(R.string.setting_shutdown_success),
                                         showMask = false,
                                         duration = 800,
                                     )

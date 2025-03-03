@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.ConfirmData
 import com.wldmedical.capnoeasy.components.EtCo2LineChart
 import com.wldmedical.capnoeasy.components.EtCo2Table
@@ -81,9 +82,9 @@ class MainActivity : BaseActivity() {
         if(!viewModel.isRecording.value) {
             viewModel.updateConfirmData(
                 ConfirmData(
-                    title = "记录保存成功",
-                    text = "保存的记录可在设置>历史记录中查看",
-                    confirm_btn_text = "确认",
+                    title = getString(R.string.main_record_save_success),
+                    text = getString(R.string.main_record_save_check),
+                    confirm_btn_text = getString(R.string.main_confirm),
                     onClick = {
                         viewModel.updateConfirmData(null)
                         viewModel.updateTotalCO2WavedData()
@@ -122,7 +123,7 @@ class MainActivity : BaseActivity() {
 
         viewModel.updateToastData(
             ToastData(
-                text = if (isRecording) "停止记录" else "启动记录",
+                text = if (isRecording) getString(R.string.main_stop_record) else getString(R.string.main_start_record),
                 duration = 600,
                 showMask = false,
                 type = ToastType.SUCCESS,

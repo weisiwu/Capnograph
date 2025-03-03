@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityOptionsCompat
 import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.DeviceList
 import com.wldmedical.capnoeasy.components.DeviceType
 import com.wldmedical.capnoeasy.components.DeviceTypes
@@ -42,28 +43,13 @@ class SearchActivity : BaseActivity() {
         val options = ActivityOptionsCompat.makeCustomAnimation(this, 0, 0)
         val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
-//        TypeSwitch(
-//            selectedIndex = selectedIndex,
-//            types = DeviceTypes,
-//            modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 16.dp),
-//            onTypeClick = {
-//                viewModel.updateLoadingData(
-//                    LoadingData(
-//                        text = "切换搜索方式为${it.name}",
-//                        duration = 300,
-//                    )
-//                )
-//                viewModel.updateConnectType(it as DeviceType)
-//            }
-//        )
-
         DeviceList(
             devices = discoveredPeripherals.value,
             onSearch = {
                 viewModel.updateDiscoveredPeripherals(null, true)
                 viewModel.updateLoadingData(
                     LoadingData(
-                        text = "开始搜索${it.name ?: unkownName}",
+                        text = "${getString(R.string.search_start)}${it.name ?: unkownName}",
                         duration = InfinityDuration,
                         cancelable = false
                     )
@@ -72,7 +58,7 @@ class SearchActivity : BaseActivity() {
                     scanFinish = {
                         viewModel.updateToastData(
                             ToastData(
-                                text = "搜索结束",
+                                text = getString(R.string.search_finish),
                                 type = ToastType.SUCCESS,
                                 showMask = false
                             )
@@ -84,7 +70,7 @@ class SearchActivity : BaseActivity() {
                     checkBlueToothFail = {
                         viewModel.updateToastData(
                             ToastData(
-                                text = "搜索失败",
+                                text = getString(R.string.search_fail),
                                 type = ToastType.FAIL,
                                 showMask = false
                             )
@@ -109,7 +95,7 @@ class SearchActivity : BaseActivity() {
                 )
                 viewModel.updateLoadingData(
                     LoadingData(
-                        text = "开始链接设备${it.name ?: unkownName}"
+                        text = "${getString(R.string.search_start_connect)}${it.name ?: unkownName}"
                     )
                 )
             }

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.maskOpacity
 import com.wldmedical.capnoeasy.maxMaskZIndex
 import kotlinx.coroutines.delay
@@ -114,7 +115,7 @@ fun Toast(
                         ToastType.SUCCESS -> {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "成功",
+                                contentDescription = getString(R.string.toast_success),
                                 tint = Color.White
                             )
                         }
@@ -122,7 +123,7 @@ fun Toast(
                             Image(
                                 painter = painterResource(id = R.drawable.fail_icon),
                                 alignment = Alignment.Center,
-                                contentDescription = "失败"
+                                contentDescription = getString(R.string.toast_fail)
                             )
                         }
                     }

@@ -16,6 +16,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import com.github.barteksc.pdfviewer.PDFView
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.recordIdParams
 import kotlinx.coroutines.Dispatchers
@@ -130,7 +131,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     .fillMaxSize()
             )
         } else {
-            Text("正在加载中")
+            Text(getString(R.string.recorddetail_loading))
         }
     }
 }

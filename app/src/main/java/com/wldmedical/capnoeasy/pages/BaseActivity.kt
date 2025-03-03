@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.ActionModal
 import com.wldmedical.capnoeasy.components.AlertData
 import com.wldmedical.capnoeasy.components.AlertModal
@@ -169,7 +170,7 @@ open class BaseActivity : ComponentActivity() {
         } else {
             viewModel.updateToastData(
                 ToastData(
-                    text = "未连接设备，请链接后再试",
+                    text = getString(R.string.base_noconnect_msg),
                     showMask = false,
                     duration = 1000,
                 )
@@ -206,8 +207,8 @@ open class BaseActivity : ComponentActivity() {
                 //引导用户手动开启权限
                 viewModel.updateAlertData(
                     AlertData(
-                        text = "请开启蓝牙权限",
-                        ok_btn_text = "去开启",
+                        text = getString(R.string.base_infobl_msg),
+                        ok_btn_text = getString(R.string.base_go_open),
                         onOk = {
                             viewModel.updateAlertData(null)
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
@@ -257,10 +258,9 @@ open class BaseActivity : ComponentActivity() {
         LocalStorageKitManager.initialize(this, (application as CapnoEasyApplication))
         localStorageKit = LocalStorageKitManager.localStorageKit
 
-        // mock数据，本地测试时候打开
-        // lifecycleScope.launch {
-        //     localStorageKit.mock()
-        // }
+        val language = localStorageKit.loadUserLanguageFromPreferences(this)
+        println("wswTest language ${language}")
+        viewModel.updateLanguage(language, this)
 
         enableEdgeToEdge()
         setContent {
