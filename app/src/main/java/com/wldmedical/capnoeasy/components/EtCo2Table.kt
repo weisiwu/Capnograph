@@ -118,7 +118,7 @@ fun AttributeLine(
                     fontSize = 16.sp,
                     color = valueColor,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Start // 设置 Text 内部文本居左对齐
+                    textAlign = TextAlign.End // 设置 Text 内部文本居左对齐
                 )
             }
         }  else if (attribute.editable) {
@@ -171,7 +171,7 @@ fun AttributeLine(
                         text = valueText,
                         color = valueColor,
                         fontWeight = valueFontWeight,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth().weight(1f)
                     )
                 },
             )

@@ -78,12 +78,6 @@ fun BaseLayout(
 
         NavBar(
             viewModel = viewModel,
-//            onLeftClick = {
-//                val intent = Intent()
-//                intent.putExtra("result", "back")
-//                context.setResult(RESULT_OK, intent)
-//                context.finish()
-//            },
             onRightClick = {
                 onNavBarRightClick?.invoke()
             }
