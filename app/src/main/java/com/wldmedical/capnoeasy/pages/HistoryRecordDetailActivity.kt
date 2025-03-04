@@ -18,6 +18,7 @@ import com.github.barteksc.pdfviewer.PDFView
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.kits.Record
+import com.wldmedical.capnoeasy.kits.filterData
 import com.wldmedical.capnoeasy.recordIdParams
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -86,16 +87,20 @@ class HistoryRecordDetailActivity : BaseActivity() {
     }
 
     override fun onPrintTicketClick() {
-        if (currentRecord?.data == null) { return }
-        if (currentRecord?.data!!.size <= 0) { return }
-        val allPoints: List<Float> = currentRecord!!.data!!.map {
+        val currentData = currentRecord?.data ?: return
+        if (currentData.isEmpty()) { return }
+
+        // 对波形数据进行过滤
+        val filteredData = filterData(currentData, viewModel.CO2Scale.value.value)
+        val allPoints: List<Float> = filteredData.map {
             it.co2
         }
 
         blueToothKit.gpPrinterManager.print(
             this,
             allPoints,
-            localStorageKit.loadPrintSettingFromPreferences(this)
+            localStorageKit.loadPrintSettingFromPreferences(this),
+            viewModel.CO2Scale.value.value
         )
     }
 

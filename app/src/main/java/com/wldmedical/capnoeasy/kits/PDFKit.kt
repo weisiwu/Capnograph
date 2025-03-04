@@ -41,6 +41,39 @@ import java.util.concurrent.CountDownLatch
 val fontPath = "assets/fonts/SimSun.ttf"
 val baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
 
+/**
+ * 过滤数据，消除数据中连续超过 10 个小于最大值 10% 的数据
+ * @param data 原始数据列表
+ * @param maxValue 最大值
+ * @param consecutiveThreshold 连续低值数据的阈值，默认为 10
+ * @param lowValuePercentage 低值百分比，默认为 0.1 (10%)
+ * @return 过滤后的数据列表
+ */
+fun filterData(
+    data: List<CO2WavePointData>,
+    maxValue: Float,
+    consecutiveThreshold: Int = 10,
+    lowValuePercentage: Float = 0.1f
+): List<CO2WavePointData> {
+    if (data.isEmpty()) return data
+
+    val filteredData = mutableListOf<CO2WavePointData>()
+    var consecutiveLowValueCount = 0
+    for (i in data.indices) {
+        val current = data[i]
+        if (current.co2 < maxValue * lowValuePercentage) {
+            consecutiveLowValueCount++
+            if (consecutiveLowValueCount <= consecutiveThreshold) {
+                filteredData.add(current)
+            }
+        } else {
+            consecutiveLowValueCount = 0
+            filteredData.add(current)
+        }
+    }
+    return filteredData.takeLast(maxXPoints * 2)
+}
+
 class SaveChartToPdfTask(
     private val originalLineChart: LineChart,
     private val data: List<CO2WavePointData>,
@@ -114,39 +147,6 @@ class SaveChartToPdfTask(
         val spacingParagraph = Paragraph(" ", contentFont)
         spacingParagraph.spacingBefore = 10f // 设置标题后的间距
         document.add(spacingParagraph)
-    }
-
-    /**
-     * 过滤数据，消除数据中连续超过 10 个小于最大值 10% 的数据
-     * @param data 原始数据列表
-     * @param maxValue 最大值
-     * @param consecutiveThreshold 连续低值数据的阈值，默认为 10
-     * @param lowValuePercentage 低值百分比，默认为 0.1 (10%)
-     * @return 过滤后的数据列表
-     */
-    private fun filterData(
-        data: List<CO2WavePointData>,
-        maxValue: Float,
-        consecutiveThreshold: Int = 10,
-        lowValuePercentage: Float = 0.1f
-    ): List<CO2WavePointData> {
-        if (data.isEmpty()) return data
-
-        val filteredData = mutableListOf<CO2WavePointData>()
-        var consecutiveLowValueCount = 0
-        for (i in data.indices) {
-            val current = data[i]
-            if (current.co2 < maxValue * lowValuePercentage) {
-                consecutiveLowValueCount++
-                if (consecutiveLowValueCount <= consecutiveThreshold) {
-                    filteredData.add(current)
-                }
-            } else {
-                consecutiveLowValueCount = 0
-                filteredData.add(current)
-            }
-        }
-        return filteredData.takeLast(maxXPoints * 2)
     }
 
     private fun addPDFDetail(document: Document) {

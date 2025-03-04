@@ -6,8 +6,17 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.net.Uri
+import android.view.View
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.utils.Utils
 import com.gprinter.bean.PrinterDevices
 import com.gprinter.command.EscCommand
 import com.gprinter.io.BluetoothPort
@@ -195,27 +204,37 @@ class HotmeltPinter {
         return compressZeroSegments(allPoints)
     }
 
-     private fun startProcessingData(wavePoints: MutableList<Float>) {
-         GlobalScope.launch {
-             val allPoints = washData(wavePoints)
-             while (allPoints.size > 0) {
-                 val dataToPrint = mutableListOf<Float>()
-                 while (dataToPrint.size <= 500 && allPoints.size != 0) {
-                     val lastValue = allPoints.removeAt(0)
-                     dataToPrint.add(lastValue)
-                 }
-                 // 这里注意，数量足够才开始插值，并且绘图。否则继续等待直到数据量足够。
-                 val bitmap = generateWaveformBitmap(dataToPrint)
-                 esc.drawImage(bitmap)
-                 printer?.getPortManager()?.writeDataImmediately(esc.getCommand())
-             }
-             esc.addText("\n")
-             esc.addText("\n")
-             esc.addText("\n")
-             esc.addText("\n")
-             printer?.getPortManager()?.writeDataImmediately(esc.getCommand())
-         }
-     }
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun startProcessingData(
+        wavePoints: MutableList<Float>,
+        context: Context,
+        axisMaximum: Float,
+    ) {
+        GlobalScope.launch {
+            val allPoints = washData(wavePoints)
+            // 这里注意，数量足够才开始插值，并且绘图。否则继续等待直到数据量足够。
+            var bitmap = withContext(Dispatchers.Main) {
+                // 在主线程中调用
+                generateWaveformBitmapNew(
+                    context = context,
+                    currentPageData = allPoints,
+                    axisMaximum = axisMaximum
+                )
+            }
+            // 顺时针转90度
+            val matrix = Matrix()
+            matrix.postRotate(90f)
+            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+            esc.drawImage(bitmap)
+
+            printer.getPortManager()?.writeDataImmediately(esc.getCommand())
+            esc.addText("\n")
+            esc.addText("\n")
+            esc.addText("\n")
+            esc.addText("\n")
+            printer.getPortManager()?.writeDataImmediately(esc.getCommand())
+        }
+    }
 
     /***
      * 获取原始图片尺寸（不加载到内存）
@@ -279,20 +298,39 @@ class HotmeltPinter {
         context: Context,
         allPoints: List<Float>,
         config: PrintSetting = PrintSetting,
+        axisMaximum: Float
     ) {
         esc.addInitializePrinter()
         esc.addSetLineSpacing(100)
-        esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT)
+        esc.addSelectPrintModes(
+            EscCommand.FONT.FONTB,
+            EscCommand.ENABLE.OFF,
+            EscCommand.ENABLE.ON,
+            EscCommand.ENABLE.ON,
+            EscCommand.ENABLE.OFF
+        )
+        esc.addSelectJustification(EscCommand.JUSTIFICATION.CENTER)
         config.hospitalName?.let {
             esc.addText("${it}\n")
         }
         config.reportName?.let {
             esc.addText("${it}\n")
         }
-        esc.addSelectJustification(EscCommand.JUSTIFICATION.CENTER)
-        esc.addText("\n")
+        esc.addSelectPrintModes(
+            EscCommand.FONT.FONTA,
+            EscCommand.ENABLE.OFF,
+            EscCommand.ENABLE.OFF,
+            EscCommand.ENABLE.OFF,
+            EscCommand.ENABLE.OFF
+        )
         esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT)
         esc.addText("********************************\n")
+        config.name?.let { esc.addText("姓名: ${config.name}\n") }
+        config.gender?.let { esc.addText("性别: ${config.gender}\n") }
+        config.age?.let { if (config.age != 0) { esc.addText("年龄: ${config.age}\n") } }
+        config.pdfIDNumber?.let { esc.addText("ID: ${config.pdfIDNumber}\n") }
+        config.pdfDepart?.let { esc.addText("科室: ${config.pdfDepart}\n") }
+        config.pdfBedNumber?.let { esc.addText("床号: ${config.pdfBedNumber}\n") }
         esc.addText("时间: ${getCurrentFormattedDateTime()}\n")
         esc.addText("设备: CapnoEasy\n")
         esc.addText("********************************\n")
@@ -301,7 +339,11 @@ class HotmeltPinter {
         printer?.getPortManager()?.writeDataImmediately(esc.getCommand())
 
         // 读取记录中的数据，并打印出来
-        startProcessingData(allPoints.toMutableList())
+        startProcessingData(
+            allPoints.toMutableList(),
+            context,
+            axisMaximum
+        )
     }
 
     /**
@@ -318,33 +360,53 @@ class HotmeltPinter {
         printer.connect(blueTooth)
     }
 
-     fun generateWaveformBitmap(data: List<Float>): Bitmap {
-         val width = 400  // 打印机宽度 (58mm * 203dpi)
-         val height = 400 // 设定波形图的高度
-         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-         val canvas = Canvas(bitmap)
-         canvas.drawColor(Color.WHITE)
+    // 新版本线图，保持和PDF一致
+    fun generateWaveformBitmapNew(
+        context: Context,
+        currentPageData: List<Float>,
+        axisMaximum: Float,
+    ): Bitmap {
+        val width = (currentPageData.size / 500) * 1000 // 设置宽度
+        val height = 450 // 设置高度
 
-         // 设置画笔
-         val paint = Paint().apply {
-             color = Color.BLACK
-             strokeWidth = 2f
-             isAntiAlias = true
-         }
+        // 生成当前页的 Bitmap
+        val currentPageBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(currentPageBitmap)
+        canvas.drawColor(Color.WHITE)
 
-         // 绘制波形
-         val pointSpacing = width / data.size.toFloat()
+        // 绘制当前页的图表
+        val copyLineChart = LineChart(context)
+        copyLineChart.setBackgroundColor(Color.TRANSPARENT)
+        copyLineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        copyLineChart.xAxis.textColor = Color.BLACK
+        copyLineChart.xAxis.textSize = Utils.convertDpToPixel(8f)
+        copyLineChart.axisRight.isEnabled = false
+        copyLineChart.description.isEnabled = false
+        copyLineChart.axisLeft.axisMinimum = 0f
+        copyLineChart.axisLeft.axisMaximum = axisMaximum
+        copyLineChart.xAxis.valueFormatter = object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String { return "" }
+        }
 
-         for (i in 0 until data.size - 1) {
-             // 计算 X 和 Y 坐标
-             val startX = (i * pointSpacing).toFloat()
-             val startY = data[i] * 5  // 将数据映射到 Y 轴高度
-             val stopX = ((i + 1) * pointSpacing).toFloat()
-             val stopY = data[i + 1] * 5  // 同上
-             // 如果存在上次绘制的结束位置，则将其连接到新绘制的部分
-             canvas.drawLine(startY, startX, stopY, stopX, paint)
-         }
+        // 绘制当前页的数据
+        val segment = currentPageData.mapIndexed { index, value ->
+            Entry(index.toFloat(), value)
+        }
+        val dataSet = LineDataSet(segment, "ETCO2")
+        dataSet.lineWidth = 1f
+        dataSet.color = Color.BLACK
+        dataSet.setDrawCircles(false) // 不绘制圆点
+        val lineData = LineData(dataSet)
+        copyLineChart.data = lineData
+        copyLineChart.invalidate()
+        copyLineChart.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+        )
+        copyLineChart.layout(0, 0, width, height)
+        copyLineChart.draw(canvas)
 
-         return bitmap
-     }
+        // 输出bitmap到热熔打印机
+        return currentPageBitmap
+    }
 }
