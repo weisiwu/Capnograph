@@ -59,12 +59,18 @@ class MainActivity : BaseActivity() {
         try {
             // 从用户偏好里读取默认打印设置
             val printSetting: PrintSetting = localStorageKit.loadPrintSettingFromPreferences(this)
+
             printSetting.hospitalName?.let { viewModel.updatePdfHospitalName(it) }
+            printSetting.name?.let { viewModel.updatePatientName(it) }
+            printSetting.gender?.let { viewModel.updatePatientGender(
+                if(it == getString(R.string.etco2table_male)) GENDER.MALE else GENDER.FORMALE)
+            }
+            printSetting.age?.let { viewModel.updatePatientAge(it) }
             printSetting.reportName?.let { viewModel.updatePdfReportName(it) }
             printSetting.isPDF.let { viewModel.updateIsPDF(it) }
-            printSetting.pdfDepart?.let { viewModel.updatePdfDepart(it) }
-            printSetting.pdfBedNumber?.let { viewModel.updatePdfBedNumber(it) }
-            printSetting.pdfIDNumber?.let { viewModel.updatePdfIDNumber(it) }
+            printSetting.pdfDepart?.let { viewModel.updatePatientDepartment(it) }
+            printSetting.pdfBedNumber?.let { viewModel.updatePatientBedNumber(it) }
+            printSetting.pdfIDNumber?.let { viewModel.updatePatientID(it) }
         } catch (e: Exception) {
             println("wswTest 从用户偏好里读取默认打印设置异常 : ${e.message}")
             e.printStackTrace()
@@ -99,27 +105,28 @@ class MainActivity : BaseActivity() {
         val context = this
 
         // 如果基础信息没有填写完毕，不允许录播数据
-        if (
-            viewModel.patientName.value == null ||
-            viewModel.patientGender.value == null ||
-            viewModel.patientAge.value == null ||
-            viewModel.patientID.value == null ||
-            viewModel.patientDepartment.value == null ||
-            viewModel.patientBedNumber.value == null
-        ) {
-            viewModel.updateToastData(
-                ToastData(
-                    text = getString(R.string.main_cant_record_msg),
-                    duration = 2000,
-                    showMask = false,
-                    type = ToastType.FAIL,
-                    callback = {
-                        viewModel.updateToastData(null)
-                    }
-                )
-            )
-            return
-        }
+        // TODO:(wsw) 临时删除，防止拦截
+        // if (
+        //     viewModel.patientName.value == null ||
+        //     viewModel.patientGender.value == null ||
+        //     viewModel.patientAge.value == null ||
+        //     viewModel.patientID.value == null ||
+        //     viewModel.patientDepartment.value == null ||
+        //     viewModel.patientBedNumber.value == null
+        // ) {
+        //     viewModel.updateToastData(
+        //         ToastData(
+        //             text = getString(R.string.main_cant_record_msg),
+        //             duration = 2000,
+        //             showMask = false,
+        //             type = ToastType.FAIL,
+        //             callback = {
+        //                 viewModel.updateToastData(null)
+        //             }
+        //         )
+        //     )
+        //     return
+        // }
 
         localStorageKit.saveUserPrintSettingToPreferences(
             context = context,
@@ -143,6 +150,7 @@ class MainActivity : BaseActivity() {
                 localStorageKit.saveRecord(
                     context = context,
                     patient = patient,
+                    recordName = "${viewModel.pdfHospitalName.value}_${viewModel.pdfReportName.value}",
                     lineChart = viewModel.lineChart,
                     data = viewModel.totalCO2WavedData.toList(),
                     startTime = startRecordTime ?: LocalDateTime.now(),

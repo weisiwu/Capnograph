@@ -3,7 +3,6 @@ package com.wldmedical.capnoeasy.models
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothDevice
-import android.content.Context
 import android.net.Uri
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.MutableState
@@ -101,24 +100,6 @@ class AppState @Inject constructor() {
     // ETCO2
     val etCO2: MutableState<Float> = mutableFloatStateOf(0f)
 
-    // 病人姓名
-    val patientName: MutableState<String?> = mutableStateOf(null)
-
-    // 性别
-    val patientGender: MutableState<GENDER?> = mutableStateOf(null)
-
-    // 年龄
-    val patientAge: MutableState<Int?> = mutableStateOf(null)
-
-    // ID
-    val patientID: MutableState<String?> = mutableStateOf(null)
-
-    // 科室
-    val patientDepartment: MutableState<String?> = mutableStateOf(null)
-
-    // 病床号
-    val patientBedNumber: MutableState<String?> = mutableStateOf(null)
-
     // 本次记录的所有capnoeasy波形数据, 此数据和app状态相关，所以放在这里。
     var totalCO2WavedData = mutableListOf<CO2WavePointData>()
 
@@ -177,7 +158,7 @@ class AppState @Inject constructor() {
     val moduleName: MutableState<String> = mutableStateOf("CapnoGraph")
 
     /***
-     * PDF相关设置
+     * 打印相关数据
      */
     // 医院名称
     val pdfHospitalName: MutableState<String> = mutableStateOf("")
@@ -188,32 +169,24 @@ class AppState @Inject constructor() {
     // 是否以PDF格式输出
     val isPDF: MutableState<Boolean> = mutableStateOf(true)
 
+    // 病人相关数据都会出现在打印结果中
+    // 病人姓名
+    val patientName: MutableState<String?> = mutableStateOf(null)
+
+    // 性别
+    val patientGender: MutableState<GENDER?> = mutableStateOf(null)
+
+    // 年龄
+    val patientAge: MutableState<Int?> = mutableStateOf(null)
+
+    // ID
+    val patientID: MutableState<String?> = mutableStateOf(null)
+
     // 科室
-    val pdfDepart: MutableState<String> = mutableStateOf("")
+    val patientDepartment: MutableState<String?> = mutableStateOf(null)
 
-    // 床号
-    val pdfBedNumber: MutableState<String> = mutableStateOf("")
-
-    // id号
-    val pdfIDNumber: MutableState<String> = mutableStateOf("")
-
-    /***
-     * 打印相关数据
-     */
-    // 打印设置-地址
-    val printAddress: MutableState<String> = mutableStateOf("")
-
-    // 打印设置-电话
-    val printPhone: MutableState<String> = mutableStateOf("")
-
-    // 打印设置-网址
-    val printUrl: MutableState<String> = mutableStateOf("")
-
-    // 打印设置-是否支持网址二维码
-    val printUrlQRCode: MutableState<Boolean> = mutableStateOf(true)
-
-    // 打印设置-Logo
-    val printLogo: MutableState<Uri?> = mutableStateOf(null)
+    // 病床号
+    val patientBedNumber: MutableState<String?> = mutableStateOf(null)
 
     /***
      * 实时蓝牙设备数据
@@ -496,54 +469,6 @@ class AppStateModel @Inject constructor(
     val isPDF = appState.isPDF
     fun updateIsPDF(newVal: Boolean) {
         appState.isPDF.value = newVal
-    }
-
-    // pdf设置-科室
-    val pdfDepart = appState.pdfDepart
-    fun updatePdfDepart(newVal: String) {
-        appState.pdfDepart.value = newVal
-    }
-
-    // pdf设置-床号
-    val pdfBedNumber = appState.pdfBedNumber
-    fun updatePdfBedNumber(newVal: String) {
-        appState.pdfBedNumber.value = newVal
-    }
-
-    // pdf设置-医院名称
-    val pdfIDNumber = appState.pdfIDNumber
-    fun updatePdfIDNumber(newVal: String) {
-        appState.pdfIDNumber.value = newVal
-    }
-
-    // 打印设置-地址
-    val printAddress = appState.printAddress
-    fun updatePrintAddress(newVal: String) {
-        appState.printAddress.value = newVal
-    }
-
-    // 打印设置-电话
-    val printPhone = appState.printPhone
-    fun updatePrintPhone(newVal: String) {
-        appState.printPhone.value = newVal
-    }
-
-    // 打印设置-网址
-    val printUrl = appState.printUrl
-    fun updatePrintUrl(newVal: String) {
-        appState.printUrl.value = newVal
-    }
-
-    // 打印设置-是否支持网址二维码
-    val printUrlQRCode = appState.printUrlQRCode
-    fun updatePrintUrlQRCode(newVal: Boolean) {
-        appState.printUrlQRCode.value = newVal
-    }
-
-    // 打印设置-Logo
-    val printLogo = appState.printLogo
-    fun updatePrintLogo(newVal: Uri?) {
-        appState.printLogo.value = newVal
     }
 
     // 附近蓝牙设备-扫描结果

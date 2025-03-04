@@ -78,6 +78,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
         }
     }
 
+    // 保存PDF文件
     override fun onSavePDFClick() {
         if (this.sourceFilePath.isNotEmpty()) {
             createPdfDocument()

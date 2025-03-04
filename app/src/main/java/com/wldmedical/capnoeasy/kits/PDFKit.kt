@@ -37,6 +37,10 @@ import java.io.FileOutputStream
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.CountDownLatch
 
+// 使用支持中文的字体
+val fontPath = "assets/fonts/SimSun.ttf"
+val baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
+
 class SaveChartToPdfTask(
     private val originalLineChart: LineChart,
     private val data: List<CO2WavePointData>,
@@ -47,16 +51,13 @@ class SaveChartToPdfTask(
     private val onComplete: (Boolean) -> Unit // 添加回调
 ) : AsyncTask<Void, Void, Boolean>() {
 
-    private lateinit var bitmap: Bitmap
     private val latch = CountDownLatch(1) // 添加 CountDownLatch
-    // 使用支持中文的字体
-    val fontPath = "assets/fonts/SimSun.ttf"
-    val baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
 
     // 复制图表，并将整体数据切分为段落渲染为bitmap
     override fun onPreExecute() {
         Handler(Looper.getMainLooper()).post {
             try {
+                println("wswTest 保存的pdf位置 ${filePath}")
                 savePDF(filePath)
                 latch.countDown()
             } catch (e: Exception) {
@@ -159,17 +160,17 @@ class SaveChartToPdfTask(
         table.setWidths(floatArrayOf(1f, 1f, 1f))
 
         // 添加表头单元格
-        val nameCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_name)}${record?.patient?.name ?: ""}", contentFont))
+        val nameCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_name)}${printSetting?.name ?: ""}", contentFont))
         nameCell.horizontalAlignment = Element.ALIGN_CENTER
         nameCell.border = Rectangle.NO_BORDER
         table.addCell(nameCell)
 
-        val genderCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_gender)}${record?.patient?.gender?.title ?: ""}", contentFont))
+        val genderCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_gender)}${printSetting?.gender ?: ""}", contentFont))
         genderCell.horizontalAlignment = Element.ALIGN_CENTER
         genderCell.border = Rectangle.NO_BORDER
         table.addCell(genderCell)
 
-        val ageCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_age)}${record?.patient?.age ?: ""}", contentFont))
+        val ageCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_age)}${printSetting?.age ?: ""}", contentFont))
         ageCell.horizontalAlignment = Element.ALIGN_CENTER
         ageCell.border = Rectangle.NO_BORDER
         table.addCell(ageCell)
@@ -193,7 +194,6 @@ class SaveChartToPdfTask(
         document.add(table)
     }
 
-    // TODO:(wsw) 这里需要调整ETCO2的取值逻辑
     private fun addPDFETCO2(document: Document) {
         val contentFont = Font(baseFont, 12f, Font.NORMAL)
 
@@ -206,6 +206,7 @@ class SaveChartToPdfTask(
         table.widthPercentage = 100f
         table.setWidths(floatArrayOf(1f, 1f))
 
+        // TODO: 目前这个是假货
         val ETCO2Cell = PdfPCell(Paragraph("ETCO2：${23.4 ?: ""}", contentFont))
         ETCO2Cell.horizontalAlignment = Element.ALIGN_CENTER
         ETCO2Cell.border = Rectangle.NO_BORDER
@@ -292,8 +293,8 @@ class SaveChartToPdfTask(
         val segment = currentPageData.map {
             Entry(it.index.toFloat(), it.co2)
         }
-        val dataSet = LineDataSet(segment, "")
-        dataSet.lineWidth = 0.5f
+        val dataSet = LineDataSet(segment, "ETCO2")
+        dataSet.lineWidth = 1f
         dataSet.setDrawCircles(false) // 不绘制圆点
         val lineData = LineData(dataSet)
         copyLineChart.data = lineData
@@ -329,7 +330,6 @@ class SaveChartToPdfTask(
         table.addCell(doctorCell)
 
         val formatter = DateTimeFormatter.ofPattern(getString(R.string.pdf_date_format))
-//        val startTimeStr = if (record?.startTime != null) record.startTime.format(formatter) else ""
         val endTimeStr = if (record?.endTime != null) record.endTime.format(formatter) else ""
         val timeCell = PdfPCell(Paragraph("${getString(R.string.pdf_report_time)}${endTimeStr}", contentFont))
         timeCell.horizontalAlignment = Element.ALIGN_CENTER
@@ -386,10 +386,10 @@ fun saveChartToPdfInBackground(
     printSetting: PrintSetting? = null,
     record: Record? = null
 ) {
-    val reverseData = data.asReversed()
+//    val reverseData = data.asReversed()
     SaveChartToPdfTask(
         lineChart,
-        data = reverseData,
+        data = data,
         filePath = filePath,
         record = record,
         maxETCO2 = maxETCO2,
@@ -414,7 +414,7 @@ class SaveChartToPreviewPdfTask(
     override fun onPreExecute() {
         Handler(Looper.getMainLooper()).post {
             try {
-                convertBitmapToPdf(filePath)
+                savePDF(filePath)
                 latch.countDown()
             } catch (e: Exception) {
                 println("wswTest 遇到了错误")
@@ -446,48 +446,7 @@ class SaveChartToPreviewPdfTask(
         onComplete(result) // 调用回调函数
     }
 
-    private fun addRepeatedWatermark(writer: PdfWriter, pageSize: Rectangle) {
-        val fontPath = "assets/fonts/SimSun.ttf" // 确保路径正确
-        val baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
-        val fontSize = 24f
-
-        val text = "万联达仪器"
-        val watermarkWidth = baseFont.getWidthPoint(text, fontSize) // 计算文本宽度
-        val watermarkHeight = fontSize * 1.2f // 粗略计算文本高度
-        val rotation = 45f // 旋转角度
-
-        val xSpacing = watermarkWidth * 2f // 水印之间的水平间距
-        val ySpacing = watermarkHeight * 5f  // 水印之间的垂直间距
-
-        val startX = -pageSize.width / 4 // 起始位置
-        val startY = -pageSize.height / 4 // 起始位置
-
-        val canvas = writer.directContentUnder
-
-        // 设置字体透明度
-        val gState = PdfGState()
-        gState.setFillOpacity(0.3f) // 设置填充透明度，0.0（完全透明）到 1.0（不透明）
-        gState.setStrokeOpacity(0.3f) // 设置描边透明度（可选）
-
-        // 应用透明度
-        canvas.saveState()
-        canvas.setGState(gState)
-
-        canvas.beginText()
-        canvas.setFontAndSize(baseFont, fontSize)
-
-        for (x in generateSequence(startX) { it + xSpacing }.takeWhile { it < pageSize.width * 1.5 }) {
-            for (y in generateSequence(startY) { it + ySpacing }.takeWhile { it < pageSize.height * 1.5 }) {
-                canvas.showTextAligned(Element.ALIGN_CENTER, text, x, y, rotation)
-            }
-        }
-
-        canvas.endText()
-        // 恢复状态（必须与 saveState 成对出现）
-        canvas.restoreState()
-    }
-
-    private fun convertBitmapToPdf(filePath: String) {
+    private fun savePDF(filePath: String) {
         val document = Document()
         try {
             val writer = PdfWriter.getInstance(document, FileOutputStream(filePath))
@@ -530,8 +489,9 @@ class SaveChartToPreviewPdfTask(
                 val segment = currentPageData.map {
                     Entry(it.index.toFloat(), it.co2)
                 }
+
                 val dataSet = LineDataSet(segment, "ETCO2")
-                dataSet.lineWidth = 2f
+                dataSet.lineWidth = 1f
                 dataSet.setDrawCircles(false) // 不绘制圆点
                 val lineData = LineData(dataSet)
                 copyLineChart.data = lineData
@@ -554,9 +514,6 @@ class SaveChartToPreviewPdfTask(
                 )
 
                 document.add(image)
-
-                // 添加重复水印
-                // addRepeatedWatermark(writer, document.pageSize)
 
                 // 结束当前页
                 document.newPage()

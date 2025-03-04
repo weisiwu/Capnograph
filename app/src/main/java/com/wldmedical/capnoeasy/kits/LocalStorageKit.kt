@@ -224,16 +224,6 @@ class LocalStorageKit @Inject constructor(
 
     val database = application.database
 
-    // 将字符串解析为 LocalDateTime 对象
-    fun handleTime(str: String): LocalDateTime? {
-        try {
-            return LocalDateTime.parse(str, formatter)
-        } catch (e: DateTimeParseException) {
-            println("Invalid date time format: ${e.message}") // 捕获并处理解析异常
-            return null
-        }
-    }
-
     /***
      * 保存病人
      * 在主页填写了病人信息并点击记录时候调用
@@ -255,6 +245,7 @@ class LocalStorageKit @Inject constructor(
         context: Context? = null,
         patient: Patient,
         startTime: LocalDateTime,
+        recordName: String = "",
         data: List<CO2WavePointData> = listOf(),
         endTime: LocalDateTime,
         maxETCO2: Float = 0f,
@@ -262,7 +253,6 @@ class LocalStorageKit @Inject constructor(
     ) {
         withContext(Dispatchers.IO) {
             val dateIndex = generateDateIndex(startTime)
-            val timeIndex = generateTimeIndex(startTime)
             val patientIndex = generatePatientIndex(patient)
             var pdfFilePath: String? = null
             var previewPdfFilePath: String? = null
@@ -271,12 +261,12 @@ class LocalStorageKit @Inject constructor(
             if (context != null) {
                 pdfFilePath = File(
                     context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
-                    "${patientIndex}_${dateIndex}${timeIndex}.pdf"
+                    "${recordName}_${patient.name}_${patient.gender.title}_${patient.age}_${startTime.format(formatter)}.pdf"
                 ).absolutePath
 
                 previewPdfFilePath = File(
                     context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
-                    "${patientIndex}_${dateIndex}${timeIndex}_preview.pdf"
+                    "${recordName}_${patient.name}_${patient.gender.title}_${patient.age}_${startTime.format(formatter)}_preview.pdf"
                 ).absolutePath
             }
 
@@ -292,23 +282,23 @@ class LocalStorageKit @Inject constructor(
             )
 
             if (pdfFilePath != null && lineChart != null) {
-                println("wswTest 保存pdf文件的地址是什么 ${pdfFilePath}")
-                saveChartToPdfInBackground(
+                 saveChartToPdfInBackground(
+                     lineChart = lineChart,
+                     data = data,
+                     filePath = pdfFilePath,
+                     record = record,
+                     maxETCO2 = maxETCO2,
+                     printSetting = printSetting
+                 )
+            }
+
+            if (previewPdfFilePath != null && lineChart != null) {
+                saveChartToPreviewPDFInBackground(
                     lineChart = lineChart,
                     data = data,
-                    filePath = pdfFilePath,
-                    record = record,
-                    maxETCO2 = maxETCO2,
-                    printSetting = printSetting
+                    segmentSize = maxXPoints,
+                    filePath = previewPdfFilePath,
                 )
-                if (previewPdfFilePath != null) {
-                    saveChartToPreviewPDFInBackground(
-                        lineChart = lineChart,
-                        data = data,
-                        segmentSize = maxXPoints,
-                        filePath = previewPdfFilePath,
-                    )
-                }
             }
 
             database.recordDao().insertRecord(record)

@@ -259,7 +259,6 @@ open class BaseActivity : ComponentActivity() {
         localStorageKit = LocalStorageKitManager.localStorageKit
 
         val language = localStorageKit.loadUserLanguageFromPreferences(this)
-        println("wswTest language ${language}")
         viewModel.updateLanguage(language, this)
 
         enableEdgeToEdge()
