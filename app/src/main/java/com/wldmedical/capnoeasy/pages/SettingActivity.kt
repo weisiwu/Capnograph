@@ -80,7 +80,17 @@ class SettingActivity : BaseActivity() {
                             viewModel.updateLoadingData(
                                 LoadingData(
                                     text = getString(R.string.setting_shutdown),
-                                    duration = InfinityDuration,
+                                    duration = 3000,
+                                    callback = {
+                                        // 关机成功自然消除掉回调
+                                        viewModel.updateToastData(
+                                            ToastData(
+                                                text = getString(R.string.setting_shutdown_fail),
+                                                showMask = false,
+                                                duration = 800,
+                                            )
+                                        )
+                                    }
                                 )
                             )
                             blueToothKit.shutdown() {

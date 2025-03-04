@@ -137,6 +137,7 @@ class BlueToothKit @Inject constructor(
     /******************* 属性 *******************/
     // 获取主线程的 Handler
     val handler = Handler(Looper.getMainLooper())
+    private var checkInitRunnable: Runnable? = null // 保存 Runnable 的引用
 
     val taskQueue = BluetoothTaskQueue()
 
@@ -159,6 +160,10 @@ class BlueToothKit @Inject constructor(
             data!!,
             type
         )
+        if (result == 4) {
+            connectedCapnoEasy.value = null
+            taskQueue.executeAllTasks()
+        }
         println("wswTest result $result")
     }
 
@@ -196,12 +201,16 @@ class BlueToothKit @Inject constructor(
         // 设备是否成功链接
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+            println("wswTest 设备新装填 $newState")
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     gatt.discoverServices()
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
+                    println("wswTest 设备断开链接")
                     // 设备已断开连接
+                    connectedCapnoEasy.value = null
+                    taskQueue.executeAllTasks()
                 }
                 else -> {
                     // 其他状态
@@ -279,7 +288,7 @@ class BlueToothKit @Inject constructor(
 
                 // 将任务注册进入，等待onCharacteristicWrite回调触发任务队列
                 // 使用 Handler 和 Runnable 实现循环检查
-                handler.post(object : Runnable {
+                checkInitRunnable = object : Runnable {
                     override fun run() {
                         Log.d("initCapnoEasyConection", "wswTest Checking initialization status...")
 
@@ -290,6 +299,8 @@ class BlueToothKit @Inject constructor(
                             sendContinuous()
                             // 返回首页&&保存配对设备信息到本地
                             onDeviceConnectSuccess?.invoke(connectedCapnoEasy.value)
+
+                            checkInitRunnable?.let { handler.removeCallbacks(it) }
                             return // 退出循环
                         } else {
                             // 至少有一个属性为 false，继续循环检查
@@ -302,7 +313,8 @@ class BlueToothKit @Inject constructor(
                             handler.postDelayed(this, 100)
                         }
                     }
-                })
+                }
+                handler.post(checkInitRunnable!!)
             }
         }
 
@@ -890,8 +902,10 @@ class BlueToothKit @Inject constructor(
                     sendSavedData()
                 },
                 Runnable { sendContinuous() },
-                Runnable { connectedCapnoEasy.value = null },
-                Runnable { callback?.invoke() }
+                Runnable {
+                    checkInitRunnable?.let { handler.removeCallbacks(it) }
+                },
+                Runnable { callback?.invoke() },
             )
         )
         taskQueue.executeTask()

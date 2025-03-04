@@ -68,6 +68,7 @@
     <string name="setting_screen_constant_success">Screen Constant Setting Success</string>
     <string name="setting_shutdown">Shutting Down</string>
     <string name="setting_shutdown_success">Shutdown Success</string>
+    <string name="setting_shutdown_fail">Shutdown Failed</string>
     <!-- SplashActivity.kt-->
     <string name="splash_company_name">WLD Medical</string>
     <!-- SystemSettingActivity.kt-->
