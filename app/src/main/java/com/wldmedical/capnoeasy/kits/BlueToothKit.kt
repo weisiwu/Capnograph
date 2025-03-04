@@ -286,35 +286,38 @@ class BlueToothKit @Inject constructor(
                     currentGatt!!.setCharacteristicNotification(filterList[0], true)
                 }
 
+                // 所有初始化完成，执行后续操作
+                sendContinuous()
+                // 返回首页&&保存配对设备信息到本地
+                onDeviceConnectSuccess?.invoke(connectedCapnoEasy.value)
+
+                initCapnoEasyConection()
+
                 // 将任务注册进入，等待onCharacteristicWrite回调触发任务队列
                 // 使用 Handler 和 Runnable 实现循环检查
-                checkInitRunnable = object : Runnable {
-                    override fun run() {
-                        Log.d("initCapnoEasyConection", "wswTest Checking initialization status...")
-
-                        // 检查三个属性是否都为 true
-                        if (isSettingInit && isExpandInit && isSoftInfoInit) {
-                            Log.d("initCapnoEasyConection", "wswTest All initialization completed!")
-                            // 所有初始化完成，执行后续操作
-                            sendContinuous()
-                            // 返回首页&&保存配对设备信息到本地
-                            onDeviceConnectSuccess?.invoke(connectedCapnoEasy.value)
-
-                            checkInitRunnable?.let { handler.removeCallbacks(it) }
-                            return // 退出循环
-                        } else {
-                            // 至少有一个属性为 false，继续循环检查
-                            Log.d("initCapnoEasyConection", "wswTest Initialization not completed yet. isSettingInit: $isSettingInit, isExpandInit: $isExpandInit, isSoftInfoInit: $isSoftInfoInit")
-                            if (taskQueue.taskQueueSize == 0) {
-                                initCapnoEasyConection()
-                            }
-                            taskQueue.executeTask()
-                            // 延迟 500 毫秒后再次执行
-                            handler.postDelayed(this, 100)
-                        }
-                    }
-                }
-                handler.post(checkInitRunnable!!)
+//                checkInitRunnable = object : Runnable {
+//                    override fun run() {
+//                        Log.d("initCapnoEasyConection", "wswTest Checking initialization status...")
+//
+//                        // 检查三个属性是否都为 true
+//                        if (isSettingInit && isExpandInit && isSoftInfoInit) {
+//                            Log.d("initCapnoEasyConection", "wswTest All initialization completed!")
+//
+//                            checkInitRunnable?.let { handler.removeCallbacks(it) }
+//                            return // 退出循环
+//                        } else {
+//                            // 至少有一个属性为 false，继续循环检查
+//                            Log.d("initCapnoEasyConection", "wswTest Initialization not completed yet. isSettingInit: $isSettingInit, isExpandInit: $isExpandInit, isSoftInfoInit: $isSoftInfoInit")
+//                            if (taskQueue.taskQueueSize == 0) {
+//                                initCapnoEasyConection()
+//                            }
+//                            taskQueue.executeTask()
+//                            // 延迟 500 毫秒后再次执行
+//                            handler.postDelayed(this, 100)
+//                        }
+//                    }
+//                }
+//                handler.post(checkInitRunnable!!)
             }
         }
 
@@ -346,6 +349,7 @@ class BlueToothKit @Inject constructor(
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
+            println("wswTEst 是否成功了 ${status}")
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 taskQueue.executeTask()
             }
@@ -763,74 +767,112 @@ class BlueToothKit @Inject constructor(
     // 链接上CapnoEasy后，需要尽快发送初始化信息，否则会断开
     @SuppressLint("MissingPermission")
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private fun initCapnoEasyConection() {
+    fun initCapnoEasyConection(getSystemInfo: Boolean = false) {
         // 写服务注册就绪，开始发送设备初初始化命令
         val filterList = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLESendDataCha.value }
         // 发送数据
         if (filterList.isNotEmpty()) {
             sendDataCharacteristic.add(filterList[0])
-            taskQueue.addTasks(
-                listOf(
-                    // 读取单位前，必须要先停止设置
-                    Runnable { sendStopContinuous() },
-                    // 显示设置
-                    Runnable { if (!isExpandInit) updateCO2Unit(CO2_UNIT.MMHG) },
-                    Runnable { if (!isExpandInit) updateCO2Scale(CO2_SCALE.MIDDLE) },
-                    // 模块设置
-                    Runnable { if (!isExpandInit) updateNoBreath(asphyxiationTime) },
-                    Runnable { if (!isExpandInit) updateGasCompensation(oxygenCompensation) },
-                    // 报警设置
-                    Runnable { if (!isExpandInit) innerUpdateAlertRange(10f,20f, 10, 20) },
-                    // 拉取设备信息
-                    Runnable {
-                        if (!isSettingInit) {
+            if (getSystemInfo) {
+                taskQueue.addTasks(
+                    listOf(
+                        // 读取单位前，必须要先停止设置
+                        Runnable { sendStopContinuous() },
+                        // 拉取设备信息
+                        Runnable {
                             // ISB=1 大气压
                             sendArray.add(SensorCommand.Settings.value.toByte())
                             sendArray.add(0x02)
                             sendArray.add(ISBState84H.AirPressure.value.toByte())
                             sendSavedData()
-                        }
-                    },
-                    Runnable {
-                        if (!isSettingInit) {
+                        },
+                        Runnable {
                             // ISB=21
                             sendArray.add(SensorCommand.Settings.value.toByte())
                             sendArray.add(0x02)
                             sendArray.add(ISBState84H.GetHardWareRevision.value.toByte())
                             sendSavedData()
-                        }
-                    },
-                    Runnable {
-                        if (!isSettingInit) {
+                        },
+                        Runnable {
                             // ISB=20
                             sendArray.add(SensorCommand.Settings.value.toByte())
                             sendArray.add(0x02)
                             sendArray.add(ISBState84H.GetSerialNumber.value.toByte())
                             sendSavedData()
-                        }
-                    },
-                    Runnable {
-                        if (!isSettingInit) {
+                        },
+                        Runnable {
                             // ISB=18
                             sendArray.add(SensorCommand.Settings.value.toByte())
                             sendArray.add(0x02)
                             sendArray.add(ISBState84H.GetSensorPartNumber.value.toByte())
                             sendSavedData()
-                        }
-                    },
-                    // 获取软件版本
-                    Runnable {
-                        if (!isSoftInfoInit) {
+                        },
+                        // 获取软件版本
+                        Runnable {
                             sendArray.add(SensorCommand.GetSoftwareRevision.value.toByte())
                             sendArray.add(0x02)
                             sendArray.add(0x00)
                             sendSavedData()
-                        }
-                    },
-                    // 设置结束后，开始尝试接受数据
-                    Runnable { sendContinuous() },
+                        },
+                        // 设置结束后，开始尝试接受数据
+                        Runnable { sendContinuous() },
+                    )
                 )
-            )
+                taskQueue.executeTask()
+            } else {
+                taskQueue.addTasks(
+                    listOf(
+                        // 读取单位前，必须要先停止设置
+                        Runnable { sendStopContinuous() },
+                        // 显示设置
+                        Runnable { updateCO2Unit(CO2_UNIT.MMHG) },
+                        Runnable { updateCO2Scale(CO2_SCALE.MIDDLE) },
+                        // 模块设置
+                        Runnable { updateNoBreath(asphyxiationTime) },
+                        Runnable { updateGasCompensation(oxygenCompensation) },
+                        // 报警设置
+                        Runnable { innerUpdateAlertRange(10f,20f, 10, 20) },
+                        // 拉取设备信息
+                        Runnable {
+                            // ISB=1 大气压
+                            sendArray.add(SensorCommand.Settings.value.toByte())
+                            sendArray.add(0x02)
+                            sendArray.add(ISBState84H.AirPressure.value.toByte())
+                            sendSavedData()
+                        },
+                        Runnable {
+                            // ISB=21
+                            sendArray.add(SensorCommand.Settings.value.toByte())
+                            sendArray.add(0x02)
+                            sendArray.add(ISBState84H.GetHardWareRevision.value.toByte())
+                            sendSavedData()
+                        },
+                        Runnable {
+                            // ISB=20
+                            sendArray.add(SensorCommand.Settings.value.toByte())
+                            sendArray.add(0x02)
+                            sendArray.add(ISBState84H.GetSerialNumber.value.toByte())
+                            sendSavedData()
+                        },
+                        Runnable {
+                            // ISB=18
+                            sendArray.add(SensorCommand.Settings.value.toByte())
+                            sendArray.add(0x02)
+                            sendArray.add(ISBState84H.GetSensorPartNumber.value.toByte())
+                            sendSavedData()
+                        },
+                        // 获取软件版本
+                        Runnable {
+                            sendArray.add(SensorCommand.GetSoftwareRevision.value.toByte())
+                            sendArray.add(0x02)
+                            sendArray.add(0x00)
+                            sendSavedData()
+                        },
+                        // 设置结束后，开始尝试接受数据
+                        Runnable { sendContinuous() },
+                    )
+                )
+            }
         }
     }
 

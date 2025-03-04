@@ -1,5 +1,8 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.os.Build
+import android.os.Bundle
+import androidx.annotation.RequiresApi
 import com.wldmedical.capnoeasy.getString
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +45,21 @@ class SystemSettingActivity : BaseActivity() {
         // 存储到本地，启动的时候读取
         val language = if (newLanguage == LanguageTypes.CHINESE) "zh" else "en"
         localStorageKit.saveUserLanguageToPreferences(context = this, language)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (
+            blueToothKit.sHardwareVersion.value.isEmpty() ||
+            blueToothKit.sSoftwareVersion.value.isEmpty() ||
+            blueToothKit.productionDate.value.isEmpty() ||
+            blueToothKit.sSerialNumber.value.isEmpty() ||
+            blueToothKit.deviceName.value.isEmpty()
+        ) {
+            println("wswTest 开始执行任务")
+            blueToothKit.initCapnoEasyConection(true)
+        }
     }
 
     @Composable

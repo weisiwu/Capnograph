@@ -6,23 +6,16 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityOptionsCompat
 import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.DeviceList
-import com.wldmedical.capnoeasy.components.DeviceType
-import com.wldmedical.capnoeasy.components.DeviceTypes
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
-import com.wldmedical.capnoeasy.components.TypeSwitch
 import com.wldmedical.capnoeasy.kits.unkownName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -38,7 +31,6 @@ class SearchActivity : BaseActivity() {
     @RequiresApi(Build.VERSION_CODES.S)
     @Composable
     override fun Content() {
-        val selectedIndex = if (viewModel.connectType.value == null) 0 else DeviceTypes.indexOfFirst { type -> viewModel.connectType.value == type }
         val discoveredPeripherals = viewModel.discoveredPeripherals.collectAsState()
         val options = ActivityOptionsCompat.makeCustomAnimation(this, 0, 0)
         val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
@@ -95,6 +87,8 @@ class SearchActivity : BaseActivity() {
                 )
                 viewModel.updateLoadingData(
                     LoadingData(
+                        cancelable = false,
+                        duration = 10000,
                         text = "${getString(R.string.search_start_connect)}${it.name ?: unkownName}"
                     )
                 )
