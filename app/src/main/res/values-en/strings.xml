@@ -26,6 +26,8 @@
     <string name="display_setting_success">Setting Success</string>
     <!-- HistoryRecordDetailActivity.kt-->
     <string name="recorddetail_loading">Loading</string>
+    <string name="recorddetail_print_fail">Fail to print without connected printer</string>
+    <string name="recorddetail_record_fail">Fail to record without connected device</string>
     <!-- MainActivity.kt-->
     <string name="main_record_save_success">Record saved successfully</string>
     <string name="main_record_save_check">Saved records can be viewed in Settings > History Records</string>

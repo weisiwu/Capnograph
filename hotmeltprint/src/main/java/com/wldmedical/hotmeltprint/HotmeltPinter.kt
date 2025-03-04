@@ -7,7 +7,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
-import android.graphics.Paint
 import android.net.Uri
 import android.view.View
 import com.github.mikephil.charting.charts.LineChart
@@ -344,6 +343,10 @@ class HotmeltPinter {
             context,
             axisMaximum
         )
+    }
+
+    fun getConnectState(): Boolean {
+        return printer.getConnectState()
     }
 
     /**

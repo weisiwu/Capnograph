@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import com.github.barteksc.pdfviewer.PDFView
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.kits.filterData
 import com.wldmedical.capnoeasy.recordIdParams
@@ -81,6 +82,17 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     // 保存PDF文件
     override fun onSavePDFClick() {
+        if (blueToothKit.connectedCapnoEasy.value == null) {
+            viewModel.updateToastData(
+                ToastData(
+                    text = getString(R.string.recorddetail_record_fail),
+                    showMask = false,
+                    duration = 1000,
+                )
+            )
+            return
+        }
+
         if (this.sourceFilePath.isNotEmpty()) {
             createPdfDocument()
         }
@@ -89,6 +101,17 @@ class HistoryRecordDetailActivity : BaseActivity() {
     override fun onPrintTicketClick() {
         val currentData = currentRecord?.data ?: return
         if (currentData.isEmpty()) { return }
+
+        if (!blueToothKit.gpPrinterManager.getConnectState()) {
+            viewModel.updateToastData(
+                ToastData(
+                    text = getString(R.string.recorddetail_print_fail),
+                    showMask = false,
+                    duration = 1000,
+                )
+            )
+            return
+        }
 
         // 对波形数据进行过滤
         val filteredData = filterData(currentData, viewModel.CO2Scale.value.value)

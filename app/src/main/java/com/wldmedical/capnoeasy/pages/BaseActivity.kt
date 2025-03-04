@@ -163,10 +163,8 @@ open class BaseActivity : ComponentActivity() {
 
     // 检查是否已经链接上CannoEasy
     public fun checkHasConnectDevice(cb: (() -> Unit)? = null) {
-        if (blueToothKit.connectedCapnoEasy.size > 0) {
-            if (blueToothKit.connectedCapnoEasy[blueToothKit.connectedCapnoEasyIndex] != null) {
-                cb?.invoke()
-            }
+        if (blueToothKit.connectedCapnoEasy.value != null) {
+            cb?.invoke()
         } else {
             viewModel.updateToastData(
                 ToastData(
@@ -230,6 +228,8 @@ open class BaseActivity : ComponentActivity() {
         // 5. 延迟初始化 BlueToothKit
         Handler(Looper.getMainLooper()).postDelayed({
             Log.d("BaseActivity", "Initializing BlueToothKit...")
+            // 已经有设备练级，不再继续初始化
+            if (blueToothKit.connectedCapnoEasy.value != null) return@postDelayed
             BlueToothKitManager.initialize(this, viewModel, true)
             blueToothKit = BlueToothKitManager.blueToothKit
             Log.d("BaseActivity", "BlueToothKit initialized.")
@@ -248,6 +248,7 @@ open class BaseActivity : ComponentActivity() {
         BlueToothKitManager.initialize(this, viewModel)
         blueToothKit = BlueToothKitManager.blueToothKit
 
+        // 重新授权后，初始化
         if (checkBluetoothPermissions()) {
             initializeBlueToothKit()
         }
@@ -260,6 +261,8 @@ open class BaseActivity : ComponentActivity() {
 
         val language = localStorageKit.loadUserLanguageFromPreferences(this)
         viewModel.updateLanguage(language, this)
+
+        println("wswTest 有没有CAPDD ${blueToothKit.connectedCapnoEasy.value}")
 
         enableEdgeToEdge()
         setContent {

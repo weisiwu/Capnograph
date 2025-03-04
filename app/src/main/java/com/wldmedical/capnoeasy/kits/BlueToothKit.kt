@@ -216,7 +216,7 @@ class BlueToothKit @Inject constructor(
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 // 设备成功连接，开始注册服务、特征值
-                connectedCapnoEasyGATT.add(gatt)
+                connectedCapnoEasyGATT.value = gatt
 
                 val services = gatt.services
                 val sortedServices = mutableListOf<BluetoothGattService>()
@@ -289,7 +289,7 @@ class BlueToothKit @Inject constructor(
                             // 所有初始化完成，执行后续操作
                             sendContinuous()
                             // 返回首页&&保存配对设备信息到本地
-                            onDeviceConnectSuccess?.invoke(connectedCapnoEasy[connectedCapnoEasyIndex])
+                            onDeviceConnectSuccess?.invoke(connectedCapnoEasy.value)
                             return // 退出循环
                         } else {
                             // 至少有一个属性为 false，继续循环检查
@@ -385,10 +385,10 @@ class BlueToothKit @Inject constructor(
     public val discoveredPeripherals = mutableListOf<BluetoothDevice>()
 
     // 已链接设备-CapnoEasy
-    public val connectedCapnoEasy = mutableListOf<BluetoothDevice?>()
+    public val connectedCapnoEasy = mutableStateOf<BluetoothDevice?>(null)
 
     // 已链接设备-CapnoEasy GATT
-    public var connectedCapnoEasyGATT = mutableListOf<BluetoothGatt?>()
+    public var connectedCapnoEasyGATT = mutableStateOf<BluetoothGatt?>(null)
 
     // 当前正在展示的capnoEasy设备的序号
     public var connectedCapnoEasyIndex: Int = 0
@@ -399,18 +399,14 @@ class BlueToothKit @Inject constructor(
     // 当前链接设备地址
     public val currentDeviceMacAddress: String?
         get() {
-            val connectDevice = connectedCapnoEasy.getOrNull(connectedCapnoEasyIndex)
+            val connectDevice = connectedCapnoEasy.value
             return connectDevice?.address
         }
 
     // 当前gatt
     public val currentGatt: BluetoothGatt?
         get() {
-            if (connectedCapnoEasyGATT.size != 0) {
-                return connectedCapnoEasyGATT.getOrNull(connectedCapnoEasyIndex)
-                return connectedCapnoEasyGATT?.find { it?.device?.address == currentDeviceMacAddress }
-            }
-            return null
+            return connectedCapnoEasyGATT.value
         }
 
     val currentSendDataService: BluetoothGattService?
@@ -872,7 +868,7 @@ class BlueToothKit @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun sendSavedData() {
-        if (connectedCapnoEasyGATT.isEmpty() || currentSendDataCharacteristic == null) {
+        if (connectedCapnoEasyGATT.value == null || currentSendDataCharacteristic == null) {
             resetSendData()
             return
         }
@@ -894,6 +890,7 @@ class BlueToothKit @Inject constructor(
                     sendSavedData()
                 },
                 Runnable { sendContinuous() },
+                Runnable { connectedCapnoEasy.value = null },
                 Runnable { callback?.invoke() }
             )
         )
@@ -1000,8 +997,6 @@ class BlueToothKit @Inject constructor(
             }
             sendSavedData()
         }
-
-        // TODO: 待添加对wfSpeed的支持
     }
 
     /** 调整ETCO2/RR的报警范围 */
@@ -1103,13 +1098,7 @@ class BlueToothKit @Inject constructor(
     }
 
     // 链接经典耗蓝牙
-    private fun connectClassicDevice(device: BluetoothDevice) {
-        // val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter?.bondedDevices
-        // pairedDevices?.forEach { device ->
-        //     val deviceName = device.name
-        //     val deviceHardwareAddress = device.address // MAC address
-        // }
-    }
+    private fun connectClassicDevice(device: BluetoothDevice) {}
 
     // 链接蓝牙设备
     @SuppressLint("MissingPermission")
@@ -1123,7 +1112,7 @@ class BlueToothKit @Inject constructor(
         onDeviceConnectSuccess = onSuccess
 
         // 已连接设备中，存在相同mac地址的，放弃保存
-        val isSaved = connectedCapnoEasy.find { it?.address  == device.address } != null
+        val isSaved = connectedCapnoEasy.value?.address == device.address
 
         if (isSaved) {
             return
@@ -1133,11 +1122,11 @@ class BlueToothKit @Inject constructor(
         // 这里做了兼容：我的一加手机会把BLE设备偶尔识别为未知类型
         if (device.type == DEVICE_TYPE_LE || device.type == DEVICE_TYPE_UNKNOWN) {
             connectBleDevice(device)
-            connectedCapnoEasy.add(device)
+            connectedCapnoEasy.value = device
             receivedCO2WavedDataMap[device.address] = mutableListOf()
         } else if (device.type == DEVICE_TYPE_CLASSIC) {
             connectClassicDevice(device)
-            connectedCapnoEasy.add(device)
+            connectedCapnoEasy.value = device
             receivedCO2WavedDataMap[device.address] = mutableListOf()
         }
     }

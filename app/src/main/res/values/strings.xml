@@ -17,7 +17,7 @@
     <string name="alertsetting_is_setting">正在设置</string>
     <string name="alertsetting_setting_success">设置成功</string>
     <!-- BaseActivity.kt-->
-    <string name="base_noconnect_msg">未连接设备，请链接后再试</string>
+    <string name="base_noconnect_msg">未连接设备，请连接后再试</string>
     <string name="base_infobl_msg">请开启蓝牙权限</string>
     <string name="base_go_open">去开启</string>
     <!-- DisplaySettingActivity.kt-->
@@ -26,6 +26,8 @@
     <string name="display_setting_success">设置成功</string>
     <!-- HistoryRecordDetailActivity.kt-->
     <string name="recorddetail_loading">正在加载中</string>
+    <string name="recorddetail_print_fail">打印失败，未连接打印机</string>
+    <string name="recorddetail_record_fail">记录失败，未连接仪器</string>
     <!-- MainActivity.kt-->
     <string name="main_record_save_success">记录保存成功</string>
     <string name="main_record_save_check">保存的记录可在设置>历史记录中查看</string>
@@ -59,7 +61,7 @@
     <string name="search_start">开始搜索</string>
     <string name="search_finish">搜索结束</string>
     <string name="search_fail">搜索失败</string>
-    <string name="search_start_connect">开始链接设备</string>
+    <string name="search_start_connect">开始连接设备</string>
     <!-- SettingActivity.kt-->
     <string name="setting_zeroing">正在校零</string>
     <string name="setting_zeroing_success">成功校零</string>
@@ -141,7 +143,7 @@
     <string name="etco2linechart_unknown_device">未知设备</string>
     <!-- DeviceList -->
     <string name="devicelist_no_devices">附近没有可配对设备！</string>
-    <string name="devicelist_connect">链接</string>
+    <string name="devicelist_connect">连接</string>
     <string name="devicelist_rescan">重新搜索</string>
     <!-- CustomTextField -->
     <string name="customtextfield_yes">是</string>

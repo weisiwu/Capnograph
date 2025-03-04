@@ -86,7 +86,7 @@ fun EtCo2LineChart(
             .background(Color.Transparent)
     ) {
         HorizontalPager(
-            count = blueToothKit.connectedCapnoEasy.size,
+            count = 1,
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
@@ -94,8 +94,8 @@ fun EtCo2LineChart(
         ) { page ->
             blueToothKit.connectedCapnoEasyIndex = pagerState.currentPage
 
-            if (blueToothKit.connectedCapnoEasy.size > 0) {
-                val currentDevice = blueToothKit.connectedCapnoEasy[blueToothKit.connectedCapnoEasyIndex];
+            if (blueToothKit.connectedCapnoEasy.value != null) {
+                val currentDevice = blueToothKit.connectedCapnoEasy.value;
 
                 if (currentDevice != null) {
                     Text(
