@@ -27,6 +27,7 @@ import java.io.IOException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.concurrent.thread
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -369,7 +370,7 @@ class HotmeltPinter {
         currentPageData: List<Float>,
         axisMaximum: Float,
     ): Bitmap {
-        val width = (currentPageData.size / 500) * 1000 // 设置宽度
+        val width = max(500, (currentPageData.size / 500) * 1000) // 设置宽度
         val height = 450 // 设置高度
 
         // 生成当前页的 Bitmap
