@@ -69,6 +69,9 @@
     <string name="setting_shutdown">Shutting Down</string>
     <string name="setting_shutdown_success">Shutdown Success</string>
     <string name="setting_shutdown_fail">Shutdown Failed</string>
+    <string name="setting_shutdown_confirm_msg">Confirm to Shutdown?</string>
+    <string name="setting_shutdown_ok">Yes</string>
+    <string name="setting_shutdown_cancel">No</string>
     <!-- SplashActivity.kt-->
     <string name="splash_company_name">WLD Medical</string>
     <!-- SystemSettingActivity.kt-->

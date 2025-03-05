@@ -69,6 +69,9 @@
     <string name="setting_shutdown">正在关机</string>
     <string name="setting_shutdown_success">关机成功</string>
     <string name="setting_shutdown_fail">关机失败</string>
+    <string name="setting_shutdown_confirm_msg">是否要关机</string>
+    <string name="setting_shutdown_ok">确认</string>
+    <string name="setting_shutdown_cancel">取消</string>
     <!-- SplashActivity.kt-->
     <string name="splash_company_name">万联达信科</string>
     <!-- SystemSettingActivity.kt-->

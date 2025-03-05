@@ -11,6 +11,7 @@ import androidx.core.app.ActivityOptionsCompat
 import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.components.AlertData
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.SettingList
 import com.wldmedical.capnoeasy.components.SettingType
@@ -76,33 +77,45 @@ class SettingActivity : BaseActivity() {
                     }
                     SettingType.SHUTDOWN -> {
                         checkHasConnectDevice {
-                            couldJump = false
-                            viewModel.updateLoadingData(
-                                LoadingData(
-                                    text = getString(R.string.setting_shutdown),
-                                    duration = 3000,
-                                    callback = {
-                                        // 关机成功自然消除掉回调
-                                        viewModel.updateToastData(
-                                            ToastData(
-                                                text = getString(R.string.setting_shutdown_fail),
-                                                showMask = false,
-                                                duration = 800,
+                            viewModel.updateAlertData(
+                                AlertData(
+                                    text = getString(R.string.setting_shutdown_confirm_msg),
+                                    ok_btn_text = getString(R.string.setting_shutdown_ok),
+                                    cancel_btn_text = getString(R.string.setting_shutdown_cancel),
+                                    onCancel = {
+                                        viewModel.updateAlertData(null)
+                                    },
+                                    onOk = {
+                                        couldJump = false
+                                        viewModel.updateLoadingData(
+                                            LoadingData(
+                                                text = getString(R.string.setting_shutdown),
+                                                duration = 3000,
+                                                callback = {
+                                                    // 关机成功自然消除掉回调
+                                                    viewModel.updateToastData(
+                                                        ToastData(
+                                                            text = getString(R.string.setting_shutdown_fail),
+                                                            showMask = false,
+                                                            duration = 800,
+                                                        )
+                                                    )
+                                                }
                                             )
                                         )
+                                        blueToothKit.shutdown() {
+                                            viewModel.clearXData()
+                                            viewModel.updateToastData(
+                                                ToastData(
+                                                    text = getString(R.string.setting_shutdown_success),
+                                                    showMask = false,
+                                                    duration = 800,
+                                                )
+                                            )
+                                        }
                                     }
                                 )
                             )
-                            blueToothKit.shutdown() {
-                                viewModel.clearXData()
-                                viewModel.updateToastData(
-                                    ToastData(
-                                        text = getString(R.string.setting_shutdown_success),
-                                        showMask = false,
-                                        duration = 800,
-                                    )
-                                )
-                            }
                         }
                     }
                 }
