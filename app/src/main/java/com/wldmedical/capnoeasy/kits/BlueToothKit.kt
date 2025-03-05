@@ -46,9 +46,12 @@ import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.text.SimpleDateFormat
@@ -116,15 +119,6 @@ class BlueToothKit @Inject constructor(
     @ActivityContext private val activity: Activity,
     private val appState: AppStateModel
 ) {
-    // 获取系统扩展设置，如硬件、软件版本
-    private var isSettingInit: Boolean = false
-
-    // 报警设置、模块参数等默认初始化
-    private var isExpandInit: Boolean = false
-
-    // 获取软件版本
-    private var isSoftInfoInit: Boolean = false
-
     // 扩展低功耗蓝牙设备属性，全局存储（WeakHashMap 自动管理内存）
     private val deviceExtras = WeakHashMap<BluetoothDevice, BLEDeviceExtra>()
 
@@ -136,8 +130,108 @@ class BlueToothKit @Inject constructor(
 
     /******************* 属性 *******************/
     // 获取主线程的 Handler
-    val handler = Handler(Looper.getMainLooper())
-    private var checkInitRunnable: Runnable? = null // 保存 Runnable 的引用
+    private val handler = Handler(Looper.getMainLooper())
+    private val sendPeriod = 100L // 指令发送间隔，查询设备信息需要多条指令配置，互不依赖
+    private var checkJob: Job? = null
+
+    // 获取设备信息指令，由于该指令失败概率高，所以会周期性发送，直到成功
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun fetchDeviceInfo() {
+        checkJob?.cancel() // 取消之前的任务
+        checkJob = CoroutineScope(Dispatchers.IO).launch {
+            while (true) {
+                println("wswTest 轮训设备信息外层的值 在循环")
+                if (sHardwareVersion.value.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        taskQueue.addTask(
+                            Runnable {
+                                // ISB=21 硬件信息
+                                sendArray.add(SensorCommand.Settings.value.toByte())
+                                sendArray.add(0x02)
+                                sendArray.add(ISBState84H.GetHardWareRevision.value.toByte())
+                                sendSavedData()
+                            }
+                        )
+                        taskQueue.executeTask()
+                    }
+                    delay(sendPeriod)
+                }
+
+                if (oemId.value.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        taskQueue.addTask(
+                            Runnable {
+                                // ISB=19 OEM ID
+                                sendArray.add(SensorCommand.Settings.value.toByte())
+                                sendArray.add(0x02)
+                                sendArray.add(ISBState84H.GetOEMID.value.toByte())
+                                sendSavedData()
+                            }
+                        )
+                        taskQueue.executeTask()
+                    }
+                    delay(sendPeriod)
+                }
+
+                if (sSerialNumber.value.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        taskQueue.addTask(
+                            Runnable {
+                                // ISB=20 序列号
+                                sendArray.add(SensorCommand.Settings.value.toByte())
+                                sendArray.add(0x02)
+                                sendArray.add(ISBState84H.GetSerialNumber.value.toByte())
+                                sendSavedData()
+                            }
+                        )
+                        taskQueue.executeTask()
+                    }
+                    delay(sendPeriod)
+                }
+
+                if (deviceName.value.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        taskQueue.addTask(
+                            Runnable {
+                                // ISB=18 型号
+                                sendArray.add(SensorCommand.Settings.value.toByte())
+                                sendArray.add(0x02)
+                                sendArray.add(ISBState84H.GetSensorPartNumber.value.toByte())
+                                sendSavedData()
+                            }
+                        )
+                        taskQueue.executeTask()
+                    }
+                    delay(sendPeriod)
+                }
+
+                if (sSoftwareVersion.value.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        taskQueue.addTask(
+                            Runnable {
+                                sendArray.add(SensorCommand.GetSoftwareRevision.value.toByte())
+                                sendArray.add(0x02)
+                                sendArray.add(0x00)
+                                sendSavedData()
+                            }
+                        )
+                        taskQueue.executeTask()
+                    }
+                    delay(sendPeriod)
+                }
+
+                if (
+                    sHardwareVersion.value.isNotEmpty() &&
+                    oemId.value.isNotEmpty() &&
+                    sSerialNumber.value.isNotEmpty() &&
+                    deviceName.value.isNotEmpty() &&
+                    sSoftwareVersion.value.isNotEmpty()
+                ) {
+                    break
+                }
+            }
+        }
+    }
 
     val taskQueue = BluetoothTaskQueue()
 
@@ -292,32 +386,6 @@ class BlueToothKit @Inject constructor(
                 onDeviceConnectSuccess?.invoke(connectedCapnoEasy.value)
 
                 initCapnoEasyConection()
-
-                // 将任务注册进入，等待onCharacteristicWrite回调触发任务队列
-                // 使用 Handler 和 Runnable 实现循环检查
-//                checkInitRunnable = object : Runnable {
-//                    override fun run() {
-//                        Log.d("initCapnoEasyConection", "wswTest Checking initialization status...")
-//
-//                        // 检查三个属性是否都为 true
-//                        if (isSettingInit && isExpandInit && isSoftInfoInit) {
-//                            Log.d("initCapnoEasyConection", "wswTest All initialization completed!")
-//
-//                            checkInitRunnable?.let { handler.removeCallbacks(it) }
-//                            return // 退出循环
-//                        } else {
-//                            // 至少有一个属性为 false，继续循环检查
-//                            Log.d("initCapnoEasyConection", "wswTest Initialization not completed yet. isSettingInit: $isSettingInit, isExpandInit: $isExpandInit, isSoftInfoInit: $isSoftInfoInit")
-//                            if (taskQueue.taskQueueSize == 0) {
-//                                initCapnoEasyConection()
-//                            }
-//                            taskQueue.executeTask()
-//                            // 延迟 500 毫秒后再次执行
-//                            handler.postDelayed(this, 100)
-//                        }
-//                    }
-//                }
-//                handler.post(checkInitRunnable!!)
             }
         }
 
@@ -567,6 +635,9 @@ class BlueToothKit @Inject constructor(
 
     // 设备名称
     public var deviceName: MutableState<String> = mutableStateOf("")
+
+    // 设备制造商ID
+    public var oemId: MutableState<String> = mutableStateOf("")
 
     // 设备序列号
     public var sSerialNumber: MutableState<String> = mutableStateOf("")
@@ -873,6 +944,8 @@ class BlueToothKit @Inject constructor(
                     )
                 )
             }
+            // 间隔轮训设备信息
+            fetchDeviceInfo()
         }
     }
 
@@ -944,9 +1017,6 @@ class BlueToothKit @Inject constructor(
                     sendSavedData()
                 },
                 Runnable { sendContinuous() },
-                Runnable {
-                    checkInitRunnable?.let { handler.removeCallbacks(it) }
-                },
                 Runnable { callback?.invoke() },
             )
         )
@@ -1386,11 +1456,15 @@ class BlueToothKit @Inject constructor(
         when (data[2].toUByte().toInt() and 0xFF) { // 使用 Int 类型进行比较
             ISBState84H.GetSensorPartNumber.value -> {
                 deviceName.value = ""
-                for (i in 0..9) {
-                    val uScalar = (data[i].toUByte().toInt()+ 3) and 0xFF
+                for (i in 3..12) {
+                    val uScalar = (data[i].toUByte().toInt()) and 0xFF
                     deviceName.value += uScalar.toChar().toString() // 使用 toChar() 转换为字符
                 }
-                isSettingInit = true
+            }
+            ISBState84H.GetOEMID.value -> {
+                oemId.value = ""
+                val uScalar = data[3].toUByte().toInt()
+                oemId.value = uScalar.toString(16).uppercase()
             }
             ISBState84H.GetSerialNumber.value -> {
                 val DB1 = data[3].toUByte().toInt().toDouble() * 2.0.pow(28)
@@ -1400,14 +1474,12 @@ class BlueToothKit @Inject constructor(
                 val DB5 = data[7].toUByte().toInt().toDouble()
                 val sNum = DB1 + DB2 + DB3 + DB4 + DB5
                 sSerialNumber.value = String.format("%.0f", sNum)
-                isSettingInit = true
             }
             ISBState84H.GetHardWareRevision.value -> {
                 val DB1 = data[3].toUByte().toInt()
                 val DB2 = data[4].toUByte().toInt()
                 val DB3 = data[5].toUByte().toInt()
                 sHardwareVersion.value = "${DB1.toChar()}.${DB2.toChar()}.${DB3.toChar()}"
-                isSettingInit = true
             }
             ISBState84H.AirPressure.value -> {
                 val DB1 = data[3].toUByte().toFloat()
@@ -1433,7 +1505,6 @@ class BlueToothKit @Inject constructor(
             val pattern = "(\\d{2})\\s(\\d{2}/\\d{2}/\\d{2}\\s\\d{2}:\\d{2})"
             val regex = Pattern.compile(pattern)
             val matcher = regex.matcher(rawSoftWareVersion)
-            isSoftInfoInit = true
 
             if (matcher.find()) {
                 val yearString = matcher.group(1)
@@ -1466,7 +1537,6 @@ class BlueToothKit @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun handleSystemExpand(data: ByteArray) {
         val buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
-        isExpandInit = true
 
         when (data[2].toUByte().toInt().toInt() and 0xFF) {
             ISBStateF2H.CO2Scale.value -> {

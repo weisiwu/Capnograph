@@ -76,7 +76,7 @@ class SystemSettingActivity : BaseActivity() {
             ),
             SystemIno(
                 name = com.wldmedical.capnoeasy.getString(R.string.system_firmware_version),
-                value = viewModel.firmVersion.value
+                value = blueToothKit.oemId.value
             ),
             SystemIno(
                 name = com.wldmedical.capnoeasy.getString(R.string.system_hardware_version),

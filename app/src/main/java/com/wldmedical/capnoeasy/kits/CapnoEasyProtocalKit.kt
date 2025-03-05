@@ -140,6 +140,7 @@ enum class ISBState84H(val value: Int) {
     ZeroPointGasType(value = 9), // 零点气类型
     GasCompensation(value = 11), // 读取/设置 气体补偿
     GetSensorPartNumber(value = 18), // 获取sensor part number
+    GetOEMID(value = 19), // 获取OEM ID
     GetSerialNumber(value = 20), // 获取sensor serial number
     GetHardWareRevision(value = 21), // 获取硬件版本
     Stop(value = 27), // 停止采样气泵

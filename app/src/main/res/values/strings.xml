@@ -73,12 +73,12 @@
     <string name="splash_company_name">万联达信科</string>
     <!-- SystemSettingActivity.kt-->
     <string name="system_language">语言</string>
-    <string name="system_firmware_version">固件版本</string>
+    <string name="system_firmware_version">OEM ID</string>
     <string name="system_hardware_version">硬件版本</string>
     <string name="system_software_version">软件版本</string>
     <string name="system_production_date">生产日期</string>
     <string name="system_serial_number">序列号</string>
-    <string name="system_module_name">模块名称</string>
+    <string name="system_module_name">部件号</string>
     <!-- BlueToothKit -->
     <string name="bluetooth_unknown_device">未知设备</string>
     <!-- PDFKit -->
