@@ -76,6 +76,7 @@
     <string name="splash_company_name">万联达信科</string>
     <!-- SystemSettingActivity.kt-->
     <string name="system_language">语言</string>
+    <string name="system_app_version">APP版本</string>
     <string name="system_firmware_version">OEM ID</string>
     <string name="system_hardware_version">硬件版本</string>
     <string name="system_software_version">软件版本</string>

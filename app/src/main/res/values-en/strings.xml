@@ -76,6 +76,7 @@
     <string name="splash_company_name">WLD Medical</string>
     <!-- SystemSettingActivity.kt-->
     <string name="system_language">Language</string>
+    <string name="system_app_version">App version</string>
     <string name="system_firmware_version">OEM ID</string>
     <string name="system_hardware_version">Hardware Version</string>
     <string name="system_software_version">Software Version</string>

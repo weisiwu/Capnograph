@@ -3,6 +3,7 @@ package com.wldmedical.capnoeasy.pages
 import android.Manifest
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -262,7 +263,13 @@ open class BaseActivity : ComponentActivity() {
         val language = localStorageKit.loadUserLanguageFromPreferences(this)
         viewModel.updateLanguage(language, this)
 
-        println("wswTest 有没有CAPDD ${blueToothKit.connectedCapnoEasy.value}")
+        val packageManager: PackageManager = packageManager
+        try {
+            val packageInfo: PackageInfo = packageManager.getPackageInfo(packageName, 0)
+            viewModel.updateAppVersion(packageInfo.versionName.toString())
+        } catch (e: PackageManager.NameNotFoundException) {
+            Log.e("MainActivity", "找不到包名：$packageName", e)
+        }
 
         enableEdgeToEdge()
         setContent {

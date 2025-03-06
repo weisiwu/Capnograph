@@ -141,6 +141,9 @@ class AppState @Inject constructor() {
     // 语言
     val language: MutableState<LanguageTypes> = mutableStateOf(LanguageTypes.CHINESE)
 
+    // app版本
+    val appVersion: MutableState<String> = mutableStateOf("")
+
     // 固件版本
     val firmVersion: MutableState<String> = mutableStateOf("--")
 
@@ -400,6 +403,12 @@ class AppStateModel @Inject constructor(
     val airPressure = appState.airPressure
     fun updateAirPressure(newVal: Float) {
         appState.airPressure.value = newVal
+    }
+
+    // 大气压
+    val appVersion = appState.appVersion
+    fun updateAppVersion(newVal: String) {
+        appState.appVersion.value = newVal
     }
 
     // 语言

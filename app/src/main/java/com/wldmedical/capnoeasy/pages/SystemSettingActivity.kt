@@ -3,7 +3,6 @@ package com.wldmedical.capnoeasy.pages
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
-import com.wldmedical.capnoeasy.getString
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -64,6 +63,8 @@ class SystemSettingActivity : BaseActivity() {
 
     @Composable
     override fun Content() {
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        println("wswTest 包的信息是什么 ${packageInfo}")
         val systeminfos = arrayOf(
             SystemIno(
                 name = com.wldmedical.capnoeasy.getString(R.string.system_language),
@@ -73,6 +74,10 @@ class SystemSettingActivity : BaseActivity() {
                     LanguageTypes.CHINESE,
                     LanguageTypes.ENGLISH
                 )
+            ),
+            SystemIno(
+                name = com.wldmedical.capnoeasy.getString(R.string.system_app_version),
+                value = viewModel.appVersion.value
             ),
             SystemIno(
                 name = com.wldmedical.capnoeasy.getString(R.string.system_firmware_version),
