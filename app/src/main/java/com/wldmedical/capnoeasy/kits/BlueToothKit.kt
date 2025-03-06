@@ -1371,30 +1371,43 @@ class BlueToothKit @Inject constructor(
                     currentETCO2.value = (data[6].toUByte().toFloat() * 128 + (data[7].toUByte().toFloat())) / 10f
                     // 检测到呼吸。才能计算是否异常。
                     isValidETCO2 = !currentBreathe || (
-                        currentETCO2.value <= appState.alertETCO2Range.value.start && currentETCO2.value >= appState.alertETCO2Range.value.endInclusive
+                        currentETCO2.value <= appState.alertETCO2Range.value.start
+                        && currentETCO2.value >= appState.alertETCO2Range.value.endInclusive
                     )
                 }
                 ISBState80H.RRValue.value -> {
                     currentRespiratoryRate.value = data[6].toUByte().toInt() * 128 + (data[7].toUByte().toInt())
                     isValidRR = !currentBreathe || (
-                        currentRespiratoryRate.value <= appState.alertRRRange.value.endInclusive && currentRespiratoryRate.value >= appState.alertRRRange.value.endInclusive
+                        currentRespiratoryRate.value <= appState.alertRRRange.value.start
+                        && currentRespiratoryRate.value >= appState.alertRRRange.value.endInclusive
                     )
                 }
                 ISBState80H.FiCO2Value.value -> {
-                    currentFiCO2 = ((data[6].toUByte().toInt().toInt() and 0xFF * 128 + (data[7].toUByte().toInt().toInt() and 0xFF)).toFloat() / 10)
+                    currentFiCO2 = ((data[6].toUByte().toInt() and 0xFF * 128 + (data[7].toUByte().toInt() and 0xFF)).toFloat() / 10)
                 }
                 ISBState80H.DetectBreath.value -> currentBreathe = true
                 else -> println("CO2Waveform DPI 不匹配")
             }
 
-            // TODO: 报警的逻辑，后续再加
-            if (!isAsphyxiation && isValidETCO2 && isValidRR && !isLowerEnergy && !isNeedZeroCorrect && !isAdaptorInvalid && !isAdaptorPolluted) {
+            if (!isAsphyxiation
+                && isValidETCO2
+                && isValidRR
+                && !isLowerEnergy
+                && !isNeedZeroCorrect
+                && !isAdaptorInvalid
+                && !isAdaptorPolluted
+            ) {
                 audioIns.stopAudio()
-            } else if (isAsphyxiation || !isValidETCO2 || !isValidRR || isLowerEnergy) {
+            } else if (isAsphyxiation
+                || !isValidETCO2
+                || !isValidRR
+                || isLowerEnergy
+            ) {
                 audioIns.playAlertAudio(AlertAudioType.MiddleLevelAlert)
-            } else if (isNeedZeroCorrect || isAdaptorInvalid) {
-                // TODO: 临时将  isAdaptorPolluted 删除，因为其值恒为true
-            // } else if (isNeedZeroCorrect || isAdaptorInvalid || isAdaptorPolluted) {
+            } else if (isNeedZeroCorrect
+                || isAdaptorInvalid
+                || isAdaptorPolluted
+            ) {
                 audioIns.playAlertAudio(AlertAudioType.LowLevelAlert)
             }
         }
