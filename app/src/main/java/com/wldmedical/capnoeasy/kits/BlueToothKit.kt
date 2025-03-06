@@ -1374,6 +1374,7 @@ class BlueToothKit @Inject constructor(
                         currentETCO2.value <= appState.alertETCO2Range.value.start
                         && currentETCO2.value >= appState.alertETCO2Range.value.endInclusive
                     )
+                                    println("wswTest【报警功能调试】 isValidETCO2 ${isValidETCO2}")
                 }
                 ISBState80H.RRValue.value -> {
                     currentRespiratoryRate.value = data[6].toUByte().toInt() * 128 + (data[7].toUByte().toInt())
@@ -1381,6 +1382,7 @@ class BlueToothKit @Inject constructor(
                         currentRespiratoryRate.value <= appState.alertRRRange.value.start
                         && currentRespiratoryRate.value >= appState.alertRRRange.value.endInclusive
                     )
+                    println("wswTest【报警功能调试】 isValidRR ${isValidRR}")
                 }
                 ISBState80H.FiCO2Value.value -> {
                     currentFiCO2 = ((data[6].toUByte().toInt() and 0xFF * 128 + (data[7].toUByte().toInt() and 0xFF)).toFloat() / 10)
@@ -1397,12 +1399,14 @@ class BlueToothKit @Inject constructor(
                 && !isAdaptorInvalid
                 && !isAdaptorPolluted
             ) {
+//                println("wswTest【报警功能调试】 停止报警  ")
                 audioIns.stopAudio()
             } else if (isAsphyxiation
                 || !isValidETCO2
                 || !isValidRR
                 || isLowerEnergy
             ) {
+//                println("wswTest【报警功能调试】 开始报警")
                 audioIns.playAlertAudio(AlertAudioType.MiddleLevelAlert)
             } else if (isNeedZeroCorrect
                 || isAdaptorInvalid
@@ -1461,6 +1465,7 @@ class BlueToothKit @Inject constructor(
         }
 
         isAsphyxiation = (data[6].toUByte().toInt() and 0x40) == 0x40 // 检查是否置位
+        println("wswTest【报警功能调试】 是否窒息 ${isAsphyxiation} ")
     }
 
     /** 处理设置： 序列号、硬件版本、设备名称 */

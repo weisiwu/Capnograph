@@ -14,7 +14,7 @@ import java.io.IOException
 
 class AudioPlayer(private val context: Context) {
     private var mediaPlayer: MediaPlayer? = null
-    private var isPlaying: Boolean = false
+    private var isPlay: Boolean = false
     // 使用数字替代状态: 0: 不播放 1: 低级报警 2: 中级报警
     private var playStatus: Int = 0
 
@@ -26,13 +26,16 @@ class AudioPlayer(private val context: Context) {
         val lowAlertResId = R.raw.low_level_alert
 
         // 当前正在播放报警
-        if (isPlaying) {
-            println("wswTest【报警功能调试】 !isPlaying=${isPlaying}")
+        if (this.isPlay) {
+            println("wswTest【报警功能调试】 退出当前循环")
             return
         }
 
+        // 播放新的报警前，先停止已有的
+        stopAudio()
+
         // 没有音频在播放，进入准备播放期间
-        val newPlayStatus = when (type) {
+        playStatus = when (type) {
             AlertAudioType.MiddleLevelAlert -> 2
             AlertAudioType.LowLevelAlert -> 1
         }
@@ -44,33 +47,30 @@ class AudioPlayer(private val context: Context) {
             val moderateVolume = (maxVolume * 0.3).toInt()
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, moderateVolume, 0)
 
-            // 播放新的报警前，先停止已有的
-            stopAudio()
-
             // 如果是中级报警
-            if (newPlayStatus == 2) {
+            if (playStatus == 2) {
                 mediaPlayer = MediaPlayer.create(context, middleAlertResId)
             }
             // 如果是低级报警
-            else if (newPlayStatus == 1) {
+            else if (playStatus == 1) {
                 mediaPlayer = MediaPlayer.create(context, lowAlertResId)
             }
 
             mediaPlayer?.start()
-            isPlaying = true
-            playStatus = newPlayStatus
+            this.isPlay = true
 
             // 播放14秒后，停止播放
             Handler(Looper.getMainLooper()).postDelayed({
-                isPlaying = false
+                stopAudio()
+                this.isPlay = false
             }, 14000)
         } catch (e: IOException) {
+            stopAudio()
             println("wswTest【报警功能调试】无法播放音频文件: ${e.localizedMessage}")
         }
     }
     
     fun stopAudio() {
-        isPlaying = false
         mediaPlayer?.stop()
         mediaPlayer?.release() // 释放资源
         mediaPlayer = null
