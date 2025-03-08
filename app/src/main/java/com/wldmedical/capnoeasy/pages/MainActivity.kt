@@ -44,7 +44,6 @@ class MainActivity : BaseActivity() {
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val context = this;
         try {
             val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)
             if (deviceAddress != null) {

@@ -265,6 +265,10 @@ open class BaseActivity : ComponentActivity() {
         LocalStorageKitManager.initialize(this, (application as CapnoEasyApplication))
         localStorageKit = LocalStorageKitManager.localStorageKit
 
+//        DatabaseBackupHelperManager.initialize(application as CapnoEasyApplication)
+////        DatabaseBackupHelperManager.initialize(this)
+//        dbBackupHelperKit = DatabaseBackupHelperManager.dbBackupHelperKit
+
         val language = localStorageKit.loadUserLanguageFromPreferences(this)
         viewModel.updateLanguage(language, this)
 

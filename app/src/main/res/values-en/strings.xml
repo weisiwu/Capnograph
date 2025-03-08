@@ -163,4 +163,8 @@
     <string name="actionmodal_export_pdf">Export PDF</string>
     <string name="actionmodal_print_ticket">Thermal Print</string>
     <string name="actionmodal_cancel">Cancel</string>
+    <!-- ActionBar -->
+    <string name="actionbar_search">Search</string>
+    <string name="actionbar_homepage">Home</string>
+    <string name="actionbar_setting">Setting</string>
 </resources>

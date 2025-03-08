@@ -162,4 +162,8 @@
     <string name="actionmodal_export_pdf">导出PDF</string>
     <string name="actionmodal_print_ticket">热熔打印</string>
     <string name="actionmodal_cancel">取消</string>
+    <!-- ActionBar -->
+    <string name="actionbar_search">搜索设备</string>
+    <string name="actionbar_homepage">主页</string>
+    <string name="actionbar_setting">设置</string>
 </resources>

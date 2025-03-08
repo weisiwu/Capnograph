@@ -1,8 +1,6 @@
 package com.wldmedical.capnoeasy
 
 import android.content.Context
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import java.text.DecimalFormat
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -93,13 +91,6 @@ fun <T : Any> getValueByKey(obj: T, key: String): Any? {
 fun getString(resId: Int, context: Context): String {
     return context.getString(resId)
 }
-//fun getString(resId: Int, context: Context? = null): String {
-//    if (context == null) {
-//        return CapnoEasyApplication.context.getString(resId)
-//    } else {
-//        return context.getString(resId)
-//    }
-//}
 
 enum class PageScene(val title: (Context) -> String) {
     HOME_PAGE({ "CapnoGraph" }), // 主页
