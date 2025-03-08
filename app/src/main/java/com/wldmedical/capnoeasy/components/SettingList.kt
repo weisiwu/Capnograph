@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.components
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -47,62 +49,64 @@ data class Setting(
     val type: SettingType = SettingType.ZERO
 )
 
-val settings = arrayOf(
-    Setting(
-        name = getString(R.string.settinglist_zeroing),
-        icon = R.drawable.m3_refresh,
-        type = SettingType.ZERO
-    ),
-    Setting(
-        name = getString(R.string.settinglist_screen_constant),
-        icon = R.drawable.m3_lightbulb,
-        type = SettingType.KEEP_LIGHT
-    ),
-    Setting(
-        name = getString(R.string.settinglist_alert_setting),
-        icon = R.drawable.m3_arrow_forward,
-        type = SettingType.ALERT_PARAM
-    ),
-    Setting(
-        name = getString(R.string.settinglist_display_setting),
-        icon = R.drawable.m3_arrow_forward,
-        type = SettingType.DISPLAY_PARAM
-    ),
-    Setting(
-        name = getString(R.string.settinglist_module_setting),
-        icon = R.drawable.m3_arrow_forward,
-        type = SettingType.MODULE_PARAM
-    ),
-    Setting(
-        name = getString(R.string.settinglist_system_setting),
-        icon = R.drawable.m3_arrow_forward,
-        type = SettingType.SYSTEM_SETTING
-    ),
-    Setting(
-        name = getString(R.string.settinglist_print_setting),
-        icon = R.drawable.m3_arrow_forward,
-        type = SettingType.PRINT_SETTING
-    ),
-    Setting(
-        name = getString(R.string.settinglist_history_records),
-        icon = R.drawable.m3_arrow_forward,
-        type = SettingType.HISTORY_RECORD
-    ),
-    Setting(
-        name = getString(R.string.settinglist_shutdown),
-        icon = R.drawable.m3_power_settings,
-        type = SettingType.SHUTDOWN
-    ),
-)
+
 
 /**
  * App 配置页 - 所有二级配置页的入口
  */
 @Composable
 fun SettingList(
-    settings: Array<Setting>,
     onSettingClick: ((setting: Setting) -> Unit)? = null,
 ) {
+    val context: Context = LocalContext.current
+    val settings = arrayOf(
+        Setting(
+            name = getString(R.string.settinglist_zeroing, context),
+            icon = R.drawable.m3_refresh,
+            type = SettingType.ZERO
+        ),
+        Setting(
+            name = getString(R.string.settinglist_screen_constant, context),
+            icon = R.drawable.m3_lightbulb,
+            type = SettingType.KEEP_LIGHT
+        ),
+        Setting(
+            name = getString(R.string.settinglist_alert_setting, context),
+            icon = R.drawable.m3_arrow_forward,
+            type = SettingType.ALERT_PARAM
+        ),
+        Setting(
+            name = getString(R.string.settinglist_display_setting, context),
+            icon = R.drawable.m3_arrow_forward,
+            type = SettingType.DISPLAY_PARAM
+        ),
+        Setting(
+            name = getString(R.string.settinglist_module_setting, context),
+            icon = R.drawable.m3_arrow_forward,
+            type = SettingType.MODULE_PARAM
+        ),
+        Setting(
+            name = getString(R.string.settinglist_system_setting, context),
+            icon = R.drawable.m3_arrow_forward,
+            type = SettingType.SYSTEM_SETTING
+        ),
+        Setting(
+            name = getString(R.string.settinglist_print_setting, context),
+            icon = R.drawable.m3_arrow_forward,
+            type = SettingType.PRINT_SETTING
+        ),
+        Setting(
+            name = getString(R.string.settinglist_history_records, context),
+            icon = R.drawable.m3_arrow_forward,
+            type = SettingType.HISTORY_RECORD
+        ),
+        Setting(
+            name = getString(R.string.settinglist_shutdown, context),
+            icon = R.drawable.m3_power_settings,
+            type = SettingType.SHUTDOWN
+        ),
+    )
+
     Column(
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
@@ -142,6 +146,6 @@ fun SettingList(
 @Composable
 fun SettingListPreview() {
     CapnoEasyTheme {
-        SettingList(settings = settings)
+        SettingList()
     }
 }

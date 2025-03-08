@@ -38,7 +38,7 @@ class AlertSettingActivity : BaseActivity() {
 
         Column {
             RangeSelector(
-                title = getString(R.string.alertsetting_etco2_range),
+                title = getStringAcitivity(R.string.alertsetting_etco2_range),
                 unit = viewModel.CO2Unit.value.rawValue,
                 type = RangeType.BOTH,
                 startValue = minETCO2,
@@ -53,7 +53,7 @@ class AlertSettingActivity : BaseActivity() {
             )
 
             RangeSelector(
-                title = getString(R.string.alertsetting_rr_range),
+                title = getStringAcitivity(R.string.alertsetting_rr_range),
                 unit = RR_UNIT,
                 type = RangeType.BOTH,
                 startValue = minRR,
@@ -77,7 +77,7 @@ class AlertSettingActivity : BaseActivity() {
                     viewModel.updateAlertETCO2Range(minETCO2, maxETCO2)
                     viewModel.updateLoadingData(
                         LoadingData(
-                            text = getString(R.string.alertsetting_is_setting),
+                            text = getStringAcitivity(R.string.alertsetting_is_setting),
                             duration = InfinityDuration,
                         )
                     )
@@ -90,7 +90,7 @@ class AlertSettingActivity : BaseActivity() {
                             viewModel.clearXData()
                             viewModel.updateToastData(
                                 ToastData(
-                                    text = getString(R.string.alertsetting_setting_success),
+                                    text = getStringAcitivity(R.string.alertsetting_setting_success),
                                     showMask = false,
                                     duration = 800,
                                 )

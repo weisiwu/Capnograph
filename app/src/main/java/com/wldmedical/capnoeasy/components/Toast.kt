@@ -58,6 +58,7 @@ fun Toast(
     onClick: (() -> Unit)? = null,
     onTimeout: (() -> Unit)? = null,
 ) {
+    val context: Context = LocalContext.current
     val isTimeout = remember { mutableStateOf(false) }
 
     if (data == null) {
@@ -115,7 +116,7 @@ fun Toast(
                         ToastType.SUCCESS -> {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
-                                contentDescription = getString(R.string.toast_success),
+                                contentDescription = getString(R.string.toast_success, context),
                                 tint = Color.White
                             )
                         }
@@ -123,7 +124,7 @@ fun Toast(
                             Image(
                                 painter = painterResource(id = R.drawable.fail_icon),
                                 alignment = Alignment.Center,
-                                contentDescription = getString(R.string.toast_fail)
+                                contentDescription = getString(R.string.toast_fail, context)
                             )
                         }
                     }

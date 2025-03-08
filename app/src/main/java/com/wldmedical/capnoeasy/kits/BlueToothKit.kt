@@ -36,10 +36,8 @@ import androidx.core.content.ContextCompat.registerReceiver
 import com.wldmedical.capnoeasy.CO2_SCALE
 import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.PAIRED_DEVICE_KEY
-import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.USER_PREF_NS
 import com.wldmedical.capnoeasy.WF_SPEED
-import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.HotmeltPinter
@@ -104,8 +102,6 @@ const val NOT_SUPPORT_BLUETOOTH = 1
 const val REQUEST_ENABLE_BT = 2
 const val REQUEST_BLUETOOTH_CONNECT_PERMISSION = 3
 const val REQUEST_BLUETOOTH_SCAN_PERMISSION = 4
-
-val unkownName: String = getString(R.string.bluetooth_unknown_device)
 
 /***
  * 蓝牙模块
@@ -1399,14 +1395,12 @@ class BlueToothKit @Inject constructor(
                 && !isAdaptorInvalid
                 && !isAdaptorPolluted
             ) {
-//                println("wswTest【报警功能调试】 停止报警  ")
                 audioIns.stopAudio()
             } else if (isAsphyxiation
                 || !isValidETCO2
                 || !isValidRR
                 || isLowerEnergy
             ) {
-//                println("wswTest【报警功能调试】 开始报警")
                 audioIns.playAlertAudio(AlertAudioType.MiddleLevelAlert)
             } else if (isNeedZeroCorrect
                 || isAdaptorInvalid

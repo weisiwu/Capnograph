@@ -114,7 +114,7 @@ class DisplaySettingActivity : BaseActivity() {
                             viewModel.clearXData()
                             viewModel.updateToastData(
                                 ToastData(
-                                    text = getString(R.string.display_setting_success),
+                                    text = getStringAcitivity(R.string.display_setting_success),
                                     showMask = false,
                                     duration = 600,
                                 )

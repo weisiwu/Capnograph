@@ -1,6 +1,7 @@
 package com.wldmedical.capnoeasy.components
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.compose.foundation.background
@@ -19,10 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.github.mikephil.charting.charts.LineChart
@@ -55,6 +55,7 @@ fun EtCo2LineChart(
     blueToothKit: BlueToothKit,
     viewModel: AppStateModel
 ) {
+    val context: Context = LocalContext.current
     var index = 0f
     val chart: MutableState<LineChart?> = remember { mutableStateOf(null) }
     val entries = remember { mutableStateListOf<Entry>() }.apply {
@@ -99,7 +100,7 @@ fun EtCo2LineChart(
 
                 if (currentDevice != null) {
                     Text(
-                        text = if(currentDevice.name == null) getString(R.string.etco2linechart_unknown_device) else currentDevice.name,
+                        text = if(currentDevice.name == null) getString(R.string.etco2linechart_unknown_device, context) else currentDevice.name,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                 }

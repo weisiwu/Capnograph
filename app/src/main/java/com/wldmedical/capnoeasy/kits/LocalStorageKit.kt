@@ -2,7 +2,6 @@ package com.wldmedical.capnoeasy.kits
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.net.Uri
 import android.os.Environment
 import androidx.compose.runtime.mutableStateOf
 import androidx.room.Dao
@@ -22,10 +21,7 @@ import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.DATABASE_NS
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.LanguageTypes
-import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.USER_PREF_NS
-import com.wldmedical.capnoeasy.components.formatter
-import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.PrintSetting
 import dagger.hilt.android.qualifiers.ActivityContext
@@ -36,9 +32,7 @@ import java.time.LocalDateTime
 import javax.inject.Inject
 import java.io.Serializable
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import java.util.UUID
-import kotlin.text.lowercase
 
 @Entity(tableName = "patients")
 data class Patient(
@@ -72,12 +66,6 @@ enum class GROUP_BY {
 data class Group(
     val type: GROUP_BY = GROUP_BY.ALL,
     val name: String,
-)
-
-val Groups = listOf(
-    Group(name = getString(R.string.localstorage_all), type = GROUP_BY.ALL),
-    Group(name = getString(R.string.localstorage_patient), type = GROUP_BY.PATIENT),
-    Group(name = getString(R.string.localstorage_time), type = GROUP_BY.DATE),
 )
 
 @Dao
@@ -258,6 +246,7 @@ class LocalStorageKit @Inject constructor(
             var previewPdfFilePath: String? = null
             val printSetting: PrintSetting? = context?.let { loadPrintSettingFromPreferences(it) }
 
+            val formatter = DateTimeFormatter.ofPattern("yyyy/M/d HH:mm:ss")
             if (context != null) {
                 pdfFilePath = File(
                     context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
@@ -288,7 +277,8 @@ class LocalStorageKit @Inject constructor(
                      filePath = pdfFilePath,
                      record = record,
                      maxETCO2 = maxETCO2,
-                     printSetting = printSetting
+                     printSetting = printSetting,
+                     context = context
                  )
             }
 

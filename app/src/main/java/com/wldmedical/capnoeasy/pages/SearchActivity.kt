@@ -16,7 +16,6 @@ import com.wldmedical.capnoeasy.components.DeviceList
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
-import com.wldmedical.capnoeasy.kits.unkownName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -41,7 +40,7 @@ class SearchActivity : BaseActivity() {
                 viewModel.updateDiscoveredPeripherals(null, true)
                 viewModel.updateLoadingData(
                     LoadingData(
-                        text = "${getString(R.string.search_start)}${it.name ?: unkownName}",
+                        text = "${getStringAcitivity(R.string.search_start)}${it.name ?: getStringAcitivity(R.string.bluetooth_unknown_device)}",
                         duration = InfinityDuration,
                         cancelable = false
                     )
@@ -50,7 +49,7 @@ class SearchActivity : BaseActivity() {
                     scanFinish = {
                         viewModel.updateToastData(
                             ToastData(
-                                text = getString(R.string.search_finish),
+                                text = getStringAcitivity(R.string.search_finish),
                                 type = ToastType.SUCCESS,
                                 showMask = false
                             )
@@ -62,7 +61,7 @@ class SearchActivity : BaseActivity() {
                     checkBlueToothFail = {
                         viewModel.updateToastData(
                             ToastData(
-                                text = getString(R.string.search_fail),
+                                text = getStringAcitivity(R.string.search_fail),
                                 type = ToastType.FAIL,
                                 showMask = false
                             )
@@ -89,7 +88,7 @@ class SearchActivity : BaseActivity() {
                     LoadingData(
                         cancelable = false,
                         duration = 10000,
-                        text = "${getString(R.string.search_start_connect)}${it.name ?: unkownName}"
+                        text = "${getStringAcitivity(R.string.search_start_connect)}${it.name ?: getStringAcitivity(R.string.bluetooth_unknown_device)}"
                     )
                 )
             }

@@ -63,8 +63,8 @@ class PrintSettingActivity : BaseActivity() {
         ) {
             // 医院名称
             CustomTextField(
-                title = getString(R.string.print_pdf_hospital_name),
-                defaultText = getString(R.string.print_input_name),
+                title = getStringAcitivity(R.string.print_pdf_hospital_name),
+                defaultText = getStringAcitivity(R.string.print_input_name),
                 value = pdfHospitalName,
                 onValueChange = {
                     pdfHospitalName = it
@@ -72,8 +72,8 @@ class PrintSettingActivity : BaseActivity() {
             )
             // 报告名称
             CustomTextField(
-                title = getString(R.string.print_pdf_report_name),
-                defaultText = getString(R.string.print_input_name),
+                title = getStringAcitivity(R.string.print_pdf_report_name),
+                defaultText = getStringAcitivity(R.string.print_input_name),
                 value = pdfReportName,
                 onValueChange = {
                     pdfReportName = it
@@ -92,12 +92,12 @@ class PrintSettingActivity : BaseActivity() {
                 },
                 types = arrayOf(
                     OutputType(
-                        name = getString(R.string.print_output_pdf),
+                        name = getStringAcitivity(R.string.print_output_pdf),
                         id = "是",
                         index = 0,
                     ),
                     OutputType(
-                        name = getString(R.string.print_output_hotmelt),
+                        name = getStringAcitivity(R.string.print_output_hotmelt),
                         id = "否",
                         index = 1,
                     ),
@@ -118,7 +118,7 @@ class PrintSettingActivity : BaseActivity() {
                     modifier = Modifier.clickable {
                         viewModel.updateLoadingData(
                             LoadingData(
-                                text = getString(R.string.print_is_setting),
+                                text = getStringAcitivity(R.string.print_is_setting),
                                 duration = 800,
                             )
                         )
@@ -136,7 +136,7 @@ class PrintSettingActivity : BaseActivity() {
 
                         viewModel.updateToastData(
                             ToastData(
-                                text = getString(R.string.print_setting_success),
+                                text = getStringAcitivity(R.string.print_setting_success),
                                 showMask = false,
                                 duration = 600,
                             )
@@ -144,7 +144,7 @@ class PrintSettingActivity : BaseActivity() {
                     }
                 ) {
                     Text(
-                        text = getString(R.string.print_save),
+                        text = getStringAcitivity(R.string.print_save),
                         letterSpacing = 5.sp,
                         color = Color(0xff165DFF),
                         fontSize = 18.sp,

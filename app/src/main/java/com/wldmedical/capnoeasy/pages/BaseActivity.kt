@@ -49,6 +49,11 @@ import kotlin.collections.toTypedArray
  */
 @AndroidEntryPoint
 open class BaseActivity : ComponentActivity() {
+    // 切换语言
+    fun getStringAcitivity(resId: Int): String {
+        return getString(resId)
+    }
+
     /***
      * 相关渲染函数
      */
@@ -169,7 +174,7 @@ open class BaseActivity : ComponentActivity() {
         } else {
             viewModel.updateToastData(
                 ToastData(
-                    text = getString(R.string.base_noconnect_msg),
+                    text = getStringAcitivity(R.string.base_noconnect_msg),
                     showMask = false,
                     duration = 1000,
                 )
@@ -206,8 +211,8 @@ open class BaseActivity : ComponentActivity() {
                 //引导用户手动开启权限
                 viewModel.updateAlertData(
                     AlertData(
-                        text = getString(R.string.base_infobl_msg),
-                        ok_btn_text = getString(R.string.base_go_open),
+                        text = getStringAcitivity(R.string.base_infobl_msg),
+                        ok_btn_text = getStringAcitivity(R.string.base_go_open),
                         onOk = {
                             viewModel.updateAlertData(null)
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)

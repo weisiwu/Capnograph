@@ -36,7 +36,7 @@ class ModuleSettingActivity : BaseActivity() {
 
         Column {
             RangeSelector(
-                title = "${getString(R.string.module_atmospheric_pressure)}(${viewModel.CO2Unit.value.rawValue})",
+                title = "${getStringAcitivity(R.string.module_atmospheric_pressure)}(${viewModel.CO2Unit.value.rawValue})",
                 unit = viewModel.CO2Unit.value.rawValue,
                 enabled = false,
                 value = blueToothKit.airPressure.value,
@@ -45,7 +45,7 @@ class ModuleSettingActivity : BaseActivity() {
             )
 
             RangeSelector(
-                title = "${getString(R.string.module_asphyxia_time)}(${TIME_UNIT})",
+                title = "${getStringAcitivity(R.string.module_asphyxia_time)}(${TIME_UNIT})",
                 value = asphyxiationTime.toFloat(),
                 unit = TIME_UNIT,
                 type = RangeType.ONESIDE,
@@ -56,7 +56,7 @@ class ModuleSettingActivity : BaseActivity() {
             )
 
             RangeSelector(
-                title = "${getString(R.string.module_oxygen_compensation)}(${O2_UNIT})",
+                title = "${getStringAcitivity(R.string.module_oxygen_compensation)}(${O2_UNIT})",
                 unit = O2_UNIT,
                 value = o2Compensation,
                 type = RangeType.ONESIDE,
@@ -76,7 +76,7 @@ class ModuleSettingActivity : BaseActivity() {
                     viewModel.updateO2Compensation(o2Compensation)
                     viewModel.updateLoadingData(
                         LoadingData(
-                            text = getString(R.string.module_is_setting),
+                            text = getStringAcitivity(R.string.module_is_setting),
                             duration = InfinityDuration,
                         )
                     )
@@ -87,7 +87,7 @@ class ModuleSettingActivity : BaseActivity() {
                             viewModel.clearXData()
                             viewModel.updateToastData(
                                 ToastData(
-                                    text = getString(R.string.module_setting_success),
+                                    text = getStringAcitivity(R.string.module_setting_success),
                                     showMask = false,
                                     duration = 800,
                                 )

@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.components
 
+import android.content.Context
 import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,7 +53,6 @@ import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.kits.GROUP_BY
 import com.wldmedical.capnoeasy.kits.Group
-import com.wldmedical.capnoeasy.kits.Groups
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.pages.HistoryRecordDetailActivity
@@ -61,9 +62,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.Locale
-
-val emptyRecordAlert = getString(R.string.historylist_no_data)
-val formatter = DateTimeFormatter.ofPattern(getString(R.string.historylist_date_format), Locale.CHINA)
 
 /**
  * App 历史列表，内容为设备上记录的整体历史记录数据
@@ -77,7 +75,10 @@ fun HistoryList(
     onSearch: ((Group) -> Unit)? = null,
     onItemClick: ((record: Record) -> UInt)? = null,
     context: ComponentActivity,
+    groups: List<Group>
 ) {
+    val emptyRecordAlert = getString(R.string.historylist_no_data, context)
+    val formatter = DateTimeFormatter.ofPattern(getString(R.string.historylist_date_format, context), Locale.CHINA)
     val rRecords = remember { records }
     val rState = remember { state }
     val newRecords = mutableListOf<Record>()
@@ -85,7 +86,7 @@ fun HistoryList(
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
     val configuration = LocalConfiguration.current
     val thirdScreenWidth = configuration.screenWidthDp.dp / 3
-    val selectedIndex = Groups.indexOfFirst { group ->
+    val selectedIndex = groups.indexOfFirst { group ->
         group.type == rState.value
     }
 
@@ -130,7 +131,7 @@ fun HistoryList(
                     .fillMaxWidth()
                     .padding(0.dp),
             ) {
-                Groups.forEachIndexed { index, group ->
+                groups.forEachIndexed { index, group ->
                     val isSelected = selectedIndex == index
                     Tab(
                         selected = isSelected,
@@ -177,7 +178,7 @@ fun HistoryList(
                                     startTime = records[0].startTime,
                                     endTime = records[0].endTime,
                                     isGroupTitle = true,
-                                    groupTitle = patient.name + " " + patient.gender.title + " " + patient.age + getString(R.string.historylist_age)
+                                    groupTitle = patient.name + " " + patient.gender.title + " " + patient.age + getString(R.string.historylist_age, context)
                                 )
                             )
                         } else {
@@ -188,7 +189,7 @@ fun HistoryList(
                                     startTime = startDate,
                                     endTime = records[0].endTime,
                                     isGroupTitle = true,
-                                    groupTitle = startDate.year.toString() + getString(R.string.historylist_year) + startDate.monthValue + getString(R.string.historylist_month) + startDate.dayOfMonth + getString(R.string.historylist_day)
+                                    groupTitle = startDate.year.toString() + getString(R.string.historylist_year, context) + startDate.monthValue + getString(R.string.historylist_month, context) + startDate.dayOfMonth + getString(R.string.historylist_day, context)
                                 )
                             )
                         }
@@ -240,13 +241,13 @@ fun HistoryList(
                                     modifier = Modifier.padding(end = 8.dp)
                                 )
                                 Text(
-                                    text = "${record.patient.age}${getString(R.string.historylist_age)}",
+                                    text = "${record.patient.age}${getString(R.string.historylist_age, context)}",
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(end = 8.dp)
                                 )
                                 Text(
-                                    text = if (record.patient.gender == GENDER.MALE) getString(R.string.historylist_male) else getString(R.string.historylist_female),
+                                    text = if (record.patient.gender == GENDER.MALE) getString(R.string.historylist_male, context) else getString(R.string.historylist_female, context),
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                 )
@@ -306,8 +307,15 @@ fun HistoryListPreview() {
     val startTimeString = "2025年1月29日18:00:03"
     val endTimeString = "2025年1月01日18:00:03"
     val state = remember { mutableStateOf(GROUP_BY.ALL) }
+    val context: Context = LocalContext.current
+    val groups = listOf(
+        Group(name = getString(R.string.localstorage_all, context), type = GROUP_BY.ALL),
+        Group(name = getString(R.string.localstorage_patient, context), type = GROUP_BY.PATIENT),
+        Group(name = getString(R.string.localstorage_time, context), type = GROUP_BY.DATE),
+    )
 
     try {
+        val formatter = DateTimeFormatter.ofPattern(getString(R.string.historylist_date_format, context), Locale.CHINA)
         startTime = LocalDateTime.parse(startTimeString, formatter) // 将字符串解析为 LocalDateTime 对象
         endTime = LocalDateTime.parse(endTimeString, formatter) // 将字符串解析为 LocalDateTime 对象
     } catch (e: DateTimeParseException) {
@@ -335,7 +343,8 @@ fun HistoryListPreview() {
             HistoryList(
                 records = records,
                 state = state,
-                context = ComponentActivity()
+                context = ComponentActivity(),
+                groups = groups,
             )
         }
     }

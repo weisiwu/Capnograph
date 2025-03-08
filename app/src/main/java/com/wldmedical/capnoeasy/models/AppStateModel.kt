@@ -425,6 +425,10 @@ class AppStateModel @Inject constructor(
         Locale.setDefault(locale)
         val localeList = LocaleListCompat.create(locale)
         AppCompatDelegate.setApplicationLocales(localeList)
+        // 更新Configuration
+        val configuration = Configuration(context.resources.configuration)
+        configuration.setLocale(locale)
+        context.resources.updateConfiguration(configuration, context.resources.displayMetrics)
         context.recreate()
     }
 

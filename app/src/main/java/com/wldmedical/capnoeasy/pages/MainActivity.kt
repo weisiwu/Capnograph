@@ -63,7 +63,7 @@ class MainActivity : BaseActivity() {
             printSetting.hospitalName?.let { viewModel.updatePdfHospitalName(it) }
             printSetting.name?.let { viewModel.updatePatientName(it) }
             printSetting.gender?.let { viewModel.updatePatientGender(
-                if(it == getString(R.string.etco2table_male)) GENDER.MALE else GENDER.FORMALE)
+                if(it == getStringAcitivity(R.string.etco2table_male)) GENDER.MALE else GENDER.FORMALE)
             }
             printSetting.age?.let { viewModel.updatePatientAge(it) }
             printSetting.reportName?.let { viewModel.updatePdfReportName(it) }
@@ -88,9 +88,9 @@ class MainActivity : BaseActivity() {
         if(!viewModel.isRecording.value) {
             viewModel.updateConfirmData(
                 ConfirmData(
-                    title = getString(R.string.main_record_save_success),
-                    text = getString(R.string.main_record_save_check),
-                    confirm_btn_text = getString(R.string.main_confirm),
+                    title = getStringAcitivity(R.string.main_record_save_success),
+                    text = getStringAcitivity(R.string.main_record_save_check),
+                    confirm_btn_text = getStringAcitivity(R.string.main_confirm),
                     onClick = {
                         viewModel.updateConfirmData(null)
                         viewModel.updateTotalCO2WavedData()
@@ -105,28 +105,27 @@ class MainActivity : BaseActivity() {
         val context = this
 
         // 如果基础信息没有填写完毕，不允许录播数据
-        // TODO:(wsw) 临时删除，防止拦截
-        // if (
-        //     viewModel.patientName.value == null ||
-        //     viewModel.patientGender.value == null ||
-        //     viewModel.patientAge.value == null ||
-        //     viewModel.patientID.value == null ||
-        //     viewModel.patientDepartment.value == null ||
-        //     viewModel.patientBedNumber.value == null
-        // ) {
-        //     viewModel.updateToastData(
-        //         ToastData(
-        //             text = getString(R.string.main_cant_record_msg),
-        //             duration = 2000,
-        //             showMask = false,
-        //             type = ToastType.FAIL,
-        //             callback = {
-        //                 viewModel.updateToastData(null)
-        //             }
-        //         )
-        //     )
-        //     return
-        // }
+         if (
+             viewModel.patientName.value == null ||
+             viewModel.patientGender.value == null ||
+             viewModel.patientAge.value == null ||
+             viewModel.patientID.value == null ||
+             viewModel.patientDepartment.value == null ||
+             viewModel.patientBedNumber.value == null
+         ) {
+             viewModel.updateToastData(
+                 ToastData(
+                     text = getStringAcitivity(R.string.main_cant_record_msg),
+                     duration = 2000,
+                     showMask = false,
+                     type = ToastType.FAIL,
+                     callback = {
+                         viewModel.updateToastData(null)
+                     }
+                 )
+             )
+             return
+         }
 
         localStorageKit.saveUserPrintSettingToPreferences(
             context = context,
@@ -164,7 +163,7 @@ class MainActivity : BaseActivity() {
 
         viewModel.updateToastData(
             ToastData(
-                text = if (isRecording) getString(R.string.main_stop_record) else getString(R.string.main_start_record),
+                text = if (isRecording) getStringAcitivity(R.string.main_stop_record) else getStringAcitivity(R.string.main_start_record),
                 duration = 600,
                 showMask = false,
                 type = ToastType.SUCCESS,

@@ -47,7 +47,7 @@ class SettingActivity : BaseActivity() {
                             couldJump = false
                             viewModel.updateLoadingData(
                                 LoadingData(
-                                    text = getString(R.string.setting_zeroing),
+                                    text = getStringAcitivity(R.string.setting_zeroing),
                                     duration = InfinityDuration,
                                     cancelable = false
                                 )
@@ -56,7 +56,7 @@ class SettingActivity : BaseActivity() {
                                 viewModel.clearXData()
                                 viewModel.updateToastData(
                                     ToastData(
-                                        text = getString(R.string.setting_zeroing_success),
+                                        text = getStringAcitivity(R.string.setting_zeroing_success),
                                         showMask = false,
                                         duration = 800,
                                     )
@@ -69,7 +69,7 @@ class SettingActivity : BaseActivity() {
                         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                         viewModel.updateToastData(
                             ToastData(
-                                text = getString(R.string.setting_screen_constant_success),
+                                text = getStringAcitivity(R.string.setting_screen_constant_success),
                                 showMask = false,
                                 duration = 800
                             )
@@ -79,9 +79,9 @@ class SettingActivity : BaseActivity() {
                         checkHasConnectDevice {
                             viewModel.updateAlertData(
                                 AlertData(
-                                    text = getString(R.string.setting_shutdown_confirm_msg),
-                                    ok_btn_text = getString(R.string.setting_shutdown_ok),
-                                    cancel_btn_text = getString(R.string.setting_shutdown_cancel),
+                                    text = getStringAcitivity(R.string.setting_shutdown_confirm_msg),
+                                    ok_btn_text = getStringAcitivity(R.string.setting_shutdown_ok),
+                                    cancel_btn_text = getStringAcitivity(R.string.setting_shutdown_cancel),
                                     onCancel = {
                                         viewModel.updateAlertData(null)
                                     },
@@ -89,13 +89,13 @@ class SettingActivity : BaseActivity() {
                                         couldJump = false
                                         viewModel.updateLoadingData(
                                             LoadingData(
-                                                text = getString(R.string.setting_shutdown),
+                                                text = getStringAcitivity(R.string.setting_shutdown),
                                                 duration = 3000,
                                                 callback = {
                                                     // 关机成功自然消除掉回调
                                                     viewModel.updateToastData(
                                                         ToastData(
-                                                            text = getString(R.string.setting_shutdown_fail),
+                                                            text = getStringAcitivity(R.string.setting_shutdown_fail),
                                                             showMask = false,
                                                             duration = 800,
                                                         )
@@ -107,7 +107,7 @@ class SettingActivity : BaseActivity() {
                                             viewModel.clearXData()
                                             viewModel.updateToastData(
                                                 ToastData(
-                                                    text = getString(R.string.setting_shutdown_success),
+                                                    text = getStringAcitivity(R.string.setting_shutdown_success),
                                                     showMask = false,
                                                     duration = 800,
                                                 )

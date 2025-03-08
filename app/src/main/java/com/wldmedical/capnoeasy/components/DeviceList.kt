@@ -2,6 +2,7 @@ package com.wldmedical.capnoeasy.components
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,21 +30,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.R
-import com.wldmedical.capnoeasy.getString
-import com.wldmedical.capnoeasy.kits.unkownName
+import com.wldmedical.capnoeasy.getStringunkownName
 
 data class Device(
     val name: String,
     val mac: String,
     val type: CustomType = DeviceTypeList.BLE.deviceType
 )
-
-val emptyAlert = getString(R.string.devicelist_no_devices)
 
 /**
  * App 设备列表页 - 设备列表
@@ -58,11 +57,13 @@ fun DeviceList(
     onSearch: ((CustomType) -> Unit)? = null,
     onDeviceClick: ((device: BluetoothDevice) -> Unit)? = null,
 ) {
+    val context: Context = LocalContext.current
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp.dp
     val searchBtnHeight = 65.dp;
     val deviceListMinHeight = 100.dp
     val deviceListMaxHeight = max(screenHeightDp * 0.6f, 500.dp)
+    val emptyAlert = getString(R.string.devicelist_no_devices, context)
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -100,7 +101,7 @@ fun DeviceList(
                     ) {
                         Column {
                             Text(
-                                text = device.name ?: unkownName,
+                                text = device.name ?: getString(R.string.bluetooth_unknown_device, context),
                                 fontSize = 17.sp,
                             )
                             Text(
@@ -127,7 +128,7 @@ fun DeviceList(
                             contentPadding = PaddingValues(0.dp),
                             content = {
                                 Text(
-                                    text = getString(R.string.devicelist_connect),
+                                    text = getString(R.string.devicelist_connect, context),
                                     modifier = Modifier.clip(RoundedCornerShape(2.dp)),
                                     color = Color(0xff165DFF),
                                 )
@@ -164,7 +165,7 @@ fun DeviceList(
                 contentPadding = PaddingValues(0.dp),
                 content = {
                     Text(
-                        text = getString(R.string.devicelist_rescan),
+                        text = getString(R.string.devicelist_rescan, context),
                         modifier = Modifier.clip(RoundedCornerShape(14.dp)),
                         color = Color(0xff165DFF),
                     )

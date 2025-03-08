@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.components
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +23,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -46,6 +48,7 @@ fun AttributeLine(
     attribute: Atribute,
     modifier: Modifier = Modifier,
     onInputChange: ((newVal: String) -> Unit)? = null,
+    context: Context,
 ) {
     val value = when(attribute.viewModelName) {
         "rr" -> blueToothKit.currentRespiratoryRate.value.toString()
@@ -97,9 +100,9 @@ fun AttributeLine(
                         // 直接换出alert弹框，让用户进行选择
                         viewModel.updateAlertData(
                             AlertData(
-                                text = getString(R.string.etco2table_select_gender),
-                                ok_btn_text = getString(R.string.etco2table_male),
-                                cancel_btn_text = getString(R.string.etco2table_female),
+                                text = getString(R.string.etco2table_select_gender, context),
+                                ok_btn_text = getString(R.string.etco2table_male, context),
+                                cancel_btn_text = getString(R.string.etco2table_female, context),
                                 onOk = {
                                     viewModel.updateAlertData(null)
                                     viewModel.updatePatientGender(GENDER.MALE)
@@ -210,54 +213,6 @@ val attributes = listOf(
     Atribute(title = "ETCO2", viewModelName = "etCO2", placeholder = "0 mmHg", editable = false, fullRow = true),
 )
 
-val attributesGroupA = listOf(
-    Atribute(
-        title = getString(R.string.etco2table_name), 
-        viewModelName = "patientName", 
-        placeholder = getString(R.string.etco2table_fill_in), 
-        editable = true
-    ),
-    Atribute(
-        title = getString(R.string.etco2table_gender), 
-        viewModelName = "patientGender", 
-        placeholder = getString(R.string.etco2table_select), 
-        editable = true,
-        isSelect = true
-    ),
-)
-
-val attributesGroupB = listOf(
-    Atribute(
-        title = getString(R.string.etco2table_age), 
-        viewModelName = "patientAge", 
-        placeholder = getString(R.string.etco2table_input), 
-        editable = true, 
-        isNumber = true
-    ),
-    Atribute(title = "ID", 
-        viewModelName = "patientID", 
-        placeholder = getString(R.string.etco2table_input), 
-        editable = true
-    ),
-)
-
-val attributesGroupC = listOf(
-    Atribute(
-        title = getString(R.string.etco2table_depart),
-        viewModelName = "department",
-        placeholder = getString(R.string.etco2table_input),
-        editable = true,
-        isNumber = true
-    ),
-    Atribute(
-        title = getString(R.string.etco2table_bed),
-        viewModelName = "bedNumber",
-        placeholder = getString(R.string.etco2table_input),
-        editable = true,
-        isNumber = true
-    ),
-)
-
 /**
  * App 主页，展示呼吸率、ETCO2、姓名、性别、年龄等文字数据
  */
@@ -266,6 +221,54 @@ fun EtCo2Table(
     viewModel: AppStateModel,
     blueToothKit: BlueToothKit,
 ) {
+    val context: Context = LocalContext.current
+    val attributesGroupA = listOf(
+        Atribute(
+            title = getString(R.string.etco2table_name, context),
+            viewModelName = "patientName",
+            placeholder = getString(R.string.etco2table_fill_in, context),
+            editable = true
+        ),
+        Atribute(
+            title = getString(R.string.etco2table_gender, context),
+            viewModelName = "patientGender",
+            placeholder = getString(R.string.etco2table_select, context),
+            editable = true,
+            isSelect = true
+        ),
+    )
+
+    val attributesGroupB = listOf(
+        Atribute(
+            title = getString(R.string.etco2table_age, context),
+            viewModelName = "patientAge",
+            placeholder = getString(R.string.etco2table_input, context),
+            editable = true,
+            isNumber = true
+        ),
+        Atribute(title = "ID",
+            viewModelName = "patientID",
+            placeholder = getString(R.string.etco2table_input, context),
+            editable = true
+        ),
+    )
+
+    val attributesGroupC = listOf(
+        Atribute(
+            title = getString(R.string.etco2table_depart, context),
+            viewModelName = "department",
+            placeholder = getString(R.string.etco2table_input, context),
+            editable = true,
+            isNumber = true
+        ),
+        Atribute(
+            title = getString(R.string.etco2table_bed, context),
+            viewModelName = "bedNumber",
+            placeholder = getString(R.string.etco2table_input, context),
+            editable = true,
+            isNumber = true
+        ),
+    )
     Row (
         modifier = Modifier
             .fillMaxWidth()
@@ -274,13 +277,15 @@ fun EtCo2Table(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupA[0],
-            modifier = Modifier.padding(start = 28.dp).weight(1f)
+            modifier = Modifier.padding(start = 28.dp).weight(1f),
+            context = context
         )
         AttributeLine(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupA[1],
-            modifier = Modifier.padding(end = 29.dp).weight(1f)
+            modifier = Modifier.padding(end = 29.dp).weight(1f),
+            context = context
         )
     }
 
@@ -292,13 +297,15 @@ fun EtCo2Table(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupB[0],
-            modifier = Modifier.padding(start = 28.dp).weight(1f)
+            modifier = Modifier.padding(start = 28.dp).weight(1f),
+            context = context
         )
         AttributeLine(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupB[1],
-            modifier = Modifier.padding(end = 13.dp).weight(1f)
+            modifier = Modifier.padding(end = 13.dp).weight(1f),
+            context = context
         )
     }
 
@@ -310,13 +317,15 @@ fun EtCo2Table(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupC[0],
-            modifier = Modifier.padding(start = 28.dp).weight(1f)
+            modifier = Modifier.padding(start = 28.dp).weight(1f),
+            context = context
         )
         AttributeLine(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupC[1],
-            modifier = Modifier.padding(end = 13.dp).weight(1f)
+            modifier = Modifier.padding(end = 13.dp).weight(1f),
+            context = context
         )
     }
 
@@ -326,7 +335,8 @@ fun EtCo2Table(
                 viewModel = viewModel,
                 blueToothKit = blueToothKit,
                 attribute = attribute,
-                modifier = Modifier.padding(start = 28.dp, end = 28.dp)
+                modifier = Modifier.padding(start = 28.dp, end = 28.dp),
+                context = context
             )
         }
     }

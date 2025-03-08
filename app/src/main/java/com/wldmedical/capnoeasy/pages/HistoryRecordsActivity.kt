@@ -20,6 +20,13 @@ class HistoryRecordsActivity : BaseActivity() {
 
     @Composable
     override fun Content() {
+
+        val Groups = listOf(
+            Group(name = getStringActivity(R.string.localstorage_all), type = GROUP_BY.ALL),
+            Group(name = getStringActivity(R.string.localstorage_patient), type = GROUP_BY.PATIENT),
+            Group(name = getStringActivity(R.string.localstorage_time), type = GROUP_BY.DATE),
+        )
+
         val records = remember { mutableStateListOf<Record>() }
 
         LaunchedEffect(0) {
@@ -36,7 +43,8 @@ class HistoryRecordsActivity : BaseActivity() {
         HistoryList(
             records = records,
             state = localStorageKit.state,
-            context = this
+            context = this,
+            groups = Groups
         )
     }
 }

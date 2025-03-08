@@ -44,6 +44,7 @@ class SystemSettingActivity : BaseActivity() {
         // 存储到本地，启动的时候读取
         val language = if (newLanguage == LanguageTypes.CHINESE) "zh" else "en"
         localStorageKit.saveUserLanguageToPreferences(context = this, language)
+        println("wswTest 切换余元后 ${viewModel.language.value.cname}")
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -56,18 +57,15 @@ class SystemSettingActivity : BaseActivity() {
             blueToothKit.sSerialNumber.value.isEmpty() ||
             blueToothKit.deviceName.value.isEmpty()
         ) {
-            println("wswTest 开始执行任务")
             blueToothKit.initCapnoEasyConection(true)
         }
     }
 
     @Composable
     override fun Content() {
-        val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        println("wswTest 包的信息是什么 ${packageInfo}")
         val systeminfos = arrayOf(
             SystemIno(
-                name = com.wldmedical.capnoeasy.getString(R.string.system_language),
+                name = getStringAcitivity(R.string.system_language),
                 value = viewModel.language.value.cname,
                 isRadio = true,
                 radios = arrayOf(
@@ -76,31 +74,31 @@ class SystemSettingActivity : BaseActivity() {
                 )
             ),
             SystemIno(
-                name = com.wldmedical.capnoeasy.getString(R.string.system_app_version),
+                name = getStringAcitivity(R.string.system_app_version),
                 value = viewModel.appVersion.value
             ),
             SystemIno(
-                name = com.wldmedical.capnoeasy.getString(R.string.system_firmware_version),
+                name = getStringAcitivity(R.string.system_firmware_version),
                 value = blueToothKit.oemId.value
             ),
             SystemIno(
-                name = com.wldmedical.capnoeasy.getString(R.string.system_hardware_version),
+                name = getStringAcitivity(R.string.system_hardware_version),
                 value = blueToothKit.sHardwareVersion.value
             ),
             SystemIno(
-                name = com.wldmedical.capnoeasy.getString(R.string.system_software_version),
+                name = getStringAcitivity(R.string.system_software_version),
                 value = blueToothKit.sSoftwareVersion.value
             ),
             SystemIno(
-                name = com.wldmedical.capnoeasy.getString(R.string.system_production_date),
+                name = getStringAcitivity(R.string.system_production_date),
                 value = blueToothKit.productionDate.value
             ),
             SystemIno(
-                name = com.wldmedical.capnoeasy.getString(R.string.system_serial_number),
+                name = getStringAcitivity(R.string.system_serial_number),
                 value = blueToothKit.sSerialNumber.value
             ),
             SystemIno(
-                name = com.wldmedical.capnoeasy.getString(R.string.system_module_name),
+                name = getStringAcitivity(R.string.system_module_name),
                 value = blueToothKit.deviceName.value
             ),
         )

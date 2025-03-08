@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.components
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.R
@@ -57,6 +59,7 @@ fun DeviceType(
     isSelected: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
+    val context: Context = LocalContext.current
     val baseBgColor = if(isSelected) Color(0xffE7F1FF) else Color(0xffF5F5F5)
     val baseFontColor = if(isSelected) Color(0xff1677FF) else Color.Black
 
@@ -74,7 +77,7 @@ fun DeviceType(
         if (isSelected) {
             Image(
                 painter = painterResource(R.drawable.device_tyoe_mark),
-                contentDescription = getString(R.string.typeswitch_selected),
+                contentDescription = getString(R.string.typeswitch_selected, context),
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier
                     .width(58.dp)

@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.components
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.PageScene
@@ -42,6 +44,7 @@ fun NavBar(
     viewModel: AppStateModel,
     onRightClick: (() -> Unit)? = null
 ) {
+    val context: Context = LocalContext.current
     val currentPage = viewModel.currentPage
     val rightImage: MutableState<Int?> = remember { mutableStateOf(null) }
     val rightDesc: MutableState<String> = remember { mutableStateOf("") }
@@ -50,18 +53,18 @@ fun NavBar(
         PageScene.HISTORY_DETAIL_PAGE -> {
             rightImage.value = R.drawable.pull_up
             if (viewModel.isPDF.value) {
-                rightDesc.value = getString(R.string.actionmodal_export_pdf)
+                rightDesc.value = getString(R.string.actionmodal_export_pdf, context)
             } else {
-                rightDesc.value = getString(R.string.actionmodal_print_ticket)
+                rightDesc.value = getString(R.string.actionmodal_print_ticket, context)
             }
         }
         PageScene.HOME_PAGE ->
             if (viewModel.isRecording.value) {
                 rightImage.value = R.drawable.nav_print_stop_btn
-                rightDesc.value = getString(R.string.navbar_recording)
+                rightDesc.value = getString(R.string.navbar_recording, context)
             } else {
                 rightImage.value = R.drawable.nav_print_btn
-                rightDesc.value = getString(R.string.navbar_start_record)
+                rightDesc.value = getString(R.string.navbar_start_record, context)
             }
         else -> {
             rightImage.value = null

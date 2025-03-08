@@ -14,11 +14,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import com.github.barteksc.pdfviewer.PDFView
-import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.ToastData
@@ -89,7 +87,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
         if (blueToothKit.connectedCapnoEasy.value == null) {
             viewModel.updateToastData(
                 ToastData(
-                    text = getString(R.string.recorddetail_record_fail),
+                    text = getStringAcitivity(R.string.recorddetail_record_fail),
                     showMask = false,
                     duration = 1000,
                 )
@@ -109,7 +107,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
         if (!blueToothKit.gpPrinterManager.getConnectState()) {
             viewModel.updateToastData(
                 ToastData(
-                    text = getString(R.string.recorddetail_print_fail),
+                    text = getStringAcitivity(R.string.recorddetail_print_fail),
                     showMask = false,
                     duration = 1000,
                 )
@@ -179,7 +177,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     .fillMaxSize()
             )
         } else {
-            Text(getString(R.string.recorddetail_loading))
+            Text(getStringAcitivity(R.string.recorddetail_loading))
         }
     }
 }

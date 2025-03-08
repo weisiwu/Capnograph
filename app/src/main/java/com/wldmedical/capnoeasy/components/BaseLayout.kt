@@ -42,9 +42,9 @@ fun BaseLayout(
                 if (viewModel.isRecording.value) {
                     viewModel.updateAlertData(
                         AlertData(
-                            text = getString(R.string.baselayout_recording_in_progress),
-                            ok_btn_text = getString(R.string.baselayout_stop),
-                            cancel_btn_text = getString(R.string.baselayout_think_again),
+                            text = getString(R.string.baselayout_recording_in_progress, context),
+                            ok_btn_text = getString(R.string.baselayout_stop, context),
+                            cancel_btn_text = getString(R.string.baselayout_think_again, context),
                             onOk = { onNavBarRightClick?.invoke() },
                             onCancel = { viewModel.updateAlertData(null) },
                         )
