@@ -16,7 +16,6 @@ import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.SettingList
 import com.wldmedical.capnoeasy.components.SettingType
 import com.wldmedical.capnoeasy.components.ToastData
-import com.wldmedical.capnoeasy.components.settings
 
 /***
  * 设置一级页
@@ -31,7 +30,6 @@ class SettingActivity : BaseActivity() {
         val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
          SettingList(
-            settings = settings,
             onSettingClick = { setting ->
                 var couldJump = true
                 var intent = Intent(this, SettingActivity::class.java)

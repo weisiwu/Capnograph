@@ -270,7 +270,7 @@ class LocalStorageKit @Inject constructor(
                 previewPdfFilePath = previewPdfFilePath
             )
 
-            if (pdfFilePath != null && lineChart != null) {
+            if (pdfFilePath != null && lineChart != null && context != null) {
                  saveChartToPdfInBackground(
                      lineChart = lineChart,
                      data = data,

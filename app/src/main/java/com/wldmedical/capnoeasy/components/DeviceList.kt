@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.R
-import com.wldmedical.capnoeasy.getStringunkownName
+import com.wldmedical.capnoeasy.getString
 
 data class Device(
     val name: String,
@@ -159,7 +159,6 @@ fun DeviceList(
                     .background(Color(0xffE8F3FF))
                     .size(width = 104.dp, height = 35.dp),
                 onClick = {
-                    // TODO: 这里临时写死，后续需要从外部传入
                     onSearch?.invoke(DeviceTypeList.BLE.deviceType)
                 },
                 contentPadding = PaddingValues(0.dp),

@@ -41,10 +41,10 @@ data class DeviceType(
 ): CustomType
 
 enum class DeviceTypeList(val deviceType: CustomType) {
-    BLE(DeviceType(name = getString(R.string.typeswitch_bluetooth), id = "BLUETOOTH_LOWENERGY", index = 0)),
+    BLE(DeviceType(name = "BLE", id = "BLUETOOTH_LOWENERGY", index = 0)),
     WIFI(DeviceType(name = "WIFI", id = "WIFI", index = 1)),
     USB(DeviceType(name = "USB", id = "USB", index = 2)),
-    BLUETHOOTH(DeviceType(name = getString(R.string.typeswitch_classic_bluetooth), id = "BLUETOOTH_CLASSIC", index = 3)),
+//    BLUETHOOTH(DeviceType(name = getString(R.string.typeswitch_classic_bluetooth), id = "BLUETOOTH_CLASSIC", index = 3)),
 }
 
 val DeviceTypes: Array<CustomType> = arrayOf(
