@@ -3,6 +3,7 @@ package com.wldmedical.capnoeasy.pages
 import android.Manifest
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.graphics.pdf.PdfDocument.Page
@@ -304,6 +305,9 @@ open class BaseActivity : ComponentActivity() {
         } catch (e: PackageManager.NameNotFoundException) {
             Log.e("MainActivity", "找不到包名：$packageName", e)
         }
+
+        // 禁用横屏，设置为竖屏模式
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         enableEdgeToEdge()
         setContent {
