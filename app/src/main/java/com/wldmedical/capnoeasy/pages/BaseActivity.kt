@@ -31,6 +31,7 @@ import com.wldmedical.capnoeasy.components.ConfirmModal
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.Toast
 import com.wldmedical.capnoeasy.components.ToastData
+import com.wldmedical.capnoeasy.kits.AppDatabase
 import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.kits.BlueToothKitManager
 import com.wldmedical.capnoeasy.kits.LocalStorageKit
@@ -39,6 +40,7 @@ import com.wldmedical.capnoeasy.kits.PrintProtocalKitManager
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlin.collections.any
 import kotlin.collections.filter
 import kotlin.collections.isNotEmpty
@@ -188,13 +190,13 @@ open class BaseActivity : ComponentActivity() {
             arrayOf(
                 Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
             )
         } else {
             arrayOf(
                 Manifest.permission.BLUETOOTH,
                 Manifest.permission.BLUETOOTH_ADMIN,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
             )
         }
 
@@ -227,6 +229,7 @@ open class BaseActivity : ComponentActivity() {
             }
             return false
         }
+
         return true
     }
 
@@ -264,10 +267,6 @@ open class BaseActivity : ComponentActivity() {
 
         LocalStorageKitManager.initialize(this, (application as CapnoEasyApplication))
         localStorageKit = LocalStorageKitManager.localStorageKit
-
-//        DatabaseBackupHelperManager.initialize(application as CapnoEasyApplication)
-////        DatabaseBackupHelperManager.initialize(this)
-//        dbBackupHelperKit = DatabaseBackupHelperManager.dbBackupHelperKit
 
         val language = localStorageKit.loadUserLanguageFromPreferences(this)
         viewModel.updateLanguage(language, this)

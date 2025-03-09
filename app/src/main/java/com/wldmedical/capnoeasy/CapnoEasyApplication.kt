@@ -1,7 +1,6 @@
 package com.wldmedical.capnoeasy
 
 import DatabaseBackupHelper
-import DatabaseBackupHelperManager.dbBackupHelperKit
 import android.app.Application
 import android.content.Context
 import android.os.Build
@@ -28,10 +27,10 @@ class CapnoEasyApplication : Application() {
 
         database = AppDatabase.getDatabase(this)
 
-        println("wswTest 这里？？")
         // 启动后开始备份数据库或者恢复数据
         DatabaseBackupHelperManager.initialize(this)
         dbBackupHelperKit = DatabaseBackupHelperManager.dbBackupHelperKit
         dbBackupHelperKit.startWork(applicationContext, database)
+        println("wswTest 无论如何开始检查")
     }
 }

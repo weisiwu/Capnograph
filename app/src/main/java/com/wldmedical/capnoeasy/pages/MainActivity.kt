@@ -1,10 +1,13 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
+import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
@@ -24,6 +27,8 @@ import java.time.LocalDateTime
  * 主页
  */
 class MainActivity : BaseActivity() {
+    private val STORAGE_PERMISSION_CODE = 101
+
     override var pageScene = PageScene.HOME_PAGE
 
     private  var startRecordTime: LocalDateTime? = null
@@ -172,6 +177,28 @@ class MainActivity : BaseActivity() {
                 },
             )
         )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        println("wswTest 权限辩护到底算了算了 ====================== $requestCode")
+        if (requestCode == 101) {
+            if (grantResults.isNotEmpty()) {
+                println("wswTest 授权的最终结果是>>>>>>>>>>>>>> ${grantResults[0]}")
+            }
+
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                val application = application as CapnoEasyApplication
+
+                // 访问 dbBackupHelperKit 并调用 restoreDatabase
+                println("wswTest 授权接受后开始处理东西")
+                application.dbBackupHelperKit.startWork(applicationContext, application.database)
+            } else {
+                println("wswTEst 为什么会失败》》》》》》")
+                Log.e("DatabaseBackupHelper", "Storage Permission Denied")
+            }
+        }
     }
 
     @Composable
