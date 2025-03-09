@@ -1,21 +1,15 @@
-import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
-import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.room.Room
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.DATABASE_NS
@@ -28,7 +22,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
-import kotlin.collections.containsAll
 
 const val IS_FIRST_LAUNCH = "is_wld_medical_app_first_install"
 const val DATA_LATEST_VERSION = "last_data_version"
@@ -44,22 +37,6 @@ class DatabaseBackupHelper(private val context: Context) {
     private val STORAGE_PERMISSION_CODE = 101
     val prefs: SharedPreferences = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
 
-//    @RequiresApi(Build.VERSION_CODES.Q)
-//    private fun checkPermission() {
-//        // 获取当前 Activity
-//        val activity = context as? Activity
-//        if (activity != null) {
-//            if (ContextCompat.checkSelfPermission(activity, permission) == PackageManager.PERMISSION_DENIED) {
-//                // 请求权限
-//                ActivityCompat.requestPermissions(activity, arrayOf(permission), requestCode)
-//            } else {
-//                // 权限已授予，继续文件访问
-//                restoreDatabase()
-//            }
-//            checkPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE)
-//        }
-//    }
-
     // 恢复进程开始工作,按照如下流程
     // 1、判断是否为首次安装
     // 2、如是，则判断是否有历史数据库文件，如有，开始恢复进程
@@ -67,7 +44,8 @@ class DatabaseBackupHelper(private val context: Context) {
     @RequiresApi(Build.VERSION_CODES.Q)
     fun startWork(
         context: Context,
-        database: AppDatabase
+        database: AppDatabase,
+        isRestore: Boolean = false
     ) {
         val isFirstLaunch = prefs.getBoolean(IS_FIRST_LAUNCH, true)
         lastDataVersion = prefs.getInt(DATA_LATEST_VERSION, -1)
@@ -76,9 +54,8 @@ class DatabaseBackupHelper(private val context: Context) {
         runBlocking {
             println("wswTest 是否首次安装: ${isFirstLaunch} ")
             // 首次安装，修改标志为false，然后退出
-            if (isFirstLaunch) {
+            if (isFirstLaunch || isRestore) {
                 prefs.edit().putBoolean(IS_FIRST_LAUNCH, false).apply()
-                println("wswTest 开始恢复数据")
                 // 无论是否存在数据库文件，都尝试恢复
                 try {
                     restoreDatabase()
@@ -348,6 +325,7 @@ class DatabaseBackupHelper(private val context: Context) {
             Log.d("DatabaseBackupHelper", "Database backed up successfully.")
         }
     }
+
     /**
      * 备份数据文件
      * 1、DB数据文件
@@ -389,7 +367,6 @@ class DatabaseBackupHelper(private val context: Context) {
             val databaseFile = context.getDatabasePath(databaseName)
             val walFile = File(databaseFile.parent, "$databaseName-wal")
             val shmFile = File(databaseFile.parent, "$databaseName-shm")
-            println("wswTest【restoreDatabase】 数据库的地址什么 ${databaseFile.absolutePath}")
 
             // 2. 关闭当前数据库连接
             roomDatabase.close()
@@ -406,89 +383,32 @@ class DatabaseBackupHelper(private val context: Context) {
             }
             println("wswTest[restoreDatabase] 删除已有的当前数据库文件，从历史数据中恢复")
 
-            // 4. 使用 MediaStore 扫描文件
-            val contentResolver = context.contentResolver
-            val projection = arrayOf(
-                MediaStore.MediaColumns.DISPLAY_NAME,
-                MediaStore.MediaColumns.RELATIVE_PATH,
-                MediaStore.MediaColumns._ID
+            val backupFile = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                "$backupDirectoryName/$DATABASE_NS"
             )
-//            val selection = "${MediaStore.MediaColumns.RELATIVE_PATH} LIKE ?"
-//            val selectionArgs = arrayOf("%$backupDirectoryName%")
-            val uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
-            val selection =
-                "${MediaStore.MediaColumns.RELATIVE_PATH} = ? AND ${MediaStore.MediaColumns.DISPLAY_NAME} IN (?, ?, ?)"
-            val selectionArgs = arrayOf(
-                "${Environment.DIRECTORY_DOWNLOADS}/$backupDirectoryName/",
-                databaseName,
-                "$databaseName-shm",
-                "$databaseName-wal"
-            )
-            val query = contentResolver.query(
-                uri,
-                projection,
-                selection,
-                selectionArgs,
-                null
-            )
-
-            val fileNames = mutableListOf<String>()
-            val fileUris = mutableMapOf<String, Uri>()
-            query?.use { cursor ->
-                while (cursor.moveToNext()) {
-                    val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME)
-                    val relativePathColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH)
-                    val idColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
-
-                    val displayName = cursor.getString(displayNameColumn)
-                    val relativePath = cursor.getString(relativePathColumn)
-                    val id = cursor.getLong(idColumn)
-                    fileNames.add(displayName)
-                    val fileUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id)
-                    fileUris[displayName] = fileUri
-                    Log.d("DatabaseBackupHelper", "wswTest Found file: $displayName in $relativePath with URI: $fileUri")
-                }
-            }
-
-            // 5. 检查是否找到所有文件
-            if (fileNames.containsAll(listOf(databaseName, "$databaseName-shm", "$databaseName-wal"))) {
-                println("wswTest[restoreDatabase] MediaStore 扫描到所有文件，开始恢复")
-
-                // 6. 恢复数据库文件
-                println("wswTest[restoreDatabase] 开始恢复数据库文件")
-                fileUris[databaseName]?.let { uri ->
-                    contentResolver.openInputStream(uri)?.use { inputStream ->
-                        FileOutputStream(databaseFile).use { outputStream ->
-                            inputStream.copyTo(outputStream)
-                        }
+            if (backupFile.exists()) {
+                // 获取应用数据库目录
+                val dbPath = context.getDatabasePath(DATABASE_NS).absolutePath
+                val dbFile = File(dbPath)
+                try {
+                    // 创建目标数据库文件
+                    dbFile.parentFile?.mkdirs() // 确保目录存在
+                    if (dbFile.exists()) {
+                        dbFile.delete() // 如果数据库已经存在，先删除
                     }
-                }
-                println("wswTest[restoreDatabase] 恢复数据库文件完成")
+                    // 复制备份文件到数据库文件
+                    backupFile.copyTo(dbFile, overwrite = true)
 
-                // 7. 恢复 WAL 文件
-                println("wswTest[restoreDatabase] 开始恢复 WAL 文件")
-                fileUris["$databaseName-wal"]?.let { uri ->
-                    contentResolver.openInputStream(uri)?.use { inputStream ->
-                        FileOutputStream(walFile).use { outputStream ->
-                            inputStream.copyTo(outputStream)
-                        }
-                    }
-                }
-                println("wswTest[restoreDatabase] 恢复 WAL 文件完成")
+                    val walFile = File(backupFile.absolutePath + "-wal")
+                    val shmFile = File(backupFile.absolutePath + "-shm")
+                    walFile.copyTo(File(dbPath + "-wal"), overwrite = true)
+                    shmFile.copyTo(File(dbPath + "-shm"), overwrite = true)
 
-                // 8. 恢复 SHM 文件
-                println("wswTest[restoreDatabase] 开始恢复 SHM 文件")
-                fileUris["$databaseName-shm"]?.let { uri ->
-                    contentResolver.openInputStream(uri)?.use { inputStream ->
-                        FileOutputStream(shmFile).use { outputStream ->
-                            inputStream.copyTo(outputStream)
-                        }
-                    }
+                    Log.d("DatabaseRestore", "wswTest 数据库恢复成功!")
+                } catch (e: Exception) {
+                    Log.e("DatabaseRestore", "wswTest 恢复数据库时出错: ${e.message}")
                 }
-                println("wswTest[restoreDatabase] 恢复 SHM 文件完成")
-            } else {
-                println("wswTest[restoreDatabase] MediaStore 扫描缺少一个或多个备份文件 ${fileNames} ++++ ${fileNames.size}")
-                return
             }
 
             // 9. 重新打开数据库连接

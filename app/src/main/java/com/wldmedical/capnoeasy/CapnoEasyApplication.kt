@@ -30,7 +30,6 @@ class CapnoEasyApplication : Application() {
         // 启动后开始备份数据库或者恢复数据
         DatabaseBackupHelperManager.initialize(this)
         dbBackupHelperKit = DatabaseBackupHelperManager.dbBackupHelperKit
-        dbBackupHelperKit.startWork(applicationContext, database)
-        println("wswTest 无论如何开始检查")
+        dbBackupHelperKit.startWork(applicationContext, database, true)
     }
 }

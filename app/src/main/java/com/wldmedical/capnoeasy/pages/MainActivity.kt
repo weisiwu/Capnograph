@@ -1,9 +1,14 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
@@ -35,6 +40,8 @@ class MainActivity : BaseActivity() {
 
     private  var endRecordTime: LocalDateTime? = null
 
+    private  val REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION = 1001
+
     override fun onTabClick(index: Int): Boolean {
         super.onTabClick(index)
 
@@ -49,6 +56,8 @@ class MainActivity : BaseActivity() {
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val context = this
+
         try {
             val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)
             if (deviceAddress != null) {
@@ -58,6 +67,25 @@ class MainActivity : BaseActivity() {
             }
         } catch (e: Exception) {
             println("wswTest 捕获到自动链接BLE配对设备异常: ${e.message}")
+        }
+
+        if (!Environment.isExternalStorageManager()) {
+            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+            startActivity(intent)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                try {
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                    }
+                    startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION )
+                } catch (e: Exception) {
+                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                    startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION )
+                }
+            }
         }
 
         try {
@@ -179,27 +207,24 @@ class MainActivity : BaseActivity() {
         )
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        println("wswTest 权限辩护到底算了算了 ====================== $requestCode")
-        if (requestCode == 101) {
-            if (grantResults.isNotEmpty()) {
-                println("wswTest 授权的最终结果是>>>>>>>>>>>>>> ${grantResults[0]}")
-            }
-
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+    @RequiresApi(Build.VERSION_CODES.R)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION ) {
+            if (Environment.isExternalStorageManager()) {
+                // 权限已授予，执行数据库恢复操作
                 val application = application as CapnoEasyApplication
 
                 // 访问 dbBackupHelperKit 并调用 restoreDatabase
                 println("wswTest 授权接受后开始处理东西")
-                application.dbBackupHelperKit.startWork(applicationContext, application.database)
+                application.dbBackupHelperKit.startWork(applicationContext, application.database, true)
             } else {
-                println("wswTEst 为什么会失败》》》》》》")
-                Log.e("DatabaseBackupHelper", "Storage Permission Denied")
+                // 权限未授予，提示用户或采取其他措施
+                Toast.makeText(this, "未授予存储权限，无法恢复数据库。", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
 
     @Composable
     override fun Content() {
