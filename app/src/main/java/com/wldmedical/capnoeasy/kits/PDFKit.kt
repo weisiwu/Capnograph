@@ -389,10 +389,17 @@ fun saveChartToPdfInBackground(
     record: Record? = null,
     context: Context,
 ) {
-//    val reverseData = data.asReversed()
+    // 反转列表
+    val reversedList = data.asReversed()
+
+    // 更新 index 值
+    for (i in reversedList.indices) {
+        reversedList[i].index = i
+    }
+
     SaveChartToPdfTask(
         lineChart,
-        data = data,
+        data = reversedList,
         filePath = filePath,
         record = record,
         maxETCO2 = maxETCO2,
@@ -401,7 +408,6 @@ fun saveChartToPdfInBackground(
         onComplete = {}
     ).execute()
 }
-
 
 class SaveChartToPreviewPdfTask(
     private val originalLineChart: LineChart,
@@ -536,9 +542,17 @@ fun saveChartToPreviewPDFInBackground(
     segmentSize: Int,
     filePath: String
 ) {
+    // 反转列表
+    val reversedList = data.asReversed()
+
+    // 更新 index 值
+    for (i in reversedList.indices) {
+        reversedList[i].index = i
+    }
+
     SaveChartToPreviewPdfTask(
         lineChart,
-        data,
+        data = reversedList,
         segmentSize,
         filePath = filePath,
         onComplete = {}

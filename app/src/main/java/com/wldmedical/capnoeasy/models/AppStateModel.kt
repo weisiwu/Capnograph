@@ -42,7 +42,7 @@ data class CO2WavePointData(
     val RR: Int = 0,
     val ETCO2: Float = 0f,
     val FiCO2: Float = 0f,
-    val index: Int = 0
+    var index: Int = 0
 ): Serializable
 
 /**
