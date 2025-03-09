@@ -57,13 +57,16 @@ open class BaseActivity : ComponentActivity() {
         return getString(resId)
     }
 
+    // 返回拦截
     override fun onBackPressed() {
         val firstPageScene = listOf(
             PageScene.HOME_PAGE,
             PageScene.SETTING_PAGE,
             PageScene.DEVICES_LIST_PAGE,
         )
-        if (firstPageScene.contains(pageScene)) {
+        val activityCount = (application as CapnoEasyApplication).getActivityCount()
+
+        if (firstPageScene.contains(pageScene) && activityCount == 1) {
             viewModel.updateAlertData(
                 AlertData(
                     text = com.wldmedical.capnoeasy.getString(R.string.base_exit_info, this),
