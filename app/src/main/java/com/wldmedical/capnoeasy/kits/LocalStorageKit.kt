@@ -246,7 +246,7 @@ class LocalStorageKit @Inject constructor(
             var previewPdfFilePath: String? = null
             val printSetting: PrintSetting? = context?.let { loadPrintSettingFromPreferences(it) }
 
-            val formatter = DateTimeFormatter.ofPattern("yyyy/M/d HH:mm:ss")
+            val formatter = DateTimeFormatter.ofPattern("yyyyMd_HHmmss")
             if (context != null) {
                 pdfFilePath = File(
                     context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
