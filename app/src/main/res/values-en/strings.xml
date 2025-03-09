@@ -21,6 +21,9 @@
     <string name="base_noconnect_msg">Device not connected, please connect and try again</string>
     <string name="base_infobl_msg">Please turn on Bluetooth</string>
     <string name="base_go_open">Go to open</string>
+    <string name="base_exit_info">Confirm to Exit App?</string>
+    <string name="base_exit_ok">Yes</string>
+    <string name="base_exit_cancel">No</string>
     <!-- DisplaySettingActivity.kt-->
     <string name="display_co2_unit">CO2 Unit</string>
     <string name="display_is_setting">Setting</string>

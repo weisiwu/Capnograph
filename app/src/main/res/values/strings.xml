@@ -20,6 +20,9 @@
     <string name="base_noconnect_msg">未连接设备，请连接后再试</string>
     <string name="base_infobl_msg">请开启蓝牙权限</string>
     <string name="base_go_open">去开启</string>
+    <string name="base_exit_info">确认退出应用?</string>
+    <string name="base_exit_ok">确认</string>
+    <string name="base_exit_cancel">取消</string>
     <!-- DisplaySettingActivity.kt-->
     <string name="display_co2_unit">CO2 单位</string>
     <string name="display_is_setting">正在设置</string>

@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.graphics.pdf.PdfDocument.Page
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -27,11 +28,11 @@ import com.wldmedical.capnoeasy.components.ActionModal
 import com.wldmedical.capnoeasy.components.AlertData
 import com.wldmedical.capnoeasy.components.AlertModal
 import com.wldmedical.capnoeasy.components.BaseLayout
+import com.wldmedical.capnoeasy.components.ConfirmData
 import com.wldmedical.capnoeasy.components.ConfirmModal
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.Toast
 import com.wldmedical.capnoeasy.components.ToastData
-import com.wldmedical.capnoeasy.kits.AppDatabase
 import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.kits.BlueToothKitManager
 import com.wldmedical.capnoeasy.kits.LocalStorageKit
@@ -40,7 +41,6 @@ import com.wldmedical.capnoeasy.kits.PrintProtocalKitManager
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.hotmeltprint.HotmeltPinter
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlin.collections.any
 import kotlin.collections.filter
 import kotlin.collections.isNotEmpty
@@ -54,6 +54,32 @@ open class BaseActivity : ComponentActivity() {
     // 切换语言
     fun getStringAcitivity(resId: Int): String {
         return getString(resId)
+    }
+
+    override fun onBackPressed() {
+        val firstPageScene = listOf(
+            PageScene.HOME_PAGE,
+            PageScene.SETTING_PAGE,
+            PageScene.DEVICES_LIST_PAGE,
+        )
+        if (firstPageScene.contains(pageScene)) {
+            viewModel.updateAlertData(
+                AlertData(
+                    text = com.wldmedical.capnoeasy.getString(R.string.base_exit_info, this),
+                    ok_btn_text = com.wldmedical.capnoeasy.getString(R.string.base_exit_ok, this),
+                    cancel_btn_text = com.wldmedical.capnoeasy.getString(R.string.base_exit_cancel, this),
+                    onCancel = {
+                        viewModel.updateAlertData(null)
+                    },
+                    onOk = {
+                        viewModel.updateAlertData(null)
+                        super.onBackPressed()
+                    }
+                )
+            )
+        } else {
+            super.onBackPressed()
+        }
     }
 
     /***
