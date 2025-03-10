@@ -9,8 +9,6 @@ import android.os.Bundle
 import androidx.annotation.RequiresApi
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.ktx.Firebase
 import com.wldmedical.capnoeasy.kits.AppDatabase
 import dagger.hilt.android.HiltAndroidApp
 

@@ -92,6 +92,7 @@
     <string name="pdf_patient_name">姓名：</string>
     <string name="pdf_patient_gender">性别：</string>
     <string name="pdf_patient_age">年龄：</string>
+    <string name="pdf_patient_age_unit">岁</string>
     <string name="pdf_department">科室：</string>
     <string name="pdf_id_number">ID号：</string>
     <string name="pdf_bed_number">床号：</string>

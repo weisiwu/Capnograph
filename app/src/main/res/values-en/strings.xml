@@ -93,6 +93,7 @@
     <string name="pdf_patient_name">Name:</string>
     <string name="pdf_patient_gender">Gender:</string>
     <string name="pdf_patient_age">Age:</string>
+    <string name="pdf_patient_age_unit"></string>
     <string name="pdf_department">Department:</string>
     <string name="pdf_id_number">ID Number:</string>
     <string name="pdf_bed_number">Bed Number:</string>

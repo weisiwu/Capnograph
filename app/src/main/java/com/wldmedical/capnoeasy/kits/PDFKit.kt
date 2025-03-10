@@ -172,7 +172,7 @@ class SaveChartToPdfTask(
         genderCell.border = Rectangle.NO_BORDER
         table.addCell(genderCell)
 
-        val ageCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_age, context)}${printSetting?.age ?: ""}", contentFont))
+        val ageCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_age, context)}${printSetting?.age ?: ""}${getString(R.string.pdf_patient_age_unit, context)}", contentFont))
         ageCell.horizontalAlignment = Element.ALIGN_CENTER
         ageCell.border = Rectangle.NO_BORDER
         table.addCell(ageCell)
