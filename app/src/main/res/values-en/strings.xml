@@ -143,6 +143,7 @@
     <string name="etco2table_name">Name</string>
     <string name="etco2table_gender">Gender</string>
     <string name="etco2table_age">Age</string>
+    <string name="etco2table_age_unit"></string>
     <string name="etco2table_depart">Department</string>
     <string name="etco2table_bed">Bed Number</string>
     <string name="etco2table_fill_in">Please fill in</string>

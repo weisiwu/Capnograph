@@ -327,7 +327,7 @@ class HotmeltPinter {
         esc.addText("********************************\n")
         config.name?.let { esc.addText("姓名: ${config.name}\n") }
         config.gender?.let { esc.addText("性别: ${config.gender}\n") }
-        config.age?.let { if (config.age != 0) { esc.addText("年龄: ${config.age}\n") } }
+        config.age?.let { if (config.age != 0) { esc.addText("年龄: ${config.age}岁\n") } }
         config.pdfIDNumber?.let { esc.addText("ID: ${config.pdfIDNumber}\n") }
         config.pdfDepart?.let { esc.addText("科室: ${config.pdfDepart}\n") }
         config.pdfBedNumber?.let { esc.addText("床号: ${config.pdfBedNumber}\n") }

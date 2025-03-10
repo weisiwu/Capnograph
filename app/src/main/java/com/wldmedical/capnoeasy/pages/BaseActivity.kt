@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.graphics.pdf.PdfDocument.Page
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -29,7 +28,6 @@ import com.wldmedical.capnoeasy.components.ActionModal
 import com.wldmedical.capnoeasy.components.AlertData
 import com.wldmedical.capnoeasy.components.AlertModal
 import com.wldmedical.capnoeasy.components.BaseLayout
-import com.wldmedical.capnoeasy.components.ConfirmData
 import com.wldmedical.capnoeasy.components.ConfirmModal
 import com.wldmedical.capnoeasy.components.Loading
 import com.wldmedical.capnoeasy.components.Toast

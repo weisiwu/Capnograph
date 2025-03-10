@@ -7,6 +7,10 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
+import com.google.firebase.FirebaseApp
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 import com.wldmedical.capnoeasy.kits.AppDatabase
 import dagger.hilt.android.HiltAndroidApp
 
@@ -16,6 +20,8 @@ class CapnoEasyApplication : Application() {
     private var activityCount = 0
 
     lateinit var database: AppDatabase
+
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
 
     // 备份数据库
     lateinit var dbBackupHelperKit: DatabaseBackupHelper
@@ -36,6 +42,8 @@ class CapnoEasyApplication : Application() {
         context = applicationContext
 
         database = AppDatabase.getDatabase(this)
+
+        FirebaseApp.initializeApp(this)
 
         // 启动后开始备份数据库或者恢复数据
         DatabaseBackupHelperManager.initialize(this)

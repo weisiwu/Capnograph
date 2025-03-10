@@ -130,6 +130,17 @@ fun AttributeLine(
             TextField(
                 value = value,
                 singleLine = true,
+                suffix = {
+                    if (attribute.viewModelName == "patientAge") {
+                        Text(
+                            color = Color(0xff1D2129),
+                            fontSize = 16.sp,
+                            lineHeight = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            text = getString(R.string.etco2table_age_unit, context)
+                        )
+                    }
+                },
                 modifier = Modifier
                     .height(baseRowHeight)
                     .padding(0.dp)
@@ -145,6 +156,7 @@ fun AttributeLine(
                         "patientID" -> viewModel.updatePatientID(newVal)
                         "patientAge" -> {
                             val intVal = newVal.toIntOrNull() ?: 0
+                            println("wswTest 看事实吗  $intVal")
                             if (intVal >= patientAgeRange.start && intVal <= patientAgeRange.last) {
                                 viewModel.updatePatientAge(intVal)
                             }
@@ -174,7 +186,9 @@ fun AttributeLine(
                         text = valueText,
                         color = valueColor,
                         fontWeight = valueFontWeight,
-                        modifier = Modifier.fillMaxWidth().weight(1f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
                     )
                 },
             )
@@ -277,14 +291,18 @@ fun EtCo2Table(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupA[0],
-            modifier = Modifier.padding(start = 28.dp).weight(1f),
+            modifier = Modifier
+                .padding(start = 28.dp)
+                .weight(1f),
             context = context
         )
         AttributeLine(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupA[1],
-            modifier = Modifier.padding(end = 29.dp).weight(1f),
+            modifier = Modifier
+                .padding(end = 29.dp)
+                .weight(1f),
             context = context
         )
     }
@@ -297,14 +315,18 @@ fun EtCo2Table(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupB[0],
-            modifier = Modifier.padding(start = 28.dp).weight(1f),
+            modifier = Modifier
+                .padding(start = 28.dp)
+                .weight(1f),
             context = context
         )
         AttributeLine(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupB[1],
-            modifier = Modifier.padding(end = 13.dp).weight(1f),
+            modifier = Modifier
+                .padding(end = 13.dp)
+                .weight(1f),
             context = context
         )
     }
@@ -317,14 +339,18 @@ fun EtCo2Table(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupC[0],
-            modifier = Modifier.padding(start = 28.dp).weight(1f),
+            modifier = Modifier
+                .padding(start = 28.dp)
+                .weight(1f),
             context = context
         )
         AttributeLine(
             viewModel = viewModel,
             blueToothKit = blueToothKit,
             attribute = attributesGroupC[1],
-            modifier = Modifier.padding(end = 13.dp).weight(1f),
+            modifier = Modifier
+                .padding(end = 13.dp)
+                .weight(1f),
             context = context
         )
     }

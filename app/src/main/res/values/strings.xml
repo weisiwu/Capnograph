@@ -142,6 +142,7 @@
     <string name="etco2table_name">姓名</string>
     <string name="etco2table_gender">性别</string>
     <string name="etco2table_age">年龄</string>
+    <string name="etco2table_age_unit">岁</string>
     <string name="etco2table_depart">科室</string>
     <string name="etco2table_bed">床号</string>
     <string name="etco2table_fill_in">请填写</string>

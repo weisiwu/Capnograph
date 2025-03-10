@@ -32,7 +32,6 @@ import java.time.LocalDateTime
  * 主页
  */
 class MainActivity : BaseActivity() {
-    private val STORAGE_PERMISSION_CODE = 101
 
     override var pageScene = PageScene.HOME_PAGE
 
