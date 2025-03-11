@@ -21,6 +21,10 @@ import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.google.firebase.ktx.Firebase
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
@@ -50,6 +54,10 @@ import kotlin.collections.toTypedArray
  */
 @AndroidEntryPoint
 open class BaseActivity : ComponentActivity() {
+
+    protected lateinit var firebaseAnalytics: FirebaseAnalytics
+    protected lateinit var firebaseCrashlytics: FirebaseCrashlytics
+
     // 切换语言
     fun getStringAcitivity(resId: Int): String {
         return getString(resId)
@@ -279,6 +287,10 @@ open class BaseActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 初始化 Firebase 服务
+//        firebaseAnalytics = Firebase.analytics
+//        firebaseCrashlytics = FirebaseCrashlytics.getInstance()
 
         viewModel = ViewModelProvider(this)[AppStateModel::class.java]
 
