@@ -163,32 +163,32 @@ class SaveChartToPdfTask(
 
         // 添加表头单元格
         val nameCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_name, context)}${printSetting?.name ?: ""}", contentFont))
-        nameCell.horizontalAlignment = Element.ALIGN_CENTER
+        nameCell.horizontalAlignment = Element.ALIGN_LEFT
         nameCell.border = Rectangle.NO_BORDER
         table.addCell(nameCell)
 
         val genderCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_gender, context)}${printSetting?.gender ?: ""}", contentFont))
-        genderCell.horizontalAlignment = Element.ALIGN_CENTER
+        genderCell.horizontalAlignment = Element.ALIGN_LEFT
         genderCell.border = Rectangle.NO_BORDER
         table.addCell(genderCell)
 
         val ageCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_age, context)}${printSetting?.age ?: ""}${getString(R.string.pdf_patient_age_unit, context)}", contentFont))
-        ageCell.horizontalAlignment = Element.ALIGN_CENTER
+        ageCell.horizontalAlignment = Element.ALIGN_LEFT
         ageCell.border = Rectangle.NO_BORDER
         table.addCell(ageCell)
 
         val departCell = PdfPCell(Paragraph("${getString(R.string.pdf_department, context)}${printSetting?.pdfDepart ?: ""}", contentFont))
-        departCell.horizontalAlignment = Element.ALIGN_CENTER
+        departCell.horizontalAlignment = Element.ALIGN_LEFT
         departCell.border = Rectangle.NO_BORDER
         table.addCell(departCell)
 
         val idCell = PdfPCell(Paragraph("${getString(R.string.pdf_id_number, context)}${printSetting?.pdfIDNumber ?: ""}", contentFont))
-        idCell.horizontalAlignment = Element.ALIGN_CENTER
+        idCell.horizontalAlignment = Element.ALIGN_LEFT
         idCell.border = Rectangle.NO_BORDER
         table.addCell(idCell)
 
         val bedCell = PdfPCell(Paragraph("${getString(R.string.pdf_bed_number, context)}${printSetting?.pdfBedNumber ?: ""}", contentFont))
-        bedCell.horizontalAlignment = Element.ALIGN_CENTER
+        bedCell.horizontalAlignment = Element.ALIGN_LEFT
         bedCell.border = Rectangle.NO_BORDER
         table.addCell(bedCell)
 
