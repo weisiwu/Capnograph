@@ -273,14 +273,12 @@ fun EtCo2Table(
             viewModelName = "department",
             placeholder = getString(R.string.etco2table_input, context),
             editable = true,
-            isNumber = true
         ),
         Atribute(
             title = getString(R.string.etco2table_bed, context),
             viewModelName = "bedNumber",
             placeholder = getString(R.string.etco2table_input, context),
             editable = true,
-            isNumber = true
         ),
     )
     Row (
