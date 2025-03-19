@@ -37,7 +37,7 @@ class HistoryRecordsActivity : BaseActivity() {
                 withContext(Dispatchers.IO) {
                     val newRecords = localStorageKit.database.recordDao().getAllRecords()
                     withContext(Dispatchers.Main) {
-                        records.addAll(newRecords)
+                        records.addAll(newRecords.reversed())
                     }
                 }
             }

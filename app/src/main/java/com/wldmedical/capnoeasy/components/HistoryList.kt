@@ -158,7 +158,7 @@ fun HistoryList(
 
             // 无分组
             if (rState.value == GROUP_BY.ALL) {
-                newRecords.addAll(rRecords)
+                newRecords.addAll(rRecords.reversed())
             } else {
                 // 带有分组的情况 - 默认走病人
                 var currentGroup = ""
@@ -194,7 +194,7 @@ fun HistoryList(
                             )
                         }
                     }
-                    newRecords.addAll(records)
+                    newRecords.addAll(records.reversed())
                 }
             }
 
