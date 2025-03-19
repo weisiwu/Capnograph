@@ -215,7 +215,6 @@ class MainActivity : BaseActivity() {
                 val application = application as CapnoEasyApplication
 
                 // 访问 dbBackupHelperKit 并调用 restoreDatabase
-                println("wswTest 授权接受后开始处理东西")
                 application.dbBackupHelperKit.startWork(applicationContext, application.database, true)
             } else {
                 // 权限未授予，提示用户或采取其他措施

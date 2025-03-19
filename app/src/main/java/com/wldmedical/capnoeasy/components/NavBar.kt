@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
@@ -104,7 +105,8 @@ fun NavBar(
                     }
                 }
             }
-        }
+        },
+        modifier = Modifier.padding(bottom = 60.dp)
     )
 }
 
