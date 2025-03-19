@@ -54,6 +54,13 @@ class SearchActivity : BaseActivity() {
                                 showMask = false
                             )
                         )
+                        // 扫描结束后，自动连接已经配对设备
+                        val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)
+                        if (deviceAddress != null) {
+                            val device = blueToothKit.bluetoothAdapter?.getRemoteDevice(deviceAddress)
+                            // 尝试自动连接已经配对设备
+                            blueToothKit.connectDevice(device)
+                        }
                     },
                     scanFind = {
                         viewModel.updateDiscoveredPeripherals(it)
