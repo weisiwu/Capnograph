@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.MutableState
@@ -75,6 +77,7 @@ fun NavBar(
     }
 
     TopAppBar(
+        modifier = Modifier.padding(bottom = 40.dp),
         title = {
             Row(
                 horizontalArrangement = Arrangement.Center,
@@ -105,8 +108,7 @@ fun NavBar(
                     }
                 }
             }
-        },
-        modifier = Modifier.padding(bottom = 60.dp)
+        }
     )
 }
 
