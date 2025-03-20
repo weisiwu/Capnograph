@@ -238,7 +238,9 @@ class LocalStorageKit @Inject constructor(
         data: List<CO2WavePointData> = listOf(),
         endTime: LocalDateTime,
         maxETCO2: Float = 0f,
-        lineChart: LineChart? = null
+        lineChart: LineChart? = null,
+        currentETCO2: Float = 0f,
+        currentRR: Int = 0,
     ) {
         withContext(Dispatchers.IO) {
             val dateIndex = generateDateIndex(startTime)
@@ -266,13 +268,15 @@ class LocalStorageKit @Inject constructor(
 
             if (pdfFilePath != null && lineChart != null && context != null) {
                  saveChartToPdfInBackground(
-                     lineChart = lineChart,
-                     data = data,
-                     filePath = pdfFilePath,
-                     record = record,
-                     maxETCO2 = maxETCO2,
-                     printSetting = printSetting,
-                     context = context
+                    lineChart = lineChart,
+                    data = data,
+                    filePath = pdfFilePath,
+                    record = record,
+                    maxETCO2 = maxETCO2,
+                    currentETCO2 = currentETCO2,
+                    currentRR = currentRR,
+                    printSetting = printSetting,
+                    context = context
                  )
             }
 

@@ -80,6 +80,8 @@ class SaveChartToPdfTask(
     private val data: List<CO2WavePointData>,
     private val filePath: String,
     private val maxETCO2: Float,
+    private val currentETCO2: Float,
+    private val currentRR: Int,
     private val record: Record? = null,
     private val context: Context,
     private val printSetting: PrintSetting? = null,
@@ -208,13 +210,12 @@ class SaveChartToPdfTask(
         table.widthPercentage = 100f
         table.setWidths(floatArrayOf(1f, 1f))
 
-        // TODO: 目前这个是假货
-        val ETCO2Cell = PdfPCell(Paragraph("ETCO2：${23.4 ?: ""}", contentFont))
+        val ETCO2Cell = PdfPCell(Paragraph("ETCO2：${currentETCO2}", contentFont))
         ETCO2Cell.horizontalAlignment = Element.ALIGN_CENTER
         ETCO2Cell.border = Rectangle.NO_BORDER
         table.addCell(ETCO2Cell)
 
-        val RRCell = PdfPCell(Paragraph("${getString(R.string.pdf_respiratory_rate, context)}${17 ?: ""}", contentFont))
+        val RRCell = PdfPCell(Paragraph("${getString(R.string.pdf_respiratory_rate, context)}${currentRR}", contentFont))
         RRCell.horizontalAlignment = Element.ALIGN_CENTER
         RRCell.border = Rectangle.NO_BORDER
         table.addCell(RRCell)
@@ -385,6 +386,8 @@ fun saveChartToPdfInBackground(
     data: List<CO2WavePointData>,
     filePath: String,
     maxETCO2: Float = 0f,
+    currentETCO2: Float = 0f,
+    currentRR: Int = 0,
     printSetting: PrintSetting? = null,
     record: Record? = null,
     context: Context,
@@ -403,8 +406,10 @@ fun saveChartToPdfInBackground(
         filePath = filePath,
         record = record,
         maxETCO2 = maxETCO2,
+        currentETCO2 = currentETCO2,
+        currentRR = currentRR,
         printSetting = printSetting,
         context = context,
-        onComplete = {}
+        onComplete = {},
     ).execute()
 }

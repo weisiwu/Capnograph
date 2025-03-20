@@ -185,7 +185,9 @@ class MainActivity : BaseActivity() {
                     data = viewModel.totalCO2WavedData.toList(),
                     startTime = startRecordTime ?: LocalDateTime.now(),
                     endTime = endRecordTime ?: LocalDateTime.now(),
-                    maxETCO2 = viewModel.CO2Scale.value.value
+                    maxETCO2 = viewModel.CO2Scale.value.value,
+                    currentETCO2 = blueToothKit.currentETCO2.value,
+                    currentRR = blueToothKit.currentRespiratoryRate.value,
                 )
             }
         } else {
