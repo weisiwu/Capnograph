@@ -101,16 +101,16 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     // 保存PDF文件
     override fun onSavePDFClick() {
-        if (blueToothKit.connectedCapnoEasy.value == null) {
-            viewModel.updateToastData(
-                ToastData(
-                    text = getStringAcitivity(R.string.recorddetail_record_fail),
-                    showMask = false,
-                    duration = 1000,
-                )
-            )
-            return
-        }
+//        if (blueToothKit.connectedCapnoEasy.value == null) {
+//            viewModel.updateToastData(
+//                ToastData(
+//                    text = getStringAcitivity(R.string.recorddetail_record_fail),
+//                    showMask = false,
+//                    duration = 1000,
+//                )
+//            )
+//            return
+//        }
 
         if (this.sourceFilePath.isNotEmpty()) {
             createPdfDocument()
@@ -148,6 +148,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     @Composable
     override fun Content() {
+        val context = this;
         val recordId = intent.getStringExtra(recordIdParams)
         val totalLen = remember { mutableStateOf(30f) }
         val startValue = remember { mutableStateOf(0f) }
@@ -167,6 +168,15 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     localStorageKit.database.recordDao().queryRecordById(UUID.fromString(recordId))
                 }
                 if (record != null) {
+                    // 为导出做准备
+                    if (record.pdfFilePath != null) {
+                        if (record.pdfFilePath!!.isNotEmpty()) {
+                            context.sourceFilePath = record.pdfFilePath!!
+                            context.saveFileName = "${record.patientIndex}_${record.dateIndex}"
+                            context.currentRecord = record
+                        }
+                    }
+
                     val startIndex = (startValue.value * 100).toInt()
                     val endIndex = startIndex + maxXPoints
                     val safeStartIndex = startIndex.coerceAtLeast(0)
