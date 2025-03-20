@@ -150,6 +150,7 @@ fun EtCo2LineChart(
                         val dataSet = LineDataSet(entries, "ETCO2")
                         dataSet.lineWidth = 2f
                         dataSet.setDrawCircles(false) // 不绘制圆点
+                        dataSet.setDrawValues(false) // 不绘制具体的值
                         val lineData = LineData(dataSet)
                         dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
                         chart.value?.data = lineData
