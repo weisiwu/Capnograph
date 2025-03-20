@@ -141,20 +141,24 @@ class HistoryRecordDetailActivity : BaseActivity() {
                 withContext(Dispatchers.IO) {
                     val record = localStorageKit.database.recordDao().queryRecordById(UUID.fromString(recordId))
                     if (record != null) {
-                        if (record.previewPdfFilePath != null) {
-                            if (record.previewPdfFilePath!!.isNotEmpty()) {
-                                pdfFilePath.value = record.previewPdfFilePath!!
-                                context.sourceFilePath = record.pdfFilePath!!
-                                context.saveFileName = "${record.patientIndex}_${record.dateIndex}"
-                                context.currentRecord = record
-                            }
-                        }
+//                        if (record.previewPdfFilePath != null) {
+//                            if (record.previewPdfFilePath!!.isNotEmpty()) {
+//                                pdfFilePath.value = record.previewPdfFilePath!!
+//                                context.sourceFilePath = record.pdfFilePath!!
+//                                context.saveFileName = "${record.patientIndex}_${record.dateIndex}"
+//                                context.currentRecord = record
+//                            }
+//                        }
                     }
                 }
             }
         }
 
-        if (pdfFilePath.value != "") {
+
+
+//        if (pdfFilePath.value != "") {
+        // 放弃通过PDF预览历史波形数据，但是保留代码
+        if (false) {
             AndroidView(
                 factory = { context ->
                     val pdfFile = File(pdfFilePath.value)
@@ -176,8 +180,8 @@ class HistoryRecordDetailActivity : BaseActivity() {
                 modifier = Modifier
                     .fillMaxSize()
             )
-        } else {
-            Text(getStringAcitivity(R.string.recorddetail_loading))
+//        } else {
+//            Text(getStringAcitivity(R.string.recorddetail_loading))
         }
     }
 }
