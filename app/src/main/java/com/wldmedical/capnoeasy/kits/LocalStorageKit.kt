@@ -52,6 +52,8 @@ data class Record(
     val patientIndex: String = "",
     val isGroupTitle: Boolean = false,
     var pdfFilePath: String? = null,
+    // 保留字段，但是不再设置值，防止App更新后，数据库表字段不一，导致报错
+    var previewPdfFilePath: String? = null,
     val data: List<CO2WavePointData> = listOf(),
     val groupTitle: String = "",
 ): Serializable
