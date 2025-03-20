@@ -52,7 +52,6 @@ data class Record(
     val patientIndex: String = "",
     val isGroupTitle: Boolean = false,
     var pdfFilePath: String? = null,
-    var previewPdfFilePath: String? = null,
     val data: List<CO2WavePointData> = listOf(),
     val groupTitle: String = "",
 ): Serializable
@@ -243,7 +242,6 @@ class LocalStorageKit @Inject constructor(
             val dateIndex = generateDateIndex(startTime)
             val patientIndex = generatePatientIndex(patient)
             var pdfFilePath: String? = null
-            var previewPdfFilePath: String? = null
             val printSetting: PrintSetting? = context?.let { loadPrintSettingFromPreferences(it) }
 
             val formatter = DateTimeFormatter.ofPattern("yyyyMd_HHmmss")
@@ -251,11 +249,6 @@ class LocalStorageKit @Inject constructor(
                 pdfFilePath = File(
                     context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
                     "${recordName}_${patient.name}_${patient.gender.title}_${patient.age}_${startTime.format(formatter)}.pdf"
-                ).absolutePath
-
-                previewPdfFilePath = File(
-                    context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
-                    "${recordName}_${patient.name}_${patient.gender.title}_${patient.age}_${startTime.format(formatter)}_preview.pdf"
                 ).absolutePath
             }
 
@@ -267,7 +260,6 @@ class LocalStorageKit @Inject constructor(
                 dateIndex = dateIndex,
                 patientIndex = patientIndex,
                 pdfFilePath = pdfFilePath,
-                previewPdfFilePath = previewPdfFilePath
             )
 
             if (pdfFilePath != null && lineChart != null && context != null) {
@@ -280,15 +272,6 @@ class LocalStorageKit @Inject constructor(
                      printSetting = printSetting,
                      context = context
                  )
-            }
-
-            if (previewPdfFilePath != null && lineChart != null) {
-                saveChartToPreviewPDFInBackground(
-                    lineChart = lineChart,
-                    data = data,
-                    segmentSize = maxXPoints,
-                    filePath = previewPdfFilePath,
-                )
             }
 
             database.recordDao().insertRecord(record)
