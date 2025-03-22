@@ -84,6 +84,7 @@ class SaveChartToPdfTask(
     private val currentRR: Int,
     private val record: Record? = null,
     private val context: Context,
+    private val showTrendingChart: Boolean,
     private val printSetting: PrintSetting? = null,
     private val onComplete: (Boolean) -> Unit // 添加回调
 ) : AsyncTask<Void, Void, Boolean>() {
@@ -415,7 +416,9 @@ class SaveChartToPdfTask(
             addPDFETCO2(document)
 
             // 趋势图
-            addETCO2TrendChart(document)
+            if (showTrendingChart) {
+                addETCO2TrendChart(document)
+            }
 
             // 保存ETCO2曲线图
             // 当前会压缩波形数据，将波形数据中，连续多少个小于XX的数据去除
@@ -445,6 +448,7 @@ fun saveChartToPdfInBackground(
     currentRR: Int = 0,
     printSetting: PrintSetting? = null,
     record: Record? = null,
+    showTrendingChart: Boolean = true,
     context: Context,
 ) {
     // 反转列表
@@ -465,6 +469,7 @@ fun saveChartToPdfInBackground(
         currentRR = currentRR,
         printSetting = printSetting,
         context = context,
+        showTrendingChart = showTrendingChart,
         onComplete = {},
     ).execute()
 }

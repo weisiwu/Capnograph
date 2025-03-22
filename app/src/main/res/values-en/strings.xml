@@ -48,6 +48,8 @@
     <!-- PrintSettingActivity.kt-->
     <string name="print_output_pdf">PDF</string>
     <string name="print_output_hotmelt">Hotmelt Print</string>
+    <string name="print_show_trend_yes">Show Trend Chart</string>
+    <string name="print_show_trend_no">Hide Trend Chart</string>
     <string name="print_pdf_hospital_name">Hospital Name</string>
     <string name="print_input_name">Please enter the name</string>
     <string name="print_pdf_report_name">Report Name</string>

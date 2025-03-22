@@ -52,6 +52,7 @@ class PrintSettingActivity : BaseActivity() {
         pdfHospitalName = viewModel.pdfHospitalName.value
         pdfReportName = viewModel.pdfReportName.value
         val isPDF = remember { mutableStateOf(viewModel.isPDF.value) }
+        val showTrendingChart = remember { mutableStateOf(viewModel.showTrendingChart.value) }
 
         val context = this
 
@@ -84,7 +85,7 @@ class PrintSettingActivity : BaseActivity() {
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
             )
 
-            // 输出什么类型
+            // 输出类型: 保存PDF或者热熔打印
             TypeSwitch(
                 selectedIndex = if (isPDF.value) 0 else 1,
                 onTypeClick = { type ->
@@ -98,6 +99,30 @@ class PrintSettingActivity : BaseActivity() {
                     ),
                     OutputType(
                         name = getStringAcitivity(R.string.print_output_hotmelt),
+                        id = "否",
+                        index = 1,
+                    ),
+                )
+            )
+
+            Spacer(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+            )
+
+            // 是否展示趋势图？
+            TypeSwitch(
+                selectedIndex = if (showTrendingChart.value) 0 else 1,
+                onTypeClick = { type ->
+                    showTrendingChart.value = type.id == "是"
+                },
+                types = arrayOf(
+                    OutputType(
+                        name = getStringAcitivity(R.string.print_show_trend_yes),
+                        id = "是",
+                        index = 0,
+                    ),
+                    OutputType(
+                        name = getStringAcitivity(R.string.print_show_trend_no),
                         id = "否",
                         index = 1,
                     ),
@@ -126,12 +151,14 @@ class PrintSettingActivity : BaseActivity() {
                         viewModel.updatePdfHospitalName(pdfHospitalName)
                         viewModel.updatePdfReportName(pdfReportName)
                         viewModel.updateIsPDF(isPDF.value)
+                        viewModel.updateShowTrendingChart(showTrendingChart.value)
                         // 将打印设置存储到用户偏好中
                         localStorageKit.saveUserPrintSettingToPreferences(
                             context = context,
                             hospitalName = pdfHospitalName,
                             reportName = pdfReportName,
                             isPDF = isPDF.value,
+                            showTrendingChart = showTrendingChart.value
                         )
 
                         viewModel.updateToastData(

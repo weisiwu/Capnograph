@@ -47,6 +47,8 @@
     <!-- PrintSettingActivity.kt-->
     <string name="print_output_pdf">PDF</string>
     <string name="print_output_hotmelt">热熔打印</string>
+    <string name="print_show_trend_yes">展示趋势图</string>
+    <string name="print_show_trend_no">隐藏趋势图</string>
     <string name="print_pdf_hospital_name">医院名称</string>
     <string name="print_input_name">请输入名称</string>
     <string name="print_pdf_report_name">报告名称</string>

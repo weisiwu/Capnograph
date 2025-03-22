@@ -201,6 +201,7 @@ class LocalStorageKit @Inject constructor(
     private val KEY_PATIENT_NAME = "patient_name"
     private val KEY_PATIENT_GENDER = "patient_gender"
     private val KEY_PATIENT_AGE = "patient_age"
+    private val KEY_SHOW_TREND_CHART = "show_trend_chart"
 
     // 用户语言偏好
     private val KEY_LANGUAGE = "userLanguage"
@@ -240,6 +241,7 @@ class LocalStorageKit @Inject constructor(
         maxETCO2: Float = 0f,
         lineChart: LineChart? = null,
         currentETCO2: Float = 0f,
+        showTrendingChart: Boolean = true,
         currentRR: Int = 0,
     ) {
         withContext(Dispatchers.IO) {
@@ -276,6 +278,7 @@ class LocalStorageKit @Inject constructor(
                     currentETCO2 = currentETCO2,
                     currentRR = currentRR,
                     printSetting = printSetting,
+                    showTrendingChart = showTrendingChart,
                     context = context
                  )
             }
@@ -368,6 +371,7 @@ class LocalStorageKit @Inject constructor(
         name: String? = null,
         gender: String? = null,
         age: Int? = null,
+        showTrendingChart: Boolean? = null
     ) {
         val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
         prefs.edit().apply {
@@ -380,6 +384,7 @@ class LocalStorageKit @Inject constructor(
             name?.let { putString(KEY_PATIENT_NAME, it) }
             gender?.let { putString(KEY_PATIENT_GENDER, it) }
             age?.let { putInt(KEY_PATIENT_AGE, it) }
+            showTrendingChart?.let { putBoolean(KEY_SHOW_TREND_CHART, it) }
         }.apply()
     }
 
@@ -395,6 +400,7 @@ class LocalStorageKit @Inject constructor(
         PrintSetting.name = prefs.getString(KEY_PATIENT_NAME, null)
         PrintSetting.gender = prefs.getString(KEY_PATIENT_GENDER, null)
         PrintSetting.age = prefs.getInt(KEY_PATIENT_AGE, 0)
+        PrintSetting.showTrendingChart = prefs.getBoolean(KEY_SHOW_TREND_CHART, true)
 
         return PrintSetting
     }

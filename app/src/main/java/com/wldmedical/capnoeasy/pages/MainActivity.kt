@@ -102,6 +102,7 @@ class MainActivity : BaseActivity() {
             printSetting.pdfDepart?.let { viewModel.updatePatientDepartment(it) }
             printSetting.pdfBedNumber?.let { viewModel.updatePatientBedNumber(it) }
             printSetting.pdfIDNumber?.let { viewModel.updatePatientID(it) }
+            printSetting.showTrendingChart?.let { viewModel.updateShowTrendingChart(it) }
         } catch (e: Exception) {
             println("wswTest 从用户偏好里读取默认打印设置异常 : ${e.message}")
             e.printStackTrace()
@@ -186,6 +187,7 @@ class MainActivity : BaseActivity() {
                     startTime = startRecordTime ?: LocalDateTime.now(),
                     endTime = endRecordTime ?: LocalDateTime.now(),
                     maxETCO2 = viewModel.CO2Scale.value.value,
+                    showTrendingChart = viewModel.showTrendingChart.value,
                     currentETCO2 = blueToothKit.currentETCO2.value,
                     currentRR = blueToothKit.currentRespiratoryRate.value,
                 )

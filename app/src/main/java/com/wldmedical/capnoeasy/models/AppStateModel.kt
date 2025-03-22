@@ -144,6 +144,9 @@ class AppState @Inject constructor() {
     // app版本
     val appVersion: MutableState<String> = mutableStateOf("")
 
+    // 是否在导出的PDF报告中展示趋势图
+    val showTrendingChart: MutableState<Boolean> = mutableStateOf(true)
+
     // 固件版本
     val firmVersion: MutableState<String> = mutableStateOf("--")
 
@@ -419,7 +422,6 @@ class AppStateModel @Inject constructor(
         }
         appState.language.value = newVal
         val languageCode = if (newVal == LanguageTypes.CHINESE) "zh" else "en"
-        println("wswTest languageCode ${languageCode}")
         // 更新语言的同时，切换整个APP语言设置
         val locale = Locale(languageCode)
         Locale.setDefault(locale)
@@ -430,6 +432,11 @@ class AppStateModel @Inject constructor(
         configuration.setLocale(locale)
         context.resources.updateConfiguration(configuration, context.resources.displayMetrics)
         context.recreate()
+    }
+
+    val showTrendingChart = appState.showTrendingChart
+    fun updateShowTrendingChart(newVal: Boolean) {
+        appState.showTrendingChart.value = newVal
     }
 
     // 固件版本

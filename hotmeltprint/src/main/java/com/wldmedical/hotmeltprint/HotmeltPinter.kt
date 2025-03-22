@@ -41,6 +41,7 @@ public object PrintSetting {
     var name: String? = null
     var gender: String? = null
     var age: Int? = null
+    var showTrendingChart: Boolean = true
 }
 
 object Printer {
