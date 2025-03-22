@@ -212,57 +212,59 @@ class HistoryRecordDetailActivity : BaseActivity() {
                 .fillMaxSize()
                 .verticalScroll(scrollState) // Make the Column vertically scrollable
         ) {
-            // 趋势图: 按照间隔获取硬件设备传回的ETCO2。并将其渲染
-            // 如果整体波形数据少于30秒，不展示
-            // 如果数据极多，会扩大间隔，确保趋势图的点不超过100个
-            AndroidView(
-                factory = {
-                    LineChart(it).apply {
-                        // 设置图表大小
-                        layoutParams = LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            300.dp.value.toInt()
-                        )
+            if (viewModel.showTrendingChart.value) {
+                // 趋势图: 按照间隔获取硬件设备传回的ETCO2。并将其渲染
+                // 如果整体波形数据少于30秒，不展示
+                // 如果数据极多，会扩大间隔，确保趋势图的点不超过100个
+                AndroidView(
+                    factory = {
+                        LineChart(it).apply {
+                            // 设置图表大小
+                            layoutParams = LinearLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                300.dp.value.toInt()
+                            )
 
-                        // 设置图表背景颜色
-                        setBackgroundColor(Color.Transparent.value.toInt())
+                            // 设置图表背景颜色
+                            setBackgroundColor(Color.Transparent.value.toInt())
 
-                        // 设置 X 轴位置
-                        xAxis.position = XAxis.XAxisPosition.BOTTOM
+                            // 设置 X 轴位置
+                            xAxis.position = XAxis.XAxisPosition.BOTTOM
 
-                        // 禁用右侧 Y 轴
-                        axisRight.isEnabled = false
+                            // 禁用右侧 Y 轴
+                            axisRight.isEnabled = false
 
-                        // 隐藏 DescriptionLabel
-                        description.isEnabled = false
+                            // 隐藏 DescriptionLabel
+                            description.isEnabled = false
 
-                        // 设置 Y 轴值范围
-                        axisLeft.axisMinimum = 0f
-                        axisLeft.axisMaximum = viewModel.CO2Scale.value.value
+                            // 设置 Y 轴值范围
+                            axisLeft.axisMinimum = 0f
+                            axisLeft.axisMaximum = viewModel.CO2Scale.value.value
 
-                        // 设置 X 轴格式化器
-                        xAxis.valueFormatter = object : ValueFormatter() {
-                            override fun getFormattedValue(value: Float): String { return "" }
+                            // 设置 X 轴格式化器
+                            xAxis.valueFormatter = object : ValueFormatter() {
+                                override fun getFormattedValue(value: Float): String { return "" }
+                            }
+
+                            trendChart.value = this
                         }
-
-                        trendChart.value = this
-                    }
-                },
-                update = {
-                    // 设置数据
-                    val dataSet = LineDataSet(trendEntries, getStringAcitivity(R.string.chart_trending))
-                    dataSet.lineWidth = 2f
-                    dataSet.setDrawCircles(false) // 不绘制圆点
-                    dataSet.setDrawValues(false) // 不绘制具体的值
-                    val lineData = LineData(dataSet)
-                    dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
-                    trendChart.value?.data = lineData
-                    it.invalidate()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp)
-            )
+                    },
+                    update = {
+                        // 设置数据
+                        val dataSet = LineDataSet(trendEntries, getStringAcitivity(R.string.chart_trending))
+                        dataSet.lineWidth = 2f
+                        dataSet.setDrawCircles(false) // 不绘制圆点
+                        dataSet.setDrawValues(false) // 不绘制具体的值
+                        val lineData = LineData(dataSet)
+                        dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
+                        trendChart.value?.data = lineData
+                        it.invalidate()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                )
+            }
 
             // 渲染波形图
             AndroidView(
