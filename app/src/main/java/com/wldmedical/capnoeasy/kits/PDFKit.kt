@@ -320,9 +320,13 @@ class SaveChartToPdfTask(
     }
 
     private fun addETCO2TrendChart(document: Document) {
-        val filteredData = filterData(data, maxETCO2)
-        val totalPoints = filteredData.size
-        val currentPageData = data.subList(0, totalPoints)
+        // 生成趋势数据
+        val newTrendEntries = mutableListOf<Entry>()
+        var sequentialTrendIndex = 0
+        for (i in data.indices step 50) {
+            newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), data[i].ETCO2))
+            sequentialTrendIndex++
+        }
         val width = 1000 // 设置宽度
         val height = 800 // 设置高度
 
@@ -348,10 +352,7 @@ class SaveChartToPdfTask(
         copyLineChart.requestLayout()
 
         // 绘制当前页的数据
-        val segment = currentPageData.map {
-            Entry(it.index.toFloat(), it.co2)
-        }
-        val dataSet = LineDataSet(segment, getString(R.string.chart_trending, context))
+        val dataSet = LineDataSet(newTrendEntries, getString(R.string.chart_trending, context))
         dataSet.lineWidth = 1f
         dataSet.setDrawCircles(false) // 不绘制圆点
         dataSet.setDrawValues(false) // 不绘制具体的值
@@ -413,12 +414,12 @@ class SaveChartToPdfTask(
             // 打印波形图相关的ETCO2、RR值
             addPDFETCO2(document)
 
+            // 趋势图
+            addETCO2TrendChart(document)
+
             // 保存ETCO2曲线图
             // 当前会压缩波形数据，将波形数据中，连续多少个小于XX的数据去除
             addETCO2LineChart(document)
-
-            // 趋势图
-            addETCO2TrendChart(document)
 
             // PDF页脚
             addPDFFooter(document)
