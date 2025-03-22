@@ -172,4 +172,6 @@
     <string name="actionbar_search">Search</string>
     <string name="actionbar_homepage">Home</string>
     <string name="actionbar_setting">Setting</string>
+    <!-- 趋势图 -->
+    <string name="chart_trending">TrendChart</string>
 </resources>

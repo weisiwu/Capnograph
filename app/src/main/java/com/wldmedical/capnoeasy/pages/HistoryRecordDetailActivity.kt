@@ -101,17 +101,6 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     // 保存PDF文件
     override fun onSavePDFClick() {
-//        if (blueToothKit.connectedCapnoEasy.value == null) {
-//            viewModel.updateToastData(
-//                ToastData(
-//                    text = getStringAcitivity(R.string.recorddetail_record_fail),
-//                    showMask = false,
-//                    duration = 1000,
-//                )
-//            )
-//            return
-//        }
-
         if (this.sourceFilePath.isNotEmpty()) {
             createPdfDocument()
         }
@@ -261,7 +250,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                 },
                 update = {
                     // 设置数据
-                    val dataSet = LineDataSet(trendEntries, "趋势图/TrendChart")
+                    val dataSet = LineDataSet(trendEntries, getStringAcitivity(R.string.chart_trending))
                     dataSet.lineWidth = 2f
                     dataSet.setDrawCircles(false) // 不绘制圆点
                     dataSet.setDrawValues(false) // 不绘制具体的值

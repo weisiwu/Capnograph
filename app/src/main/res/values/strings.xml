@@ -171,4 +171,6 @@
     <string name="actionbar_search">搜索设备</string>
     <string name="actionbar_homepage">主页</string>
     <string name="actionbar_setting">设置</string>
+    <!-- 趋势图 -->
+    <string name="chart_trending">趋势图</string>
 </resources>

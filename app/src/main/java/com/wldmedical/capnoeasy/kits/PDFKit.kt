@@ -299,6 +299,7 @@ class SaveChartToPdfTask(
         val dataSet = LineDataSet(segment, "ETCO2")
         dataSet.lineWidth = 1f
         dataSet.setDrawCircles(false) // 不绘制圆点
+        dataSet.setDrawValues(false) // 不绘制具体的值
         val lineData = LineData(dataSet)
         copyLineChart.data = lineData
         copyLineChart.invalidate()
@@ -318,7 +319,60 @@ class SaveChartToPdfTask(
         document.add(image)
     }
 
-    private fun addETCO2TrendChart(document: Document) {}
+    private fun addETCO2TrendChart(document: Document) {
+        val filteredData = filterData(data, maxETCO2)
+        val totalPoints = filteredData.size
+        val currentPageData = data.subList(0, totalPoints)
+        val width = 1000 // 设置宽度
+        val height = 800 // 设置高度
+
+        // 生成当前页的 Bitmap
+        val currentPageBitmap = Bitmap.createBitmap(1000, 800, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(currentPageBitmap)
+
+        // 绘制当前页的图表
+        val copyLineChart = LineChart(originalLineChart.context)
+        copyLineChart.setBackgroundColor(Color.Transparent.value.toInt())
+        copyLineChart.xAxis.position = originalLineChart.xAxis.position
+        copyLineChart.axisRight.isEnabled = originalLineChart.axisRight.isEnabled
+        copyLineChart.description.isEnabled = originalLineChart.description.isEnabled
+        copyLineChart.axisLeft.axisMinimum = originalLineChart.axisLeft.axisMinimum
+        copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
+        copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
+        copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
+        copyLineChart.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+        )
+        copyLineChart.layout(0, 0, width, height)
+        copyLineChart.requestLayout()
+
+        // 绘制当前页的数据
+        val segment = currentPageData.map {
+            Entry(it.index.toFloat(), it.co2)
+        }
+        val dataSet = LineDataSet(segment, getString(R.string.chart_trending, context))
+        dataSet.lineWidth = 1f
+        dataSet.setDrawCircles(false) // 不绘制圆点
+        dataSet.setDrawValues(false) // 不绘制具体的值
+        val lineData = LineData(dataSet)
+        copyLineChart.data = lineData
+        copyLineChart.invalidate()
+        copyLineChart.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+        )
+        copyLineChart.layout(0, 0, width, height)
+        copyLineChart.draw(canvas)
+
+        // 添加图像到文档
+        val stream = ByteArrayOutputStream()
+        currentPageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        val image = Image.getInstance(stream.toByteArray())
+        image.scaleToFit(document.pageSize.width * 0.9f, document.pageSize.height * 0.9f)
+
+        document.add(image)
+    }
 
     private fun addPDFFooter(document: Document) {
         val contentFont = Font(baseFont, 12f, Font.NORMAL)
