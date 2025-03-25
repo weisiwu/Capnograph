@@ -7,6 +7,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
+import com.tencent.bugly.crashreport.CrashReport
 import com.wldmedical.capnoeasy.kits.AppDatabase
 import dagger.hilt.android.HiltAndroidApp
 
@@ -32,6 +33,8 @@ class CapnoEasyApplication : Application() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate() {
         super.onCreate()
+
+        CrashReport.initCrashReport(getApplicationContext());
 
         context = applicationContext
 

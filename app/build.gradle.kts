@@ -106,6 +106,8 @@ dependencies {
     // 轮播
     implementation("com.google.accompanist:accompanist-pager:0.28.0")
     implementation("com.google.accompanist:accompanist-pager-indicators:0.28.0")
+    // 引入bugly
+    implementation(fileTree(mapOf("include" to listOf("*.aar"), "dir" to "libs")))
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
