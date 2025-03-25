@@ -4,9 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.dagger.hilt.android")  // Hilt 插件
     id("kotlin-kapt")
-    id("com.google.gms.google-services") version "4.4.2" apply false
-    // Add the Crashlytics Gradle plugin
-    id("com.google.firebase.crashlytics")
 }
 
 val vicoVersion = "2.0.1"
@@ -83,7 +80,6 @@ dependencies {
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.layout.android)
-    implementation(libs.firebase.config.ktx)
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0-alpha01")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -110,13 +106,6 @@ dependencies {
     // 轮播
     implementation("com.google.accompanist:accompanist-pager:0.28.0")
     implementation("com.google.accompanist:accompanist-pager-indicators:0.28.0")
-    // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
-    implementation("com.google.firebase:firebase-config-ktx")
-    // When using the BoM, don't specify versions in Firebase dependencies
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-crashlytics")
-    implementation("com.google.firebase:firebase-crashlytics-ktx")
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

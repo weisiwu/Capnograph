@@ -1,17 +1,14 @@
 package com.wldmedical.capnoeasy.pages
 
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
-import android.util.Log
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
 import com.wldmedical.capnoeasy.CapnoEasyApplication
