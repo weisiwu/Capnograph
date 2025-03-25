@@ -5,7 +5,8 @@ plugins {
     id("com.google.dagger.hilt.android")  // Hilt 插件
     id("kotlin-kapt")
     id("com.google.gms.google-services") version "4.4.2" apply false
-    id("com.google.firebase.crashlytics") version "3.0.3" apply false
+    // Add the Crashlytics Gradle plugin
+    id("com.google.firebase.crashlytics")
 }
 
 val vicoVersion = "2.0.1"

@@ -8,8 +8,10 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
 import com.wldmedical.capnoeasy.CapnoEasyApplication
@@ -230,6 +232,16 @@ class MainActivity : BaseActivity() {
 
     @Composable
     override fun Content() {
+        val crashButton = android.widget.Button(this)
+        crashButton.text = "Test Crash"
+        crashButton.setOnClickListener {
+            throw RuntimeException("Test Crash") // Force a crash
+        }
+
+        addContentView(crashButton, ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT))
+
         CapnoEasyTheme {
             EtCo2Table(
                 viewModel = viewModel,
