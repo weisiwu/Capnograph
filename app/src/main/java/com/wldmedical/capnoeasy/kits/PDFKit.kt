@@ -452,11 +452,14 @@ fun saveChartToPdfInBackground(
     context: Context,
 ) {
     // 反转列表
-    val reversedList = data.asReversed()
+    val reversedList = data.filterNotNull().asReversed()
 
     // 更新 index 值
     for (i in reversedList.indices) {
-        reversedList[i].index = i
+        val item = reversedList[i]
+        if (item != null) {
+            item.index = i
+        }
     }
 
     SaveChartToPdfTask(
