@@ -18,6 +18,8 @@ import com.wldmedical.capnoeasy.components.RangeSelector
 import com.wldmedical.capnoeasy.components.RangeType
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.o2CompensationRange
+import kotlin.math.max
+import kotlin.math.min
 
 /***
  * 设置二级页 - 模块
@@ -39,14 +41,26 @@ class ModuleSettingActivity : BaseActivity() {
                 title = "${getStringAcitivity(R.string.module_atmospheric_pressure)}(${viewModel.CO2Unit.value.rawValue})",
                 unit = viewModel.CO2Unit.value.rawValue,
                 enabled = false,
-                value = blueToothKit.airPressure.value,
+                value = min(
+                    max(
+                        airPressureRange.start,
+                        blueToothKit.airPressure.value
+                    ),
+                    airPressureRange.endInclusive
+                ),
                 type = RangeType.ONESIDE,
                 valueRange = airPressureRange,
             )
 
             RangeSelector(
                 title = "${getStringAcitivity(R.string.module_asphyxia_time)}(${TIME_UNIT})",
-                value = asphyxiationTime.toFloat(),
+                value = min(
+                    max(
+                        asphyxiationTimeRange.start,
+                        asphyxiationTime.toFloat()
+                    ),
+                    asphyxiationTimeRange.endInclusive
+                ),
                 unit = TIME_UNIT,
                 type = RangeType.ONESIDE,
                 valueRange = asphyxiationTimeRange,
@@ -58,7 +72,13 @@ class ModuleSettingActivity : BaseActivity() {
             RangeSelector(
                 title = "${getStringAcitivity(R.string.module_oxygen_compensation)}(${O2_UNIT})",
                 unit = O2_UNIT,
-                value = o2Compensation,
+                value = min(
+                    max(
+                        o2CompensationRange.start,
+                        o2Compensation
+                    ),
+                    o2CompensationRange.endInclusive
+                ),
                 type = RangeType.ONESIDE,
                 valueRange = o2CompensationRange,
                 onValueChange = { newVal, _ ->

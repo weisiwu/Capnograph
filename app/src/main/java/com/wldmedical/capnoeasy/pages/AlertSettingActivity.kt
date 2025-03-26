@@ -16,6 +16,8 @@ import com.wldmedical.capnoeasy.components.RangeSelector
 import com.wldmedical.capnoeasy.components.RangeType
 import com.wldmedical.capnoeasy.components.ToastData
 import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
 
 /***
  * 设置二级页 - 报警
@@ -31,10 +33,10 @@ class AlertSettingActivity : BaseActivity() {
     @SuppressLint("NewApi")
     @Composable
     override fun Content() {
-        minETCO2 = viewModel.alertETCO2Range.value.start
-        maxETCO2 = viewModel.alertETCO2Range.value.endInclusive
-        minRR = viewModel.alertRRRange.value.start
-        maxRR = viewModel.alertRRRange.value.endInclusive
+        minETCO2 = min(viewModel.alertETCO2Range.value.start, ETCO2Range.start)
+        maxETCO2 = max(viewModel.alertETCO2Range.value.endInclusive, ETCO2Range.endInclusive)
+        minRR = min(viewModel.alertRRRange.value.start, RRRange.start)
+        maxRR = max(viewModel.alertRRRange.value.endInclusive, RRRange.endInclusive)
 
         Column {
             RangeSelector(
