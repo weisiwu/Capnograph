@@ -41,6 +41,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import com.wldmedical.capnoeasy.FloatToFixed
 import com.wldmedical.capnoeasy.R
+import kotlin.math.absoluteValue
 
 enum class RangeType{
     BOTH,
@@ -70,9 +71,12 @@ fun RangeSelector(
     valueRange: ClosedFloatingPointRange<Float>,
     onValueChange: ((Float, Float?) -> Unit)? = null,
 ) {
+    val _startValue = startValue.coerceAtLeast(valueRange.start).coerceAtMost(valueRange.endInclusive)
+    val _endValue = endValue.coerceAtLeast(valueRange.start).coerceAtMost(valueRange.endInclusive)
+    val _value = value.coerceAtLeast(valueRange.start).coerceAtMost(valueRange.endInclusive)
     val totalOffset = if (unit != "") 200 else 100
-    val singlePosition = remember { mutableFloatStateOf(value) }
-    val bothPosition = remember { mutableStateOf(startValue..endValue) }
+    val singlePosition = remember { mutableFloatStateOf(_value) }
+    val bothPosition = remember { mutableStateOf(_startValue.._endValue) }
     val startTextMeasurer = rememberTextMeasurer()
     val endTextMeasurer = rememberTextMeasurer()
     val thumbColors = SliderDefaults.colors(
