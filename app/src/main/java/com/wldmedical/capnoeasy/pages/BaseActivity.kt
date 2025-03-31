@@ -3,6 +3,8 @@ package com.wldmedical.capnoeasy.pages
 import android.Manifest
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -21,6 +23,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.ActionModal
 import com.wldmedical.capnoeasy.components.AlertData
 import com.wldmedical.capnoeasy.components.AlertModal
@@ -47,6 +50,41 @@ import kotlin.collections.toTypedArray
  */
 @AndroidEntryPoint
 open class BaseActivity : ComponentActivity() {
+
+    // 切换语言
+    fun getStringAcitivity(resId: Int): String {
+        return getString(resId)
+    }
+
+    // 返回拦截
+    override fun onBackPressed() {
+        val firstPageScene = listOf(
+            PageScene.HOME_PAGE,
+            PageScene.SETTING_PAGE,
+            PageScene.DEVICES_LIST_PAGE,
+        )
+        val activityCount = (application as CapnoEasyApplication).getActivityCount()
+
+        if (firstPageScene.contains(pageScene) && activityCount == 1) {
+            viewModel.updateAlertData(
+                AlertData(
+                    text = com.wldmedical.capnoeasy.getString(R.string.base_exit_info, this),
+                    ok_btn_text = com.wldmedical.capnoeasy.getString(R.string.base_exit_ok, this),
+                    cancel_btn_text = com.wldmedical.capnoeasy.getString(R.string.base_exit_cancel, this),
+                    onCancel = {
+                        viewModel.updateAlertData(null)
+                    },
+                    onOk = {
+                        viewModel.updateAlertData(null)
+                        super.onBackPressed()
+                    }
+                )
+            )
+        } else {
+            super.onBackPressed()
+        }
+    }
+
     /***
      * 相关渲染函数
      */
@@ -162,14 +200,12 @@ open class BaseActivity : ComponentActivity() {
 
     // 检查是否已经链接上CannoEasy
     public fun checkHasConnectDevice(cb: (() -> Unit)? = null) {
-        if (blueToothKit.connectedCapnoEasy.size > 0) {
-            if (blueToothKit.connectedCapnoEasy[blueToothKit.connectedCapnoEasyIndex] != null) {
-                cb?.invoke()
-            }
+        if (blueToothKit.connectedCapnoEasy.value != null) {
+            cb?.invoke()
         } else {
             viewModel.updateToastData(
                 ToastData(
-                    text = "未连接设备，请链接后再试",
+                    text = getStringAcitivity(R.string.base_noconnect_msg),
                     showMask = false,
                     duration = 1000,
                 )
@@ -183,13 +219,13 @@ open class BaseActivity : ComponentActivity() {
             arrayOf(
                 Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
             )
         } else {
             arrayOf(
                 Manifest.permission.BLUETOOTH,
                 Manifest.permission.BLUETOOTH_ADMIN,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
             )
         }
 
@@ -206,8 +242,8 @@ open class BaseActivity : ComponentActivity() {
                 //引导用户手动开启权限
                 viewModel.updateAlertData(
                     AlertData(
-                        text = "请开启蓝牙权限",
-                        ok_btn_text = "去开启",
+                        text = getStringAcitivity(R.string.base_infobl_msg),
+                        ok_btn_text = getStringAcitivity(R.string.base_go_open),
                         onOk = {
                             viewModel.updateAlertData(null)
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
@@ -222,6 +258,7 @@ open class BaseActivity : ComponentActivity() {
             }
             return false
         }
+
         return true
     }
 
@@ -229,6 +266,8 @@ open class BaseActivity : ComponentActivity() {
         // 5. 延迟初始化 BlueToothKit
         Handler(Looper.getMainLooper()).postDelayed({
             Log.d("BaseActivity", "Initializing BlueToothKit...")
+            // 已经有设备练级，不再继续初始化
+            if (blueToothKit.connectedCapnoEasy.value != null) return@postDelayed
             BlueToothKitManager.initialize(this, viewModel, true)
             blueToothKit = BlueToothKitManager.blueToothKit
             Log.d("BaseActivity", "BlueToothKit initialized.")
@@ -247,6 +286,7 @@ open class BaseActivity : ComponentActivity() {
         BlueToothKitManager.initialize(this, viewModel)
         blueToothKit = BlueToothKitManager.blueToothKit
 
+        // 重新授权后，初始化
         if (checkBluetoothPermissions()) {
             initializeBlueToothKit()
         }
@@ -257,10 +297,19 @@ open class BaseActivity : ComponentActivity() {
         LocalStorageKitManager.initialize(this, (application as CapnoEasyApplication))
         localStorageKit = LocalStorageKitManager.localStorageKit
 
-        // mock数据，本地测试时候打开
-        // lifecycleScope.launch {
-        //     localStorageKit.mock()
-        // }
+        val language = localStorageKit.loadUserLanguageFromPreferences(this)
+        viewModel.updateLanguage(language, this)
+
+        val packageManager: PackageManager = packageManager
+        try {
+            val packageInfo: PackageInfo = packageManager.getPackageInfo(packageName, 0)
+            viewModel.updateAppVersion(packageInfo.versionName.toString())
+        } catch (e: PackageManager.NameNotFoundException) {
+            Log.e("MainActivity", "找不到包名：$packageName", e)
+        }
+
+        // 禁用横屏，设置为竖屏模式
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         enableEdgeToEdge()
         setContent {

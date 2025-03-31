@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.wldmedical.capnoeasy"
-        minSdk = 26
+        minSdk = 33
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -108,6 +108,8 @@ dependencies {
     // 多设备轮播
     implementation("com.google.accompanist:accompanist-pager:0.28.0")
     implementation("com.google.accompanist:accompanist-pager-indicators:0.28.0")
+    // 引入bugly
+    implementation(fileTree(mapOf("include" to listOf("*.aar"), "dir" to "libs")))
     implementation(libs.androidx.baselibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

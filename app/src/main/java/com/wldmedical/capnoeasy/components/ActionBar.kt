@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.components
 
+import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +20,10 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
 
@@ -27,12 +31,6 @@ data class TabItem(
     val text: String,
     val icon: ImageVector? = null, // 可选的图标
     val index: Int = 0,
-)
-
-val tabs = listOf(
-    TabItem(text = "搜索设备", icon = Icons.Filled.Search, index = 0 ),
-    TabItem(text = "主页", icon = Icons.Filled.Home, index = 1 ),
-    TabItem(text = "设置", icon = Icons.Filled.Settings, index = 2 ),
 )
 
 /**
@@ -46,6 +44,13 @@ fun ActionBar(
     onTabClick: ((index: Int) -> Unit)? = { viewModel.updateCurrentTab(it) },
     isInPreview: Boolean = false
 ) {
+    val context: Context = LocalContext.current
+    val tabs = listOf(
+        TabItem(text = getString(R.string.actionbar_search, context), icon = Icons.Filled.Search, index = 0 ),
+        TabItem(text = getString(R.string.actionbar_homepage, context), icon = Icons.Filled.Home, index = 1 ),
+        TabItem(text = getString(R.string.actionbar_setting, context), icon = Icons.Filled.Settings, index = 2 ),
+    )
+
     Column(
         modifier = if (isInPreview) Modifier.fillMaxWidth() else Modifier.fillMaxSize()
     ) {

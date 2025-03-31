@@ -1,6 +1,7 @@
 package com.wldmedical.capnoeasy.components
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,13 +20,11 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.maskOpacity
 import com.wldmedical.capnoeasy.maxMaskZIndex
 import com.wldmedical.capnoeasy.models.AppState
@@ -54,6 +54,7 @@ fun ActionModal(
     onSavePDFClick: (() -> Unit)? = null,
     onPrintTicketClick: (() -> Unit)? = null
 ) {
+    val context: Context = LocalContext.current
     //起初以为是m3的ModalBottomSheet在Preview模式下不展示
     //https://issuetracker.google.com/issues/283843380
     //按照问题描述，问题已经修复，但实际上我的机器仍然会展示（我的m3版本是正确的）
@@ -92,7 +93,7 @@ fun ActionModal(
                     contentAlignment = Alignment.TopCenter
                 ) {
                     Text(
-                        text = "操作",
+                        text = getString(R.string.actionmodal_operation, context),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.align(Alignment.Center)
@@ -100,21 +101,28 @@ fun ActionModal(
                 }
                 Row(
                     horizontalArrangement = Arrangement.Start,
-                    modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally).padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                        .padding(16.dp),
                 ) {
                     Column(
                         verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.padding(end = 40.dp).clickable {
-                            onSavePDFClick?.invoke()
-                        }
+                        modifier = Modifier
+                            .padding(end = 40.dp)
+                            .clickable {
+                                onSavePDFClick?.invoke()
+                            }
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.print_pdf),
-                            modifier = Modifier.height(62.dp).padding(bottom = 12.dp),
-                            contentDescription = "导出PDF"
+                            modifier = Modifier
+                                .height(62.dp)
+                                .padding(bottom = 12.dp),
+                            contentDescription = getString(R.string.actionmodal_export_pdf, context)
                         )
                         Text(
-                            text = "导出PDF",
+                            text = getString(R.string.actionmodal_export_pdf, context),
                             color = Color(0xFF86909C)
                         )
                     }
@@ -126,11 +134,13 @@ fun ActionModal(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.print_ticket),
-                            modifier = Modifier.height(62.dp).padding(bottom = 12.dp),
-                            contentDescription = "导出PDF"
+                            modifier = Modifier
+                                .height(62.dp)
+                                .padding(bottom = 12.dp),
+                            contentDescription = getString(R.string.actionmodal_print_ticket, context)
                         )
                         Text(
-                            text = "打印小票",
+                            text = getString(R.string.actionmodal_print_ticket, context),
                             color = Color(0xFF86909C)
                         )
                     }
@@ -139,17 +149,20 @@ fun ActionModal(
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().height(54.dp).clickable {
-                        onCancelClick?.invoke()
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                viewModel.updateShowActionModal(false)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp)
+                        .clickable {
+                            onCancelClick?.invoke()
+                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                if (!sheetState.isVisible) {
+                                    viewModel.updateShowActionModal(false)
+                                }
                             }
-                        }
-                    },
+                        },
                 ) {
                     Text(
-                        text = "取消",
+                        text = getString(R.string.actionmodal_cancel, context),
                         color = Color(0xFF86909C),
                     )
                 }

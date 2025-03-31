@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.components
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,11 +26,13 @@ import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.maskOpacity
 import com.wldmedical.capnoeasy.maxMaskZIndex
 import kotlinx.coroutines.delay
@@ -57,6 +60,7 @@ fun Toast(
     onClick: (() -> Unit)? = null,
     onTimeout: (() -> Unit)? = null,
 ) {
+    val context: Context = LocalContext.current
     val isTimeout = remember { mutableStateOf(false) }
 
     if (data == null) {
@@ -114,7 +118,7 @@ fun Toast(
                         ToastType.SUCCESS -> {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "成功",
+                                contentDescription = getString(R.string.toast_success, context),
                                 tint = Color.White
                             )
                         }
@@ -122,7 +126,7 @@ fun Toast(
                             Image(
                                 painter = painterResource(id = R.drawable.fail_icon),
                                 alignment = Alignment.Center,
-                                contentDescription = "失败"
+                                contentDescription = getString(R.string.toast_fail, context)
                             )
                         }
                     }

@@ -1,4 +1,178 @@
 <resources>
     <string name="app_name">CapnoEasy</string>
     <string name="app_version">v1.0.0</string>
+    <!-- CapnoEasyConstant.kt-->
+    <string name="constant_setting">设置</string>
+    <string name="constant_nearby_devices">附近设备</string>
+    <string name="constant_system_setting">系统设置</string>
+    <string name="constant_alert_setting">报警参数</string>
+    <string name="constant_display_setting">显示参数</string>
+    <string name="constant_module_setting">模块参数</string>
+    <string name="constant_print_setting">打印设置</string>
+    <string name="constant_history_records">历史记录</string>
+    <string name="constant_record_detail">记录详情</string>
+    <!-- AlertSettingActivity.kt-->
+    <string name="alertsetting_etco2_range">ETCO2 范围</string>
+    <string name="alertsetting_rr_range">RR 范围</string>
+    <string name="alertsetting_is_setting">正在设置</string>
+    <string name="alertsetting_setting_success">设置成功</string>
+    <!-- BaseActivity.kt-->
+    <string name="base_noconnect_msg">未连接设备，请连接后再试</string>
+    <string name="base_infobl_msg">请开启蓝牙权限</string>
+    <string name="base_go_open">去开启</string>
+    <string name="base_exit_info">确认退出应用?</string>
+    <string name="base_exit_ok">确认</string>
+    <string name="base_exit_cancel">取消</string>
+    <!-- DisplaySettingActivity.kt-->
+    <string name="display_co2_unit">CO2 单位</string>
+    <string name="display_is_setting">正在设置</string>
+    <string name="display_setting_success">设置成功</string>
+    <!-- HistoryRecordDetailActivity.kt-->
+    <string name="recorddetail_loading">正在加载中</string>
+    <string name="recorddetail_print_fail">打印失败，未连接打印机</string>
+    <string name="recorddetail_record_fail">记录失败，未连接仪器</string>
+    <!-- MainActivity.kt-->
+    <string name="main_record_save_success">记录保存成功</string>
+    <string name="main_record_save_check">保存的记录可在设置>历史记录中查看</string>
+    <string name="main_confirm">确认</string>
+    <string name="main_stop_record">停止记录</string>
+    <string name="main_start_record">启动记录</string>
+    <string name="main_cant_record_msg">请填写所有信息后再开始记录</string>
+    <!-- ModuleSettingActivity.kt-->
+    <string name="module_atmospheric_pressure">大气压</string>
+    <string name="module_asphyxia_time">窒息时间</string>
+    <string name="module_oxygen_compensation">氧气补偿</string>
+    <string name="module_is_setting">正在设置</string>
+    <string name="module_setting_success">设置成功</string>
+    <!-- PrintSettingActivity.kt-->
+    <string name="print_output_pdf">PDF</string>
+    <string name="print_output_hotmelt">热熔打印</string>
+    <string name="print_show_trend_yes">展示趋势图</string>
+    <string name="print_show_trend_no">隐藏趋势图</string>
+    <string name="print_pdf_hospital_name">医院名称</string>
+    <string name="print_input_name">请输入名称</string>
+    <string name="print_pdf_report_name">报告名称</string>
+    <string name="print_pdf_depart">科室</string>
+    <string name="print_input_depart">请输入科室</string>
+    <string name="print_pdf_id">ID号</string>
+    <string name="print_input_id">请输入ID号</string>
+    <string name="print_pdf_bed_number">床号</string>
+    <string name="print_input_bed_number">请输入床号</string>
+    <string name="print_is_setting">正在设置</string>
+    <string name="print_setting_success">设置成功</string>
+    <string name="print_setting_fail">设置失败</string>
+    <string name="print_save">保存</string>
+    <!-- SearchActivity.kt-->
+    <string name="search_start">开始搜索</string>
+    <string name="search_finish">搜索结束</string>
+    <string name="search_fail">搜索失败</string>
+    <string name="search_start_connect">开始连接设备</string>
+    <!-- SettingActivity.kt-->
+    <string name="setting_zeroing">正在校零</string>
+    <string name="setting_zeroing_success">成功校零</string>
+    <string name="setting_screen_constant_success">成功设置屏幕常量</string>
+    <string name="setting_shutdown">正在关机</string>
+    <string name="setting_shutdown_success">关机成功</string>
+    <string name="setting_shutdown_fail">关机失败</string>
+    <string name="setting_shutdown_confirm_msg">是否要关机</string>
+    <string name="setting_shutdown_ok">确认</string>
+    <string name="setting_shutdown_cancel">取消</string>
+    <!-- SplashActivity.kt-->
+    <string name="splash_company_name">万联达信科</string>
+    <!-- SystemSettingActivity.kt-->
+    <string name="system_language">语言</string>
+    <string name="system_app_version">APP版本</string>
+    <string name="system_firmware_version">OEM ID</string>
+    <string name="system_hardware_version">硬件版本</string>
+    <string name="system_software_version">软件版本</string>
+    <string name="system_production_date">生产日期</string>
+    <string name="system_serial_number">序列号</string>
+    <string name="system_module_name">部件号</string>
+    <!-- BlueToothKit -->
+    <string name="bluetooth_unknown_device">未知设备</string>
+    <!-- PDFKit -->
+    <string name="pdf_patient_name">姓名：</string>
+    <string name="pdf_patient_gender">性别：</string>
+    <string name="pdf_patient_age">年龄：</string>
+    <string name="pdf_patient_age_unit">岁</string>
+    <string name="pdf_department">科室：</string>
+    <string name="pdf_id_number">ID号：</string>
+    <string name="pdf_bed_number">床号：</string>
+    <string name="pdf_respiratory_rate">呼吸率：</string>
+    <string name="pdf_reporter">报告者：</string>
+    <string name="pdf_report_time">报告时间：</string>
+    <string name="pdf_date_format">yyyy年MM月dd日 HH时mm分ss秒</string>
+    <!-- LocalStorageKit -->
+    <string name="localstorage_all">全部</string>
+    <string name="localstorage_patient">病人</string>
+    <string name="localstorage_time">时间</string>
+    <!-- TypeSwitch -->
+    <string name="typeswitch_bluetooth">蓝牙</string>
+    <string name="typeswitch_classic_bluetooth">经典蓝牙</string>
+    <string name="typeswitch_selected">选中</string>
+    <!-- Toast -->
+    <string name="toast_success">成功</string>
+    <string name="toast_fail">失败</string>
+    <!-- SettingList -->
+    <string name="settinglist_zeroing">校零</string>
+    <string name="settinglist_screen_constant">屏幕常亮</string>
+    <string name="settinglist_alert_setting">报警参数</string>
+    <string name="settinglist_display_setting">显示参数</string>
+    <string name="settinglist_module_setting">模块参数</string>
+    <string name="settinglist_system_setting">系统设置</string>
+    <string name="settinglist_print_setting">打印设置</string>
+    <string name="settinglist_history_records">历史记录</string>
+    <string name="settinglist_shutdown">关机</string>
+    <!-- SaveButton -->
+    <string name="savebutton_save">保存</string>
+    <!-- NavBar -->
+    <string name="navbar_more_actions">更多操作</string>
+    <string name="navbar_recording">记录中</string>
+    <string name="navbar_start_record">开始记录</string>
+    <!-- HistoryList -->
+    <string name="historylist_no_data">没有历史波形数据</string>
+    <string name="historylist_date_format">yyyy年M月d日HH:mm:ss</string>
+    <string name="historylist_year">年</string>
+    <string name="historylist_month">月</string>
+    <string name="historylist_day">日</string>
+    <string name="historylist_age">岁</string>
+    <string name="historylist_male">男</string>
+    <string name="historylist_female">女</string>
+    <!-- EtCo2Table -->
+    <string name="etco2table_select_gender">请选择病人性别</string>
+    <string name="etco2table_male">男</string>
+    <string name="etco2table_female">女</string>
+    <string name="etco2table_name">姓名</string>
+    <string name="etco2table_gender">性别</string>
+    <string name="etco2table_age">年龄</string>
+    <string name="etco2table_age_unit">岁</string>
+    <string name="etco2table_depart">科室</string>
+    <string name="etco2table_bed">床号</string>
+    <string name="etco2table_fill_in">请填写</string>
+    <string name="etco2table_select">请选择</string>
+    <string name="etco2table_input">请输入</string>
+    <!-- EtCo2LineChart -->
+    <string name="etco2linechart_unknown_device">未知设备</string>
+    <!-- DeviceList -->
+    <string name="devicelist_no_devices">附近没有可配对设备！</string>
+    <string name="devicelist_connect">连接</string>
+    <string name="devicelist_rescan">重新搜索</string>
+    <!-- CustomTextField -->
+    <string name="customtextfield_yes">是</string>
+    <string name="customtextfield_no">否</string>
+    <!-- BaseLayout -->
+    <string name="baselayout_recording_in_progress">正在记录中，请先停止</string>
+    <string name="baselayout_stop">停止</string>
+    <string name="baselayout_think_again">再想想</string>
+    <!-- ActionModal -->
+    <string name="actionmodal_operation">操作</string>
+    <string name="actionmodal_export_pdf">导出PDF</string>
+    <string name="actionmodal_print_ticket">热熔打印</string>
+    <string name="actionmodal_cancel">取消</string>
+    <!-- ActionBar -->
+    <string name="actionbar_search">搜索设备</string>
+    <string name="actionbar_homepage">主页</string>
+    <string name="actionbar_setting">设置</string>
+    <!-- 趋势图 -->
+    <string name="chart_trending">趋势图</string>
 </resources>

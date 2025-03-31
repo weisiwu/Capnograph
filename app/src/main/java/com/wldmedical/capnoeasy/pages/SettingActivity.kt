@@ -10,11 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityOptionsCompat
 import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.components.AlertData
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.SettingList
 import com.wldmedical.capnoeasy.components.SettingType
 import com.wldmedical.capnoeasy.components.ToastData
-import com.wldmedical.capnoeasy.components.settings
 
 /***
  * 设置一级页
@@ -29,7 +30,6 @@ class SettingActivity : BaseActivity() {
         val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
          SettingList(
-            settings = settings,
             onSettingClick = { setting ->
                 var couldJump = true
                 var intent = Intent(this, SettingActivity::class.java)
@@ -45,7 +45,7 @@ class SettingActivity : BaseActivity() {
                             couldJump = false
                             viewModel.updateLoadingData(
                                 LoadingData(
-                                    text = "正在校零",
+                                    text = getStringAcitivity(R.string.setting_zeroing),
                                     duration = InfinityDuration,
                                     cancelable = false
                                 )
@@ -54,7 +54,7 @@ class SettingActivity : BaseActivity() {
                                 viewModel.clearXData()
                                 viewModel.updateToastData(
                                     ToastData(
-                                        text = "成功校零",
+                                        text = getStringAcitivity(R.string.setting_zeroing_success),
                                         showMask = false,
                                         duration = 800,
                                     )
@@ -67,7 +67,7 @@ class SettingActivity : BaseActivity() {
                         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                         viewModel.updateToastData(
                             ToastData(
-                                text = "成功设置屏幕常量",
+                                text = getStringAcitivity(R.string.setting_screen_constant_success),
                                 showMask = false,
                                 duration = 800
                             )
@@ -75,23 +75,45 @@ class SettingActivity : BaseActivity() {
                     }
                     SettingType.SHUTDOWN -> {
                         checkHasConnectDevice {
-                            couldJump = false
-                            viewModel.updateLoadingData(
-                                LoadingData(
-                                    text = "正在关机",
-                                    duration = InfinityDuration,
+                            viewModel.updateAlertData(
+                                AlertData(
+                                    text = getStringAcitivity(R.string.setting_shutdown_confirm_msg),
+                                    ok_btn_text = getStringAcitivity(R.string.setting_shutdown_ok),
+                                    cancel_btn_text = getStringAcitivity(R.string.setting_shutdown_cancel),
+                                    onCancel = {
+                                        viewModel.updateAlertData(null)
+                                    },
+                                    onOk = {
+                                        couldJump = false
+                                        viewModel.updateLoadingData(
+                                            LoadingData(
+                                                text = getStringAcitivity(R.string.setting_shutdown),
+                                                duration = 3000,
+                                                callback = {
+                                                    // 关机成功自然消除掉回调
+                                                    viewModel.updateToastData(
+                                                        ToastData(
+                                                            text = getStringAcitivity(R.string.setting_shutdown_fail),
+                                                            showMask = false,
+                                                            duration = 800,
+                                                        )
+                                                    )
+                                                }
+                                            )
+                                        )
+                                        blueToothKit.shutdown() {
+                                            viewModel.clearXData()
+                                            viewModel.updateToastData(
+                                                ToastData(
+                                                    text = getStringAcitivity(R.string.setting_shutdown_success),
+                                                    showMask = false,
+                                                    duration = 800,
+                                                )
+                                            )
+                                        }
+                                    }
                                 )
                             )
-                            blueToothKit.shutdown() {
-                                viewModel.clearXData()
-                                viewModel.updateToastData(
-                                    ToastData(
-                                        text = "成功关机",
-                                        showMask = false,
-                                        duration = 800,
-                                    )
-                                )
-                            }
                         }
                     }
                 }

@@ -1,13 +1,18 @@
 package com.wldmedical.capnoeasy.models
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.bluetooth.BluetoothDevice
+import android.content.res.Configuration
 import android.net.Uri
+import android.os.Build
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import com.github.mikephil.charting.charts.LineChart
 import com.wldmedical.capnoeasy.CO2_SCALE
@@ -27,6 +32,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.Serializable
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -36,7 +42,7 @@ data class CO2WavePointData(
     val RR: Int = 0,
     val ETCO2: Float = 0f,
     val FiCO2: Float = 0f,
-    val index: Int = 0
+    var index: Int = 0
 ): Serializable
 
 /**
@@ -96,18 +102,6 @@ class AppState @Inject constructor() {
     // ETCO2
     val etCO2: MutableState<Float> = mutableFloatStateOf(0f)
 
-    // 病人姓名
-    val patientName: MutableState<String?> = mutableStateOf(null)
-
-    // 性别
-    val patientGender: MutableState<GENDER?> = mutableStateOf(null)
-
-    // 年龄
-    val patientAge: MutableState<Int?> = mutableStateOf(null)
-
-    // ID
-    val patientID: MutableState<String?> = mutableStateOf(null)
-
     // 本次记录的所有capnoeasy波形数据, 此数据和app状态相关，所以放在这里。
     var totalCO2WavedData = mutableListOf<CO2WavePointData>()
 
@@ -147,6 +141,12 @@ class AppState @Inject constructor() {
     // 语言
     val language: MutableState<LanguageTypes> = mutableStateOf(LanguageTypes.CHINESE)
 
+    // app版本
+    val appVersion: MutableState<String> = mutableStateOf("")
+
+    // 是否在导出的PDF报告中展示趋势图
+    val showTrendingChart: MutableState<Boolean> = mutableStateOf(true)
+
     // 固件版本
     val firmVersion: MutableState<String> = mutableStateOf("--")
 
@@ -166,37 +166,35 @@ class AppState @Inject constructor() {
     val moduleName: MutableState<String> = mutableStateOf("CapnoGraph")
 
     /***
-     * PDF相关设置
+     * 打印相关数据
      */
     // 医院名称
     val pdfHospitalName: MutableState<String> = mutableStateOf("")
 
+    // 报告名称
+    val pdfReportName: MutableState<String> = mutableStateOf("")
+
+    // 是否以PDF格式输出
+    val isPDF: MutableState<Boolean> = mutableStateOf(true)
+
+    // 病人相关数据都会出现在打印结果中
+    // 病人姓名
+    val patientName: MutableState<String?> = mutableStateOf(null)
+
+    // 性别
+    val patientGender: MutableState<GENDER?> = mutableStateOf(null)
+
+    // 年龄
+    val patientAge: MutableState<Int?> = mutableStateOf(null)
+
+    // ID
+    val patientID: MutableState<String?> = mutableStateOf(null)
+
     // 科室
-    val pdfDepart: MutableState<String> = mutableStateOf("")
+    val patientDepartment: MutableState<String?> = mutableStateOf(null)
 
-    // 床号
-    val pdfBedNumber: MutableState<String> = mutableStateOf("")
-
-    // id号
-    val pdfIDNumber: MutableState<String> = mutableStateOf("")
-
-    /***
-     * 打印相关数据
-     */
-    // 打印设置-地址
-    val printAddress: MutableState<String> = mutableStateOf("")
-
-    // 打印设置-电话
-    val printPhone: MutableState<String> = mutableStateOf("")
-
-    // 打印设置-网址
-    val printUrl: MutableState<String> = mutableStateOf("")
-
-    // 打印设置-是否支持网址二维码
-    val printUrlQRCode: MutableState<Boolean> = mutableStateOf(true)
-
-    // 打印设置-Logo
-    val printLogo: MutableState<Uri?> = mutableStateOf(null)
+    // 病床号
+    val patientBedNumber: MutableState<String?> = mutableStateOf(null)
 
     /***
      * 实时蓝牙设备数据
@@ -328,6 +326,18 @@ class AppStateModel @Inject constructor(
         appState.patientID.value = newVal
     }
 
+    // 科室
+    val patientDepartment = appState.patientDepartment
+    fun updatePatientDepartment(newVal: String) {
+        appState.patientDepartment.value = newVal
+    }
+
+    // 床号
+    val patientBedNumber = appState.patientBedNumber
+    fun updatePatientBedNumber(newVal: String) {
+        appState.patientBedNumber.value = newVal
+    }
+
     // 本次记录的蓝牙波形数据
     val totalCO2WavedData = appState.totalCO2WavedData
     fun updateTotalCO2WavedData(newVal: CO2WavePointData? = null) {
@@ -398,10 +408,35 @@ class AppStateModel @Inject constructor(
         appState.airPressure.value = newVal
     }
 
+    // 大气压
+    val appVersion = appState.appVersion
+    fun updateAppVersion(newVal: String) {
+        appState.appVersion.value = newVal
+    }
+
     // 语言
     val language = appState.language
-    fun updateLanguage(newVal: LanguageTypes) {
+    fun updateLanguage(newVal: LanguageTypes, context: Activity) {
+        if (newVal == appState.language.value) {
+            return
+        }
         appState.language.value = newVal
+        val languageCode = if (newVal == LanguageTypes.CHINESE) "zh" else "en"
+        // 更新语言的同时，切换整个APP语言设置
+        val locale = Locale(languageCode)
+        Locale.setDefault(locale)
+        val localeList = LocaleListCompat.create(locale)
+        AppCompatDelegate.setApplicationLocales(localeList)
+        // 更新Configuration
+        val configuration = Configuration(context.resources.configuration)
+        configuration.setLocale(locale)
+        context.resources.updateConfiguration(configuration, context.resources.displayMetrics)
+        context.recreate()
+    }
+
+    val showTrendingChart = appState.showTrendingChart
+    fun updateShowTrendingChart(newVal: Boolean) {
+        appState.showTrendingChart.value = newVal
     }
 
     // 固件版本
@@ -446,52 +481,16 @@ class AppStateModel @Inject constructor(
         appState.pdfHospitalName.value = newVal
     }
 
-    // pdf设置-科室
-    val pdfDepart = appState.pdfDepart
-    fun updatePdfDepart(newVal: String) {
-        appState.pdfDepart.value = newVal
+    // pdf设置-报告名称
+    val pdfReportName = appState.pdfReportName
+    fun updatePdfReportName(newVal: String) {
+        appState.pdfReportName.value = newVal
     }
 
-    // pdf设置-床号
-    val pdfBedNumber = appState.pdfBedNumber
-    fun updatePdfBedNumber(newVal: String) {
-        appState.pdfBedNumber.value = newVal
-    }
-
-    // pdf设置-医院名称
-    val pdfIDNumber = appState.pdfIDNumber
-    fun updatePdfIDNumber(newVal: String) {
-        appState.pdfIDNumber.value = newVal
-    }
-
-    // 打印设置-地址
-    val printAddress = appState.printAddress
-    fun updatePrintAddress(newVal: String) {
-        appState.printAddress.value = newVal
-    }
-
-    // 打印设置-电话
-    val printPhone = appState.printPhone
-    fun updatePrintPhone(newVal: String) {
-        appState.printPhone.value = newVal
-    }
-
-    // 打印设置-网址
-    val printUrl = appState.printUrl
-    fun updatePrintUrl(newVal: String) {
-        appState.printUrl.value = newVal
-    }
-
-    // 打印设置-是否支持网址二维码
-    val printUrlQRCode = appState.printUrlQRCode
-    fun updatePrintUrlQRCode(newVal: Boolean) {
-        appState.printUrlQRCode.value = newVal
-    }
-
-    // 打印设置-Logo
-    val printLogo = appState.printLogo
-    fun updatePrintLogo(newVal: Uri?) {
-        appState.printLogo.value = newVal
+    // pdf设置-是否以PDF格式输出
+    val isPDF = appState.isPDF
+    fun updateIsPDF(newVal: Boolean) {
+        appState.isPDF.value = newVal
     }
 
     // 附近蓝牙设备-扫描结果

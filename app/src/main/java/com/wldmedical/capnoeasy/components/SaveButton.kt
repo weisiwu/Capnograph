@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,9 +17,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 
 /***
  * 保存按钮
@@ -27,6 +31,7 @@ import androidx.compose.ui.unit.sp
 fun SaveButton(
     onClick: (() -> Unit)? = null,
 ) {
+    val context: Context = LocalContext.current
     Row(
         horizontalArrangement = Arrangement.Center,
         modifier = Modifier
@@ -39,7 +44,7 @@ fun SaveButton(
             }
         ) {
             Text(
-                text = "保存",
+                text = getString(R.string.savebutton_save, context),
                 letterSpacing = 5.sp,
                 color = Color(0xff165DFF),
                 fontSize = 16.sp,

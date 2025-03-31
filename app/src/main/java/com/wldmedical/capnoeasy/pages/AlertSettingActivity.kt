@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import com.wldmedical.capnoeasy.ETCO2Range
 import com.wldmedical.capnoeasy.InfinityDuration
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.RRRange
 import com.wldmedical.capnoeasy.RR_UNIT
 import com.wldmedical.capnoeasy.components.LoadingData
@@ -15,6 +16,8 @@ import com.wldmedical.capnoeasy.components.RangeSelector
 import com.wldmedical.capnoeasy.components.RangeType
 import com.wldmedical.capnoeasy.components.ToastData
 import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
 
 /***
  * 设置二级页 - 报警
@@ -30,14 +33,14 @@ class AlertSettingActivity : BaseActivity() {
     @SuppressLint("NewApi")
     @Composable
     override fun Content() {
-        minETCO2 = viewModel.alertETCO2Range.value.start
-        maxETCO2 = viewModel.alertETCO2Range.value.endInclusive
-        minRR = viewModel.alertRRRange.value.start
-        maxRR = viewModel.alertRRRange.value.endInclusive
+        minETCO2 = min(viewModel.alertETCO2Range.value.start, ETCO2Range.start)
+        maxETCO2 = max(viewModel.alertETCO2Range.value.endInclusive, ETCO2Range.endInclusive)
+        minRR = min(viewModel.alertRRRange.value.start, RRRange.start)
+        maxRR = max(viewModel.alertRRRange.value.endInclusive, RRRange.endInclusive)
 
         Column {
             RangeSelector(
-                title = "ETCO2 范围",
+                title = getStringAcitivity(R.string.alertsetting_etco2_range),
                 unit = viewModel.CO2Unit.value.rawValue,
                 type = RangeType.BOTH,
                 startValue = minETCO2,
@@ -52,7 +55,7 @@ class AlertSettingActivity : BaseActivity() {
             )
 
             RangeSelector(
-                title = "RR 范围",
+                title = getStringAcitivity(R.string.alertsetting_rr_range),
                 unit = RR_UNIT,
                 type = RangeType.BOTH,
                 startValue = minRR,
@@ -76,7 +79,7 @@ class AlertSettingActivity : BaseActivity() {
                     viewModel.updateAlertETCO2Range(minETCO2, maxETCO2)
                     viewModel.updateLoadingData(
                         LoadingData(
-                            text = "正在设置",
+                            text = getStringAcitivity(R.string.alertsetting_is_setting),
                             duration = InfinityDuration,
                         )
                     )
@@ -89,7 +92,7 @@ class AlertSettingActivity : BaseActivity() {
                             viewModel.clearXData()
                             viewModel.updateToastData(
                                 ToastData(
-                                    text = "设置成功",
+                                    text = getStringAcitivity(R.string.alertsetting_setting_success),
                                     showMask = false,
                                     duration = 800,
                                 )

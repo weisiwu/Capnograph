@@ -1,6 +1,7 @@
 package com.wldmedical.capnoeasy.components
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.compose.foundation.background
@@ -19,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -33,6 +35,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.kits.BlueToothKitManager.blueToothKit
 import com.wldmedical.capnoeasy.kits.maxXPoints
@@ -51,6 +55,7 @@ fun EtCo2LineChart(
     blueToothKit: BlueToothKit,
     viewModel: AppStateModel
 ) {
+    val context: Context = LocalContext.current
     var index = 0f
     val chart: MutableState<LineChart?> = remember { mutableStateOf(null) }
     val entries = remember { mutableStateListOf<Entry>() }.apply {
@@ -82,7 +87,7 @@ fun EtCo2LineChart(
             .background(Color.Transparent)
     ) {
         HorizontalPager(
-            count = blueToothKit.connectedCapnoEasy.size,
+            count = 1,
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
@@ -90,12 +95,12 @@ fun EtCo2LineChart(
         ) { page ->
             blueToothKit.connectedCapnoEasyIndex = pagerState.currentPage
 
-            if (blueToothKit.connectedCapnoEasy.size > 0) {
-                val currentDevice = blueToothKit.connectedCapnoEasy[blueToothKit.connectedCapnoEasyIndex];
+            if (blueToothKit.connectedCapnoEasy.value != null) {
+                val currentDevice = blueToothKit.connectedCapnoEasy.value;
 
                 if (currentDevice != null) {
                     Text(
-                        text = if(currentDevice.name == null) "未知设备" else currentDevice.name,
+                        text = if(currentDevice.name == null) getString(R.string.etco2linechart_unknown_device, context) else currentDevice.name,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                 }
@@ -145,6 +150,7 @@ fun EtCo2LineChart(
                         val dataSet = LineDataSet(entries, "ETCO2")
                         dataSet.lineWidth = 2f
                         dataSet.setDrawCircles(false) // 不绘制圆点
+                        dataSet.setDrawValues(false) // 不绘制具体的值
                         val lineData = LineData(dataSet)
                         dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
                         chart.value?.data = lineData

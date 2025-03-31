@@ -27,12 +27,6 @@ data class SupportQRCodeType(
     override val index: Int
 ): CustomType
 
-val SupportQRCodeTypes: Array<CustomType> = arrayOf(
-    SupportQRCodeType(name = "是", id = "是", index = 0),
-    SupportQRCodeType(name = "否", id = "否", index = 1),
-)
-
-// TODO: 缺少一个选择图片的能力
 @Composable
 fun CustomTextField(
     title: String? = null,

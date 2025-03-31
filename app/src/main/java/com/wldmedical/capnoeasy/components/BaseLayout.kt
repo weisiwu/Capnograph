@@ -4,13 +4,21 @@ import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityOptionsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.pages.MainActivity
 import com.wldmedical.capnoeasy.pages.SearchActivity
@@ -32,7 +40,9 @@ fun BaseLayout(
     val options = ActivityOptionsCompat.makeCustomAnimation(context, 0, 0)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
-    Column {
+    Column (
+        modifier = Modifier.background(Color.White)
+    ) {
         ActionBar(
             viewModel = viewModel,
             onTabClick = { index ->
@@ -40,9 +50,9 @@ fun BaseLayout(
                 if (viewModel.isRecording.value) {
                     viewModel.updateAlertData(
                         AlertData(
-                            text = "正在记录中，请先停止",
-                            ok_btn_text = "停止",
-                            cancel_btn_text = "再想想",
+                            text = getString(R.string.baselayout_recording_in_progress, context),
+                            ok_btn_text = getString(R.string.baselayout_stop, context),
+                            cancel_btn_text = getString(R.string.baselayout_think_again, context),
                             onOk = { onNavBarRightClick?.invoke() },
                             onCancel = { viewModel.updateAlertData(null) },
                         )
@@ -76,12 +86,6 @@ fun BaseLayout(
 
         NavBar(
             viewModel = viewModel,
-//            onLeftClick = {
-//                val intent = Intent()
-//                intent.putExtra("result", "back")
-//                context.setResult(RESULT_OK, intent)
-//                context.finish()
-//            },
             onRightClick = {
                 onNavBarRightClick?.invoke()
             }

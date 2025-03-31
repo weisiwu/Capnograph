@@ -2,7 +2,6 @@ package com.wldmedical.capnoeasy.kits
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.net.Uri
 import android.os.Environment
 import androidx.compose.runtime.mutableStateOf
 import androidx.room.Dao
@@ -21,8 +20,8 @@ import com.google.gson.reflect.TypeToken
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.DATABASE_NS
 import com.wldmedical.capnoeasy.GENDER
+import com.wldmedical.capnoeasy.LanguageTypes
 import com.wldmedical.capnoeasy.USER_PREF_NS
-import com.wldmedical.capnoeasy.components.formatter
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.PrintSetting
 import dagger.hilt.android.qualifiers.ActivityContext
@@ -33,15 +32,7 @@ import java.time.LocalDateTime
 import javax.inject.Inject
 import java.io.Serializable
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import java.util.UUID
-
-public object PDFSetting {
-    var pdfHospitalName: String? = null
-    var pdfDepart: String? = null
-    var pdfBedNumber: String? = null
-    var pdfIDNumber: String? = null
-}
 
 @Entity(tableName = "patients")
 data class Patient(
@@ -61,6 +52,8 @@ data class Record(
     val patientIndex: String = "",
     val isGroupTitle: Boolean = false,
     var pdfFilePath: String? = null,
+    // 保留字段，但是不再设置值，防止App更新后，数据库表字段不一，导致报错
+    var previewPdfFilePath: String? = null,
     val data: List<CO2WavePointData> = listOf(),
     val groupTitle: String = "",
 ): Serializable
@@ -74,12 +67,6 @@ enum class GROUP_BY {
 data class Group(
     val type: GROUP_BY = GROUP_BY.ALL,
     val name: String,
-)
-
-val Groups = listOf(
-    Group(name = "全部", type = GROUP_BY.ALL),
-    Group(name = "病人", type = GROUP_BY.PATIENT),
-    Group(name = "时间", type = GROUP_BY.DATE),
 )
 
 @Dao
@@ -205,19 +192,19 @@ class LocalStorageKit @Inject constructor(
     application: CapnoEasyApplication
 ) {
     // 打印设置相关key
-    private val KEY_MAC_ADDRESS = "mac_address"
     private val KEY_HOSPITAL_NAME = "hospital_name"
-    private val KEY_PRINT_ADDRESS = "print_address"
-    private val KEY_PRINT_PHONE = "print_phone"
-    private val KEY_PRINT_URL = "print_url"
-    private val KEY_PRINT_LOGO_URI = "print_logo_uri"
-    private val KEY_PRINT_URL_QR_CODE = "print_url_qr_code"
-
-    // PDF设置
-    private val KEY_PDFHOSPITALNAME = "pdfHospitalName"
+    private val KEY_REPORT_NAME = "report_name"
+    private val KEY_OUTPUT_PDF = "is_output_pdf"
     private val KEY_PDFDEPART = "pdfDepart"
     private val KEY_PDFBEDNUMBER = "pdfBedNumber"
     private val KEY_PDFIDNUMBER = "pdfIDNumber"
+    private val KEY_PATIENT_NAME = "patient_name"
+    private val KEY_PATIENT_GENDER = "patient_gender"
+    private val KEY_PATIENT_AGE = "patient_age"
+    private val KEY_SHOW_TREND_CHART = "show_trend_chart"
+
+    // 用户语言偏好
+    private val KEY_LANGUAGE = "userLanguage"
 
     var patients: MutableList<Patient> = mutableListOf()
 
@@ -226,16 +213,6 @@ class LocalStorageKit @Inject constructor(
     val state = mutableStateOf(GROUP_BY.ALL)
 
     val database = application.database
-
-    // 将字符串解析为 LocalDateTime 对象
-    fun handleTime(str: String): LocalDateTime? {
-        try {
-            return LocalDateTime.parse(str, formatter)
-        } catch (e: DateTimeParseException) {
-            println("Invalid date time format: ${e.message}") // 捕获并处理解析异常
-            return null
-        }
-    }
 
     /***
      * 保存病人
@@ -258,22 +235,26 @@ class LocalStorageKit @Inject constructor(
         context: Context? = null,
         patient: Patient,
         startTime: LocalDateTime,
+        recordName: String = "",
         data: List<CO2WavePointData> = listOf(),
         endTime: LocalDateTime,
         maxETCO2: Float = 0f,
-        lineChart: LineChart? = null
+        lineChart: LineChart? = null,
+        currentETCO2: Float = 0f,
+        showTrendingChart: Boolean = true,
+        currentRR: Int = 0,
     ) {
         withContext(Dispatchers.IO) {
             val dateIndex = generateDateIndex(startTime)
-            val timeIndex = generateTimeIndex(startTime)
             val patientIndex = generatePatientIndex(patient)
             var pdfFilePath: String? = null
-            val pdfSetting: PDFSetting? = context?.let { loadPDFSettingFromPreferences(it) }
+            val printSetting: PrintSetting? = context?.let { loadPrintSettingFromPreferences(it) }
 
+            val formatter = DateTimeFormatter.ofPattern("yyyyMd_HHmmss")
             if (context != null) {
                 pdfFilePath = File(
                     context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
-                    "${patientIndex}_${dateIndex}${timeIndex}.pdf"
+                    "${recordName}_${patient.name}_${patient.gender.title}_${patient.age}_${startTime.format(formatter)}.pdf"
                 ).absolutePath
             }
 
@@ -287,16 +268,19 @@ class LocalStorageKit @Inject constructor(
                 pdfFilePath = pdfFilePath,
             )
 
-            if (pdfFilePath != null && lineChart != null) {
-                println("wswTest 保存pdf文件的地址是什么 ${pdfFilePath}")
-                saveChartToPdfInBackground(
+            if (pdfFilePath != null && lineChart != null && context != null) {
+                 saveChartToPdfInBackground(
                     lineChart = lineChart,
                     data = data,
                     filePath = pdfFilePath,
                     record = record,
                     maxETCO2 = maxETCO2,
-                    pdfSetting = pdfSetting
-                )
+                    currentETCO2 = currentETCO2,
+                    currentRR = currentRR,
+                    printSetting = printSetting,
+                    showTrendingChart = showTrendingChart,
+                    context = context
+                 )
             }
 
             database.recordDao().insertRecord(record)
@@ -350,33 +334,27 @@ class LocalStorageKit @Inject constructor(
     }
 
     /***
-     * 用户PDF偏好，保存到本地
+     * 保存用户语言选择
      */
-    fun saveUserPDFSettingToPreferences(
+    fun saveUserLanguageToPreferences(
         context: Context,
-        pdfHospitalName: String? = "",
-        pdfDepart: String? = "",
-        pdfBedNumber: String? = "",
-        pdfIDNumber: String? = "",
+        language: String = "zh",
     ) {
         val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
         prefs.edit().apply {
-            pdfHospitalName?.let { putString(KEY_PDFHOSPITALNAME, it) } ?: remove(KEY_PDFHOSPITALNAME)
-            pdfDepart?.let { putString(KEY_PDFDEPART, it) } ?: remove(KEY_PDFDEPART)
-            pdfBedNumber?.let { putString(KEY_PDFBEDNUMBER, it) } ?: remove(KEY_PDFBEDNUMBER)
-            pdfIDNumber?.let { putString(KEY_PDFIDNUMBER, it) } ?: remove(KEY_PDFIDNUMBER)
+            language?.let { putString(KEY_LANGUAGE, it) } ?: remove(KEY_LANGUAGE)
         }.apply()
     }
 
-    // 读取PDF偏好打印设置
-    fun loadPDFSettingFromPreferences(context: Context): PDFSetting {
+    // 读取用户语言
+    fun loadUserLanguageFromPreferences(context: Context): LanguageTypes {
         val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
-        PDFSetting.pdfHospitalName = prefs.getString(KEY_PDFHOSPITALNAME, null)
-        PDFSetting.pdfDepart = prefs.getString(KEY_PDFDEPART, null)
-        PDFSetting.pdfBedNumber = prefs.getString(KEY_PDFBEDNUMBER, null)
-        PDFSetting.pdfIDNumber = prefs.getString(KEY_PDFIDNUMBER, null)
+        val language = prefs.getString(KEY_LANGUAGE, null)
 
-        return PDFSetting
+        if (language == "en") {
+            return LanguageTypes.ENGLISH
+        }
+        return LanguageTypes.CHINESE
     }
 
     /***
@@ -384,46 +362,45 @@ class LocalStorageKit @Inject constructor(
      */
     fun saveUserPrintSettingToPreferences(
         context: Context,
-        macAddress: String? = "",
-        printPhone: String = "",
-        printAddress: String = "",
-        printUrl: String = "",
-        printLogo: Uri? = null,
-        printUrlQRCode: Boolean? = true,
+        hospitalName: String? = null,
+        reportName: String? = null,
+        isPDF: Boolean = true,
+        depart: String? = null,
+        bedNumber: String? = null,
+        idNumber: String? = null,
+        name: String? = null,
+        gender: String? = null,
+        age: Int? = null,
+        showTrendingChart: Boolean? = null
     ) {
         val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
         prefs.edit().apply {
-            // 处理可空字符串
-            macAddress?.let { putString(KEY_MAC_ADDRESS, it) } ?: remove(KEY_MAC_ADDRESS)
-            putString(KEY_PRINT_ADDRESS, printAddress)
-            putString(KEY_PRINT_PHONE, printPhone)
-            putString(KEY_PRINT_URL, printUrl)
-
-            // 处理 Uri 类型
-            printLogo?.let { uri ->
-                putString(KEY_PRINT_LOGO_URI, uri.toString())
-            } ?: remove(KEY_PRINT_LOGO_URI)
-
-            // Boolean 类型（非空）
-            putBoolean(KEY_PRINT_URL_QR_CODE, printUrlQRCode ?: true)
-        }.apply() // 异步提交
+            hospitalName?.let { putString(KEY_HOSPITAL_NAME, it) }
+            reportName?.let { putString(KEY_REPORT_NAME, it) }
+            putBoolean(KEY_OUTPUT_PDF, isPDF)
+            depart?.let { putString(KEY_PDFDEPART, it) }
+            bedNumber?.let { putString(KEY_PDFBEDNUMBER, it) }
+            idNumber?.let { putString(KEY_PDFIDNUMBER, it) }
+            name?.let { putString(KEY_PATIENT_NAME, it) }
+            gender?.let { putString(KEY_PATIENT_GENDER, it) }
+            age?.let { putInt(KEY_PATIENT_AGE, it) }
+            showTrendingChart?.let { putBoolean(KEY_SHOW_TREND_CHART, it) }
+        }.apply()
     }
 
     // 读取用户偏好打印设置
     fun loadPrintSettingFromPreferences(context: Context): PrintSetting {
         val prefs = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
-        PrintSetting.macAddress = prefs.getString(KEY_MAC_ADDRESS, null)
-        PrintSetting.printAddress = prefs.getString(KEY_PRINT_ADDRESS, null)
-        PrintSetting.printPhone = prefs.getString(KEY_PRINT_PHONE, null)
-        PrintSetting.printUrl = prefs.getString(KEY_PRINT_URL, null)
-
-        // 还原 Uri
-        prefs.getString(KEY_PRINT_LOGO_URI, null)?.let { uriStr ->
-            PrintSetting.printLogo = Uri.parse(uriStr)
-        }
-
-        // Boolean 类型（需处理兼容性，旧版本可能无此键）
-        PrintSetting.printUrlQRCode = prefs.getBoolean(KEY_PRINT_URL_QR_CODE, true)
+        PrintSetting.hospitalName = prefs.getString(KEY_HOSPITAL_NAME, null)
+        PrintSetting.reportName = prefs.getString(KEY_REPORT_NAME, null)
+        PrintSetting.isPDF = prefs.getBoolean(KEY_OUTPUT_PDF, true)
+        PrintSetting.pdfDepart = prefs.getString(KEY_PDFDEPART, null)
+        PrintSetting.pdfBedNumber = prefs.getString(KEY_PDFBEDNUMBER, null)
+        PrintSetting.pdfIDNumber = prefs.getString(KEY_PDFIDNUMBER, null)
+        PrintSetting.name = prefs.getString(KEY_PATIENT_NAME, null)
+        PrintSetting.gender = prefs.getString(KEY_PATIENT_GENDER, null)
+        PrintSetting.age = prefs.getInt(KEY_PATIENT_AGE, 0)
+        PrintSetting.showTrendingChart = prefs.getBoolean(KEY_SHOW_TREND_CHART, true)
 
         return PrintSetting
     }

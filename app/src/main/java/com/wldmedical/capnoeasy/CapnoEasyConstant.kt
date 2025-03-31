@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy
 
+import android.content.Context
 import java.text.DecimalFormat
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -87,17 +88,21 @@ fun <T : Any> getValueByKey(obj: T, key: String): Any? {
     }
 }
 
-enum class PageScene(val title: String) {
-    HOME_PAGE("CapnoGraph"), // 主页
-    SETTING_PAGE("CapnoGraph-设置"), // 设置页
-    DEVICES_LIST_PAGE("CapnoGraph-附近设备"), // 设备列表页
-    SYSTEM_CONFIG_PAGE("CapnoGraph-系统设置"), // 设置页 - 系统设置
-    ALERT_CONFIG_PAGE("CapnoGraph-报警参数"), // 设置页 - 报警参数
-    DISPLAY_CONFIG_PAGE("CapnoGraph-显示参数"), // 设置页 - 显示参数
-    MODULE_CONFIG_PAGE("CapnoGraph-模块参数"), // 设置页 - 模块参数
-    PRINT_CONFIG_PAGE("CapnoGraph-打印设置"), // 设置页 - 打印设置
-    HISTORY_LIST_PAGE("CapnoGraph-历史记录"), // 设置页 - 历史记录列表
-    HISTORY_DETAIL_PAGE("CapnoGraph-记录详情"), // 设置页 - 历史记录详情
+fun getString(resId: Int, context: Context): String {
+    return context.getString(resId)
+}
+
+enum class PageScene(val title: (Context) -> String) {
+    HOME_PAGE({ "CapnoGraph" }), // 主页
+    SETTING_PAGE({ context -> "CapnoGraph-${context.getString(R.string.constant_setting)}" }), // 设置页
+    DEVICES_LIST_PAGE({ context -> "CapnoGraph-${context.getString(R.string.constant_nearby_devices)}" }), // 设备列表页
+    SYSTEM_CONFIG_PAGE({ context -> "CapnoGraph-${context.getString(R.string.constant_system_setting)}" }), // 设置页 - 系统设置
+    ALERT_CONFIG_PAGE({ context -> "CapnoGraph-${context.getString(R.string.constant_alert_setting)}" }), // 设置页 - 报警参数
+    DISPLAY_CONFIG_PAGE({ context -> "CapnoGraph-${context.getString(R.string.constant_display_setting)}" }), // 设置页 - 显示参数
+    MODULE_CONFIG_PAGE({ context -> "CapnoGraph-${context.getString(R.string.constant_module_setting)}" }), // 设置页 - 模块参数
+    PRINT_CONFIG_PAGE({ context -> "CapnoGraph-${context.getString(R.string.constant_print_setting)}" }), // 设置页 - 打印设置
+    HISTORY_LIST_PAGE({ context -> "CapnoGraph-${context.getString(R.string.constant_history_records)}" }), // 设置页 - 历史记录列表
+    HISTORY_DETAIL_PAGE({ context -> "CapnoGraph-${context.getString(R.string.constant_record_detail)}" }), // 设置页 - 历史记录详情
 }
 
 val FloatToFixed = DecimalFormat("#")

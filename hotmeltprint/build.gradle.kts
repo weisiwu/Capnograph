@@ -39,9 +39,14 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.foundation.android)
     implementation(libs.hilt.android)
+    implementation(libs.mpandroidchart)
+    implementation(libs.mpandroidchart)
+    implementation(libs.mpandroidchart)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    // https://github.com/itext/itextpdf
+    implementation("com.itextpdf:itextpdf:5.5.13.4")
     implementation(fileTree(mapOf("include" to listOf("*.jar"), "dir" to "libs")))
     implementation(files("libs/SDKLib.jar"))
 }

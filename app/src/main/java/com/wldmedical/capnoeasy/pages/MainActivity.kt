@@ -1,19 +1,26 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
+import android.view.ViewGroup
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
+import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.PageScene
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.ConfirmData
 import com.wldmedical.capnoeasy.components.EtCo2LineChart
 import com.wldmedical.capnoeasy.components.EtCo2Table
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.kits.BluetoothType
-import com.wldmedical.capnoeasy.kits.PDFSetting
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
@@ -24,11 +31,14 @@ import java.time.LocalDateTime
  * 主页
  */
 class MainActivity : BaseActivity() {
+
     override var pageScene = PageScene.HOME_PAGE
 
     private  var startRecordTime: LocalDateTime? = null
 
     private  var endRecordTime: LocalDateTime? = null
+
+    private  val REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION = 1001
 
     override fun onTabClick(index: Int): Boolean {
         super.onTabClick(index)
@@ -44,7 +54,8 @@ class MainActivity : BaseActivity() {
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val context = this;
+        val context = this
+
         try {
             val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)
             if (deviceAddress != null) {
@@ -52,28 +63,55 @@ class MainActivity : BaseActivity() {
                 // 尝试自动连接已经配对设备
                 blueToothKit.connectDevice(device)
             }
+        } catch (e: Exception) {
+            println("wswTest 捕获到自动链接BLE配对设备异常: ${e.message}")
+        }
 
+        if (!Environment.isExternalStorageManager()) {
+            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+            startActivity(intent)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                try {
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                    }
+                    startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION )
+                } catch (e: Exception) {
+                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                    startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION )
+                }
+            }
+        }
+
+        try {
             // 从用户偏好里读取默认打印设置
             val printSetting: PrintSetting = localStorageKit.loadPrintSettingFromPreferences(this)
-            printSetting.printAddress?.let { viewModel.updatePrintAddress(it) }
-            printSetting.printPhone?.let { viewModel.updatePrintPhone(it) }
-            printSetting.printUrl?.let { viewModel.updatePrintUrl(it) }
-            printSetting.printUrlQRCode?.let { viewModel.updatePrintUrlQRCode(it) }
-            printSetting.printLogo?.let {
-                viewModel.updatePrintLogo(it)
+
+            printSetting.hospitalName?.let { viewModel.updatePdfHospitalName(it) }
+            printSetting.name?.let { viewModel.updatePatientName(it) }
+            printSetting.gender?.let { viewModel.updatePatientGender(
+                if(it == getStringAcitivity(R.string.etco2table_male)) GENDER.MALE else GENDER.FORMALE)
             }
+            printSetting.age?.let { viewModel.updatePatientAge(it) }
+            printSetting.reportName?.let { viewModel.updatePdfReportName(it) }
+            printSetting.isPDF.let { viewModel.updateIsPDF(it) }
+            printSetting.pdfDepart?.let { viewModel.updatePatientDepartment(it) }
+            printSetting.pdfBedNumber?.let { viewModel.updatePatientBedNumber(it) }
+            printSetting.pdfIDNumber?.let { viewModel.updatePatientID(it) }
+            printSetting.showTrendingChart?.let { viewModel.updateShowTrendingChart(it) }
+        } catch (e: Exception) {
+            println("wswTest 从用户偏好里读取默认打印设置异常 : ${e.message}")
+            e.printStackTrace()
+        }
 
-            // 读取默认pdf设置
-            val pdfSetting: PDFSetting = localStorageKit.loadPDFSettingFromPreferences(this)
-            pdfSetting.pdfHospitalName?.let { viewModel.updatePdfHospitalName(it) }
-            pdfSetting.pdfDepart?.let { viewModel.updatePdfDepart(it) }
-            pdfSetting.pdfBedNumber?.let { viewModel.updatePdfBedNumber(it) }
-            pdfSetting.pdfIDNumber?.let { viewModel.updatePdfIDNumber(it) }
-
+        try {
             // 默认扫描，连接周围打印机
             blueToothKit.searchDevices(BluetoothType.CLASSIC)
         } catch (e: Exception) {
-            println("wswTest 捕获到自动链接BLE配对设备异常: ${e.message}")
+            println("wswTest 默认扫描，连接周围打印机异常 : ${e.message}")
         }
     }
 
@@ -81,9 +119,9 @@ class MainActivity : BaseActivity() {
         if(!viewModel.isRecording.value) {
             viewModel.updateConfirmData(
                 ConfirmData(
-                    title = "记录保存成功",
-                    text = "保存的记录可在设置>历史记录中查看",
-                    confirm_btn_text = "确认",
+                    title = getStringAcitivity(R.string.main_record_save_success),
+                    text = getStringAcitivity(R.string.main_record_save_check),
+                    confirm_btn_text = getStringAcitivity(R.string.main_confirm),
                     onClick = {
                         viewModel.updateConfirmData(null)
                         viewModel.updateTotalCO2WavedData()
@@ -97,6 +135,39 @@ class MainActivity : BaseActivity() {
         val isRecording = viewModel.isRecording.value
         val context = this
 
+        // 如果基础信息没有填写完毕，不允许录播数据
+         if (
+             viewModel.patientName.value == null ||
+             viewModel.patientGender.value == null ||
+             viewModel.patientAge.value == null ||
+             viewModel.patientID.value == null ||
+             viewModel.patientDepartment.value == null ||
+             viewModel.patientBedNumber.value == null
+         ) {
+             viewModel.updateToastData(
+                 ToastData(
+                     text = getStringAcitivity(R.string.main_cant_record_msg),
+                     duration = 2000,
+                     showMask = false,
+                     type = ToastType.FAIL,
+                     callback = {
+                         viewModel.updateToastData(null)
+                     }
+                 )
+             )
+             return
+         }
+
+        localStorageKit.saveUserPrintSettingToPreferences(
+            context = context,
+            name = viewModel.patientName.value,
+            gender = viewModel.patientGender.value?.title,
+            age = viewModel.patientAge.value,
+            idNumber = viewModel.patientID.value,
+            depart = viewModel.patientDepartment.value,
+            bedNumber = viewModel.patientBedNumber.value,
+        )
+
         // 正在记录中，点击为保存动作
         if (isRecording) {
             lifecycleScope.launch {
@@ -109,11 +180,15 @@ class MainActivity : BaseActivity() {
                 localStorageKit.saveRecord(
                     context = context,
                     patient = patient,
+                    recordName = "${viewModel.pdfHospitalName.value}_${viewModel.pdfReportName.value}",
                     lineChart = viewModel.lineChart,
                     data = viewModel.totalCO2WavedData.toList(),
                     startTime = startRecordTime ?: LocalDateTime.now(),
                     endTime = endRecordTime ?: LocalDateTime.now(),
-                    maxETCO2 = viewModel.CO2Scale.value.value
+                    maxETCO2 = viewModel.CO2Scale.value.value,
+                    showTrendingChart = viewModel.showTrendingChart.value,
+                    currentETCO2 = blueToothKit.currentETCO2.value,
+                    currentRR = blueToothKit.currentRespiratoryRate.value,
                 )
             }
         } else {
@@ -122,7 +197,7 @@ class MainActivity : BaseActivity() {
 
         viewModel.updateToastData(
             ToastData(
-                text = if (isRecording) "停止记录" else "启动记录",
+                text = if (isRecording) getStringAcitivity(R.string.main_stop_record) else getStringAcitivity(R.string.main_start_record),
                 duration = 600,
                 showMask = false,
                 type = ToastType.SUCCESS,
@@ -133,6 +208,24 @@ class MainActivity : BaseActivity() {
             )
         )
     }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION ) {
+            if (Environment.isExternalStorageManager()) {
+                // 权限已授予，执行数据库恢复操作
+                val application = application as CapnoEasyApplication
+
+                // 访问 dbBackupHelperKit 并调用 restoreDatabase
+                application.dbBackupHelperKit.startWork(applicationContext, application.database, true)
+            } else {
+                // 权限未授予，提示用户或采取其他措施
+                Toast.makeText(this, "未授予存储权限，无法恢复数据库。", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 
     @Composable
     override fun Content() {

@@ -68,7 +68,7 @@ fun SplashScreen(onNavigateToMain: () -> Unit) {
     ) {
         Image(
             painter = painterResource(id = R.drawable.wld_logo),
-            contentDescription = "万联达信科",
+            contentDescription = "WLD",
             modifier = Modifier.width(logoWidth)
         )
     }

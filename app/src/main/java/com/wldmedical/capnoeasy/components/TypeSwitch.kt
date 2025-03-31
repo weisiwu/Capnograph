@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.components
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,9 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 
 interface CustomType {
     val name: String
@@ -38,17 +41,16 @@ data class DeviceType(
 ): CustomType
 
 enum class DeviceTypeList(val deviceType: CustomType) {
-    BLE(DeviceType(name = "蓝牙", id = "BLUETOOTH_LOWENERGY", index = 0)),
+    BLE(DeviceType(name = "BLE", id = "BLUETOOTH_LOWENERGY", index = 0)),
     WIFI(DeviceType(name = "WIFI", id = "WIFI", index = 1)),
     USB(DeviceType(name = "USB", id = "USB", index = 2)),
-    BLUETHOOTH(DeviceType(name = "经典蓝牙", id = "BLUETOOTH_CLASSIC", index = 3)),
+//    BLUETHOOTH(DeviceType(name = getString(R.string.typeswitch_classic_bluetooth), id = "BLUETOOTH_CLASSIC", index = 3)),
 }
 
 val DeviceTypes: Array<CustomType> = arrayOf(
     DeviceTypeList.BLE.deviceType,
     DeviceTypeList.WIFI.deviceType,
     DeviceTypeList.USB.deviceType,
-//    DeviceTypeList.BLUETHOOTH.deviceType,
 )
 
 @Composable
@@ -57,6 +59,7 @@ fun DeviceType(
     isSelected: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
+    val context: Context = LocalContext.current
     val baseBgColor = if(isSelected) Color(0xffE7F1FF) else Color(0xffF5F5F5)
     val baseFontColor = if(isSelected) Color(0xff1677FF) else Color.Black
 
@@ -74,14 +77,14 @@ fun DeviceType(
         if (isSelected) {
             Image(
                 painter = painterResource(R.drawable.device_tyoe_mark),
-                contentDescription = "选中",
+                contentDescription = getString(R.string.typeswitch_selected, context),
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier
-                    .width(108.dp)
-                    .height(36.dp)
-                    .padding(0.dp)
-                    .align(Alignment.Center)
-                    .clip(RoundedCornerShape(2.dp)) // 裁剪图片
+                    .width(58.dp)
+                    .height(19.dp)
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 0.dp, end = 0.dp)
+                    .clip(RoundedCornerShape(2.dp))
             )
         }
         Text(

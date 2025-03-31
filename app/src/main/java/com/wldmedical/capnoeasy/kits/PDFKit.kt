@@ -6,13 +6,13 @@ package com.wldmedical.capnoeasy.kits
  * 2、保存为PDF格式
  */
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.AsyncTask
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import androidx.compose.foundation.border
 import androidx.compose.ui.graphics.Color
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
@@ -28,38 +28,78 @@ import com.itextpdf.text.pdf.BaseFont
 import com.itextpdf.text.pdf.PdfGState
 import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
-import com.itextpdf.text.pdf.PdfPageEventHelper
 import com.itextpdf.text.pdf.PdfWriter
+import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.CO2WavePointData
+import com.wldmedical.hotmeltprint.PrintSetting
 import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.CountDownLatch
+
+// 使用支持中文的字体
+val fontPath = "assets/fonts/SimSun.ttf"
+val baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
+
+/**
+ * 过滤数据，消除数据中连续超过 10 个小于最大值 10% 的数据
+ * @param data 原始数据列表
+ * @param maxValue 最大值
+ * @param consecutiveThreshold 连续低值数据的阈值，默认为 10
+ * @param lowValuePercentage 低值百分比，默认为 0.1 (10%)
+ * @return 过滤后的数据列表
+ */
+fun filterData(
+    data: List<CO2WavePointData>,
+    maxValue: Float,
+    consecutiveThreshold: Int = 10,
+    lowValuePercentage: Float = 0.1f
+): List<CO2WavePointData> {
+    if (data.isEmpty()) return data
+
+    val filteredData = mutableListOf<CO2WavePointData>()
+    var consecutiveLowValueCount = 0
+    for (i in data.indices) {
+        val current = data[i]
+        if (current.co2 < maxValue * lowValuePercentage) {
+            consecutiveLowValueCount++
+            if (consecutiveLowValueCount <= consecutiveThreshold) {
+                filteredData.add(current)
+            }
+        } else {
+            consecutiveLowValueCount = 0
+            filteredData.add(current)
+        }
+    }
+    return filteredData.takeLast(maxXPoints * 2)
+}
 
 class SaveChartToPdfTask(
     private val originalLineChart: LineChart,
     private val data: List<CO2WavePointData>,
     private val filePath: String,
     private val maxETCO2: Float,
+    private val currentETCO2: Float,
+    private val currentRR: Int,
     private val record: Record? = null,
-    private val pdfSetting: PDFSetting? = null,
+    private val context: Context,
+    private val showTrendingChart: Boolean,
+    private val printSetting: PrintSetting? = null,
     private val onComplete: (Boolean) -> Unit // 添加回调
 ) : AsyncTask<Void, Void, Boolean>() {
 
-    private lateinit var bitmap: Bitmap
     private val latch = CountDownLatch(1) // 添加 CountDownLatch
-    // 使用支持中文的字体
-    val fontPath = "assets/fonts/SimSun.ttf"
-    val baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
 
     // 复制图表，并将整体数据切分为段落渲染为bitmap
     override fun onPreExecute() {
         Handler(Looper.getMainLooper()).post {
             try {
+                println("wswTest 保存的pdf位置 ${filePath}")
                 savePDF(filePath)
                 latch.countDown()
             } catch (e: Exception) {
-                println("wswTest 遇到了错误")
+                println("wswTest PDFKit 遇到了错误 ${e.message}")
                 e.printStackTrace()
                 latch.countDown()
             }
@@ -95,52 +135,23 @@ class SaveChartToPdfTask(
         val contentFont = Font(baseFont, 12f, Font.NORMAL)
 
         // 医院名称
-        val title1 = Paragraph("医院名称：${pdfSetting?.pdfHospitalName ?: ""}", titleFont)
-        title1.alignment = Element.ALIGN_CENTER
-        document.add(title1)
+        printSetting?.hospitalName?.let {
+            val title1 = Paragraph(it ?: "", titleFont)
+            title1.alignment = Element.ALIGN_CENTER
+            document.add(title1)
+        }
 
         // 记录名称
-        val title2 = Paragraph("报告名称：${record?.patientIndex ?: ""}", titleFont)
-        title2.alignment = Element.ALIGN_CENTER
-        document.add(title2)
+        printSetting?.reportName?.let {
+            val title2 = Paragraph(it ?: "", titleFont)
+            title2.alignment = Element.ALIGN_CENTER
+            document.add(title2)            
+        }
 
         // 添加标题和表格之间的间距
         val spacingParagraph = Paragraph(" ", contentFont)
         spacingParagraph.spacingBefore = 10f // 设置标题后的间距
         document.add(spacingParagraph)
-    }
-
-    /**
-     * 过滤数据，消除数据中连续超过 10 个小于最大值 10% 的数据
-     * @param data 原始数据列表
-     * @param maxValue 最大值
-     * @param consecutiveThreshold 连续低值数据的阈值，默认为 10
-     * @param lowValuePercentage 低值百分比，默认为 0.1 (10%)
-     * @return 过滤后的数据列表
-     */
-    private fun filterData(
-        data: List<CO2WavePointData>,
-        maxValue: Float,
-        consecutiveThreshold: Int = 10,
-        lowValuePercentage: Float = 0.1f
-    ): List<CO2WavePointData> {
-        if (data.isEmpty()) return data
-
-        val filteredData = mutableListOf<CO2WavePointData>()
-        var consecutiveLowValueCount = 0
-        for (i in data.indices) {
-            val current = data[i]
-            if (current.co2 < maxValue * lowValuePercentage) {
-                consecutiveLowValueCount++
-                if (consecutiveLowValueCount <= consecutiveThreshold) {
-                    filteredData.add(current)
-                }
-            } else {
-                consecutiveLowValueCount = 0
-                filteredData.add(current)
-            }
-        }
-        return filteredData.takeLast(maxXPoints * 2)
     }
 
     private fun addPDFDetail(document: Document) {
@@ -154,33 +165,33 @@ class SaveChartToPdfTask(
         table.setWidths(floatArrayOf(1f, 1f, 1f))
 
         // 添加表头单元格
-        val nameCell = PdfPCell(Paragraph("姓名：${record?.patient?.name ?: ""}", contentFont))
-        nameCell.horizontalAlignment = Element.ALIGN_CENTER
+        val nameCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_name, context)}${printSetting?.name ?: ""}", contentFont))
+        nameCell.horizontalAlignment = Element.ALIGN_LEFT
         nameCell.border = Rectangle.NO_BORDER
         table.addCell(nameCell)
 
-        val genderCell = PdfPCell(Paragraph("性别：${record?.patient?.gender?.title ?: ""}", contentFont))
-        genderCell.horizontalAlignment = Element.ALIGN_CENTER
+        val genderCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_gender, context)}${printSetting?.gender ?: ""}", contentFont))
+        genderCell.horizontalAlignment = Element.ALIGN_LEFT
         genderCell.border = Rectangle.NO_BORDER
         table.addCell(genderCell)
 
-        val ageCell = PdfPCell(Paragraph("年龄：${record?.patient?.age ?: ""}", contentFont))
-        ageCell.horizontalAlignment = Element.ALIGN_CENTER
+        val ageCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_age, context)}${printSetting?.age ?: ""}${getString(R.string.pdf_patient_age_unit, context)}", contentFont))
+        ageCell.horizontalAlignment = Element.ALIGN_LEFT
         ageCell.border = Rectangle.NO_BORDER
         table.addCell(ageCell)
 
-        val departCell = PdfPCell(Paragraph("科室：${pdfSetting?.pdfDepart ?: ""}", contentFont))
-        departCell.horizontalAlignment = Element.ALIGN_CENTER
+        val departCell = PdfPCell(Paragraph("${getString(R.string.pdf_department, context)}${printSetting?.pdfDepart ?: ""}", contentFont))
+        departCell.horizontalAlignment = Element.ALIGN_LEFT
         departCell.border = Rectangle.NO_BORDER
         table.addCell(departCell)
 
-        val idCell = PdfPCell(Paragraph("ID号：${pdfSetting?.pdfIDNumber ?: ""}", contentFont))
-        idCell.horizontalAlignment = Element.ALIGN_CENTER
+        val idCell = PdfPCell(Paragraph("${getString(R.string.pdf_id_number, context)}${printSetting?.pdfIDNumber ?: ""}", contentFont))
+        idCell.horizontalAlignment = Element.ALIGN_LEFT
         idCell.border = Rectangle.NO_BORDER
         table.addCell(idCell)
 
-        val bedCell = PdfPCell(Paragraph("床号：${pdfSetting?.pdfBedNumber ?: ""}", contentFont))
-        bedCell.horizontalAlignment = Element.ALIGN_CENTER
+        val bedCell = PdfPCell(Paragraph("${getString(R.string.pdf_bed_number, context)}${printSetting?.pdfBedNumber ?: ""}", contentFont))
+        bedCell.horizontalAlignment = Element.ALIGN_LEFT
         bedCell.border = Rectangle.NO_BORDER
         table.addCell(bedCell)
 
@@ -188,7 +199,6 @@ class SaveChartToPdfTask(
         document.add(table)
     }
 
-// TODO:(wsw) 这里需要调整ETCO2的取值逻辑
     private fun addPDFETCO2(document: Document) {
         val contentFont = Font(baseFont, 12f, Font.NORMAL)
 
@@ -201,12 +211,12 @@ class SaveChartToPdfTask(
         table.widthPercentage = 100f
         table.setWidths(floatArrayOf(1f, 1f))
 
-        val ETCO2Cell = PdfPCell(Paragraph("ETCO2：${23.4 ?: ""}", contentFont))
+        val ETCO2Cell = PdfPCell(Paragraph("ETCO2：${currentETCO2}", contentFont))
         ETCO2Cell.horizontalAlignment = Element.ALIGN_CENTER
         ETCO2Cell.border = Rectangle.NO_BORDER
         table.addCell(ETCO2Cell)
 
-        val RRCell = PdfPCell(Paragraph("呼吸率：${17 ?: ""}", contentFont))
+        val RRCell = PdfPCell(Paragraph("${getString(R.string.pdf_respiratory_rate, context)}${currentRR}", contentFont))
         RRCell.horizontalAlignment = Element.ALIGN_CENTER
         RRCell.border = Rectangle.NO_BORDER
         table.addCell(RRCell)
@@ -287,9 +297,10 @@ class SaveChartToPdfTask(
         val segment = currentPageData.map {
             Entry(it.index.toFloat(), it.co2)
         }
-        val dataSet = LineDataSet(segment, "")
-        dataSet.lineWidth = 0.5f
+        val dataSet = LineDataSet(segment, "ETCO2")
+        dataSet.lineWidth = 1f
         dataSet.setDrawCircles(false) // 不绘制圆点
+        dataSet.setDrawValues(false) // 不绘制具体的值
         val lineData = LineData(dataSet)
         copyLineChart.data = lineData
         copyLineChart.invalidate()
@@ -309,7 +320,61 @@ class SaveChartToPdfTask(
         document.add(image)
     }
 
-    private fun addETCO2TrendChart(document: Document) {}
+    private fun addETCO2TrendChart(document: Document) {
+        // 生成趋势数据
+        val newTrendEntries = mutableListOf<Entry>()
+        var sequentialTrendIndex = 0
+        for (i in data.indices step 50) {
+            newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), data[i].ETCO2))
+            sequentialTrendIndex++
+        }
+        val width = 1000 // 设置宽度
+        val height = 800 // 设置高度
+
+        // 生成当前页的 Bitmap
+        val currentPageBitmap = Bitmap.createBitmap(1000, 800, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(currentPageBitmap)
+
+        // 绘制当前页的图表
+        val copyLineChart = LineChart(originalLineChart.context)
+        copyLineChart.setBackgroundColor(Color.Transparent.value.toInt())
+        copyLineChart.xAxis.position = originalLineChart.xAxis.position
+        copyLineChart.axisRight.isEnabled = originalLineChart.axisRight.isEnabled
+        copyLineChart.description.isEnabled = originalLineChart.description.isEnabled
+        copyLineChart.axisLeft.axisMinimum = originalLineChart.axisLeft.axisMinimum
+        copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
+        copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
+        copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
+        copyLineChart.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+        )
+        copyLineChart.layout(0, 0, width, height)
+        copyLineChart.requestLayout()
+
+        // 绘制当前页的数据
+        val dataSet = LineDataSet(newTrendEntries, getString(R.string.chart_trending, context))
+        dataSet.lineWidth = 1f
+        dataSet.setDrawCircles(false) // 不绘制圆点
+        dataSet.setDrawValues(false) // 不绘制具体的值
+        val lineData = LineData(dataSet)
+        copyLineChart.data = lineData
+        copyLineChart.invalidate()
+        copyLineChart.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+        )
+        copyLineChart.layout(0, 0, width, height)
+        copyLineChart.draw(canvas)
+
+        // 添加图像到文档
+        val stream = ByteArrayOutputStream()
+        currentPageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        val image = Image.getInstance(stream.toByteArray())
+        image.scaleToFit(document.pageSize.width * 0.9f, document.pageSize.height * 0.9f)
+
+        document.add(image)
+    }
 
     private fun addPDFFooter(document: Document) {
         val contentFont = Font(baseFont, 12f, Font.NORMAL)
@@ -318,15 +383,14 @@ class SaveChartToPdfTask(
         table.widthPercentage = 100f
         table.setWidths(floatArrayOf(1f, 1f))
 
-        val doctorCell = PdfPCell(Paragraph("报告者：", contentFont))
+        val doctorCell = PdfPCell(Paragraph(getString(R.string.pdf_reporter, context), contentFont))
         doctorCell.horizontalAlignment = Element.ALIGN_CENTER
         doctorCell.border = Rectangle.NO_BORDER
         table.addCell(doctorCell)
 
-        val formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH时mm分ss秒")
-        val startTimeStr = if (record?.startTime != null) record.startTime.format(formatter) else ""
+        val formatter = DateTimeFormatter.ofPattern(getString(R.string.pdf_date_format, context))
         val endTimeStr = if (record?.endTime != null) record.endTime.format(formatter) else ""
-        val timeCell = PdfPCell(Paragraph("报告时间：${startTimeStr}-${endTimeStr}", contentFont))
+        val timeCell = PdfPCell(Paragraph("${getString(R.string.pdf_report_time, context)}${endTimeStr}", contentFont))
         timeCell.horizontalAlignment = Element.ALIGN_CENTER
         timeCell.border = Rectangle.NO_BORDER
         table.addCell(timeCell)
@@ -351,12 +415,14 @@ class SaveChartToPdfTask(
             // 打印波形图相关的ETCO2、RR值
             addPDFETCO2(document)
 
+            // 趋势图
+            if (showTrendingChart) {
+                addETCO2TrendChart(document)
+            }
+
             // 保存ETCO2曲线图
             // 当前会压缩波形数据，将波形数据中，连续多少个小于XX的数据去除
             addETCO2LineChart(document)
-
-            // 趋势图
-            addETCO2TrendChart(document)
 
             // PDF页脚
             addPDFFooter(document)
@@ -378,17 +444,35 @@ fun saveChartToPdfInBackground(
     data: List<CO2WavePointData>,
     filePath: String,
     maxETCO2: Float = 0f,
-    pdfSetting: PDFSetting? = null,
-    record: Record? = null
+    currentETCO2: Float = 0f,
+    currentRR: Int = 0,
+    printSetting: PrintSetting? = null,
+    record: Record? = null,
+    showTrendingChart: Boolean = true,
+    context: Context,
 ) {
-    val reverseData = data.asReversed()
+    // 反转列表
+    val reversedList = data.filterNotNull().asReversed()
+
+    // 更新 index 值
+    for (i in reversedList.indices) {
+        val item = reversedList[i]
+        if (item != null) {
+            item.index = i
+        }
+    }
+
     SaveChartToPdfTask(
         lineChart,
-        data = reverseData,
+        data = reversedList,
         filePath = filePath,
         record = record,
         maxETCO2 = maxETCO2,
-        pdfSetting = pdfSetting,
-        onComplete = {}
+        currentETCO2 = currentETCO2,
+        currentRR = currentRR,
+        printSetting = printSetting,
+        context = context,
+        showTrendingChart = showTrendingChart,
+        onComplete = {},
     ).execute()
 }
