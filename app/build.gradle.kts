@@ -24,7 +24,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -58,7 +59,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.constraintlayout.core)
     implementation(libs.androidx.constraintlayout)
+    // https://github.com/zj565061763/compose-wheel-picker
     implementation("com.github.zj565061763:compose-wheel-picker:1.0.0-rc02")
     implementation("androidx.core:core-splashscreen:1.0.1")
     //https://developer.android.com/training/dependency-injection/hilt-android?hl=zh-cn
@@ -104,7 +105,7 @@ dependencies {
         exclude(group = "com.android.support")
     }
     implementation("androidx.collection:collection:1.2.0")
-    // 轮播
+    // 多设备轮播
     implementation("com.google.accompanist:accompanist-pager:0.28.0")
     implementation("com.google.accompanist:accompanist-pager-indicators:0.28.0")
     implementation(libs.androidx.baselibrary)

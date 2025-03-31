@@ -19,10 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.github.mikephil.charting.charts.LineChart
@@ -62,13 +60,6 @@ fun EtCo2LineChart(
     }
     val pagerState = rememberPagerState()
     viewModel.lineChart = chart.value
-
-    // TODO: 临时mock500个虚拟点
-//    LaunchedEffect(a) {
-//        RandomCurveGenerator(
-//            updateGraph = { blueToothKit.updateReceivedData(DataPoint(index = 1, value = it)) }
-//        )
-//    }
 
     // 处理折线图动画效果
     LaunchedEffect(blueToothKit.dataFlow) { // 监听 bluetoothKit 实例的变化
