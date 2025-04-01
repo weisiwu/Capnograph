@@ -9,7 +9,9 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.lifecycleScope
+import com.github.mikephil.charting.data.Entry
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.PageScene
@@ -20,12 +22,18 @@ import com.wldmedical.capnoeasy.components.EtCo2Table
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.kits.BluetoothType
+import com.wldmedical.capnoeasy.kits.CO2Data
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.kits.Record
+import com.wldmedical.capnoeasy.kits.compress
+import com.wldmedical.capnoeasy.kits.maxXPoints
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -58,47 +66,60 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         val context = this
 
-        // TODO: 测试，数据过长，无法读取
-        val patient = Patient(
-            name = "病人A",
-            age = 90,
-            gender = GENDER.MALE,
-        )
-        var startTime: LocalDateTime = LocalDateTime.now()
-        var endTime: LocalDateTime = LocalDateTime.now()
-        val records = mutableListOf<CO2WavePointData>()
-        for (index in 1..100000) {
-            records.add(
-                CO2WavePointData(
-                    co2 = 0f,
-                    RR = 0,
-                    ETCO2 = 0f,
-                    FiCO2 = 0f,
-                    index = index
+        // TODO: 测试，单条记录下数据过长，写入和读取
+        lifecycleScope.launch { // 使用 lifecycleScope 在后台线程执行
+            try {
+                val patient = Patient(
+                    name = "病人A",
+                    age = 90,
+                    gender = GENDER.MALE,
                 )
-            )
+                var startTime: LocalDateTime = LocalDateTime.now()
+                var endTime: LocalDateTime = LocalDateTime.now()
+                val records = mutableListOf<CO2WavePointData>()
+                val record = Record(
+                    patient = patient,
+                    startTime = startTime,
+                    endTime = endTime,
+                    dateIndex = 1,
+                    patientIndex = "1",
+                    pdfFilePath = "pdfFilePath",
+                )
+                withContext(Dispatchers.IO) {
+                    // TODO:  测试，插入记录
+                    localStorageKit.database.recordDao().insertRecord(record)
+                    println("wswTest 成功插入记录，id为====》 ${record.id}")
+                    val recordId = record.id
+//                    // TODO: 测试，为单条记录插入数据100个chunk,合计2G内存左右
+//                    for (index in 1..100) {
+//                        val chunk = List(600000) { index: Int ->
+                    // TODO: 测试，为单条记录插入数据100个chunk
+                    for (index in 1..100) {
+                        val chunk = List(6000) { index: Int ->
+                            CO2WavePointData(
+                                co2 = index.toFloat(),
+                                RR = 0,
+                                ETCO2 = 0f,
+                                FiCO2 = 0f,
+                                index = index
+                            )
+                        }
+                        localStorageKit.database.co2DataDao().insertCO2Data(
+                            CO2Data(
+                                recordId = recordId,
+                                chunkIndex = index,
+                                data = chunk.compress()
+                            )
+                        )
+                        println("wswTest 开始插入数据块，chunkIndex为====》 ${index}")
+                    }
+                    println("wswTest 所有测试数据均已写入完成")
+                }
+            } catch (e: Exception) {
+                println("wswTest 报错了 ${e.message}")
+            }
         }
 
-//        val records: List<CO2WavePointData> = (1..10000000).map { index ->
-//            CO2WavePointData(
-//                co2 = 0f,
-//                RR = 0,
-//                ETCO2 = 0f,
-//                FiCO2 = 0f,
-//                index = index
-//            )
-//        }
-        val record = Record(
-            patient = patient,
-            startTime = startTime,
-            endTime = endTime,
-//            data = records.toList(),
-            dateIndex = 1,
-            patientIndex = "1",
-            pdfFilePath = "pdfFilePath",
-        )
-
-        localStorageKit.database.recordDao().insertRecord(record)
 
         try {
             val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)
@@ -116,6 +137,7 @@ class MainActivity : BaseActivity() {
             startActivity(intent)
         }
 
+        // 请求文件管理权限，以便对数据库文件进行备份
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
                 try {
@@ -215,8 +237,7 @@ class MainActivity : BaseActivity() {
         // 正在记录中，点击为保存动作
         if (isRecording) {
             lifecycleScope.launch {
-                // TODO: 这个函数的作用是停止收集数据
-//                localStorageKit.stopRecord()
+                localStorageKit.stopRecord()
             }
         } else {
             // 点击后创建记录
@@ -228,12 +249,12 @@ class MainActivity : BaseActivity() {
                     age = viewModel.patientAge.value ?: 0
                 )
                 localStorageKit.savePatient(patient)
+                // 这里只创建记录，数据在ETCO2LineChart组件里，通过监听蓝牙传回的数据流，来动态存储到数据库
                 localStorageKit.saveRecord(
                     context = context,
                     patient = patient,
                     recordName = "${viewModel.pdfHospitalName.value}_${viewModel.pdfReportName.value}",
                     lineChart = viewModel.lineChart,
-                    data = viewModel.totalCO2WavedData.toList(),
                     startTime = startRecordTime ?: LocalDateTime.now(),
                     endTime = endRecordTime ?: LocalDateTime.now(),
                     maxETCO2 = viewModel.CO2Scale.value.value,
@@ -286,6 +307,7 @@ class MainActivity : BaseActivity() {
 
             EtCo2LineChart(
                 blueToothKit = blueToothKit,
+                localStorageKit = localStorageKit,
                 viewModel = viewModel
             )
         }

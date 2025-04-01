@@ -1414,6 +1414,7 @@ class BlueToothKit @Inject constructor(
             index = receivedCO2WavedData?.size ?: 0,
             value = currentCO2.value,
         )
+        // TODO: 后续将 receivedCO2WavedDataMap 全部注释，应该用不上
         // 用于在app主页展示的波形数据，是比最终保存的数据更完整
         // 但是只存在于应用运行期间
         receivedCO2WavedDataMap[currentDeviceMacAddress]?.add(currentPoint)
@@ -1434,6 +1435,7 @@ class BlueToothKit @Inject constructor(
             receivedCO2WavedDataMap[currentDeviceMacAddress]?.removeAt(0)
         }
 
+        // 这里是用于折线图展示的数据，最多不超过maxXPoints个
         updateReceivedData(currentPoint)
     }
 
