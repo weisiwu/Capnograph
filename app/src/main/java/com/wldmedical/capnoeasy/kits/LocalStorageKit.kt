@@ -270,7 +270,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     DATABASE_NS
                 )
-                .addMigrations(MIGRATION_1_2) // 添加您的迁移
+                .addMigrations(MIGRATION_1_2)
                 .build()
                 INSTANCE = instance
                 instance

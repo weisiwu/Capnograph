@@ -102,7 +102,7 @@ class MainActivity : BaseActivity() {
                     localStorageKit.currentRecordId = record.id
                     testRecord = record.id
                     // TODO:  测试，插入记录
-                    println("wswTestd 准备插入数据")
+                    println("wswTestd 准备插入数据SS1")
                     localStorageKit.database.recordDao().insertRecord(record)
                     println("wswTest 成功插入记录，id为====》 ${record.id}")
                 }
