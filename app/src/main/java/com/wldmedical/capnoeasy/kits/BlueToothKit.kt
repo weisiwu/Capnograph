@@ -1427,7 +1427,8 @@ class BlueToothKit @Inject constructor(
                 RR = currentRespiratoryRate.value,
                 ETCO2 = currentETCO2.value,
                 FiCO2 = currentFiCO2,
-                index = appState.totalCO2WavedData.size
+                // 基于前一个数据的index+1做存储，最小值为0
+                index = appState.totalCO2WavedData.takeLast(1)[0].index.coerceAtLeast(0) + 1
             )
         )
 

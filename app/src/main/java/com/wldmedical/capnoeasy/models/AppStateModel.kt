@@ -349,20 +349,23 @@ class AppStateModel @Inject constructor(
     val totalCO2WavedDataFlow: StateFlow<List<CO2WavePointData>> = appState.totalCO2WavedDataFlow
     fun updateTotalCO2WavedData(newVal: CO2WavePointData? = null) {
         // 有值且在记录中
-        if (appState.isRecording.value && newVal != null) {
+//        if (appState.isRecording.value && newVal != null) {
+        // TODO: 临时测试
+        if (newVal != null) {
             appState.totalCO2WavedData.add(newVal)
             // 更新 StateFlow 的值
             appState.totalCO2WavedDataFlow.value = appState.totalCO2WavedData.toList()
         }
         // 未传入值且停止记录了，对数据做清空（本次记录已经完成）
-        if (!appState.isRecording.value && newVal == null) {
+//        if (!appState.isRecording.value && newVal == null) {
+        if (newVal == null) {
             appState.totalCO2WavedData.clear()
             appState.totalCO2WavedDataFlow.value = appState.totalCO2WavedData.toList()
         }
     }
     // 对内存中存储的全部波形数据做取chunk操作
     fun delSavedCO2WavedDataChunk() {
-        appState.totalCO2WavedData.subList(0, maxRecordDataChunkSize).clear()
+        appState.totalCO2WavedData.subList(0, maxRecordDataChunkSize.coerceAtLeast(appState.totalCO2WavedData.size - 1)).clear()
         appState.totalCO2WavedDataFlow.value = appState.totalCO2WavedData.toList()
     }
 

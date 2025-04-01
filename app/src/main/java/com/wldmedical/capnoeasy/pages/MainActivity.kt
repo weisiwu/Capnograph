@@ -26,6 +26,7 @@ import com.wldmedical.capnoeasy.kits.CO2Data
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.kits.compress
+import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
 import com.wldmedical.capnoeasy.kits.maxXPoints
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
@@ -76,7 +77,6 @@ class MainActivity : BaseActivity() {
                 )
                 var startTime: LocalDateTime = LocalDateTime.now()
                 var endTime: LocalDateTime = LocalDateTime.now()
-                val records = mutableListOf<CO2WavePointData>()
                 val record = Record(
                     patient = patient,
                     startTime = startTime,
@@ -86,32 +86,24 @@ class MainActivity : BaseActivity() {
                     pdfFilePath = "pdfFilePath",
                 )
                 withContext(Dispatchers.IO) {
+                    localStorageKit.currentRecordId = record.id
                     // TODO:  测试，插入记录
                     localStorageKit.database.recordDao().insertRecord(record)
                     println("wswTest 成功插入记录，id为====》 ${record.id}")
-                    val recordId = record.id
-//                    // TODO: 测试，为单条记录插入数据100个chunk,合计2G内存左右
-//                    for (index in 1..100) {
-//                        val chunk = List(600000) { index: Int ->
-                    // TODO: 测试，为单条记录插入数据100个chunk
-                    for (index in 1..100) {
-                        val chunk = List(6000) { index: Int ->
+                }
+                withContext(Dispatchers.Main) {
+                    // TODO: 测试，为单条记录插 入数据100个chunk
+                    for (index in 1..1000000) {
+                        viewModel.updateTotalCO2WavedData(
                             CO2WavePointData(
-                                co2 = index.toFloat(),
+                                co2 = (index % 30).toFloat(),
                                 RR = 0,
                                 ETCO2 = 0f,
                                 FiCO2 = 0f,
                                 index = index
                             )
-                        }
-                        localStorageKit.database.co2DataDao().insertCO2Data(
-                            CO2Data(
-                                recordId = recordId,
-                                chunkIndex = index,
-                                data = chunk.compress()
-                            )
                         )
-                        println("wswTest 开始插入数据块，chunkIndex为====》 ${index}")
+    //                        println("wswTest 开始插入数据块，chunkIndex为====》 ${index}")
                     }
                     println("wswTest 所有测试数据均已写入完成")
                 }
