@@ -45,6 +45,7 @@ import com.wldmedical.capnoeasy.kits.LocalStorageKitManager.localStorageKit
 import com.wldmedical.capnoeasy.kits.compress
 import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
 import com.wldmedical.capnoeasy.kits.maxXPoints
+import com.wldmedical.capnoeasy.kits.trendStep
 import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
 import kotlinx.coroutines.Dispatchers
@@ -92,7 +93,7 @@ fun EtCo2LineChart(
         // 如果数据已经足够一个chunk size，则将数据读出来，并存放到数据库中
         // totalCO2WavedData和totalCO2WavedDataFlow数据是相同的
         viewModel.totalCO2WavedDataFlow.collect { co2WavePointDataList ->
-            if (viewModel.totalCO2WavedData.size < maxRecordDataChunkSize) {
+            if (co2WavePointDataList.size < maxRecordDataChunkSize) {
                 return@collect
             }
             // 对取出的数据存入数据库
@@ -103,11 +104,17 @@ fun EtCo2LineChart(
                 withContext(Dispatchers.IO) {
                     // 如果当前没有寄存在recordId下的chunk数据，那么chunkIndex从0开始
                     val chunkIndex = localStorageKit.database.co2DataDao().getCO2DataByRecordId(id).size.coerceAtLeast(0)
+                    val unCompressData = co2WavePointDataList.take(maxRecordDataChunkSize)
+                    var trendData = ""
+                    for (i in unCompressData.indices step trendStep) {
+                        trendData += "_${unCompressData[i].ETCO2}"
+                    }
                     // 从头部开始取出 10000 条数据，不改变 totalCO2WavedDataFlow 本身的内容
                     val co2DataChunk = CO2Data(
                         recordId = id,
                         chunkIndex = chunkIndex,
-                        data = co2WavePointDataList.take(maxRecordDataChunkSize).compress()
+                        data = unCompressData.compress(),
+                        trendData = trendData
                     )
                     val rowId = localStorageKit.database.co2DataDao().insertCO2Data(co2DataChunk)
                     println("wswTest chunk插入完成，序号为 $rowId __ ${chunkIndex}")
