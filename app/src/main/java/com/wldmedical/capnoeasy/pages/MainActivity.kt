@@ -27,6 +27,7 @@ import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
+import java.util.UUID
 
 /***
  * 主页
@@ -91,7 +92,7 @@ class MainActivity : BaseActivity() {
             patient = patient,
             startTime = startTime,
             endTime = endTime,
-            data = records.toList(),
+//            data = records.toList(),
             dateIndex = 1,
             patientIndex = "1",
             pdfFilePath = "pdfFilePath",
@@ -214,6 +215,13 @@ class MainActivity : BaseActivity() {
         // 正在记录中，点击为保存动作
         if (isRecording) {
             lifecycleScope.launch {
+                // TODO: 这个函数的作用是停止收集数据
+//                localStorageKit.stopRecord()
+            }
+        } else {
+            // 点击后创建记录
+            startRecordTime = LocalDateTime.now()
+            lifecycleScope.launch {
                 val patient = Patient(
                     name = viewModel.patientName.value ?: "",
                     gender = viewModel.patientGender.value ?: GENDER.MALE,
@@ -234,8 +242,6 @@ class MainActivity : BaseActivity() {
                     currentRR = blueToothKit.currentRespiratoryRate.value,
                 )
             }
-        } else {
-            startRecordTime = LocalDateTime.now()
         }
 
         viewModel.updateToastData(
