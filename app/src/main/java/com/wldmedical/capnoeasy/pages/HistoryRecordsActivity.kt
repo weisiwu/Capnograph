@@ -32,16 +32,17 @@ class HistoryRecordsActivity : BaseActivity() {
 
         val records = remember { mutableStateListOf<Record>() }
 
-        LaunchedEffect(0) {
-            lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
-                    val newRecords = localStorageKit.database.recordDao().getAllRecords()
-                    withContext(Dispatchers.Main) {
-                        records.addAll(newRecords)
-                    }
-                }
-            }
-        }
+        // TODO: 临时注释，后续回复
+//        LaunchedEffect(0) {
+//            lifecycleScope.launch {
+//                withContext(Dispatchers.IO) {
+//                    val newRecords = localStorageKit.database.recordDao().getAllRecords()
+//                    withContext(Dispatchers.Main) {
+//                        records.addAll(newRecords)
+//                    }
+//                }
+//            }
+//        }
 
         HistoryList(
             records = records,
