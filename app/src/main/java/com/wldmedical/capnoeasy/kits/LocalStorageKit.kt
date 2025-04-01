@@ -379,10 +379,7 @@ class LocalStorageKit @Inject constructor(
                 chunkIndex = chunkIndex,
                 data = remainData.compress()
             )
-            // TODO: 临时废弃
-//            this.database.co2DataDao().insertCO2Data(remainCo2Data)
-            val rowId = this.database.co2DataDao().insertCO2Data(remainCo2Data)
-            println("wswTest 这里也是一个 $rowId __ ${chunkIndex}")
+           this.database.co2DataDao().insertCO2Data(remainCo2Data)
         }
         currentRecordId = null
     }
@@ -396,8 +393,6 @@ class LocalStorageKit @Inject constructor(
         patient: Patient,
         startTime: LocalDateTime,
         recordName: String = "",
-        // TODO: 后续这个参数要移除掉，从数据库中读取
-        data: List<CO2WavePointData> = listOf(),
         endTime: LocalDateTime,
         maxETCO2: Float = 0f,
         lineChart: LineChart? = null,
@@ -434,7 +429,9 @@ class LocalStorageKit @Inject constructor(
             if (pdfFilePath != null && lineChart != null && context != null) {
                 saveChartToPdfInBackground(
                     lineChart = lineChart,
-                    data = data,
+                    // TODO: 等待时机解决，目前存在问题 
+                    data = listOf(),
+//                    data = data,
                     filePath = pdfFilePath,
                     record = record,
                     maxETCO2 = maxETCO2,

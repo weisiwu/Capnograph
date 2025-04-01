@@ -1070,7 +1070,7 @@ class BlueToothKit @Inject constructor(
             sendArray.add(0x03)
             sendArray.add(ISBState84H.SetCO2Unit.value.toByte())
 
-            // TODO: 这里需要监听如果其他配置变化了，这块需要重置
+            // 监听如果其他配置变化了，这块需要重置
             if (co2Unit == CO2_UNIT.MMHG) {
                 sendArray.add(0x00)
             } else if (co2Unit == CO2_UNIT.KPA) {
