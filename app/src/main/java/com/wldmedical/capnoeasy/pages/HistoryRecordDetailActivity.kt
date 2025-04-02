@@ -153,62 +153,61 @@ class HistoryRecordDetailActivity : BaseActivity() {
         val trendEntries = remember { mutableStateListOf<Entry>() }
         val scrollState = rememberScrollState()
 
-        // TODO: 展示部分全部注释掉，后续再加上
-//        LaunchedEffect(recordId, startValue.value) {
-//            lifecycleScope.launch {
-//                val record = withContext(Dispatchers.IO) {
-//                    localStorageKit.database.recordDao().queryRecordById(UUID.fromString(recordId))
-//                }
-//                if (record != null) {
-//                    // 为导出做准备
-//                    if (record.pdfFilePath != null) {
-//                        if (record.pdfFilePath!!.isNotEmpty()) {
-//                            context.sourceFilePath = record.pdfFilePath!!
-//                            context.saveFileName = "${record.patientIndex}_${record.dateIndex}"
-//                            context.currentRecord = record
-//                        }
-//                    }
-//
-//                    val startIndex = (startValue.value * 100).toInt()
-//                    val endIndex = startIndex + maxXPoints
-//                    val safeStartIndex = startIndex.coerceAtLeast(0)
-//                    val safeEndIndex = endIndex.coerceAtMost(record.data.size)
-//
-//                    // 目前按照每秒100个点去算
-//                    totalLen.value = (max(0, record.data.size - maxXPoints) / 100).toFloat()
-//                    val newEntries = mutableListOf<Entry>()
-//                    var sequentialIndex = 0
-//                    val dataToUse = if (safeStartIndex < safeEndIndex) {
-//                        record.data.slice(safeStartIndex until safeEndIndex)
-//                    } else {
-//                        emptyList()
-//                    }
-//                    dataToUse.forEach {
-//                        newEntries.add(Entry(sequentialIndex.toFloat(), it.co2))
-//                        sequentialIndex++
-//                    }
-//
-//                    // 生成趋势数据
-//                    val newTrendEntries = mutableListOf<Entry>()
-//                    var sequentialTrendIndex = 0
-//                    for (i in record.data.indices step 50) {
-//                        newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), record.data[i].ETCO2))
-//                        sequentialTrendIndex++
-//                    }
-//
-//                    Snapshot.withMutableSnapshot {
-//                        entries.clear()
-//                        entries.addAll(newEntries)
-//
-//                        // 趋势图只在读取记录后更新一次
-//                        if (trendEntries.size <= 0) {
-//                            trendEntries.clear()
-//                            trendEntries.addAll(newTrendEntries)
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        LaunchedEffect(recordId, startValue.value) {
+            lifecycleScope.launch {
+                val record = withContext(Dispatchers.IO) {
+                    localStorageKit.database.recordDao().queryRecordById(UUID.fromString(recordId))
+                }
+                if (record != null) {
+                    // 为导出做准备
+                    if (record.pdfFilePath != null) {
+                        if (record.pdfFilePath!!.isNotEmpty()) {
+                            context.sourceFilePath = record.pdfFilePath!!
+                            context.saveFileName = "${record.patientIndex}_${record.dateIndex}"
+                            context.currentRecord = record
+                        }
+                    }
+
+                    val startIndex = (startValue.value * 100).toInt()
+                    val endIndex = startIndex + maxXPoints
+                    val safeStartIndex = startIndex.coerceAtLeast(0)
+                    val safeEndIndex = endIndex.coerceAtMost(record.data.size)
+
+                    // 目前按照每秒100个点去算
+                    totalLen.value = (max(0, record.data.size - maxXPoints) / 100).toFloat()
+                    val newEntries = mutableListOf<Entry>()
+                    var sequentialIndex = 0
+                    val dataToUse = if (safeStartIndex < safeEndIndex) {
+                        record.data.slice(safeStartIndex until safeEndIndex)
+                    } else {
+                        emptyList()
+                    }
+                    dataToUse.forEach {
+                        newEntries.add(Entry(sequentialIndex.toFloat(), it.co2))
+                        sequentialIndex++
+                    }
+
+                    // 生成趋势数据
+                    val newTrendEntries = mutableListOf<Entry>()
+                    var sequentialTrendIndex = 0
+                    for (i in record.data.indices step 50) {
+                        newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), record.data[i].ETCO2))
+                        sequentialTrendIndex++
+                    }
+
+                    Snapshot.withMutableSnapshot {
+                        entries.clear()
+                        entries.addAll(newEntries)
+
+                        // 趋势图只在读取记录后更新一次
+                        if (trendEntries.size <= 0) {
+                            trendEntries.clear()
+                            trendEntries.addAll(newTrendEntries)
+                        }
+                    }
+                }
+            }
+        }
 
         Column(
             modifier = Modifier
