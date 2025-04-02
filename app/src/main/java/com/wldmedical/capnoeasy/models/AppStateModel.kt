@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothDevice
 import android.content.res.Configuration
-import android.net.Uri
-import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -28,7 +26,6 @@ import com.wldmedical.capnoeasy.components.DeviceType
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.NavBarComponentState
 import com.wldmedical.capnoeasy.components.ToastData
-import com.wldmedical.capnoeasy.kits.DataPoint
 import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

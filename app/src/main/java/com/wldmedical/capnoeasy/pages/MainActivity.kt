@@ -9,9 +9,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.lifecycleScope
-import com.github.mikephil.charting.data.Entry
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.PageScene
@@ -22,13 +20,9 @@ import com.wldmedical.capnoeasy.components.EtCo2Table
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.kits.BluetoothType
-import com.wldmedical.capnoeasy.kits.CO2Data
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.kits.Record
-import com.wldmedical.capnoeasy.kits.compress
 import com.wldmedical.capnoeasy.kits.decompressToCO2WavePointData
-import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
-import com.wldmedical.capnoeasy.kits.maxXPoints
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
@@ -36,9 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -75,76 +67,76 @@ class MainActivity : BaseActivity() {
         val context = this
 
         // TODO: 测试，单条记录下数据过长，写入和读取
-//        lifecycleScope.launch { // 使用 lifecycleScope 在后台线程执行
-//            try {
-//                val patient = Patient(
-//                    name = "病人A",
-//                    age = 90,
-//                    gender = GENDER.MALE,
-//                )
-//                var testRecord: UUID? = null
-//                var startTime: LocalDateTime = LocalDateTime.now()
-//                var endTime: LocalDateTime = LocalDateTime.now()
-//                val record = Record(
-//                    patient = patient,
-//                    startTime = startTime,
-//                    endTime = endTime,
-//                    dateIndex = 1,
-//                    patientIndex = "1",
-//                    pdfFilePath = "pdfFilePath",
-//                )
-//                fun generateCO2DataFlow(): Flow<CO2WavePointData> = flow {
-//                    for (index in 1..1000) {
-//                        emit(
-//                            CO2WavePointData(
-//                                co2 = (index % 30).toFloat(),
-//                                RR = 0,
-//                                ETCO2 = 0f,
-//                                FiCO2 = 0f,
-//                                index = index
-//                            )
-//                        )
-//                    }
-//                }
-//                withContext(Dispatchers.IO) {
-//                    localStorageKit.currentRecordId = record.id
-//                    testRecord = record.id;
-//                    // TODO:  测试，插入记录
-//                    localStorageKit.database.recordDao().insertRecord(record)
-//                    println("wswTest 成功插入记录，id为====》 ${record.id}")
-//                }
-//                // TODO: 测试，为单条记录插 入数据100个chunk
-//                generateCO2DataFlow()
-//                    .onEach { data ->
-//                        withContext(Dispatchers.Main) {
-//                            viewModel.updateTotalCO2WavedData(data)
-//                        }
-//                        delay(5)
-//                    }
-//                    .collect()
-//                withContext(Dispatchers.IO) {
-//                    println("wswTest 收尾数据 ${viewModel.totalCO2WavedData.size}")
-//                    localStorageKit.stopRecord(viewModel.totalCO2WavedData)
-//                }
-//                println("wswTest 所有测试数据均已写入完成")
-//
-//                println("wswTest 这里开始准备读取刚刚的数据")
-//                withContext(Dispatchers.IO) {
-//                    println("wswTest 收尾数据 ${viewModel.totalCO2WavedData.size} ___ ${testRecord}")
-//                    testRecord?.let {
-//                        val data = localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(it, 0)
-//                        data?.let {
-//                            val co2 = it.data.decompressToCO2WavePointData()
-//                            co2.forEach {
-//                                println("wswTEst 时间是 ${it.ETCO2}")
-//                            }
-//                        }
-//                    }
-//                }
-//            } catch (e: Exception) {
-//                println("wswTest 报错了 ${e.message}")
-//            }
-//        }
+        lifecycleScope.launch { // 使用 lifecycleScope 在后台线程执行
+            try {
+                val patient = Patient(
+                    name = "病人A",
+                    age = 90,
+                    gender = GENDER.MALE,
+                )
+                var testRecord: UUID? = null
+                var startTime: LocalDateTime = LocalDateTime.now()
+                var endTime: LocalDateTime = LocalDateTime.now()
+                val record = Record(
+                    patient = patient,
+                    startTime = startTime,
+                    endTime = endTime,
+                    dateIndex = 1,
+                    patientIndex = "1",
+                    pdfFilePath = "pdfFilePath",
+                )
+                fun generateCO2DataFlow(): Flow<CO2WavePointData> = flow {
+                    for (index in 1..1000) {
+                        emit(
+                            CO2WavePointData(
+                                co2 = (index % 30).toFloat(),
+                                RR = 0,
+                                ETCO2 = 0f,
+                                FiCO2 = 0f,
+                                index = index
+                            )
+                        )
+                    }
+                }
+                withContext(Dispatchers.IO) {
+                    localStorageKit.currentRecordId = record.id
+                    testRecord = record.id;
+                    // TODO:  测试，插入记录
+                    localStorageKit.database.recordDao().insertRecord(record)
+                    println("wswTest 成功插入记录，id为====》 ${record.id}")
+                }
+                // TODO: 测试，为单条记录插 入数据100个chunk
+                generateCO2DataFlow()
+                    .onEach { data ->
+                        withContext(Dispatchers.Main) {
+                            viewModel.updateTotalCO2WavedData(data)
+                        }
+                        delay(5)
+                    }
+                    .collect()
+                withContext(Dispatchers.IO) {
+                    println("wswTest 收尾数据 ${viewModel.totalCO2WavedData.size}")
+                    localStorageKit.stopRecord(viewModel.totalCO2WavedData)
+                }
+                println("wswTest 所有测试数据均已写入完成")
+
+                println("wswTest 这里开始准备读取刚刚的数据")
+                withContext(Dispatchers.IO) {
+                    println("wswTest 收尾数据 ${viewModel.totalCO2WavedData.size} ___ ${testRecord}")
+                    testRecord?.let {
+                        val data = localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(it, 0)
+                        data?.let {
+                            val co2 = it.data.decompressToCO2WavePointData()
+                            co2.forEach {
+                                println("wswTEst 时间是 ${it.ETCO2}")
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                println("wswTest 报错了 ${e.message}")
+            }
+        }
 
         try {
             val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)
