@@ -1,5 +1,6 @@
 package com.wldmedical.capnoeasy.kits
 
+import MIGRATION_1_2
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Environment
@@ -235,13 +236,14 @@ class LocalDateTimeConverters {
     }
 }
 
+// 2025年4月4日12:44:09 升级到V2
 @Database(
     entities = [
         Patient::class,
         Record::class,
         CO2Data::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(
@@ -267,7 +269,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NS
-                ).build()
+                )
+                .addMigrations(MIGRATION_1_2) // 添加您的迁移
+                .build()
                 INSTANCE = instance
                 instance
             }
