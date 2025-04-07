@@ -107,7 +107,6 @@ data class CO2Data(
     @PrimaryKey(autoGenerate = true) val id: Long = 0, // 自增主键
     val recordId: UUID, // 外键，关联到 Record 表
     val chunkIndex: Int, //  表示这是第几个 6000 对象块
-    val trendData: String, //  趋势图数据，按照100为step，在存储之处保存，方便渲染时可以直接获取，格式为 1.03_1.2_33_44，用_进行分割
     @ColumnInfo(name = "data") val data: ByteArray // 存储压缩后的 List<CO2WavePointData>
 )
 
@@ -182,10 +181,6 @@ interface CO2DataDao {
     // 根据 recordId 获取所有数据块 (按 chunkIndex 排序)
     @Query("SELECT * FROM co2_data WHERE recordId = :recordId ORDER BY chunkIndex")
     fun getCO2DataByRecordId(recordId: UUID): List<CO2Data>
-
-    // 根据 recordId 获取所有数据chunk上的trendData
-    @Query("SELECT trendData FROM co2_data WHERE recordId = :recordId")
-    fun getTrendDataByRecordId(recordId: UUID): List<String>
 
     // 根据 recordId 获取所有数据块 (按 chunkIndex 排序)
     @Query("SELECT * FROM co2_data WHERE recordId = :recordId ORDER BY chunkIndex")
@@ -334,11 +329,7 @@ class LocalStorageKit @Inject constructor(
         dataFlow.collect { dataChunk -> // 收集 Flow 中的数据块
             if (dataChunk.isNotEmpty()) {
                 val compressedData = dataChunk.compress()
-                var trendData = ""
-                for (i in dataChunk.indices step 100) {
-                    trendData += "_${dataChunk[i].ETCO2}"
-                }
-                val co2Data = CO2Data(recordId = recordId, chunkIndex = chunkIndex, trendData = trendData, data = compressedData)
+                val co2Data = CO2Data(recordId = recordId, chunkIndex = chunkIndex, data = compressedData)
                 co2DataDao.insertCO2Data(co2Data)
                 chunkIndex++
             }
@@ -383,14 +374,9 @@ class LocalStorageKit @Inject constructor(
         // 停止记录时，将不足一个chunk的数据，单独保存起来，避免丢失数据
         currentRecordId?.let { it ->
             val chunkIndex = this.database.co2DataDao().getCO2DataByRecordId(it).size.coerceAtLeast(0)
-            var trendData = ""
-            for (i in remainData.indices step 100) {
-                trendData += "_${remainData[i].ETCO2}"
-            }
             val remainCo2Data = CO2Data(
                 recordId = it,
                 chunkIndex = chunkIndex,
-                trendData = trendData,
                 data = remainData.compress()
             )
            this.database.co2DataDao().insertCO2Data(remainCo2Data)

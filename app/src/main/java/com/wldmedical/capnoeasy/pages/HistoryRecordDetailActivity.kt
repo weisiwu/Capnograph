@@ -1,6 +1,5 @@
 package com.wldmedical.capnoeasy.pages
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -36,14 +35,9 @@ import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.RangeSelector
 import com.wldmedical.capnoeasy.components.RangeType
 import com.wldmedical.capnoeasy.components.ToastData
-import com.wldmedical.capnoeasy.kits.CO2Data
 import com.wldmedical.capnoeasy.kits.Record
-import com.wldmedical.capnoeasy.kits.decompressToCO2WavePointData
 import com.wldmedical.capnoeasy.kits.filterData
-import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
 import com.wldmedical.capnoeasy.kits.maxXPoints
-import com.wldmedical.capnoeasy.maxMaskZIndex
-import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.capnoeasy.recordIdParams
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -52,8 +46,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.OutputStream
 import java.util.UUID
-import kotlin.math.ceil
-import kotlin.math.floor
 import kotlin.math.max
 
 /***
@@ -145,12 +137,11 @@ class HistoryRecordDetailActivity : BaseActivity() {
 //        )
     }
 
-    @SuppressLint("RememberReturnType")
     @Composable
     override fun Content() {
-        val context = this
-        val recordId = UUID.fromString(intent.getStringExtra(recordIdParams))
-        val totalLen = 100f
+        val context = this;
+        val recordId = intent.getStringExtra(recordIdParams)
+        val totalLen = remember { mutableStateOf(30f) }
         val startValue = remember { mutableStateOf(0f) }
         val trendChart: MutableState<LineChart?> = remember { mutableStateOf(null) }
         val chart: MutableState<LineChart?> = remember { mutableStateOf(null) }
@@ -161,23 +152,13 @@ class HistoryRecordDetailActivity : BaseActivity() {
         }
         val trendEntries = remember { mutableStateListOf<Entry>() }
         val scrollState = rememberScrollState()
-        // 记录关联的co2数据
-        val co2Data: MutableList<CO2WavePointData> = remember { mutableListOf() }
-        // 当前展示的是第几个chunk
-        val chunkIndex = remember { mutableStateOf(0) }
-        // 当前记录关联的chunk总数
-        val chunkNumber = remember { mutableStateOf(0) }
-        // 当前record下总共有多少数据点
-        val totalPointsNumber = remember { mutableStateOf(0) }
-        val trendData = remember { mutableListOf(0f) }
 
-        // 初始化时触发(recordId变化，视为打开新的记录页)
-        LaunchedEffect(recordId) {
-            println("wswTest 记录id 开始初始化 ${recordId}")
+        LaunchedEffect(recordId, startValue.value) {
             lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
-                    localStorageKit.database.recordDao().queryRecordById(recordId)
-                }?.let { record ->
+                val record = withContext(Dispatchers.IO) {
+                    localStorageKit.database.recordDao().queryRecordById(UUID.fromString(recordId))
+                }
+                if (record != null) {
                     // 为导出做准备
                     if (record.pdfFilePath != null) {
                         if (record.pdfFilePath!!.isNotEmpty()) {
@@ -187,82 +168,17 @@ class HistoryRecordDetailActivity : BaseActivity() {
                         }
                     }
 
-                    // 根据当前进度条所在的百分比位置，决定当前读取第几chunk的数据
-                    // 读取指定记录下的co2Data数据
-                    // 初始化的时候读取第一、第二chunk的数据。如果不是第一chunk，则需要读取前后加一起一共三chunk的数据
-                    withContext(Dispatchers.IO) {
-                        // 计算record下有多少个chunk
-                        chunkNumber.value = localStorageKit.database.co2DataDao().getCO2DataCountByRecordId(recordId)
-                        println("wswTest 当前记录下一共多少数据帧 ${chunkNumber.value}")
-                        // 计算record下有多少个数据点
-                        totalPointsNumber.value = chunkNumber.value - 1 * maxRecordDataChunkSize
-                        println("wswTest 当前记录一共多少数据点P1 ${totalPointsNumber.value}")
-                        localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkNumber.value - 1)?.data?.let {
-                            // 加上尾chunk数据点数量
-                            totalPointsNumber.value += it.size
-                            println("wswTest 当前记录一共多少数据点P2 ${totalPointsNumber.value} __ ${it.size}")
-                        }
-                        // 先行清空当前数据，然后添加，防止数据过多，爆内存
-//                        co2Data.clear()
-//                        if (chunkIndex.value >= 1) {
-//                            localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value - 1)?.let {
-//                                println("wswTest 添加第一chunk")
-//                                co2Data.addAll(listOf(it))
-//                            }
-//                        }
-//                        localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value)?.let {
-//                            println("wswTest 添加第二chunk")
-//                            co2Data.addAll(listOf(it))
-//                        }
-//                        localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value + 1)?.let {
-//                            println("wswTest 添加第三chunk")
-//                            co2Data.addAll(listOf(it))
-//                        }
-                    }
-                }
-            }
-        }
+                    val startIndex = (startValue.value * 100).toInt()
+                    val endIndex = startIndex + maxXPoints
+                    val safeStartIndex = startIndex.coerceAtLeast(0)
+                    val safeEndIndex = endIndex.coerceAtMost(record.data.size)
 
-        // 滑动修改进度值时触发，根据新进度，计算展示用的数据
-        LaunchedEffect(startValue.value) {
-            println("wswTest 记录id ${recordId} 进度发生变化===> ${startValue.value}")
-            lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
-                    localStorageKit.database.recordDao().queryRecordById(recordId)
-                }?.let { record ->
-                    val percent = chunkNumber.value * startValue.value
-                    val minus = percent % 1
-                    chunkIndex.value = ceil(percent).toInt()
-                    println("wswTest 当前的数据帧序号是 ${chunkIndex.value}")
-                    val safeStartIndex = ((if(chunkIndex.value == 0) 0 else maxRecordDataChunkSize) + minus * maxRecordDataChunkSize).toInt().coerceAtLeast(0)
-                    println("wswTest 当前进度的起始点是 $safeStartIndex")
-                    val safeEndIndex = (safeStartIndex + maxXPoints).coerceAtMost(co2Data.size)
-                    println("wswTest 当前进度的结束点是 $safeEndIndex")
-
-                    // TODO: 待验证，是否会触发改动
-                    // 动态调整chunkIndex和数据
-                    // 先行清空当前数据，然后添加，防止数据过多，爆内存
-                    co2Data.clear()
-                    if (chunkIndex.value >= 1) {
-                        localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value - 1)?.let {
-                            println("wswTest 添加第一chunk")
-                            co2Data.addAll(it.data.decompressToCO2WavePointData())
-                        }
-                    }
-                    localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value)?.let {
-                        println("wswTest 添加第二chunk")
-                        co2Data.addAll(it.data.decompressToCO2WavePointData())
-                    }
-                    localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value + 1)?.let {
-                        println("wswTest 添加第三chunk")
-                        co2Data.addAll(it.data.decompressToCO2WavePointData())
-                    }
-
-                    // 生成波形数据图
+                    // 目前按照每秒100个点去算
+                    totalLen.value = (max(0, record.data.size - maxXPoints) / 100).toFloat()
                     val newEntries = mutableListOf<Entry>()
                     var sequentialIndex = 0
                     val dataToUse = if (safeStartIndex < safeEndIndex) {
-                        co2Data.slice(safeStartIndex until safeEndIndex)
+                        record.data.slice(safeStartIndex until safeEndIndex)
                     } else {
                         emptyList()
                     }
@@ -271,25 +187,13 @@ class HistoryRecordDetailActivity : BaseActivity() {
                         sequentialIndex++
                     }
 
-                    // 生成趋势数据，所有数据在存储前，就生成好趋势快照
-                    // 根据chunk数，来决定如何凑齐不少于100个点
+                    // 生成趋势数据
                     val newTrendEntries = mutableListOf<Entry>()
-                    val everyChunkEtoc2Number = 100 / chunkNumber.value
-                    println("wswTest 每个chunk需要提供多少个ETCO2点来绘制趋势图----> $everyChunkEtoc2Number")
                     var sequentialTrendIndex = 0
-                    // 将所有的chunk依次读出来，按照一定间隔获取数据点组装为趋势数据展示
-                    localStorageKit.database.co2DataDao().getTrendDataByRecordId(recordId)
-                        .let { trendDataStrList ->
-                            val trendDataList = trendDataStrList.joinToString("_").split("_").map { it.toFloat() }
-                            val interval = floor(trendDataList.size / 100f).toInt()
-                            for (i in 0 until trendDataList.size step interval) {
-                                newTrendEntries.add(
-                                    Entry(sequentialTrendIndex.toFloat(), trendDataList[i])
-                                )
-                                println("wswTest 添加趋势图点数据: ${trendDataList[i]}")
-                                sequentialTrendIndex++
-                            }
-                        }
+                    for (i in record.data.indices step 50) {
+                        newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), record.data[i].ETCO2))
+                        sequentialTrendIndex++
+                    }
 
                     Snapshot.withMutableSnapshot {
                         entries.clear()
@@ -414,12 +318,12 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     .height(300.dp)
             )
 
-            if (co2Data.size > maxMaskZIndex) {
+            if (totalLen.value > 0f) {
                 RangeSelector(
                     unit = "S",
                     value = startValue.value,
                     type = RangeType.ONESIDE,
-                    valueRange = 0f..totalLen,
+                    valueRange = 0f..totalLen.value,
                     onValueChange = { start, end ->
                         startValue.value = start
                     }
