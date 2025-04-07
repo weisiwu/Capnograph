@@ -7,10 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
@@ -29,9 +26,6 @@ import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.PrintSetting
 import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.LocalDateTime
@@ -39,32 +33,6 @@ import javax.inject.Inject
 import java.io.Serializable
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.util.zip.GZIPInputStream
-import java.util.zip.GZIPOutputStream
-
-object CompressionUtils {
-    private val gson = Gson()
-
-    // 压缩
-    fun compress(data: List<CO2WavePointData>): ByteArray {
-        val json = gson.toJson(data) // 将 data 转换为 JSON 字符串
-        val outputStream = ByteArrayOutputStream()
-        GZIPOutputStream(outputStream).use { gzipStream ->
-            gzipStream.write(json.toByteArray())
-        }
-        return outputStream.toByteArray()
-    }
-
-    // 解压缩
-    fun decompress(compressedData: ByteArray): List<CO2WavePointData> {
-        val inputStream = ByteArrayInputStream(compressedData)
-        val json = GZIPInputStream(inputStream).bufferedReader().use { it.readText() }
-        val type = object : TypeToken<List<CO2WavePointData>>() {}.type
-        return gson.fromJson(json, type) // 将 JSON 字符串转换回 List<CO2WavePointData>
-    }
-}
 
 @Entity(tableName = "patients")
 data class Patient(
@@ -86,26 +54,9 @@ data class Record(
     var pdfFilePath: String? = null,
     // 保留字段，但是不再设置值，防止App更新后，数据库表字段不一，导致报错
     var previewPdfFilePath: String? = null,
-//    val data: List<CO2WavePointData> = listOf(),
+    val data: List<CO2WavePointData> = listOf(),
     val groupTitle: String = "",
 ): Serializable
-
-@Entity(
-    tableName = "co2_data",
-    foreignKeys = [ForeignKey(
-        entity = Record::class,
-        parentColumns = ["id"],
-        childColumns = ["recordId"],
-        onDelete = ForeignKey.CASCADE // 如果删除 Record，则删除相关的 CO2Data
-    )],
-    indices = [Index(value = ["recordId", "chunkIndex"], unique = true)] // 索引提高查询效率
-)
-data class CO2Data(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0, // 自增主键
-    val recordId: UUID, // 外键，关联到 Record 表
-    val chunkIndex: Int, //  表示这是第几个 6000 对象块
-    val data: ByteArray // 存储压缩后的 List<CO2WavePointData>
-)
 
 enum class GROUP_BY {
     ALL,
@@ -160,60 +111,14 @@ class CO2WavePointDataConverters {
 
 @Dao
 interface RecordDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE) // 使用 REPLACE 策略，避免主键冲突
-    suspend fun insertRecord(record: Record)
-
-    @Query("SELECT * FROM records WHERE id = :recordId")
-    suspend fun getRecordById(recordId: UUID): Record?
+    @Insert
+    fun insertRecord(record: Record)
 
     @Query("SELECT * FROM records")
-    fun getAllRecords(): Flow<List<Record>>
+    fun getAllRecords(): List<Record>
 
     @Query("SELECT * FROM records WHERE id = :id")
     fun queryRecordById(id: UUID): Record?
-
-    // 新增：流式获取所有记录
-    @Query("SELECT * FROM records")
-    fun getAllRecordsFlow(): Flow<List<Record>>
-
-    // 新增：分页获取记录
-    @Query("SELECT * FROM records ORDER BY startTime DESC LIMIT :limit OFFSET :offset") // 假设按 startTime 排序
-    suspend fun getRecordsPaged(limit: Int, offset: Int): List<Record>
-
-    // 新增：获取记录总数
-    @Query("SELECT COUNT(*) FROM records")
-    suspend fun getRecordCount(): Int
-}
-
-@Dao
-interface CO2DataDao {
-    // 插入压缩后的数据
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCO2Data(co2Data: CO2Data)
-
-    // 根据 recordId 获取所有数据块 (按 chunkIndex 排序)
-    @Query("SELECT * FROM co2_data WHERE recordId = :recordId ORDER BY chunkIndex")
-    suspend fun getCO2DataByRecordId(recordId: UUID): List<CO2Data>
-
-    // 根据 recordId 获取所有数据块 (按 chunkIndex 排序)
-    @Query("SELECT * FROM co2_data WHERE recordId = :recordId ORDER BY chunkIndex")
-    fun getCO2DataByRecordIdFlow(recordId: UUID): Flow<List<CO2Data>>
-
-    // 分页读取数据块
-    @Query("SELECT * FROM co2_data WHERE recordId = :recordId ORDER BY chunkIndex LIMIT :limit OFFSET :offset")
-    suspend fun getCO2DataByRecordIdPaged(recordId: UUID, limit: Int, offset: Int): List<CO2Data>
-
-    // 获取特定范围内的数据块
-    @Query("SELECT * FROM co2_data WHERE recordId = :recordId AND chunkIndex BETWEEN :startChunkIndex AND :endChunkIndex ORDER BY chunkIndex")
-    suspend fun getCO2DataByRecordIdAndRange(recordId: UUID, startChunkIndex: Int, endChunkIndex: Int): List<CO2Data>
-
-    // 获取数据块总数
-    @Query("SELECT COUNT(*) FROM co2_data WHERE recordId = :recordId")
-    suspend fun getCO2DataCountByRecordId(recordId: UUID): Int
-
-    // 获取特定数据块
-    @Query("SELECT * FROM co2_data WHERE recordId = :recordId AND chunkIndex = :chunkIndex")
-    suspend fun getCO2DataByRecordIdAndChunkIndex(recordId: UUID, chunkIndex: Int): CO2Data?
 }
 
 class RecordConverters {
@@ -248,7 +153,7 @@ class LocalDateTimeConverters {
 @TypeConverters(
     value = [
         PatientConverters::class,
-//        RecordConverters::class,
+        RecordConverters::class,
         LocalDateTimeConverters::class,
         CO2WavePointDataConverters::class,
     ]
@@ -298,9 +203,6 @@ class LocalStorageKit @Inject constructor(
     private val KEY_PATIENT_AGE = "patient_age"
     private val KEY_SHOW_TREND_CHART = "show_trend_chart"
 
-    // 当前正在操作的UUID
-    private val currentRecordId: UUID? = null
-
     // 用户语言偏好
     private val KEY_LANGUAGE = "userLanguage"
 
@@ -322,52 +224,6 @@ class LocalStorageKit @Inject constructor(
         withContext(Dispatchers.IO) {
             database.patientDto().insertPatient(patient)
             patients.add(patient)
-        }
-    }
-
-    // 插入数据
-    suspend fun insertCO2DataForRecord(
-        recordId: UUID,
-        dataFlow: Flow<List<CO2WavePointData>>, // 接收数据的 Flow
-        co2DataDao: CO2DataDao
-    ) {
-        val chunkSize = 6000
-        var chunkIndex = 0
-        dataFlow.collect { dataChunk -> // 收集 Flow 中的数据块
-            if (dataChunk.isNotEmpty()) {
-                val compressedData = CompressionUtils.compress(dataChunk)
-                val co2Data = CO2Data(recordId = recordId, chunkIndex = chunkIndex, data = compressedData)
-                co2DataDao.insertCO2Data(co2Data)
-                chunkIndex++
-            }
-        }
-    }
-
-    // 读取数据
-    suspend fun getCO2DataForRecord(recordId: UUID, co2DataDao: CO2DataDao): Flow<List<CO2WavePointData>> =
-        flow {
-        // 从数据库流式读取数据块
-        val co2DataChunksFlow = co2DataDao.getCO2DataByRecordIdFlow(recordId) // 需要在 CO2DataDao 中添加相应的方法
-        co2DataChunksFlow.collect { co2DataChunks ->
-            co2DataChunks.forEach { co2Data ->
-                // 解压缩每个数据块并发出
-                emit(CompressionUtils.decompress(co2Data.data))
-            }
-        }
-    }
-
-    fun getCO2DataForRecordPaged(
-        recordId: UUID,
-        co2DataDao: CO2DataDao,
-        pageSize: Int = 10 // 每页的数据块数量
-    ): Flow<List<CO2WavePointData>> = flow {
-        var offset = 0
-        while (true) {
-            val co2DataChunks = co2DataDao.getCO2DataByRecordIdPaged(recordId, pageSize, offset)
-            if (co2DataChunks.isEmpty()) break // 没有更多数据
-            val decompressedData = co2DataChunks.flatMap { CompressionUtils.decompress(it.data) }
-            emit(decompressedData)
-            offset += pageSize
         }
     }
 
@@ -406,7 +262,7 @@ class LocalStorageKit @Inject constructor(
                 patient = patient,
                 startTime = startTime,
                 endTime = endTime,
-//                data = data,
+                data = data,
                 dateIndex = dateIndex,
                 patientIndex = patientIndex,
                 pdfFilePath = pdfFilePath,
@@ -437,7 +293,7 @@ class LocalStorageKit @Inject constructor(
      */
     suspend fun readRecordsFromLocal(): List<Record> {
         return withContext(Dispatchers.IO) {
-            database.recordDao().getAllRecords().toList().firstOrNull() ?: emptyList()
+            database.recordDao().getAllRecords()
         }
     }
 
