@@ -66,11 +66,12 @@ fun SplashScreen(onNavigateToMain: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.wld_logo),
-            contentDescription = "WLD",
-            modifier = Modifier.width(logoWidth)
-        )
+        // TODO: 临时注释掉
+//        Image(
+//            painter = painterResource(id = R.drawable.wld_logo),
+//            contentDescription = "WLD",
+//            modifier = Modifier.width(logoWidth)
+//        )
     }
 }
 

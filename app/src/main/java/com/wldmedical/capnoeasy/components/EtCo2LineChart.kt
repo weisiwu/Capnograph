@@ -97,6 +97,7 @@ fun EtCo2LineChart(
             if (viewModel.totalCO2WavedData.size < maxRecordDataChunkSize) {
                 return@collect
             }
+            println("wswTEst 开始准备处理chunk")
             // 对取出的数据存入数据库
             val currentlRecordId = localStorageKit.currentRecordId
             println("wswTEst 获取到的记录id $currentlRecordId")
@@ -112,7 +113,7 @@ fun EtCo2LineChart(
                         data = co2WavePointDataList.take(maxRecordDataChunkSize).compress()
                     )
                     val rowId = localStorageKit.database.co2DataDao().insertCO2Data(co2DataChunk)
-                    println("wswTest chunk插入完成，序号为 $rowId __ ${chunkIndex}")
+                    println("wswTest chunk插入完成，序号为 $rowId")
                     // 如果插入后没有返回数据行号,则插入失败，行号是一个Long类型
                     if (rowId != -1L) {
                         // 对列表数据的修改需要在主线程

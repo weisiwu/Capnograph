@@ -26,20 +26,13 @@ import com.wldmedical.capnoeasy.kits.CO2Data
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.kits.compress
-import com.wldmedical.capnoeasy.kits.decompressToCO2WavePointData
 import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
 import com.wldmedical.capnoeasy.kits.maxXPoints
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
@@ -82,7 +75,6 @@ class MainActivity : BaseActivity() {
                     age = 90,
                     gender = GENDER.MALE,
                 )
-                var testRecord: UUID? = null
                 var startTime: LocalDateTime = LocalDateTime.now()
                 var endTime: LocalDateTime = LocalDateTime.now()
                 val record = Record(
@@ -93,10 +85,16 @@ class MainActivity : BaseActivity() {
                     patientIndex = "1",
                     pdfFilePath = "pdfFilePath",
                 )
-                fun generateCO2DataFlow(): Flow<CO2WavePointData> = flow {
-//                    for (index in 1..10000) {
-                    for (index in 1..1000) {
-                        emit(
+                withContext(Dispatchers.IO) {
+                    localStorageKit.currentRecordId = record.id
+                    // TODO:  测试，插入记录
+                    localStorageKit.database.recordDao().insertRecord(record)
+                    println("wswTest 成功插入记录，id为====》 ${record.id}")
+                }
+                withContext(Dispatchers.Main) {
+                    // TODO: 测试，为单条记录插 入数据100个chunk
+                    for (index in 1..1000000) {
+                        viewModel.updateTotalCO2WavedData(
                             CO2WavePointData(
                                 co2 = (index % 30).toFloat(),
                                 RR = 0,
@@ -105,47 +103,15 @@ class MainActivity : BaseActivity() {
                                 index = index
                             )
                         )
+    //                        println("wswTest 开始插入数据块，chunkIndex为====》 ${index}")
                     }
-                }
-                withContext(Dispatchers.IO) {
-                    localStorageKit.currentRecordId = record.id
-                    testRecord = record.id;
-                    // TODO:  测试，插入记录
-                    localStorageKit.database.recordDao().insertRecord(record)
-                    println("wswTest 成功插入记录，id为====》 ${record.id}")
-                }
-                // TODO: 测试，为单条记录插 入数据100个chunk
-                generateCO2DataFlow()
-                    .onEach { data ->
-                        withContext(Dispatchers.Main) {
-                            viewModel.updateTotalCO2WavedData(data)
-                        }
-                        delay(5)
-                    }
-                    .collect()
-                withContext(Dispatchers.IO) {
-                    println("wswTest 收尾数据 ${viewModel.totalCO2WavedData.size}")
-                    localStorageKit.stopRecord(viewModel.totalCO2WavedData)
-                }
-                println("wswTest 所有测试数据均已写入完成")
-
-                println("wswTest 这里开始准备读取刚刚的数据")
-                withContext(Dispatchers.IO) {
-                    println("wswTest 收尾数据 ${viewModel.totalCO2WavedData.size} ___ ${testRecord}")
-                    testRecord?.let {
-                        val data = localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(it, 0)
-                        data?.let {
-                            val co2 = it.data.decompressToCO2WavePointData()
-                            co2.forEach {
-                                println("wswTEst 时间是 ${it.ETCO2}")
-                            }
-                        }
-                    }
+                    println("wswTest 所有测试数据均已写入完成")
                 }
             } catch (e: Exception) {
                 println("wswTest 报错了 ${e.message}")
             }
         }
+
 
         try {
             val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)

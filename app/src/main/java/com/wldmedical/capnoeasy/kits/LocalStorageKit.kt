@@ -32,6 +32,7 @@ import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.LocalDateTime
@@ -45,9 +46,7 @@ import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
 // 波形图记录下每条数据chunk最多点数
-//val maxRecordDataChunkSize = 10000
-// TODO: 临时测试
-val maxRecordDataChunkSize = 100
+val maxRecordDataChunkSize = 10000
 
 // 对List<Record>进行扩展
 // 将CO2WavePointData类型数据转换为原始二进制数组
@@ -368,22 +367,7 @@ class LocalStorageKit @Inject constructor(
      * 停止记录
      * 1、清空当前 currentRecordId
      */
-    suspend fun stopRecord(
-        remainData: List<CO2WavePointData> = listOf()
-    ) {
-        // 停止记录时，将不足一个chunk的数据，单独保存起来，避免丢失数据
-        currentRecordId?.let { it ->
-            val chunkIndex = this.database.co2DataDao().getCO2DataByRecordId(it).size.coerceAtLeast(0)
-            val remainCo2Data = CO2Data(
-                recordId = it,
-                chunkIndex = chunkIndex,
-                data = remainData.compress()
-            )
-            // TODO: 临时废弃
-//            this.database.co2DataDao().insertCO2Data(remainCo2Data)
-            val rowId = this.database.co2DataDao().insertCO2Data(remainCo2Data)
-            println("wswTest 这里也是一个 $rowId __ ${chunkIndex}")
-        }
+    suspend fun stopRecord() {
         currentRecordId = null
     }
 
