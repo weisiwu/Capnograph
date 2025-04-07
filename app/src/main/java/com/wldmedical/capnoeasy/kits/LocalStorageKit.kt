@@ -45,23 +45,27 @@ import java.io.ByteArrayOutputStream
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
-// 对List<Record>进行扩展
 // 将CO2WavePointData类型数据转换为原始二进制数组
-fun List<CO2WavePointData>.compress(): ByteArray {
-    val json = Gson().toJson(this)
-    val outputStream = ByteArrayOutputStream()
-    GZIPOutputStream(outputStream).use { gzipStream ->
-        gzipStream.write(json.toByteArray())
-    }
-    return outputStream.toByteArray()
-}
+object CompressionUtils {
+    private val gson = Gson()
 
-// 将二进制数据转换为List<CO2WavePointData>
-fun ByteArray.decompressToCO2WavePointData(): List<CO2WavePointData> {
-    val inputStream = ByteArrayInputStream(this)
-    val json = GZIPInputStream(inputStream).bufferedReader().use { it.readText() }
-    val type = object : TypeToken<List<CO2WavePointData>>() {}.type
-    return Gson().fromJson(json, type) // 将 JSON 字符串转换回 List<CO2WavePointData>
+    // 压缩
+    fun compress(data: List<CO2WavePointData>): ByteArray {
+        val json = gson.toJson(data) // 将 data 转换为 JSON 字符串
+        val outputStream = ByteArrayOutputStream()
+        GZIPOutputStream(outputStream).use { gzipStream ->
+            gzipStream.write(json.toByteArray())
+        }
+        return outputStream.toByteArray()
+    }
+
+    // 解压缩
+    fun decompress(compressedData: ByteArray): List<CO2WavePointData> {
+        val inputStream = ByteArrayInputStream(compressedData)
+        val json = GZIPInputStream(inputStream).bufferedReader().use { it.readText() }
+        val type = object : TypeToken<List<CO2WavePointData>>() {}.type
+        return gson.fromJson(json, type) // 将 JSON 字符串转换回 List<CO2WavePointData>
+    }
 }
 
 @Entity(tableName = "patients")
@@ -323,7 +327,7 @@ class LocalStorageKit @Inject constructor(
         var chunkIndex = 0
         dataFlow.collect { dataChunk -> // 收集 Flow 中的数据块
             if (dataChunk.isNotEmpty()) {
-                val compressedData = dataChunk.compress()
+                val compressedData = CompressionUtils.compress(dataChunk)
                 val co2Data = CO2Data(recordId = recordId, chunkIndex = chunkIndex, data = compressedData)
                 co2DataDao.insertCO2Data(co2Data)
                 chunkIndex++
@@ -339,7 +343,7 @@ class LocalStorageKit @Inject constructor(
             co2DataChunksFlow.collect { co2DataChunks ->
                 co2DataChunks.forEach { co2Data ->
                     // 解压缩每个数据块并发出
-                    emit(co2Data.data.decompressToCO2WavePointData())
+                    emit(CompressionUtils.decompress(co2Data.data))
                 }
             }
         }
@@ -353,7 +357,7 @@ class LocalStorageKit @Inject constructor(
         while (true) {
             val co2DataChunks = co2DataDao.getCO2DataByRecordIdPaged(recordId, pageSize, offset)
             if (co2DataChunks.isEmpty()) break // 没有更多数据
-            val decompressedData = co2DataChunks.flatMap { it.data.decompressToCO2WavePointData() }
+            val decompressedData = co2DataChunks.flatMap { CompressionUtils.decompress(it.data) }
             emit(decompressedData)
             offset += pageSize
         }
