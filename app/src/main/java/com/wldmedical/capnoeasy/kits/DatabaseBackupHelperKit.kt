@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.room.Room
 import com.wldmedical.capnoeasy.CapnoEasyApplication
@@ -26,7 +25,6 @@ import java.io.IOException
 
 const val IS_FIRST_LAUNCH = "is_wld_medical_app_first_install"
 const val DATA_LATEST_VERSION = "last_data_version"
-const val BACKUP_FAILURE_COUNT = "backup_failure_count"
 
 class DatabaseBackupHelper(private val context: Context) {
 
@@ -53,16 +51,8 @@ class DatabaseBackupHelper(private val context: Context) {
         lastDataVersion = prefs.getInt(DATA_LATEST_VERSION, -1)
         roomDatabase = database
 
-        // 1. 检查是否已连续失败三次，直接返回
-        val failureCount = prefs.getInt(BACKUP_FAILURE_COUNT, 0)
-        if (failureCount >= 3) {
-            Log.d("DatabaseBackupHelper", "已连续三次备份失败，停止本次尝试")
-            Toast.makeText(context, "自动备份失败，请稍后再试", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         runBlocking {
-            println("DatabaseBackupHelper 是否首次安装: ${isFirstLaunch} ")
+            println("wswTest 是否首次安装: ${isFirstLaunch} ")
             // 首次安装，修改标志为false，然后退出
             if (isFirstLaunch || isRestore) {
                 prefs.edit().putBoolean(IS_FIRST_LAUNCH, false).apply()
@@ -76,25 +66,16 @@ class DatabaseBackupHelper(private val context: Context) {
             } else {
                 try {
                     val databaseFile = context.getDatabasePath(databaseName)
-                    println("DatabaseBackupHelper 开始备份数据")
+                    println("wswTest 开始备份数据")
                     // 如果没有历史数据库文件，则退出
                     if (!databaseFile.exists()) {
-                        println("DatabaseBackupHelper 备份失败，没有找到数据库文件")
+                        println("wswTest 备份失败，没有找到数据库文件")
                         Log.d("DatabaseBackupHelper", "Database file does not exist.")
                     } else {
                         // 开始备份
                         backupDatabase(databaseFile)
-                        // 成功后重置失败次数
-                        prefs.edit().putInt(BACKUP_FAILURE_COUNT, 0).apply()
                     }
                 } catch (e: IOException) {
-                    // 处理备份失败
-                    val currentCount = prefs.getInt(BACKUP_FAILURE_COUNT, 0) + 1
-                    prefs.edit().putInt(BACKUP_FAILURE_COUNT, currentCount).apply()
-                    if (currentCount >= 3) {
-                        Log.d("DatabaseBackupHelper", "连续三次备份失败，停止本次尝试")
-                        return@runBlocking // 退出当前协程
-                    }
                     Log.e("DatabaseBackupHelper", "备份数据遇到异常")
                 }
             }
@@ -107,7 +88,7 @@ class DatabaseBackupHelper(private val context: Context) {
         contentResolver: ContentResolver,
         databaseFile: File
     ) {
-        println("DatabaseBackupHelper[backupDBFile] 开始备份DB")
+        println("wswTest[backupDBFile] 开始备份DB")
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, databaseName)
             put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
@@ -151,7 +132,7 @@ class DatabaseBackupHelper(private val context: Context) {
                 return
             }
 
-            println("DatabaseBackupHelper[backupDBFile] 开始新建DB文件")
+            println("wswTest[backupDBFile] 开始新建DB文件")
             // 开始复制数据库
             contentResolver.openOutputStream(uri)?.use { outputStream ->
                 FileInputStream(databaseFile).use { inputStream ->
@@ -159,13 +140,13 @@ class DatabaseBackupHelper(private val context: Context) {
                 }
             }
 
-            println("DatabaseBackupHelper[backupDBFile] 备份完成-新建立数据库DB文件")
+            println("wswTest[backupDBFile] 备份完成-新建立数据库DB文件")
             Log.d("DatabaseBackupHelper", "Database backed up successfully.")
         } else {
             // 如果文件已经存在，则更新
             contentResolver.update(existingDBFileUri!!, contentValues, null, null)
 
-            println("DatabaseBackupHelper[backupDBFile] 开始复制DB文件")
+            println("wswTest[backupDBFile] 开始复制DB文件")
             // 使用 "wt" 模式打开输出流
             contentResolver.openOutputStream(existingDBFileUri!!, "wt")?.use { outputStream ->
                 // 将数据复制到输出流
@@ -174,7 +155,7 @@ class DatabaseBackupHelper(private val context: Context) {
                 }
             }
 
-            println("DatabaseBackupHelper[backupDBFile] 备份完成-更新数据库DB文件")
+            println("wswTest[backupDBFile] 备份完成-更新数据库DB文件")
             Log.d("DatabaseBackupHelper", "Database backed up successfully.")
         }
     }
@@ -189,11 +170,11 @@ class DatabaseBackupHelper(private val context: Context) {
         val walFile = File(databaseFile.parent, walFileName)
 
         if (!walFile.exists()) {
-            println("DatabaseBackupHelper[backupWALFile] WAL file does not exist.")
+            println("wswTest[backupWALFile] WAL file does not exist.")
             return
         }
 
-        println("DatabaseBackupHelper[backupWALFile] 开始备份WAL")
+        println("wswTest[backupWALFile] 开始备份WAL")
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, walFileName)
             put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
@@ -236,7 +217,7 @@ class DatabaseBackupHelper(private val context: Context) {
                 return
             }
 
-            println("DatabaseBackupHelper[backupWALFile] 开始新建文件")
+            println("wswTest[backupWALFile] 开始新建文件")
             // 复制预写日志文件
             contentResolver.openOutputStream(uri)?.use { outputStream ->
                 FileInputStream(walFile).use { inputStream ->
@@ -244,20 +225,20 @@ class DatabaseBackupHelper(private val context: Context) {
                 }
             }
 
-            println("DatabaseBackupHelper[backupWALFile] 备份完成-新建文件")
+            println("wswTest[backupWALFile] 备份完成-新建文件")
             Log.d("DatabaseBackupHelper", "Database backed up successfully.")
         } else {
             // 复制预写日志文件
             contentResolver.update(existingWALFileUri!!, contentValues, null, null)
 
-            println("DatabaseBackupHelper[backupWALFile] 开始复制文件")
+            println("wswTest[backupWALFile] 开始复制文件")
             contentResolver.openOutputStream(existingWALFileUri!!, "wt")?.use { outputStream ->
                 FileInputStream(walFile).use { inputStream ->
                     inputStream.copyTo(outputStream)
                 }
             }
 
-            println("DatabaseBackupHelper[backupWALFile] 备份完成-更新文件")
+            println("wswTest[backupWALFile] 备份完成-更新文件")
             Log.d("DatabaseBackupHelper", "Database backed up successfully.")
         }
     }
@@ -272,11 +253,11 @@ class DatabaseBackupHelper(private val context: Context) {
         val shmFile = File(databaseFile.parent, shmFileName)
 
         if (!shmFile.exists()) {
-            println("DatabaseBackupHelper[backupSHMFile] SHM file does not exist.")
+            println("wswTest[backupSHMFile] SHM file does not exist.")
             return
         }
 
-        println("DatabaseBackupHelper[backupSHMFile] 开始备份SHM")
+        println("wswTest[backupSHMFile] 开始备份SHM")
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, shmFileName)
             put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
@@ -319,7 +300,7 @@ class DatabaseBackupHelper(private val context: Context) {
                 return
             }
 
-            println("DatabaseBackupHelper[backupSHMFile] 开始新建文件")
+            println("wswTest[backupSHMFile] 开始新建文件")
             // 复制共享内存索引文件
             contentResolver.openOutputStream(uri)?.use { outputStream ->
                 FileInputStream(shmFile).use { inputStream ->
@@ -327,20 +308,20 @@ class DatabaseBackupHelper(private val context: Context) {
                 }
             }
 
-            println("DatabaseBackupHelper[backupSHMFile] 备份完成-新建文件")
+            println("wswTest[backupSHMFile] 备份完成-新建文件")
             Log.d("DatabaseBackupHelper", "Database backed up successfully.")
         } else {
             // 复制共享内存索引文件
             contentResolver.update(existingSHMFileUri!!, contentValues, null, null)
 
-            println("DatabaseBackupHelper[backupSHMFile] 开始复制文件")
+            println("wswTest[backupSHMFile] 开始复制文件")
             contentResolver.openOutputStream(existingSHMFileUri!!, "wt")?.use { outputStream ->
                 FileInputStream(shmFile).use { inputStream ->
                     inputStream.copyTo(outputStream)
                 }
             }
 
-            println("DatabaseBackupHelper[backupSHMFile] 备份完成-更新文件")
+            println("wswTest[backupSHMFile] 备份完成-更新文件")
             Log.d("DatabaseBackupHelper", "Database backed up successfully.")
         }
     }
@@ -380,7 +361,7 @@ class DatabaseBackupHelper(private val context: Context) {
     @RequiresApi(Build.VERSION_CODES.Q)
     fun restoreDatabase() {
         try {
-            println("DatabaseBackupHelper[restoreDatabase] 开始恢复数据库")
+            println("wswTest[restoreDatabase] 开始恢复数据库")
 
             // 1. 获取数据库文件、WAL 文件和 SHM 文件的 File 对象
             val databaseFile = context.getDatabasePath(databaseName)
@@ -400,7 +381,7 @@ class DatabaseBackupHelper(private val context: Context) {
             if (shmFile.exists()) {
                 shmFile.delete()
             }
-            println("DatabaseBackupHelper[restoreDatabase] 删除已有的当前数据库文件，从历史数据中恢复")
+            println("wswTest[restoreDatabase] 删除已有的当前数据库文件，从历史数据中恢复")
 
             val backupFile = File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
@@ -437,7 +418,7 @@ class DatabaseBackupHelper(private val context: Context) {
                 databaseName
             ).build()
 
-            println("DatabaseBackupHelper[restoreDatabase] 恢复数据库完成")
+            println("wswTest[restoreDatabase] 恢复数据库完成")
         } catch (e: Exception) {
             Log.e("DatabaseBackupHelper", "Error restoring database", e)
         }

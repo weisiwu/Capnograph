@@ -28,8 +28,6 @@ import com.wldmedical.capnoeasy.components.DeviceType
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.NavBarComponentState
 import com.wldmedical.capnoeasy.components.ToastData
-import com.wldmedical.capnoeasy.kits.DataPoint
-import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -105,11 +103,7 @@ class AppState @Inject constructor() {
     val etCO2: MutableState<Float> = mutableFloatStateOf(0f)
 
     // 本次记录的所有capnoeasy波形数据, 此数据和app状态相关，所以放在这里。
-    // 这个数据是用于绘制图表的
     var totalCO2WavedData = mutableListOf<CO2WavePointData>()
-
-    // 本次记录的蓝牙数据流，这是用户点击开始记录后的数据全集
-    val totalCO2WavedDataFlow = MutableStateFlow<List<CO2WavePointData>>(emptyList())
 
     /***
      * 设置相关
@@ -344,26 +338,17 @@ class AppStateModel @Inject constructor(
         appState.patientBedNumber.value = newVal
     }
 
-    // 本次记录的蓝牙波形数据全集，从点击开始记录算起，到结束记录
+    // 本次记录的蓝牙波形数据
     val totalCO2WavedData = appState.totalCO2WavedData
-    val totalCO2WavedDataFlow: StateFlow<List<CO2WavePointData>> = appState.totalCO2WavedDataFlow
     fun updateTotalCO2WavedData(newVal: CO2WavePointData? = null) {
         // 有值且在记录中
         if (appState.isRecording.value && newVal != null) {
             appState.totalCO2WavedData.add(newVal)
-            // 更新 StateFlow 的值
-            appState.totalCO2WavedDataFlow.value = appState.totalCO2WavedData.toList()
         }
         // 未传入值且停止记录了，对数据做清空（本次记录已经完成）
         if (!appState.isRecording.value && newVal == null) {
             appState.totalCO2WavedData.clear()
-            appState.totalCO2WavedDataFlow.value = appState.totalCO2WavedData.toList()
         }
-    }
-    // 对内存中存储的全部波形数据做取chunk操作
-    fun delSavedCO2WavedDataChunk() {
-        appState.totalCO2WavedData.subList(0, maxRecordDataChunkSize).clear()
-        appState.totalCO2WavedDataFlow.value = appState.totalCO2WavedData.toList()
     }
 
     /***

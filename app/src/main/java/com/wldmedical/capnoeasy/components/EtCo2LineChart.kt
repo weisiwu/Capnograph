@@ -39,11 +39,6 @@ import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.kits.BlueToothKitManager.blueToothKit
-import com.wldmedical.capnoeasy.kits.CO2Data
-import com.wldmedical.capnoeasy.kits.LocalStorageKit
-import com.wldmedical.capnoeasy.kits.LocalStorageKitManager.localStorageKit
-import com.wldmedical.capnoeasy.kits.compress
-import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
 import com.wldmedical.capnoeasy.kits.maxXPoints
 import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
@@ -58,7 +53,6 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun EtCo2LineChart(
     blueToothKit: BlueToothKit,
-    localStorageKit: LocalStorageKit,
     viewModel: AppStateModel
 ) {
     val context: Context = LocalContext.current
@@ -81,41 +75,6 @@ fun EtCo2LineChart(
                 }
                 index += 1f
                 entries.add(Entry(index, newData.last().value))
-            }
-        }
-    }
-
-    // 页面初始化的时候，添加对viewModel中全部数据的监听
-    LaunchedEffect(viewModel.totalCO2WavedDataFlow) {
-        // 如果数据已经足够一个chunk size，则将数据读出来，并存放到数据库中
-        // totalCO2WavedData和totalCO2WavedDataFlow数据是相同的
-        if (viewModel.totalCO2WavedData.size >= maxRecordDataChunkSize) {
-            println("wswTest 在表格开始监听到数据变化")
-            viewModel.totalCO2WavedDataFlow.collect { co2WavePointDataList ->
-                // 对取出的数据存入数据库
-                var result = false
-                val currentlRecordId = localStorageKit.currentRecordId
-                // 有数据id的时候才会存储到数据库中
-                currentlRecordId?.let { id ->
-                    // 如果当前没有寄存在recordId下的chunk数据，那么chunkIndex从0开始
-                    val chunkIndex = localStorageKit.database.co2DataDao().getCO2DataByRecordId(id).size.coerceAtLeast(0)
-                    // 从头部开始取出 10000 条数据，不改变 totalCO2WavedDataFlow 本身的内容
-                    val co2DataChunk = CO2Data(
-                        recordId = id,
-                        chunkIndex = chunkIndex,
-                        data = co2WavePointDataList.take(maxRecordDataChunkSize).compress()
-                    )
-                    val rowId = localStorageKit.database.co2DataDao().insertCO2Data(co2DataChunk)
-                    println("wswTest 插入的数据行号是什么 $rowId")
-                    result = rowId != -1L // 如果插入后没有返回数据行号,则插入失败，行号是一个Long类型
-                }
-
-                if (result) {
-                    // 从 totalCO2WavedDataFlow 删除取出的数据
-                    // 不直接改变 StateFlow，而是通过修改 appState.totalCO2WavedData
-                    viewModel.delSavedCO2WavedDataChunk()
-                    println("wswTest 执行删除已经插入数据库的chunk")
-                }
             }
         }
     }
@@ -223,7 +182,6 @@ fun EtCo2LineChartPreview() {
         ) {
             EtCo2LineChart(
                 blueToothKit,
-                localStorageKit = localStorageKit,
                 viewModel = AppStateModel(appState = AppState())
             )
         }

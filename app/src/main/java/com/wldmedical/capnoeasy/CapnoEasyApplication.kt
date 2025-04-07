@@ -34,8 +34,7 @@ class CapnoEasyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // TODO: 临时注释掉
-//        CrashReport.initCrashReport(getApplicationContext())
+        CrashReport.initCrashReport(getApplicationContext());
 
         context = applicationContext
 

@@ -45,9 +45,6 @@ import java.io.ByteArrayOutputStream
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
-// 波形图记录下每条数据chunk最多点数
-val maxRecordDataChunkSize = 10000
-
 // 对List<Record>进行扩展
 // 将CO2WavePointData类型数据转换为原始二进制数组
 fun List<CO2WavePointData>.compress(): ByteArray {
@@ -175,7 +172,7 @@ interface RecordDao {
 interface CO2DataDao {
     // 插入压缩后的数据
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertCO2Data(co2Data: CO2Data): Long
+    fun insertCO2Data(co2Data: CO2Data)
 
     // 根据 recordId 获取所有数据块 (按 chunkIndex 排序)
     @Query("SELECT * FROM co2_data WHERE recordId = :recordId ORDER BY chunkIndex")
@@ -247,7 +244,6 @@ class LocalDateTimeConverters {
 abstract class AppDatabase : RoomDatabase() {
     abstract fun patientDto(): PatientDao
     abstract fun recordDao(): RecordDao
-    abstract fun co2DataDao(): CO2DataDao
 
     companion object {
         @Volatile // 确保多线程环境下的可见性
@@ -291,7 +287,7 @@ class LocalStorageKit @Inject constructor(
     private val KEY_SHOW_TREND_CHART = "show_trend_chart"
 
     // 当前正在操作的UUID
-    var currentRecordId: UUID? = null
+    private val currentRecordId: UUID? = null
 
     // 用户语言偏好
     private val KEY_LANGUAGE = "userLanguage"
@@ -363,14 +359,6 @@ class LocalStorageKit @Inject constructor(
         }
     }
 
-    /**
-     * 停止记录
-     * 1、清空当前 currentRecordId
-     */
-    suspend fun stopRecord() {
-        currentRecordId = null
-    }
-
     /***
      * 保存病人ETCO2记录
      * 在主页保存记录时候调用
@@ -380,7 +368,6 @@ class LocalStorageKit @Inject constructor(
         patient: Patient,
         startTime: LocalDateTime,
         recordName: String = "",
-        // TODO: 后续这个参数要移除掉，从数据库中读取
         data: List<CO2WavePointData> = listOf(),
         endTime: LocalDateTime,
         maxETCO2: Float = 0f,
@@ -412,8 +399,6 @@ class LocalStorageKit @Inject constructor(
                 patientIndex = patientIndex,
                 pdfFilePath = pdfFilePath,
             )
-            // 记录当前正在操作的记录id
-            currentRecordId = record.id
 
             if (pdfFilePath != null && lineChart != null && context != null) {
                 saveChartToPdfInBackground(
@@ -438,20 +423,20 @@ class LocalStorageKit @Inject constructor(
     /***
      * 从本地读取历史记录数据
      */
-//    suspend fun readRecordsFromLocal(): List<Record> {
-//        return withContext(Dispatchers.IO) {
-//            database.recordDao().getAllRecords().toList().firstOrNull() ?: emptyList()
-//        }
-//    }
+    suspend fun readRecordsFromLocal(): List<Record> {
+        return withContext(Dispatchers.IO) {
+            database.recordDao().getAllRecords().toList().firstOrNull() ?: emptyList()
+        }
+    }
 
     /***
      * 从本地读取历史病人数据
      */
-//    suspend fun readPatientsFromLocal(): List<Patient> {
-//        return withContext(Dispatchers.IO) {
-//            database.patientDto().getAllPatients()
-//        }
-//    }
+    suspend fun readPatientsFromLocal(): List<Patient> {
+        return withContext(Dispatchers.IO) {
+            database.patientDto().getAllPatients()
+        }
+    }
 
     /***
      * 生成记录的病人分组索引：姓名+性别+年龄
@@ -473,12 +458,12 @@ class LocalStorageKit @Inject constructor(
     /***
      * 生成记录的时间分组索引：时分秒
      */
-//    private fun generateTimeIndex(startTime: LocalDateTime): Int {
-//        val hour = startTime.hour
-//        val minute = startTime.minute
-//        val second= startTime.second
-//        return hour * 10000 + minute * 100 + second
-//    }
+    private fun generateTimeIndex(startTime: LocalDateTime): Int {
+        val hour = startTime.hour
+        val minute = startTime.minute
+        val second= startTime.second
+        return hour * 10000 + minute * 100 + second
+    }
 
     /***
      * 保存用户语言选择
