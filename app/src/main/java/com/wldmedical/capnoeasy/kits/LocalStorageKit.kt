@@ -48,7 +48,6 @@ import java.util.zip.GZIPOutputStream
 //val maxRecordDataChunkSize = 10000
 // TODO: 临时测试
 val maxRecordDataChunkSize = 100
-val trendStep = 100
 
 // 对List<Record>进行扩展
 // 将CO2WavePointData类型数据转换为原始二进制数组
@@ -336,7 +335,7 @@ class LocalStorageKit @Inject constructor(
             if (dataChunk.isNotEmpty()) {
                 val compressedData = dataChunk.compress()
                 var trendData = ""
-                for (i in dataChunk.indices step trendStep) {
+                for (i in dataChunk.indices step 100) {
                     trendData += "_${dataChunk[i].ETCO2}"
                 }
                 val co2Data = CO2Data(recordId = recordId, chunkIndex = chunkIndex, trendData = trendData, data = compressedData)
@@ -385,7 +384,7 @@ class LocalStorageKit @Inject constructor(
         currentRecordId?.let { it ->
             val chunkIndex = this.database.co2DataDao().getCO2DataByRecordId(it).size.coerceAtLeast(0)
             var trendData = ""
-            for (i in remainData.indices step trendStep) {
+            for (i in remainData.indices step 100) {
                 trendData += "_${remainData[i].ETCO2}"
             }
             val remainCo2Data = CO2Data(
@@ -464,6 +463,24 @@ class LocalStorageKit @Inject constructor(
     }
 
     /***
+     * 从本地读取历史记录数据
+     */
+//    suspend fun readRecordsFromLocal(): List<Record> {
+//        return withContext(Dispatchers.IO) {
+//            database.recordDao().getAllRecords().toList().firstOrNull() ?: emptyList()
+//        }
+//    }
+
+    /***
+     * 从本地读取历史病人数据
+     */
+//    suspend fun readPatientsFromLocal(): List<Patient> {
+//        return withContext(Dispatchers.IO) {
+//            database.patientDto().getAllPatients()
+//        }
+//    }
+
+    /***
      * 生成记录的病人分组索引：姓名+性别+年龄
      */
     private fun generatePatientIndex(patient: Patient): String {
@@ -479,6 +496,16 @@ class LocalStorageKit @Inject constructor(
         val day= startTime.dayOfMonth
         return year * 10000 + month * 100 + day
     }
+
+    /***
+     * 生成记录的时间分组索引：时分秒
+     */
+//    private fun generateTimeIndex(startTime: LocalDateTime): Int {
+//        val hour = startTime.hour
+//        val minute = startTime.minute
+//        val second= startTime.second
+//        return hour * 10000 + minute * 100 + second
+//    }
 
     /***
      * 保存用户语言选择

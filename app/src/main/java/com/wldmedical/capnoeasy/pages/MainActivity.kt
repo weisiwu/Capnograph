@@ -75,8 +75,8 @@ class MainActivity : BaseActivity() {
                     gender = GENDER.MALE,
                 )
                 var testRecord: UUID? = null
-                val startTime: LocalDateTime = LocalDateTime.now()
-                val endTime: LocalDateTime = LocalDateTime.now()
+                var startTime: LocalDateTime = LocalDateTime.now()
+                var endTime: LocalDateTime = LocalDateTime.now()
                 val record = Record(
                     patient = patient,
                     startTime = startTime,
@@ -100,9 +100,8 @@ class MainActivity : BaseActivity() {
                 }
                 withContext(Dispatchers.IO) {
                     localStorageKit.currentRecordId = record.id
-                    testRecord = record.id
+                    testRecord = record.id;
                     // TODO:  测试，插入记录
-                    println("wswTestd 准备插入数据")
                     localStorageKit.database.recordDao().insertRecord(record)
                     println("wswTest 成功插入记录，id为====》 ${record.id}")
                 }
@@ -120,6 +119,7 @@ class MainActivity : BaseActivity() {
                     localStorageKit.stopRecord(viewModel.totalCO2WavedData)
                 }
                 println("wswTest 所有测试数据均已写入完成")
+
                 println("wswTest 这里开始准备读取刚刚的数据")
                 withContext(Dispatchers.IO) {
                     println("wswTest 收尾数据 ${viewModel.totalCO2WavedData.size} ___ ${testRecord}")
