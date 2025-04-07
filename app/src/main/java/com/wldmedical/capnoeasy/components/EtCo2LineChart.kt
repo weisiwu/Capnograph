@@ -24,7 +24,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.lifecycleScope
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
@@ -48,10 +47,7 @@ import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
 import com.wldmedical.capnoeasy.kits.maxXPoints
 import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * App底部导航条
@@ -93,17 +89,14 @@ fun EtCo2LineChart(
     LaunchedEffect(viewModel.totalCO2WavedDataFlow) {
         // 如果数据已经足够一个chunk size，则将数据读出来，并存放到数据库中
         // totalCO2WavedData和totalCO2WavedDataFlow数据是相同的
-        viewModel.totalCO2WavedDataFlow.collect { co2WavePointDataList ->
-            if (viewModel.totalCO2WavedData.size < maxRecordDataChunkSize) {
-                return@collect
-            }
-            println("wswTEst 开始准备处理chunk")
-            // 对取出的数据存入数据库
-            val currentlRecordId = localStorageKit.currentRecordId
-            println("wswTEst 获取到的记录id $currentlRecordId")
-            // 有数据id的时候才会存储到数据库中
-            currentlRecordId?.let { id ->
-                withContext(Dispatchers.IO) {
+        if (viewModel.totalCO2WavedData.size >= maxRecordDataChunkSize) {
+            println("wswTest 在表格开始监听到数据变化")
+            viewModel.totalCO2WavedDataFlow.collect { co2WavePointDataList ->
+                // 对取出的数据存入数据库
+                var result = false
+                val currentlRecordId = localStorageKit.currentRecordId
+                // 有数据id的时候才会存储到数据库中
+                currentlRecordId?.let { id ->
                     // 如果当前没有寄存在recordId下的chunk数据，那么chunkIndex从0开始
                     val chunkIndex = localStorageKit.database.co2DataDao().getCO2DataByRecordId(id).size.coerceAtLeast(0)
                     // 从头部开始取出 10000 条数据，不改变 totalCO2WavedDataFlow 本身的内容
@@ -113,17 +106,15 @@ fun EtCo2LineChart(
                         data = co2WavePointDataList.take(maxRecordDataChunkSize).compress()
                     )
                     val rowId = localStorageKit.database.co2DataDao().insertCO2Data(co2DataChunk)
-                    println("wswTest chunk插入完成，序号为 $rowId")
-                    // 如果插入后没有返回数据行号,则插入失败，行号是一个Long类型
-                    if (rowId != -1L) {
-                        // 对列表数据的修改需要在主线程
-                        withContext(Dispatchers.Main) {
-                            // 从 totalCO2WavedDataFlow 删除取出的数据
-                            // 不直接改变 StateFlow，而是通过修改 appState.totalCO2WavedData
-                            viewModel.delSavedCO2WavedDataChunk()
-                            println("wswTest 执行删除已经插入数据库的chunk")
-                        }
-                    }
+                    println("wswTest 插入的数据行号是什么 $rowId")
+                    result = rowId != -1L // 如果插入后没有返回数据行号,则插入失败，行号是一个Long类型
+                }
+
+                if (result) {
+                    // 从 totalCO2WavedDataFlow 删除取出的数据
+                    // 不直接改变 StateFlow，而是通过修改 appState.totalCO2WavedData
+                    viewModel.delSavedCO2WavedDataChunk()
+                    println("wswTest 执行删除已经插入数据库的chunk")
                 }
             }
         }
