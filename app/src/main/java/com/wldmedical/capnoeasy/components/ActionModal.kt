@@ -40,6 +40,7 @@ import com.wldmedical.capnoeasy.models.AppStateModel
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import kotlinx.coroutines.launch
 
+//TODO: 这里需要做成可以通过传递图片和文字来控制展示的效果，而不是每次往里面手动写
 /**
  * App 历史记录页，点击右上角三点水，弹出的弹框
  * 里面有打印小票，导出pdf
