@@ -119,6 +119,16 @@ interface RecordDao {
 
     @Query("SELECT * FROM records WHERE id = :id")
     fun queryRecordById(id: UUID): Record?
+
+    @Query("SELECT * FROM records ORDER BY startTime ASC LIMIT 1")
+    fun queryOldestRecord(): Record?
+
+    @Query("DELETE FROM records WHERE id = :recordId")
+    fun deleteRecordById(recordId: UUID)
+
+    // 新增：计算 records 表中的记录数量
+    @Query("SELECT COUNT(*) FROM records")
+    fun getRecordsCount(): Int
 }
 
 class RecordConverters {
@@ -285,6 +295,12 @@ class LocalStorageKit @Inject constructor(
 
             database.recordDao().insertRecord(record)
             records.add(record)
+            // 多余200个，开始删除最旧历史数据
+            if (database.recordDao().getRecordsCount() >= 200) {
+                database.recordDao().queryOldestRecord()?.let {
+                    database.recordDao().deleteRecordById(it.id)
+                }
+            }
         }
     }
 

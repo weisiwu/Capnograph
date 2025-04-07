@@ -344,6 +344,9 @@ class AppStateModel @Inject constructor(
         // 有值且在记录中
         if (appState.isRecording.value && newVal != null) {
             appState.totalCO2WavedData.add(newVal)
+            if (appState.totalCO2WavedData.size > 10000) {
+                appState.totalCO2WavedData.removeAt(0)
+            }
         }
         // 未传入值且停止记录了，对数据做清空（本次记录已经完成）
         if (!appState.isRecording.value && newVal == null) {

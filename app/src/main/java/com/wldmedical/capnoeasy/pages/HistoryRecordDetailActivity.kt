@@ -30,6 +30,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.itextpdf.text.pdf.parser.Line
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.RangeSelector
@@ -38,7 +39,10 @@ import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.kits.filterData
 import com.wldmedical.capnoeasy.kits.maxXPoints
+import com.wldmedical.capnoeasy.kits.saveChartToPdfInBackground
+import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.capnoeasy.recordIdParams
+import com.wldmedical.hotmeltprint.PrintSetting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -63,6 +67,10 @@ class HistoryRecordDetailActivity : BaseActivity() {
     }
 
     private var saveFileName: String = ""
+
+    private var lineChart: LineChart? = null
+
+    private val entriesCopy = mutableStateListOf<CO2WavePointData>()
 
     private var currentRecord: Record? = null
 
@@ -101,6 +109,38 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     // 保存PDF文件
     override fun onSavePDFClick() {
+        val recordId = intent.getStringExtra(recordIdParams)
+        val context = this
+        val printSetting: PrintSetting = localStorageKit.loadPrintSettingFromPreferences(this)
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                val record = localStorageKit.database.recordDao().queryRecordById(id = UUID.fromString(recordId))
+
+                record?.let {
+                    it.pdfFilePath?.let { it1 ->
+                        lineChart?.let {it2 ->
+                            saveChartToPdfInBackground(
+                                lineChart = it2,
+                                data = entriesCopy,
+                                filePath = it1,
+                                record = record,
+                                maxETCO2 = viewModel.CO2Scale.value.value,
+                                currentETCO2 = blueToothKit.currentETCO2.value,
+                                currentRR = blueToothKit.currentRespiratoryRate.value,
+                                printSetting = printSetting,
+                                showTrendingChart = true,
+                                context = context
+                            )
+                        }
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+
+                }
+            }
+        }
+
         if (this.sourceFilePath.isNotEmpty()) {
             createPdfDocument()
         }
@@ -168,8 +208,10 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
                     val startIndex = (startValue.value * 100).toInt()
                     val endIndex = startIndex + maxXPoints
+                    val endIndexPDF = startIndex + (maxXPoints * 1.5).toInt()
                     val safeStartIndex = startIndex.coerceAtLeast(0)
                     val safeEndIndex = endIndex.coerceAtMost(record.data.size)
+                    val safeEndIndexPDF = endIndexPDF.coerceAtMost(record.data.size)
 
                     // 目前按照每秒100个点去算
                     totalLen.value = (max(0, record.data.size - maxXPoints) / 100).toFloat()
@@ -180,6 +222,14 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     } else {
                         emptyList()
                     }
+                    val dataToUsePDF = if (safeStartIndex < safeEndIndexPDF) {
+                        record.data.slice(safeStartIndex until safeEndIndexPDF)
+                    } else {
+                        emptyList()
+                    }
+
+                    entriesCopy.clear()
+                    entriesCopy.addAll(dataToUsePDF.asReversed())
                     dataToUse.forEach {
                         newEntries.add(Entry(sequentialIndex.toFloat(), it.co2))
                         sequentialIndex++
@@ -298,6 +348,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                         }
 
                         chart.value = this
+                        lineChart = this
                     }
                 },
                 update = {
