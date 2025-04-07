@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
@@ -21,8 +22,6 @@ import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.kits.BluetoothType
 import com.wldmedical.capnoeasy.kits.Patient
-import com.wldmedical.capnoeasy.kits.Record
-import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
 import kotlinx.coroutines.launch
@@ -56,48 +55,6 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val context = this
-
-        // TODO: 测试，数据过长，无法读取
-        val patient = Patient(
-            name = "病人A",
-            age = 90,
-            gender = GENDER.MALE,
-        )
-        var startTime: LocalDateTime = LocalDateTime.now()
-        var endTime: LocalDateTime = LocalDateTime.now()
-        val records = mutableListOf<CO2WavePointData>()
-        for (index in 1..100000) {
-            records.add(
-                CO2WavePointData(
-                    co2 = 0f,
-                    RR = 0,
-                    ETCO2 = 0f,
-                    FiCO2 = 0f,
-                    index = index
-                )
-            )
-        }
-
-//        val records: List<CO2WavePointData> = (1..10000000).map { index ->
-//            CO2WavePointData(
-//                co2 = 0f,
-//                RR = 0,
-//                ETCO2 = 0f,
-//                FiCO2 = 0f,
-//                index = index
-//            )
-//        }
-        val record = Record(
-            patient = patient,
-            startTime = startTime,
-            endTime = endTime,
-            data = records.toList(),
-            dateIndex = 1,
-            patientIndex = "1",
-            pdfFilePath = "pdfFilePath",
-        )
-
-        localStorageKit.database.recordDao().insertRecord(record)
 
         try {
             val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)
