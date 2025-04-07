@@ -78,6 +78,7 @@ class BLEDeviceExtra {
     var receivedArray: BlockingQueue<Byte> = LinkedBlockingQueue()
     val taskQueue = BluetoothTaskQueue()
     val sendArray = mutableListOf<Byte>()
+    val receivedCO2WavedData: MutableList<DataPoint>? = mutableListOf()
 }
 
 // 反劫持传
@@ -555,6 +556,14 @@ class BlueToothKit @Inject constructor(
 
     // 历史配对设备-打印机
     public val pairedPrinter = mutableStateOf<BluetoothDevice?>(null)
+
+    // 已经接收到的数据 - 已经解析出来的
+    val receivedCO2WavedDataMap = HashMap<String, MutableList<DataPoint>>()
+
+    private val receivedCO2WavedData: MutableList<DataPoint>?
+        get() {
+            return receivedCO2WavedDataMap[currentDeviceMacAddress]
+        }
 
     // 内部值可变
     private val _dataFlow = MutableStateFlow<List<DataPoint>>(emptyList())
@@ -1236,9 +1245,11 @@ class BlueToothKit @Inject constructor(
         if (device.type == DEVICE_TYPE_LE || device.type == DEVICE_TYPE_UNKNOWN) {
             connectBleDevice(device)
             connectedCapnoEasy.value = device
+            receivedCO2WavedDataMap[device.address] = mutableListOf()
         } else if (device.type == DEVICE_TYPE_CLASSIC) {
             connectClassicDevice(device)
             connectedCapnoEasy.value = device
+            receivedCO2WavedDataMap[device.address] = mutableListOf()
         }
     }
 
@@ -1400,9 +1411,13 @@ class BlueToothKit @Inject constructor(
         }
 
         val currentPoint = DataPoint(
-            index = 0,
+            index = receivedCO2WavedData?.size ?: 0,
             value = currentCO2.value,
         )
+        // TODO: 后续将 receivedCO2WavedDataMap 全部注释，应该用不上
+        // 用于在app主页展示的波形数据，是比最终保存的数据更完整
+        // 但是只存在于应用运行期间
+        receivedCO2WavedDataMap[currentDeviceMacAddress]?.add(currentPoint)
 
         // 保存到pdf中的数据和最终打印出来的数据
         // 是否保存这个数据，按照用户是否点击了开始记录开始算
@@ -1416,6 +1431,10 @@ class BlueToothKit @Inject constructor(
                 index = appState.totalCO2WavedData.takeLast(1)[0].index.coerceAtLeast(0) + 1
             )
         )
+
+        if ((receivedCO2WavedData?.size ?: 0) >= maxXPoints) {
+            receivedCO2WavedDataMap[currentDeviceMacAddress]?.removeAt(0)
+        }
 
         // 这里是用于折线图展示的数据，最多不超过maxXPoints个
         updateReceivedData(currentPoint)
