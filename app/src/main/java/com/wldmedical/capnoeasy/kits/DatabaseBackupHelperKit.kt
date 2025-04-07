@@ -28,12 +28,6 @@ const val IS_FIRST_LAUNCH = "is_wld_medical_app_first_install"
 const val DATA_LATEST_VERSION = "last_data_version"
 const val BACKUP_FAILURE_COUNT = "backup_failure_count"
 
-/**
- * 数据库备份
- * 在页面初始化时，判断用户设备下是否有备份文件
- * 如有，则通过文件进行恢复
- * 如无，则将当前数据库导出为备份文件
- */
 class DatabaseBackupHelper(private val context: Context) {
 
     private val databaseName = DATABASE_NS
