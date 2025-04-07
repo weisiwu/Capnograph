@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "aaf2ce1a3e6b8878c8723b651504fb08",
+    "identityHash": "04b1636cb5ff0a25ef3a62b5f3489081",
     "entities": [
       {
         "tableName": "patients",
@@ -44,12 +44,12 @@
       },
       {
         "tableName": "records",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `patient` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `dateIndex` INTEGER NOT NULL, `patientIndex` TEXT NOT NULL, `isGroupTitle` INTEGER NOT NULL, `pdfFilePath` TEXT, `previewPdfFilePath` TEXT, `groupTitle` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` BLOB NOT NULL, `patient` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `dateIndex` INTEGER NOT NULL, `patientIndex` TEXT NOT NULL, `isGroupTitle` INTEGER NOT NULL, `pdfFilePath` TEXT, `previewPdfFilePath` TEXT, `groupTitle` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
-            "affinity": "TEXT",
+            "affinity": "BLOB",
             "notNull": true
           },
           {
@@ -120,7 +120,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'aaf2ce1a3e6b8878c8723b651504fb08')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '04b1636cb5ff0a25ef3a62b5f3489081')"
     ]
   }
 }

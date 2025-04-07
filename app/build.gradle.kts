@@ -94,9 +94,8 @@ dependencies {
     // 引用自定义打印SDK hotmeltprint
     implementation(project(":hotmeltprint"))
     // Room Persistence Library
-    implementation("androidx.room:room-runtime:2.5.2")
-    kapt("androidx.room:room-compiler:2.5.2")
-    implementation("androidx.room:room-ktx:2.5.2") // 支持协程
+    implementation("androidx.room:room-runtime:2.5.0")
+    kapt("androidx.room:room-compiler:2.5.0")
     // 引入Gson
     implementation("com.google.code.gson:gson:2.10.1")
     // https://github.com/itext/itextpdf

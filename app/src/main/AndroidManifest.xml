@@ -58,14 +58,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-<!--        临时注册，后续恢复-->
-<!--        <activity android:name=".pages.MainActivity" android:exported="false" />        -->
-        <activity android:name=".pages.MainActivity" android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+        <activity android:name=".pages.MainActivity" android:exported="false" />
         <activity android:name=".pages.SearchActivity" android:exported="false" />
         <activity android:name=".pages.SettingActivity" android:exported="false" />
         <activity android:name=".pages.AlertSettingActivity" android:exported="false" />
