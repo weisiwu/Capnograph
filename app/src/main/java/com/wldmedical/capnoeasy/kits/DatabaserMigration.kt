@@ -1,5 +1,4 @@
 import android.content.ContentValues
-import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -10,19 +9,18 @@ import com.wldmedical.capnoeasy.models.CO2WavePointData
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(database: SupportSQLiteDatabase) {
-        println("wswTEst 是否需要对数据库进行升级")
         // 步骤 1: 重命名旧的 Record 表
         database.execSQL("ALTER TABLE records RENAME TO records_old")
 
         // 步骤 2: 创建新的 records 表
         database.execSQL("""
-            CREATE TABLE IF NOT EXISTS `records` (`id` TEXT NOT NULL, `patient` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `dateIndex` INTEGER NOT NULL, `patientIndex` TEXT NOT NULL, `isGroupTitle` INTEGER NOT NULL, `pdfFilePath` TEXT, `previewPdfFilePath` TEXT, `groupTitle` TEXT NOT NULL, PRIMARY KEY(`id`))
+            CREATE TABLE IF NOT EXISTS `records` (`id` TEXT NOT NULL, `patient_name` TEXT NOT NULL, `patient_gender` TEXT NOT NULL, `patient_age` INTEGER NOT NULL, `patient_id` INTEGER NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `dateIndex` INTEGER NOT NULL, `patientIndex` TEXT NOT NULL, `isGroupTitle` INTEGER NOT NULL, `pdfFilePath` TEXT, `previewPdfFilePath` TEXT, `groupTitle` TEXT NOT NULL, PRIMARY KEY(`id`))
         """)
 
         // 步骤 3: 将旧 Record 表的数据复制到新的 records 表
         database.execSQL("""
-            INSERT INTO records (id, patient, startTime, endTime, dateIndex, patientIndex, isGroupTitle, pdfFilePath, previewPdfFilePath, groupTitle)
-            SELECT id, patient, startTime, endTime, dateIndex, patientIndex, isGroupTitle, pdfFilePath, previewPdfFilePath, groupTitle
+            INSERT INTO records (id, patient_name, patient_gender, patient_age, patient_id, startTime, endTime, dateIndex, patientIndex, isGroupTitle, pdfFilePath, previewPdfFilePath, groupTitle)
+            SELECT id, patient_name, patient_gender, patient_age, patient_id, startTime, endTime, dateIndex, patientIndex, isGroupTitle, pdfFilePath, previewPdfFilePath, groupTitle
             FROM records_old
         """)
 

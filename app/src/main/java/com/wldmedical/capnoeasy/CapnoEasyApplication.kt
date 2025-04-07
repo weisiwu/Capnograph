@@ -41,13 +41,10 @@ class CapnoEasyApplication : Application() {
 
         database = AppDatabase.getDatabase(this)
 
-        // TODO:(wsw) 这里需要等待时机，等待可以恢复的时候再行恢复
         // 启动后开始备份数据库或者恢复数据
         DatabaseBackupHelperManager.initialize(this)
-        println("wswTest 这里开始备份数据库")
         dbBackupHelperKit = DatabaseBackupHelperManager.dbBackupHelperKit
         dbBackupHelperKit.startWork(applicationContext, database)
-        println("wswTest 完成备份数据库")
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
