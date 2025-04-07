@@ -12,7 +12,6 @@ import com.wldmedical.capnoeasy.kits.GROUP_BY
 import com.wldmedical.capnoeasy.kits.Group
 import com.wldmedical.capnoeasy.kits.Record
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -33,18 +32,17 @@ class HistoryRecordsActivity : BaseActivity() {
 
         val records = remember { mutableStateListOf<Record>() }
 
-       LaunchedEffect(0) {
-           lifecycleScope.launch {
-               withContext(Dispatchers.IO) {
-                   val newRecords = localStorageKit.database.recordDao().getAllRecords().toList().firstOrNull()
-                   withContext(Dispatchers.Main) {
-                       newRecords?.let {
-                           records.addAll(newRecords)
-                       }
-                   }
-               }
-           }
-       }
+        // TODO: 临时注释，后续回复
+//        LaunchedEffect(0) {
+//            lifecycleScope.launch {
+//                withContext(Dispatchers.IO) {
+//                    val newRecords = localStorageKit.database.recordDao().getAllRecords()
+//                    withContext(Dispatchers.Main) {
+//                        records.addAll(newRecords)
+//                    }
+//                }
+//            }
+//        }
 
         HistoryList(
             records = records,
