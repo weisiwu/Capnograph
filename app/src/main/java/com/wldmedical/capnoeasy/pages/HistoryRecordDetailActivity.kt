@@ -30,7 +30,6 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
-import com.itextpdf.text.pdf.parser.Line
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.RangeSelector
@@ -50,6 +49,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.OutputStream
 import java.util.UUID
+import kotlin.math.ceil
 import kotlin.math.max
 
 /***
@@ -113,30 +113,30 @@ class HistoryRecordDetailActivity : BaseActivity() {
         val context = this
         val printSetting: PrintSetting = localStorageKit.loadPrintSettingFromPreferences(this)
         lifecycleScope.launch {
+            // 读取记录的数据并向指定位置生成pdf文件
             withContext(Dispatchers.IO) {
                 val record = localStorageKit.database.recordDao().queryRecordById(id = UUID.fromString(recordId))
 
-                record?.let {
-                    it.pdfFilePath?.let { it1 ->
-                        lineChart?.let {it2 ->
+                record?.let { _record ->
+                    val _recordData = _record.data
+                    val _recordDataMidIndex = (_recordData.size / 2).toInt()
+                    val _midRecord = _recordData.getOrNull(_recordDataMidIndex)
+                    _record.pdfFilePath?.let { _pdfFilePath ->
+                        lineChart?.let { _lineChart ->
                             saveChartToPdfInBackground(
-                                lineChart = it2,
+                                lineChart = _lineChart,
                                 data = entriesCopy,
-                                filePath = it1,
+                                filePath = _pdfFilePath,
                                 record = record,
                                 maxETCO2 = viewModel.CO2Scale.value.value,
-                                currentETCO2 = blueToothKit.currentETCO2.value,
-                                currentRR = blueToothKit.currentRespiratoryRate.value,
+                                currentETCO2 = _midRecord?.ETCO2 ?: 0f,
+                                currentRR = _midRecord?.RR ?: 0,
                                 printSetting = printSetting,
                                 showTrendingChart = true,
                                 context = context
                             )
                         }
                     }
-                }
-
-                withContext(Dispatchers.Main) {
-
                 }
             }
         }
