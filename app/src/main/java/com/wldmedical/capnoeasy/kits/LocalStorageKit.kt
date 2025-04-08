@@ -290,8 +290,8 @@ class LocalStorageKit @Inject constructor(
         currentETCO2: Float = 0f,
         showTrendingChart: Boolean = true,
         currentRR: Int = 0,
-    ) {
-        withContext(Dispatchers.IO) {
+    ): Result<Boolean> {
+        return withContext(Dispatchers.IO) {
             val dateIndex = generateDateIndex(startTime)
             val patientIndex = generatePatientIndex(patient)
             var pdfFilePath: String? = null
@@ -333,10 +333,12 @@ class LocalStorageKit @Inject constructor(
             context?.let {
                 val remainInnerSpace = getAvailableSpace(context = context)
                 // 目前策略: 1、如果存储空间不足，toast然后退出  2、如果数据量过多，超过100条，删除一条最久的历史记录继续记录
-                // 剩余空间不足
+                // 剩余空间不足 )
                 if (remainInnerSpace < singleRecordMaxSize) {
-                    Toast.makeText(context, getString(R.string.localstorage_lackof_memory, context = context), Toast.LENGTH_SHORT).show()
-                    return@withContext
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, getString(R.string.localstorage_lackof_memory, context = context), Toast.LENGTH_SHORT).show()
+                    }
+                    return@withContext Result.success(false)
                 }
             }
             // 多余100个，开始删除最旧历史数据
@@ -347,6 +349,7 @@ class LocalStorageKit @Inject constructor(
             }
             database.recordDao().insertRecord(record)
             records.add(record)
+            return@withContext Result.success(true)
         }
     }
 

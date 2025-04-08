@@ -37,7 +37,7 @@ import com.wldmedical.capnoeasy.components.RangeType
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.kits.filterData
-import com.wldmedical.capnoeasy.kits.maxXPoints
+import com.wldmedical.capnoeasy.kits.recordMaxXPoints
 import com.wldmedical.capnoeasy.kits.saveChartToPdfInBackground
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.capnoeasy.recordIdParams
@@ -49,7 +49,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.OutputStream
 import java.util.UUID
-import kotlin.math.ceil
 import kotlin.math.max
 
 /***
@@ -184,8 +183,8 @@ class HistoryRecordDetailActivity : BaseActivity() {
         val trendChart: MutableState<LineChart?> = remember { mutableStateOf(null) }
         val chart: MutableState<LineChart?> = remember { mutableStateOf(null) }
         val entries = remember { mutableStateListOf<Entry>() }.apply {
-            if (this.size < maxXPoints) {
-                repeat(maxXPoints) { add(Entry(it.toFloat(), 0f)) }
+            if (this.size < recordMaxXPoints) {
+                repeat(recordMaxXPoints) { add(Entry(it.toFloat(), 0f)) }
             }
         }
         val trendEntries = remember { mutableStateListOf<Entry>() }
@@ -206,15 +205,15 @@ class HistoryRecordDetailActivity : BaseActivity() {
                         }
                     }
 
-                    val startIndex = (startValue.value * 100).toInt()
-                    val endIndex = startIndex + maxXPoints
-                    val endIndexPDF = startIndex + (maxXPoints * 1.5).toInt()
+                    val startIndex = (startValue.value * 10).toInt()
+                    val endIndex = startIndex + recordMaxXPoints
+                    val endIndexPDF = startIndex + (recordMaxXPoints * 1.5).toInt()
                     val safeStartIndex = startIndex.coerceAtLeast(0)
                     val safeEndIndex = endIndex.coerceAtMost(record.data.size)
                     val safeEndIndexPDF = endIndexPDF.coerceAtMost(record.data.size)
 
                     // 目前按照每秒100个点去算
-                    totalLen.value = (max(0, record.data.size - maxXPoints) / 100).toFloat()
+                    totalLen.value = (max(0, record.data.size - recordMaxXPoints) / 10).toFloat()
                     val newEntries = mutableListOf<Entry>()
                     var sequentialIndex = 0
                     val dataToUse = if (safeStartIndex < safeEndIndex) {
@@ -238,7 +237,8 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     // 生成趋势数据
                     val newTrendEntries = mutableListOf<Entry>()
                     var sequentialTrendIndex = 0
-                    for (i in record.data.indices step 50) {
+//                    for (i in record.data.indices step 50) {
+                    for (i in record.data.indices) {
                         newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), record.data[i].ETCO2))
                         sequentialTrendIndex++
                     }

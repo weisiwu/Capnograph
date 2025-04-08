@@ -39,6 +39,8 @@ class HistoryRecordsActivity : BaseActivity() {
                     withContext(Dispatchers.Main) {
                         records.addAll(newRecords)
                     }
+                    val size = localStorageKit.database.recordDao().getRecordsCount()
+                    println("wswTest 一共有多少数据  ${size}？？？")
                 }
             }
         }

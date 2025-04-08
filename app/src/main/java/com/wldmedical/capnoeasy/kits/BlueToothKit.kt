@@ -86,6 +86,7 @@ val antiHijackStr = "301001301001"
 val antiHijackData = antiHijackStr.toByteArray(Charsets.UTF_8)
 
 val maxXPoints = 500
+val recordMaxXPoints = 50 // 记录数据只有实时数据的10分之一采样率
 
 // 统一设备模型
 enum class BluetoothType {
@@ -1445,10 +1446,10 @@ class BlueToothKit @Inject constructor(
         }
         _data_chunk_index += 1
         // 如果正在记录中，并且数据已经到达singleRecordMaxPointsNumber则自动存储
-        // TODO: 待调试，这里需要设置，看最终效果
         if (_data_chunk_index >= singleRecordMaxPointsNumber) {
             if (appState.isRecording.value) {
                 autoSaveRecord?.invoke()
+                _data_chunk_index = 0
             }
         }
 

@@ -188,7 +188,22 @@ class MainActivity : BaseActivity() {
                     showTrendingChart = viewModel.showTrendingChart.value,
                     currentETCO2 = blueToothKit.currentETCO2.value,
                     currentRR = blueToothKit.currentRespiratoryRate.value,
-                )
+                ).onSuccess { result ->
+                    viewModel.updateToastData(
+                        ToastData(
+                            text = getStringAcitivity(R.string.main_stop_record),
+                            duration = 600,
+                            showMask = false,
+                            type = ToastType.SUCCESS,
+                            callback = {
+                                viewModel.updateIsRecording(false)
+                                if(result) {
+                                    showAlert()                                    
+                                }
+                            },
+                        )
+                    )
+                }
             }
         } else {
             startRecordTime = LocalDateTime.now()
@@ -219,20 +234,20 @@ class MainActivity : BaseActivity() {
                     viewModel.totalCO2WavedData.removeAll(saveRecordData)
                 }
             }
-        }
 
-        viewModel.updateToastData(
-            ToastData(
-                text = if (isRecording) getStringAcitivity(R.string.main_stop_record) else getStringAcitivity(R.string.main_start_record),
-                duration = 600,
-                showMask = false,
-                type = ToastType.SUCCESS,
-                callback = {
-                    viewModel.updateIsRecording(!isRecording)
-                    showAlert()
-                },
+            viewModel.updateToastData(
+                ToastData(
+                    text = getStringAcitivity(R.string.main_start_record),
+                    duration = 600,
+                    showMask = false,
+                    type = ToastType.SUCCESS,
+                    callback = {
+                        viewModel.updateIsRecording(true)
+                        showAlert()
+                    },
+                )
             )
-        )
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
