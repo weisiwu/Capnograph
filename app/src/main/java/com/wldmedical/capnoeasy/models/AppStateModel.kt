@@ -28,6 +28,9 @@ import com.wldmedical.capnoeasy.components.DeviceType
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.NavBarComponentState
 import com.wldmedical.capnoeasy.components.ToastData
+import com.wldmedical.capnoeasy.kits.singleRecordMaxPointsNumber
+import com.wldmedical.capnoeasy.kits.singleRecordMaxSize
+import com.wldmedical.capnoeasy.kits.spaceSizeUnit
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -344,10 +347,8 @@ class AppStateModel @Inject constructor(
         // 有值且在记录中
         if (appState.isRecording.value && newVal != null) {
             appState.totalCO2WavedData.add(newVal)
-            if (appState.totalCO2WavedData.size > 10000) {
-                appState.totalCO2WavedData.removeAt(0)
-            }
         }
+
         // 未传入值且停止记录了，对数据做清空（本次记录已经完成）
         if (!appState.isRecording.value && newVal == null) {
             appState.totalCO2WavedData.clear()

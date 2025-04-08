@@ -129,6 +129,14 @@ class BlueToothKit @Inject constructor(
     private val handler = Handler(Looper.getMainLooper())
     private val sendPeriod = 100L // 指令发送间隔，查询设备信息需要多条指令配置，互不依赖
     private var checkJob: Job? = null
+    private var _data_index = 10 // 数据间隔，每次收到数据，给值加1，如果等于10或者0才记录该数据，然后将该值复位
+    private var _data_chunk_index = 0 // 当前已经存储了多少的数据点
+    private var autoSaveRecord: (() -> Unit)? = null
+
+    // 注入自动保存函数
+    open fun addAutoSave(cb: (() -> Unit)?) {
+        autoSaveRecord = cb
+    }
 
     // 获取设备信息指令，由于该指令失败概率高，所以会周期性发送，直到成功
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -136,7 +144,7 @@ class BlueToothKit @Inject constructor(
         checkJob?.cancel() // 取消之前的任务
         checkJob = CoroutineScope(Dispatchers.IO).launch {
             while (true) {
-                println("wswTest 轮训设备信息外层的值 在循环")
+//                println("wswTest 轮训设备信息外层的值 在循环")
                 if (sHardwareVersion.value.isEmpty()) {
                     withContext(Dispatchers.Main) {
                         taskQueue.addTask(
@@ -1420,15 +1428,29 @@ class BlueToothKit @Inject constructor(
 
         // 保存到pdf中的数据和最终打印出来的数据
         // 是否保存这个数据，按照用户是否点击了开始记录开始算
-        appState.updateTotalCO2WavedData(
-            CO2WavePointData(
-                co2 = currentCO2.value,
-                RR = currentRespiratoryRate.value,
-                ETCO2 = currentETCO2.value,
-                FiCO2 = currentFiCO2,
-                index = appState.totalCO2WavedData.size
+        if (_data_index >= 10) {
+            appState.updateTotalCO2WavedData(
+                CO2WavePointData(
+                    co2 = currentCO2.value,
+                    RR = currentRespiratoryRate.value,
+                    ETCO2 = currentETCO2.value,
+                    FiCO2 = currentFiCO2,
+                    index = appState.totalCO2WavedData.size
+                )
             )
-        )
+
+            _data_index = 0
+        } else {
+            _data_index += 1
+        }
+        _data_chunk_index += 1
+        // 如果正在记录中，并且数据已经到达singleRecordMaxPointsNumber则自动存储
+        // TODO: 待调试，这里需要设置，看最终效果
+        if (_data_chunk_index >= singleRecordMaxPointsNumber) {
+            if (appState.isRecording.value) {
+                autoSaveRecord?.invoke()
+            }
+        }
 
         if ((receivedCO2WavedData?.size ?: 0) >= maxXPoints) {
             receivedCO2WavedDataMap[currentDeviceMacAddress]?.removeAt(0)

@@ -107,6 +107,7 @@
     <string name="localstorage_all">All</string>
     <string name="localstorage_patient">Patient</string>
     <string name="localstorage_time">Time</string>
+    <string name="localstorage_lackof_memory">Storage space is insufficient. Please free up some storage space and try again.</string>
     <!-- TypeSwitch -->
     <string name="typeswitch_bluetooth">Bluetooth</string>
     <string name="typeswitch_classic_bluetooth">Classic Bluetooth</string>

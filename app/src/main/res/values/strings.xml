@@ -106,6 +106,7 @@
     <string name="localstorage_all">全部</string>
     <string name="localstorage_patient">病人</string>
     <string name="localstorage_time">时间</string>
+    <string name="localstorage_lackof_memory">存储空间不足，请释放存储空间后再尝试。</string>
     <!-- TypeSwitch -->
     <string name="typeswitch_bluetooth">蓝牙</string>
     <string name="typeswitch_classic_bluetooth">经典蓝牙</string>

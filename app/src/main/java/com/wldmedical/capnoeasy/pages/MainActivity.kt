@@ -193,6 +193,33 @@ class MainActivity : BaseActivity() {
             }
         } else {
             startRecordTime = LocalDateTime.now()
+            // 将自动保存记录函数传入，方便蓝牙模块在数据足够时能够自动保存
+            blueToothKit.addAutoSave {
+                lifecycleScope.launch {
+                    val patient = Patient(
+                        name = viewModel.patientName.value ?: "",
+                        gender = viewModel.patientGender.value ?: GENDER.MALE,
+                        age = viewModel.patientAge.value ?: 0
+                    )
+                    localStorageKit.savePatient(patient)
+                    val saveRecordData = viewModel.totalCO2WavedData.toList();
+                    localStorageKit.saveRecord(
+                        context = context,
+                        patient = patient,
+                        recordName = "${viewModel.pdfHospitalName.value}_${viewModel.pdfReportName.value}",
+                        lineChart = viewModel.lineChart,
+                        data = saveRecordData,
+                        startTime = startRecordTime ?: LocalDateTime.now(),
+                        endTime = endRecordTime ?: LocalDateTime.now(),
+                        maxETCO2 = viewModel.CO2Scale.value.value,
+                        showTrendingChart = viewModel.showTrendingChart.value,
+                        currentETCO2 = blueToothKit.currentETCO2.value,
+                        currentRR = blueToothKit.currentRespiratoryRate.value,
+                    )
+                    // 清空已经存储的数据
+                    viewModel.totalCO2WavedData.removeAll(saveRecordData)
+                }
+            }
         }
 
         viewModel.updateToastData(

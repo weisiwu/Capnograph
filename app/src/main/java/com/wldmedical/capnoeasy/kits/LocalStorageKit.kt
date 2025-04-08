@@ -2,7 +2,10 @@ package com.wldmedical.capnoeasy.kits
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
 import android.os.Environment
+import android.os.StatFs
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.room.Dao
 import androidx.room.Database
@@ -21,7 +24,9 @@ import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.DATABASE_NS
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.LanguageTypes
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.USER_PREF_NS
+import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.PrintSetting
 import dagger.hilt.android.qualifiers.ActivityContext
@@ -33,6 +38,18 @@ import javax.inject.Inject
 import java.io.Serializable
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+
+// 最多记录数量
+val maxRecordsNumber = 100
+
+// 1M字节常量
+val spaceSizeUnit = 1024 * 1024
+
+// 单条记录在存储中能占据的最大存储空间(单位: M)
+// 28800 * 10 * 36 8个小时总秒数 * 每秒10个点 * 每个点占用的内存空间
+val singleRecordMaxSize = 10
+
+val singleRecordMaxPointsNumber = 28800 * 10
 
 @Entity(tableName = "patients")
 data class Patient(
@@ -224,6 +241,26 @@ class LocalStorageKit @Inject constructor(
 
     val database = application.database
 
+    // 查询设备还剩多少物理存储空间
+    fun getAvailableSpace(context: Context?): Long {
+        context?.let {
+            // 计算应用内部存储空间，room数据库的数据存储在应用目录下，不考虑放到公共存储空间下。
+            val stat = StatFs(context.filesDir.path)
+            val availableBlocks: Long = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                stat.availableBlocksLong
+            } else {
+                stat.availableBlocks.toLong()
+            }
+            val blockSize: Long = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                stat.blockSizeLong
+            } else {
+                stat.blockSize.toLong()
+            }
+            return availableBlocks * blockSize / spaceSizeUnit
+        }
+        return 0L
+    }
+
     /***
      * 保存病人
      * 在主页填写了病人信息并点击记录时候调用
@@ -293,14 +330,23 @@ class LocalStorageKit @Inject constructor(
                  )
             }
 
-            database.recordDao().insertRecord(record)
-            records.add(record)
-            // 多余200个，开始删除最旧历史数据
-            if (database.recordDao().getRecordsCount() >= 200) {
+            context?.let {
+                val remainInnerSpace = getAvailableSpace(context = context)
+                // 目前策略: 1、如果存储空间不足，toast然后退出  2、如果数据量过多，超过100条，删除一条最久的历史记录继续记录
+                // 剩余空间不足
+                if (remainInnerSpace < singleRecordMaxSize) {
+                    Toast.makeText(context, getString(R.string.localstorage_lackof_memory, context = context), Toast.LENGTH_SHORT).show()
+                    return@withContext
+                }
+            }
+            // 多余100个，开始删除最旧历史数据
+            if (database.recordDao().getRecordsCount() >= maxRecordsNumber) {
                 database.recordDao().queryOldestRecord()?.let {
                     database.recordDao().deleteRecordById(it.id)
                 }
             }
+            database.recordDao().insertRecord(record)
+            records.add(record)
         }
     }
 
