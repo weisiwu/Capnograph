@@ -1441,10 +1441,10 @@ class BlueToothKit @Inject constructor(
             )
 
             _data_index = 0
+            _data_chunk_index += 1
         } else {
             _data_index += 1
         }
-        _data_chunk_index += 1
         // 如果正在记录中，并且数据已经到达singleRecordMaxPointsNumber则自动存储
         if (_data_chunk_index >= singleRecordMaxPointsNumber) {
             if (appState.isRecording.value) {
