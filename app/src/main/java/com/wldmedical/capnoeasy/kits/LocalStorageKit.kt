@@ -49,7 +49,8 @@ val spaceSizeUnit = 1024 * 1024
 // 28800 * 10 * 36 8个小时总秒数 * 每秒10个点 * 每个点占用的内存空间
 val singleRecordMaxSize = 10
 
-val singleRecordMaxPointsNumber = 28800 * 10
+// 最多存储40000个，防止数据中单条数据大于2MB（SqlList的核心组件CursorWindow对此有要求）
+val singleRecordMaxPointsNumber = 40000
 
 @Entity(tableName = "patients")
 data class Patient(
