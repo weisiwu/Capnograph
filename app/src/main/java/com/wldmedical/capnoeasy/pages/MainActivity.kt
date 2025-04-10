@@ -9,7 +9,9 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.lifecycleScope
+import com.android.identity.util.UUID
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.GENDER
 import com.wldmedical.capnoeasy.PageScene
@@ -21,9 +23,13 @@ import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.kits.BluetoothType
 import com.wldmedical.capnoeasy.kits.Patient
+import com.wldmedical.capnoeasy.kits.Record
+import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 
 /***
@@ -270,6 +276,45 @@ class MainActivity : BaseActivity() {
 
     @Composable
     override fun Content() {
+        // TODO: 临时
+//        LaunchedEffect(0) {
+//            lifecycleScope.launch {
+//                withContext(Dispatchers.IO) {
+//                    fun generateWaveDataList(): List<CO2WavePointData> {
+//                        val list = mutableListOf<CO2WavePointData>()
+//                        for (i in 0 until 50000) {
+//                            list.add(CO2WavePointData(
+//                                co2 = 1f,
+//                                RR = 1,
+//                                ETCO2 = 1f,
+//                                FiCO2 = 1f,
+//                                index = i
+//                            ))
+//                        }
+//                        return list
+//                    }
+//
+//                    val record = Record(
+//                        patient = Patient(
+//                            name = "测试一号",
+//                            gender = GENDER.MALE,
+//                            age = 12,
+//                            id = 1
+//                        ),
+//                        startTime = LocalDateTime.now(),
+//                        endTime = LocalDateTime.now(),
+//                        data = generateWaveDataList(),
+//                        dateIndex = 1,
+//                        patientIndex = "1",
+//                        pdfFilePath = "ddd",
+//                    )
+//
+//                    val size = localStorageKit.database.recordDao().insertRecord(record)
+//                    println("wswTest 一共有多少数据  ${size}？？？")
+//                }
+//            }
+//        }
+
         CapnoEasyTheme {
             EtCo2Table(
                 viewModel = viewModel,
