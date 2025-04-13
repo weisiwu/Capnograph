@@ -263,7 +263,7 @@ class BlueToothKit @Inject constructor(
             connectedCapnoEasy.value = null
             taskQueue.executeAllTasks()
         }
-        println("wswTest result $result")
+//        println("wswTest result $result")
     }
 
     // 是否正在扫描BLE蓝牙设备
@@ -422,7 +422,7 @@ class BlueToothKit @Inject constructor(
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
-            println("wswTEst 是否成功了 ${status}")
+//            println("wswTEst 是否成功了 ${status}")
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 taskQueue.executeTask()
             }
@@ -1056,6 +1056,7 @@ class BlueToothKit @Inject constructor(
         wfSpeed: WF_SPEED? = null,
         callback: (() -> Unit)? = null
     ) {
+        println("wswTest 蓝牙模块的值是什么 ${co2Scale?.value}")
         taskQueue.addTasks(
             listOf(
                 Runnable { sendStopContinuous() },
@@ -1103,19 +1104,21 @@ class BlueToothKit @Inject constructor(
             sendArray.add(ISBStateF2H.CO2Scale.value.toByte())
             if (
                 listOf(
-                    CO2_SCALE.MIDDLE,
-                    CO2_SCALE.KPA_MIDDLE,
-                    CO2_SCALE.PERCENT_MIDDLE
-                ).contains(co2Scale)
-            ) {
-                sendArray.add(0x00)
-            } else if (
-                listOf(
                     CO2_SCALE.SMALL,
                     CO2_SCALE.KPA_SMALL,
                     CO2_SCALE.PERCENT_SMALL
                 ).contains(co2Scale)
             ) {
+//                println("wswTest 发送的是小值")
+                sendArray.add(0x00)
+            } else if (
+                listOf(
+                    CO2_SCALE.MIDDLE,
+                    CO2_SCALE.KPA_MIDDLE,
+                    CO2_SCALE.PERCENT_MIDDLE
+                ).contains(co2Scale)
+            ) {
+//                println("wswTest 发送的是中值")
                 sendArray.add(0x01)
             } else if (
                 listOf(
@@ -1124,6 +1127,7 @@ class BlueToothKit @Inject constructor(
                     CO2_SCALE.PERCENT_LARGE
                 ).contains(co2Scale)
             ) {
+//                println("wswTest 发送的是大值")
                 sendArray.add(0x02)
             }
             sendSavedData()
@@ -1379,7 +1383,7 @@ class BlueToothKit @Inject constructor(
                         currentETCO2.value <= appState.alertETCO2Range.value.start
                         && currentETCO2.value >= appState.alertETCO2Range.value.endInclusive
                     )
-                                    println("wswTest【报警功能调试】 isValidETCO2 ${isValidETCO2}")
+//                    println("wswTest【报警功能调试】 isValidETCO2 ${isValidETCO2}")
                 }
                 ISBState80H.RRValue.value -> {
                     currentRespiratoryRate.value = data[6].toUByte().toInt() * 128 + (data[7].toUByte().toInt())
@@ -1387,7 +1391,7 @@ class BlueToothKit @Inject constructor(
                         currentRespiratoryRate.value <= appState.alertRRRange.value.start
                         && currentRespiratoryRate.value >= appState.alertRRRange.value.endInclusive
                     )
-                    println("wswTest【报警功能调试】 isValidRR ${isValidRR}")
+//                    println("wswTest【报警功能调试】 isValidRR ${isValidRR}")
                 }
                 ISBState80H.FiCO2Value.value -> {
                     currentFiCO2 = ((data[6].toUByte().toInt() and 0xFF * 128 + (data[7].toUByte().toInt() and 0xFF)).toFloat() / 10)
@@ -1482,7 +1486,7 @@ class BlueToothKit @Inject constructor(
         }
 
         isAsphyxiation = (data[6].toUByte().toInt() and 0x40) == 0x40 // 检查是否置位
-        println("wswTest【报警功能调试】 是否窒息 ${isAsphyxiation} ")
+//        println("wswTest【报警功能调试】 是否窒息 ${isAsphyxiation} ")
     }
 
     /** 处理设置： 序列号、硬件版本、设备名称 */

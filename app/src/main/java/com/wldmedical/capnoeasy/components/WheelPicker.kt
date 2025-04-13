@@ -12,6 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import androidx.compose.ui.Modifier
@@ -23,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.sd.lib.compose.wheel_picker.FVerticalWheelPicker
 import com.sd.lib.compose.wheel_picker.FWheelPickerFocusVertical
 import com.sd.lib.compose.wheel_picker.rememberFWheelPickerState
+import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.WF_SPEED
 import com.wldmedical.capnoeasy.co2UnitsObj
 import com.wldmedical.capnoeasy.wfSpeeds
@@ -37,14 +40,22 @@ import com.wldmedical.capnoeasy.wheelPickerConfig
 @Composable
 fun WheelPicker(
     onValueChange: ((Int) -> Unit)? = null,
+    unit: CO2_UNIT? = null,
     config: wheelPickerConfig<*,*>,
 ) {
     val (title, items, defaultValue) = config
-    val defaultIndex = items.indexOf(defaultValue)
-    val state = rememberFWheelPickerState(defaultIndex)
+    val defaultIndex = remember { derivedStateOf { items.indexOf(defaultValue) } }
+    val state = rememberFWheelPickerState(defaultIndex.value)
+//    if(title == "CO2 Scale") {
+//        println("wswTest 组件内的值是什么 ${title} 序号是什么 ${defaultIndex}")
+//    }
 
     LaunchedEffect(state.currentIndex) {
         onValueChange?.invoke(state.currentIndex)
+    }
+
+    LaunchedEffect(unit) {
+        state.scrollToIndex(0)
     }
 
     Column(
