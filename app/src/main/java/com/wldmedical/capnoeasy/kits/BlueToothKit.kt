@@ -1445,11 +1445,14 @@ class BlueToothKit @Inject constructor(
             )
 
             _data_index = 0
-            _data_chunk_index += 1
+            if (appState.isRecording.value) {
+                _data_chunk_index += 1
+            }
         } else {
             _data_index += 1
         }
         // 如果正在记录中，并且数据已经到达singleRecordMaxPointsNumber则自动存储
+//        println("wswTest _data_chunk_index ${_data_chunk_index}")
         if (_data_chunk_index >= singleRecordMaxPointsNumber) {
             if (appState.isRecording.value) {
                 autoSaveRecord?.invoke()

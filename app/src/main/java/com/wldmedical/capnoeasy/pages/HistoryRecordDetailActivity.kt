@@ -220,12 +220,20 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     val newEntries = mutableListOf<Entry>()
                     var sequentialIndex = 0
                     val dataToUse = if (safeStartIndex < safeEndIndex) {
-                        record.data.slice(safeStartIndex until safeEndIndex)
+                        if (safeStartIndex < 0) {
+                            emptyList()
+                        } else {
+                            record.data.slice(safeStartIndex until safeEndIndex)
+                        }
                     } else {
                         emptyList()
                     }
                     val dataToUsePDF = if (safeStartIndex < safeEndIndexPDF) {
-                        record.data.slice(safeStartIndex until safeEndIndexPDF)
+                        if (safeStartIndex < 0) {
+                            emptyList()
+                        } else {
+                            record.data.slice(safeStartIndex until safeEndIndexPDF)
+                        }
                     } else {
                         emptyList()
                     }
@@ -373,7 +381,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     .height(300.dp)
             )
 
-            if (totalLen.value > 0f) {
+            if (totalLen.value > 5f) {
                 RangeSelector(
                     unit = "",
                     format = { time ->
