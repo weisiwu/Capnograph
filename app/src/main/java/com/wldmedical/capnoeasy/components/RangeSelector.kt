@@ -39,6 +39,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.wldmedical.capnoeasy.FloatToFixed
 import com.wldmedical.capnoeasy.R
 import kotlin.math.absoluteValue
@@ -63,6 +64,7 @@ val thumbFontSize = 14.sp
 fun RangeSelector(
     title: String = "",
     unit: String = "",
+    format: ((Float) -> String)? = null,
     enabled: Boolean = true,
     type: RangeType = RangeType.ONESIDE,
     value: Float = 0f,
@@ -146,10 +148,12 @@ fun RangeSelector(
 
                     val offset = singlePosition.floatValue / valueRange.endInclusive * totalOffset
                     val thumbX = (singlePosition.floatValue - valueRange.start) / (valueRange.endInclusive - valueRange.start) * size.width
+                    val valStr = format?.invoke(singlePosition.floatValue) ?: FloatToFixed.format(singlePosition.floatValue)
 
                     drawText(
                         textMeasurer = startTextMeasurer,
-                        text = FloatToFixed.format(singlePosition.floatValue) + unit,
+                        text = valStr + unit,
+//                        text = FloatToFixed.format(singlePosition.floatValue) + unit,4
                         topLeft = Offset(thumbX - offset, -30f),
                         style = TextStyle(fontSize = thumbFontSize)
                     )

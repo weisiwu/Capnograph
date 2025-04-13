@@ -48,6 +48,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
 import java.io.OutputStream
+import java.time.Duration
 import java.util.UUID
 import kotlin.math.max
 
@@ -205,15 +206,17 @@ class HistoryRecordDetailActivity : BaseActivity() {
                         }
                     }
 
-                    val startIndex = (startValue.value * 10).toInt()
+                    val startIndex = ((startValue.value / totalLen.value) * record.data.size).toInt()
                     val endIndex = startIndex + recordMaxXPoints
                     val endIndexPDF = startIndex + (recordMaxXPoints * 1.5).toInt()
-                    val safeStartIndex = startIndex.coerceAtLeast(0)
+                    val safeStartIndex = startIndex.coerceAtLeast(0).coerceAtMost(record.data.size - recordMaxXPoints)
                     val safeEndIndex = endIndex.coerceAtMost(record.data.size)
                     val safeEndIndexPDF = endIndexPDF.coerceAtMost(record.data.size)
 
                     // 目前按照每秒100个点去算
-                    totalLen.value = (max(0, record.data.size - recordMaxXPoints) / 10).toFloat()
+                    val duration = Duration.between(record.startTime, record.endTime)
+                    totalLen.value = max(0f, duration.seconds.toFloat()) // 总秒数
+
                     val newEntries = mutableListOf<Entry>()
                     var sequentialIndex = 0
                     val dataToUse = if (safeStartIndex < safeEndIndex) {
@@ -230,8 +233,10 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     entriesCopy.clear()
                     entriesCopy.addAll(dataToUsePDF.asReversed())
                     dataToUse.forEach {
-                        newEntries.add(Entry(sequentialIndex.toFloat(), it.co2))
-                        sequentialIndex++
+                        it?.let { it1 ->
+                            newEntries.add(Entry(sequentialIndex.toFloat(), it1.co2))
+                            sequentialIndex++
+                        }
                     }
 
                     // 生成趋势数据
@@ -370,7 +375,20 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
             if (totalLen.value > 0f) {
                 RangeSelector(
-                    unit = "S",
+                    unit = "",
+                    format = { time ->
+                        val partialSeconds = time.toLong() // 计算部分秒数
+
+                        // 将部分秒数转换为小时、分钟、秒
+                        val hours = partialSeconds / 3600
+                        val remainingSeconds = partialSeconds % 3600
+                        val minutes = remainingSeconds / 60
+                        val seconds = remainingSeconds % 60
+
+                        (if (hours > 1) "$hours:" else "") +
+                        (if (minutes > 1) "$minutes:" else "") +
+                        (if (seconds > 0) "$seconds" else "")
+                    },
                     value = startValue.value,
                     type = RangeType.ONESIDE,
                     valueRange = 0f..totalLen.value,
