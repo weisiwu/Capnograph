@@ -171,7 +171,7 @@ fun RangeSelector(
                     drawText(
                         textMeasurer = startTextMeasurer,
                         text = FloatToFixed.format(bothPosition.value.start) + unit,
-                        topLeft = Offset(thumbStart - startOffset, -20f),
+                        topLeft = Offset(thumbStart - startOffset, 0f),
                         style = TextStyle(fontSize = thumbFontSize)
                     )
 
@@ -180,7 +180,7 @@ fun RangeSelector(
                     drawText(
                         textMeasurer = endTextMeasurer,
                         text = FloatToFixed.format(bothPosition.value.endInclusive) + unit,
-                        topLeft = Offset(thumbEnd - endOffset, 130f),
+                        topLeft = Offset(thumbEnd - endOffset, 0f),
                         style = TextStyle(fontSize = thumbFontSize)
                     )
                 },
