@@ -237,10 +237,11 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     // 生成趋势数据
                     val newTrendEntries = mutableListOf<Entry>()
                     var sequentialTrendIndex = 0
-//                    for (i in record.data.indices step 50) {
                     for (i in record.data.indices) {
-                        newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), record.data[i].ETCO2))
-                        sequentialTrendIndex++
+                        record.data[i]?.let {
+                            newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), it.ETCO2))
+                            sequentialTrendIndex++
+                        }
                     }
 
                     Snapshot.withMutableSnapshot {
