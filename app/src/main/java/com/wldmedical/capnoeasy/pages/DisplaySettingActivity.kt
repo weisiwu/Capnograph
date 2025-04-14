@@ -103,7 +103,7 @@ class DisplaySettingActivity : BaseActivity() {
             )
 
             SaveButton {
-//                checkHasConnectDevice {
+                checkHasConnectDevice {
                     viewModel.updateCO2Unit(defaultUnit.value)
                     viewModel.updateCo2Scales(co2Scales)
                     viewModel.updateCO2Scale(defaultScale.value)
@@ -114,24 +114,24 @@ class DisplaySettingActivity : BaseActivity() {
                             duration = InfinityDuration,
                         )
                     )
-                    println("wswTest 在这里传入的是什么 ${defaultScale.value} ${defaultUnit.value}")
+//                    println("wswTest 在这里传入的是什么 ${defaultScale.value} ${defaultUnit.value}")
+                    // TODO: 临时测试使用
+//                    Toast.makeText(context, "Scale:${defaultScale.value} Unit:${defaultUnit.value}", Toast.LENGTH_SHORT).show()
                     blueToothKit.updateCO2UnitScale(
                         co2Scale = defaultScale.value,
                         co2Unit = defaultUnit.value,
                         callback = {
-                            // TODO: 临时测试使用
-                            Toast.makeText(context, "Scale:${defaultScale.value} Unit:${defaultUnit.value}", Toast.LENGTH_SHORT).show()
-//                            viewModel.clearXData()
-//                            viewModel.updateToastData(
-//                                ToastData(
-//                                    text = getStringAcitivity(R.string.display_setting_success),
-//                                    showMask = false,
-//                                    duration = 600,
-//                                )
-//                            )
+                            viewModel.clearXData()
+                            viewModel.updateToastData(
+                                ToastData(
+                                    text = getStringAcitivity(R.string.display_setting_success),
+                                    showMask = false,
+                                    duration = 600,
+                                )
+                            )
                         }
                     )
-//                }
+                }
             }
         }
     }

@@ -7,10 +7,12 @@ import kotlin.concurrent.thread
 class BluetoothTaskQueue {
 
     private val taskQueue = LinkedList<Runnable>()
+
     public val taskQueueSize: Int
         get() {
             return taskQueue.size
         }
+
     private val lock = ReentrantLock()
     private var isExecuting = false
 
@@ -32,8 +34,11 @@ class BluetoothTaskQueue {
     fun addTasks(tasks: List<Runnable>) {
         lock.lock()
         try {
-            taskQueue.addAll(tasks)
             println("wswTEst taskQueue ${taskQueue.size}")
+            if (taskQueueSize > 0) {
+                taskQueue.clear()
+            }
+            taskQueue.addAll(tasks)
         } finally {
             lock.unlock()
         }

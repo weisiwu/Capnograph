@@ -855,7 +855,13 @@ class BlueToothKit @Inject constructor(
                 taskQueue.addTasks(
                     listOf(
                         // 读取单位前，必须要先停止设置
-                        Runnable { sendStopContinuous() },
+                        Runnable {
+                            sendStopContinuous()
+                            CoroutineScope(Dispatchers.Main).launch {
+                                delay(1500L)
+                                taskQueue.executeTask()
+                            }
+                        },
                         // 拉取设备信息
                         Runnable {
                             // ISB=1 大气压
@@ -901,7 +907,13 @@ class BlueToothKit @Inject constructor(
                 taskQueue.addTasks(
                     listOf(
                         // 读取单位前，必须要先停止设置
-                        Runnable { sendStopContinuous() },
+                        Runnable {
+                            sendStopContinuous()
+                            CoroutineScope(Dispatchers.Main).launch {
+                                delay(1500L)
+                                taskQueue.executeTask()
+                            }
+                        },
                         // 显示设置
                         Runnable { updateCO2Unit(CO2_UNIT.MMHG) },
                         Runnable { updateCO2Scale(CO2_SCALE.MIDDLE) },
@@ -1017,7 +1029,13 @@ class BlueToothKit @Inject constructor(
     fun shutdown(callback: (() -> Unit)? = null) {
         taskQueue.addTasks(
             listOf(
-                Runnable { sendStopContinuous() },
+                Runnable {
+                    sendStopContinuous()
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(1500L)
+                        taskQueue.executeTask()
+                    }
+                },
                 Runnable {
                     sendArray.add(SensorCommand.Reset.value.toByte())
                     sendArray.add(0x01)
@@ -1037,7 +1055,13 @@ class BlueToothKit @Inject constructor(
         correctZeroCallback = callback
         taskQueue.addTasks(
             listOf(
-                Runnable { sendStopContinuous() },
+                Runnable {
+                    sendStopContinuous()
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(1500L)
+                        taskQueue.executeTask()
+                    }
+                },
                 Runnable {
                     sendArray.add(SensorCommand.Zero.value.toByte())
                     sendArray.add(0x01)
@@ -1058,10 +1082,16 @@ class BlueToothKit @Inject constructor(
         wfSpeed: WF_SPEED? = null,
         callback: (() -> Unit)? = null
     ) {
-        println("wswTest 蓝牙模块的值是什么 ${co2Scale?.value}")
+//        println("wswTest 蓝牙模块的值是什么 ${co2Scale?.value}")
         taskQueue.addTasks(
             listOf(
-                Runnable { sendStopContinuous() },
+                Runnable {
+                    sendStopContinuous()
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(1500L)
+                        taskQueue.executeTask()
+                    }
+                },
                 Runnable { updateCO2Unit(co2Unit) },
                 Runnable { updateCO2Scale(co2Scale) },
                 Runnable { sendContinuous() },
@@ -1148,7 +1178,13 @@ class BlueToothKit @Inject constructor(
     ) {
         taskQueue.addTasks(
             listOf(
-                Runnable { sendStopContinuous() },
+                Runnable {
+                    sendStopContinuous()
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(1500L)
+                        taskQueue.executeTask()
+                    }
+                },
                 Runnable { innerUpdateAlertRange(co2Low, co2Up, rrLow, rrUp) },
                 Runnable { sendContinuous() },
                 Runnable { callback?.invoke() }
@@ -1195,7 +1231,13 @@ class BlueToothKit @Inject constructor(
     ) {
         taskQueue.addTasks(
             listOf(
-                Runnable { sendStopContinuous() },
+                Runnable {
+                    sendStopContinuous()
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(1500L)
+                        taskQueue.executeTask()
+                    }
+                },
                 Runnable { updateNoBreath(newAsphyxiationTime) },
                 Runnable { updateGasCompensation(newOxygenCompensation) },
                 Runnable { sendContinuous() },
