@@ -33,10 +33,10 @@ class AlertSettingActivity : BaseActivity() {
     @SuppressLint("NewApi")
     @Composable
     override fun Content() {
-        minETCO2 = min(viewModel.alertETCO2Range.value.start, ETCO2Range.start)
-        maxETCO2 = max(viewModel.alertETCO2Range.value.endInclusive, ETCO2Range.endInclusive)
-        minRR = min(viewModel.alertRRRange.value.start, RRRange.start)
-        maxRR = max(viewModel.alertRRRange.value.endInclusive, RRRange.endInclusive)
+        minETCO2 = max(viewModel.alertETCO2Range.value.start, ETCO2Range.start)
+        maxETCO2 = min(viewModel.alertETCO2Range.value.endInclusive, ETCO2Range.endInclusive)
+        minRR = max(viewModel.alertRRRange.value.start, RRRange.start)
+        maxRR = min(viewModel.alertRRRange.value.endInclusive, RRRange.endInclusive)
 
         Column {
             RangeSelector(
@@ -83,6 +83,7 @@ class AlertSettingActivity : BaseActivity() {
                             duration = InfinityDuration,
                         )
                     )
+                    println("wswTest 准备进行更新，111看下最新的值是什么 $minETCO2 __ $maxETCO2 __ $minRR __ $maxRR")
                     blueToothKit.updateAlertRange(
                         co2Low = minETCO2,
                         co2Up = maxETCO2,
