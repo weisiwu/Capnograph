@@ -27,6 +27,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +37,7 @@ import androidx.core.content.ContextCompat.registerReceiver
 import com.wldmedical.capnoeasy.CO2_SCALE
 import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.PAIRED_DEVICE_KEY
+import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.USER_PREF_NS
 import com.wldmedical.capnoeasy.WF_SPEED
 import com.wldmedical.capnoeasy.models.AppStateModel

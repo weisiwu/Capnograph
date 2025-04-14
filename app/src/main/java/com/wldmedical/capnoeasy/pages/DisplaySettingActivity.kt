@@ -2,6 +2,7 @@ package com.wldmedical.capnoeasy.pages
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +23,8 @@ import com.wldmedical.capnoeasy.components.WheelPicker
 import com.wldmedical.capnoeasy.wfSpeeds
 import com.wldmedical.capnoeasy.wfSpeedsObj
 import com.wldmedical.capnoeasy.wheelPickerConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /***
  * 设置二级页 - 展示
@@ -37,6 +40,7 @@ class DisplaySettingActivity : BaseActivity() {
         val defaultUnit = remember { mutableStateOf(viewModel.CO2Unit.value) }
         val defaultScale = remember { mutableStateOf(viewModel.CO2Scale.value) }
         val defaultWFSpeed = remember { mutableStateOf(viewModel.WFSpeed.value) }
+        val context = this
 
         Column {
             WheelPicker(
@@ -99,7 +103,7 @@ class DisplaySettingActivity : BaseActivity() {
             )
 
             SaveButton {
-                checkHasConnectDevice {
+//                checkHasConnectDevice {
                     viewModel.updateCO2Unit(defaultUnit.value)
                     viewModel.updateCo2Scales(co2Scales)
                     viewModel.updateCO2Scale(defaultScale.value)
@@ -115,17 +119,19 @@ class DisplaySettingActivity : BaseActivity() {
                         co2Scale = defaultScale.value,
                         co2Unit = defaultUnit.value,
                         callback = {
-                            viewModel.clearXData()
-                            viewModel.updateToastData(
-                                ToastData(
-                                    text = getStringAcitivity(R.string.display_setting_success),
-                                    showMask = false,
-                                    duration = 600,
-                                )
-                            )
+                            // TODO: 临时测试使用
+                            Toast.makeText(context, "Scale:${defaultScale.value} Unit:${defaultUnit.value}", Toast.LENGTH_SHORT).show()
+//                            viewModel.clearXData()
+//                            viewModel.updateToastData(
+//                                ToastData(
+//                                    text = getStringAcitivity(R.string.display_setting_success),
+//                                    showMask = false,
+//                                    duration = 600,
+//                                )
+//                            )
                         }
                     )
-                }
+//                }
             }
         }
     }
