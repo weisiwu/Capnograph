@@ -86,24 +86,24 @@ class PrintSettingActivity : BaseActivity() {
             )
 
             // 输出类型: 保存PDF或者热熔打印
-            TypeSwitch(
-                selectedIndex = if (isPDF.value) 0 else 1,
-                onTypeClick = { type ->
-                    isPDF.value = type.id == "是"
-                },
-                types = arrayOf(
-                    OutputType(
-                        name = getStringAcitivity(R.string.print_output_pdf),
-                        id = "是",
-                        index = 0,
-                    ),
-                    OutputType(
-                        name = getStringAcitivity(R.string.print_output_hotmelt),
-                        id = "否",
-                        index = 1,
-                    ),
-                )
-            )
+//            TypeSwitch(
+//                selectedIndex = if (isPDF.value) 0 else 1,
+//                onTypeClick = { type ->
+//                    isPDF.value = type.id == "是"
+//                },
+//                types = arrayOf(
+//                    OutputType(
+//                        name = getStringAcitivity(R.string.print_output_pdf),
+//                        id = "是",
+//                        index = 0,
+//                    ),
+//                    OutputType(
+//                        name = getStringAcitivity(R.string.print_output_hotmelt),
+//                        id = "否",
+//                        index = 1,
+//                    ),
+//                )
+//            )
 
             Spacer(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
