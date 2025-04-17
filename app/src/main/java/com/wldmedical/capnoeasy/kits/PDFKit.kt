@@ -161,37 +161,38 @@ class SaveChartToPdfTask(
         val table = PdfPTable(3)
         // 设置表格宽度为页面宽度
         table.widthPercentage = 100f
+        table.horizontalAlignment = Element.ALIGN_CENTER  // 关键：设置表格整体水平居中
         // 设置表格的列宽比例，这里设置为 1:1:1，表示三列等宽
         table.setWidths(floatArrayOf(1f, 1f, 1f))
 
         // 添加表头单元格
         val nameCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_name, context)}${printSetting?.name ?: ""}", contentFont))
-        nameCell.horizontalAlignment = Element.ALIGN_LEFT
+        nameCell.horizontalAlignment = Element.ALIGN_CENTER
         nameCell.border = Rectangle.NO_BORDER
         table.addCell(nameCell)
 
         val genderCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_gender, context)}${printSetting?.gender ?: ""}", contentFont))
-        genderCell.horizontalAlignment = Element.ALIGN_LEFT
+        genderCell.horizontalAlignment = Element.ALIGN_CENTER
         genderCell.border = Rectangle.NO_BORDER
         table.addCell(genderCell)
 
         val ageCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_age, context)}${printSetting?.age ?: ""}${getString(R.string.pdf_patient_age_unit, context)}", contentFont))
-        ageCell.horizontalAlignment = Element.ALIGN_LEFT
+        ageCell.horizontalAlignment = Element.ALIGN_CENTER
         ageCell.border = Rectangle.NO_BORDER
         table.addCell(ageCell)
 
         val departCell = PdfPCell(Paragraph("${getString(R.string.pdf_department, context)}${printSetting?.pdfDepart ?: ""}", contentFont))
-        departCell.horizontalAlignment = Element.ALIGN_LEFT
+        departCell.horizontalAlignment = Element.ALIGN_CENTER
         departCell.border = Rectangle.NO_BORDER
         table.addCell(departCell)
 
         val idCell = PdfPCell(Paragraph("${getString(R.string.pdf_id_number, context)}${printSetting?.pdfIDNumber ?: ""}", contentFont))
-        idCell.horizontalAlignment = Element.ALIGN_LEFT
+        idCell.horizontalAlignment = Element.ALIGN_CENTER
         idCell.border = Rectangle.NO_BORDER
         table.addCell(idCell)
 
         val bedCell = PdfPCell(Paragraph("${getString(R.string.pdf_bed_number, context)}${printSetting?.pdfBedNumber ?: ""}", contentFont))
-        bedCell.horizontalAlignment = Element.ALIGN_LEFT
+        bedCell.horizontalAlignment = Element.ALIGN_CENTER
         bedCell.border = Rectangle.NO_BORDER
         table.addCell(bedCell)
 
@@ -265,15 +266,17 @@ class SaveChartToPdfTask(
         canvas.restoreState()
     }
 
+    private val width = 1000 // 设置宽度
+    private val height = 800 // 设置高度
+    private val imgRatio = 0.6f // 折线图相对于页面的比例
+
     private fun addETCO2LineChart(document: Document) {
         val filteredData = filterData(data, maxETCO2)
         val totalPoints = filteredData.size
-        val currentPageData = data.subList(0, totalPoints)
-        val width = 1000 // 设置宽度
-        val height = 800 // 设置高度
+        val currentPageData = data.subList(0, totalPoints.coerceAtLeast(0))
 
         // 生成当前页的 Bitmap
-        val currentPageBitmap = Bitmap.createBitmap(1000, 800, Bitmap.Config.ARGB_8888)
+        val currentPageBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(currentPageBitmap)
 
         // 绘制当前页的图表
@@ -297,6 +300,7 @@ class SaveChartToPdfTask(
         val segment = currentPageData.map {
             Entry(it.index.toFloat(), it.co2)
         }
+
         val dataSet = LineDataSet(segment, "ETCO2")
         dataSet.lineWidth = 1f
         dataSet.setDrawCircles(false) // 不绘制圆点
@@ -315,7 +319,14 @@ class SaveChartToPdfTask(
         val stream = ByteArrayOutputStream()
         currentPageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
         val image = Image.getInstance(stream.toByteArray())
-        image.scaleToFit(document.pageSize.width * 0.9f, document.pageSize.height * 0.9f)
+
+        image.scaleToFit(document.pageSize.width * imgRatio, document.pageSize.height * imgRatio)
+
+        // 计算水平居中位置
+        val xPosition = (document.pageSize.width - image.scaledWidth) / 2
+
+        // 设置图片位置（保持当前Y位置不变，只调整X）
+        image.setAbsolutePosition(xPosition, image.absoluteY)
 
         document.add(image)
     }
@@ -325,14 +336,22 @@ class SaveChartToPdfTask(
         val newTrendEntries = mutableListOf<Entry>()
         var sequentialTrendIndex = 0
         for (i in data.indices step 50) {
-            newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), data[i].ETCO2))
-            sequentialTrendIndex++
+            try {
+                // 安全访问数组元素
+                val item = data.getOrNull(i)
+                if (item != null) {
+                    newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), item.ETCO2))
+                    sequentialTrendIndex++
+                } else {
+                    println("Warning: Index $i out of bounds")
+                }
+            } catch (e: Exception) {
+                println("Error at index $i: ${e.javaClass.simpleName} - ${e.message}")
+            }
         }
-        val width = 1000 // 设置宽度
-        val height = 800 // 设置高度
 
         // 生成当前页的 Bitmap
-        val currentPageBitmap = Bitmap.createBitmap(1000, 800, Bitmap.Config.ARGB_8888)
+        val currentPageBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(currentPageBitmap)
 
         // 绘制当前页的图表
@@ -371,7 +390,13 @@ class SaveChartToPdfTask(
         val stream = ByteArrayOutputStream()
         currentPageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
         val image = Image.getInstance(stream.toByteArray())
-        image.scaleToFit(document.pageSize.width * 0.9f, document.pageSize.height * 0.9f)
+        image.scaleToFit(document.pageSize.width * imgRatio, document.pageSize.height * imgRatio)
+
+        // 计算水平居中位置
+        val xPosition = (document.pageSize.width - image.scaledWidth) / 2
+
+        // 设置图片位置（保持当前Y位置不变，只调整X）
+        image.setAbsolutePosition(xPosition, image.absoluteY)
 
         document.add(image)
     }
@@ -381,6 +406,7 @@ class SaveChartToPdfTask(
 
         val table = PdfPTable(2)
         table.widthPercentage = 100f
+        table.horizontalAlignment = Element.ALIGN_CENTER  // 关键：设置表格整体水平居中
         table.setWidths(floatArrayOf(1f, 1f))
 
         val doctorCell = PdfPCell(Paragraph(getString(R.string.pdf_reporter, context), contentFont))
@@ -391,7 +417,7 @@ class SaveChartToPdfTask(
         val formatter = DateTimeFormatter.ofPattern(getString(R.string.pdf_date_format, context))
         val endTimeStr = if (record?.endTime != null) record.endTime.format(formatter) else ""
         val timeCell = PdfPCell(Paragraph("${getString(R.string.pdf_report_time, context)}${endTimeStr}", contentFont))
-        timeCell.horizontalAlignment = Element.ALIGN_CENTER
+        timeCell.horizontalAlignment = Element.ALIGN_LEFT
         timeCell.border = Rectangle.NO_BORDER
         table.addCell(timeCell)
 
