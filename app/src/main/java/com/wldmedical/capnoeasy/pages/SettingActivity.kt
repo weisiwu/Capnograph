@@ -50,15 +50,27 @@ class SettingActivity : BaseActivity() {
                                     cancelable = false
                                 )
                             )
-                            blueToothKit.correctZero() {
+                            blueToothKit.correctZero() { isSuccessCorrect ->
                                 viewModel.clearXData()
-                                viewModel.updateToastData(
-                                    ToastData(
-                                        text = getStringAcitivity(R.string.setting_zeroing_success),
-                                        showMask = false,
-                                        duration = 800,
+                                println("wswTest 接受的教龄是什么 isSuccessCorrect ${isSuccessCorrect}")
+                                if (isSuccessCorrect) {
+                                    viewModel.updateToastData(
+                                        ToastData(
+                                            text = getStringAcitivity(R.string.setting_zeroing_success),
+                                            showMask = false,
+                                            duration = 800,
+                                        )
                                     )
-                                )
+                                } else {
+                                println("wswTest 接受的教龄是什么 倒带了最后")
+                                    viewModel.updateToastData(
+                                        ToastData(
+                                            text = getStringAcitivity(R.string.setting_zeroing_fail),
+                                            showMask = false,
+                                            duration = 800,
+                                        )
+                                    )
+                                }
                             }
                         }
                     }

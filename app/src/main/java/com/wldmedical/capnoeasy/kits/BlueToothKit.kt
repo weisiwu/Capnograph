@@ -147,7 +147,6 @@ class BlueToothKit @Inject constructor(
         checkJob?.cancel() // 取消之前的任务
         checkJob = CoroutineScope(Dispatchers.IO).launch {
             while (true) {
-//                println("wswTest 轮训设备信息外层的值 在循环")
                 if (sHardwareVersion.value.isEmpty()) {
                     withContext(Dispatchers.Main) {
                         taskQueue.addTask(
@@ -265,7 +264,7 @@ class BlueToothKit @Inject constructor(
             connectedCapnoEasy.value = null
             taskQueue.executeAllTasks()
         }
-        println("wswTest result $result")
+//        println("wswTest result $result")
     }
 
     // 是否正在扫描BLE蓝牙设备
@@ -364,7 +363,7 @@ class BlueToothKit @Inject constructor(
                         }
                     }
                 }
-            
+
                 // 有需要订阅的服务，寻找服务的特征值
                 var filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEAntihijackCha.value }
                 // 反劫持
@@ -424,7 +423,6 @@ class BlueToothKit @Inject constructor(
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
-//            println("wswTEst 是否成功了 ${status}")
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 taskQueue.executeTask()
             }
@@ -454,15 +452,15 @@ class BlueToothKit @Inject constructor(
 
     // 扫描的设备、服务、特征
     var sendDataService = mutableListOf<BluetoothGattService?>()
-    
+
     var sendDataCharacteristic = mutableListOf<BluetoothGattCharacteristic?>()
-    
+
     var receiveDataService = mutableListOf<BluetoothGattService?>()
-    
+
     var receiveDataCharacteristic = mutableListOf<BluetoothGattCharacteristic?>()
 
     var antiHijackService = mutableListOf<BluetoothGattService?>()
-    
+
     var antiHijackCharacteristic = mutableListOf<BluetoothGattCharacteristic?>()
 
     var antiHijackNotifyCharacteristic = mutableListOf<BluetoothGattCharacteristic?>()
@@ -618,7 +616,7 @@ class BlueToothKit @Inject constructor(
 
     // 设置窒息时间
     public var asphyxiationTime: Int = 20
-    
+
     // 设置氧气补偿
     public var oxygenCompensation: Float = 20f
 
@@ -661,7 +659,7 @@ class BlueToothKit @Inject constructor(
     // 生产日期
     public var productionDate: MutableState<String> = mutableStateOf("")
 
-    private var correctZeroCallback: (() -> Unit)? = null
+    private var correctZeroCallback: ((Boolean) -> Unit)? = null
 
     /******************* 方法 *******************/
     // 判断蓝牙状态
@@ -1044,7 +1042,7 @@ class BlueToothKit @Inject constructor(
                 },
                 Runnable { sendContinuous() },
                 Runnable {
-                    isFinish = true 
+                    isFinish = true
                     callback?.invoke()
                 },
             )
@@ -1061,8 +1059,11 @@ class BlueToothKit @Inject constructor(
     /** 发送校零指令 */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
-    fun correctZero(callback: (() -> Unit)? = null) {
+    fun correctZero(callback: ((Boolean) -> Unit)? = null) {
         correctZeroCallback = callback
+        isCorrectZero = true
+
+        println("wswTest 接受的教龄是什么 taskQueue.taskQueueSize() ${taskQueue.taskQueueSize} ")
         taskQueue.addTasks(
             listOf(
                 Runnable {
@@ -1106,7 +1107,7 @@ class BlueToothKit @Inject constructor(
                 Runnable { updateCO2Scale(co2Scale) },
                 Runnable { sendContinuous() },
                 Runnable {
-                    isFinish = true 
+                    isFinish = true
                     callback?.invoke()
                 },
             )
@@ -1160,7 +1161,6 @@ class BlueToothKit @Inject constructor(
                     CO2_SCALE.PERCENT_SMALL
                 ).contains(co2Scale)
             ) {
-//                println("wswTest 发送的是小值")
                 sendArray.add(0x00)
             } else if (
                 listOf(
@@ -1169,7 +1169,6 @@ class BlueToothKit @Inject constructor(
                     CO2_SCALE.PERCENT_MIDDLE
                 ).contains(co2Scale)
             ) {
-//                println("wswTest 发送的是中值")
                 sendArray.add(0x01)
             } else if (
                 listOf(
@@ -1178,7 +1177,6 @@ class BlueToothKit @Inject constructor(
                     CO2_SCALE.PERCENT_LARGE
                 ).contains(co2Scale)
             ) {
-//                println("wswTest 发送的是大值")
                 sendArray.add(0x02)
             }
             sendSavedData()
@@ -1208,7 +1206,7 @@ class BlueToothKit @Inject constructor(
                 Runnable { innerUpdateAlertRange(co2Low, co2Up, rrLow, rrUp) },
                 Runnable { sendContinuous() },
                 Runnable {
-                    isFinish = true 
+                    isFinish = true
                     callback?.invoke()
                 },
             )
@@ -1272,7 +1270,7 @@ class BlueToothKit @Inject constructor(
                 Runnable { updateGasCompensation(newOxygenCompensation) },
                 Runnable { sendContinuous() },
                 Runnable {
-                    isFinish = true 
+                    isFinish = true
                     callback?.invoke()
                 },
             )
@@ -1437,6 +1435,7 @@ class BlueToothKit @Inject constructor(
                     it.printStackTrace()
                 }
             }
+            SensorCommand.Zero.value -> handleCorrectZero(firstArray, NBFM)
             SensorCommand.Settings.value -> handleSettings(firstArray)
             SensorCommand.GetSoftwareRevision.value -> handleSofrWareVersion(firstArray)
             SensorCommand.Expand.value -> handleSystemExpand(firstArray)
@@ -1463,18 +1462,16 @@ class BlueToothKit @Inject constructor(
                     currentETCO2.value = (data[6].toUByte().toFloat() * 128 + (data[7].toUByte().toFloat())) / 10f
                     // 检测到呼吸。才能计算是否异常。
                     isValidETCO2 = !currentBreathe || (
-                        currentETCO2.value <= appState.alertETCO2Range.value.start
-                        && currentETCO2.value >= appState.alertETCO2Range.value.endInclusive
-                    )
-//                    println("wswTest【报警功能调试】 isValidETCO2 ${isValidETCO2}")
+                            currentETCO2.value <= appState.alertETCO2Range.value.start
+                                    && currentETCO2.value >= appState.alertETCO2Range.value.endInclusive
+                            )
                 }
                 ISBState80H.RRValue.value -> {
                     currentRespiratoryRate.value = data[6].toUByte().toInt() * 128 + (data[7].toUByte().toInt())
                     isValidRR = !currentBreathe || (
-                        currentRespiratoryRate.value <= appState.alertRRRange.value.start
-                        && currentRespiratoryRate.value >= appState.alertRRRange.value.endInclusive
-                    )
-//                    println("wswTest【报警功能调试】 isValidRR ${isValidRR}")
+                            currentRespiratoryRate.value <= appState.alertRRRange.value.start
+                                    && currentRespiratoryRate.value >= appState.alertRRRange.value.endInclusive
+                            )
                 }
                 ISBState80H.FiCO2Value.value -> {
                     currentFiCO2 = ((data[6].toUByte().toInt() and 0xFF * 128 + (data[7].toUByte().toInt() and 0xFF)).toFloat() / 10)
@@ -1535,7 +1532,6 @@ class BlueToothKit @Inject constructor(
             _data_index += 1
         }
         // 如果正在记录中，并且数据已经到达singleRecordMaxPointsNumber则自动存储
-//        println("wswTest _data_chunk_index ${_data_chunk_index}")
         if (_data_chunk_index >= singleRecordMaxPointsNumber) {
             if (appState.isRecording.value) {
                 autoSaveRecord?.invoke()
@@ -1556,12 +1552,22 @@ class BlueToothKit @Inject constructor(
             return
         }
 
+        val DeviceStatus = data[6].toUByte().toInt() and 0x10 // 模块没有准备好进行较零
+        println("wswTest 接受的教龄是什么 DeviceStatus ${DeviceStatus}")
+        if (DeviceStatus == 0x10) {
+            println("wswTest 接受的教龄是什么 isCorrectZero ${isCorrectZero}")
+            if (isCorrectZero) {
+                correctZeroCallback?.invoke(false)
+                isCorrectZero = false
+            }
+        }
+
         val ZSBM = data[7].toUByte().toInt() and 0x0C // 使用 & 0x0C 提取相关位
 
         when (ZSBM) {
             ZSBState.NOZeroning.value -> {
                 if (isCorrectZero) {
-                    correctZeroCallback?.invoke()
+                    correctZeroCallback?.invoke(true)
                     isCorrectZero = false
                 }
             }
@@ -1572,7 +1578,28 @@ class BlueToothKit @Inject constructor(
         }
 
         isAsphyxiation = (data[6].toUByte().toInt() and 0x40) == 0x40 // 检查是否置位
-//        println("wswTest【报警功能调试】 是否窒息 ${isAsphyxiation} ")
+    }
+
+    /** 处理校零，校零结果会在80h中获取，DPI=1 */
+    private fun handleCorrectZero(data: ByteArray, NBFM: Int) {
+        println("wswTest 接受的教龄是什么 是否来到了这里？？？")
+        if (NBFM != 2) {
+            return
+        }
+
+        val ZSBM = data[2].toUByte().toInt() // 使用 & 0x0C 提取相关位
+        println("wswTest 接受的教龄是什么 $ZSBM ")
+        when (ZSBM) {
+            ZSBResponseState.Start.value,
+            ZSBResponseState.Processing.value -> isCorrectZero = true
+            // 其他返回，都视作校零命令直接失败
+            ZSBResponseState.NotReady.value,
+            ZSBResponseState.DetectBreath.value -> {
+                println("wswTest 接受的教龄是什么 开始启动回调")
+                correctZeroCallback?.invoke(false)
+                isCorrectZero = false
+            }
+        }
     }
 
     /** 处理设置： 序列号、硬件版本、设备名称 */

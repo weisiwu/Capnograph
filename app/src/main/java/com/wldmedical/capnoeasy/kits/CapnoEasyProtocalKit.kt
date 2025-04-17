@@ -115,6 +115,17 @@ enum class ZSBState(val value: Int) {
 }
 
 /**
+ * 校零实时响应返回 - 走82H结果获取
+ * 0/1/2/3其实是将对应标志位换出来的值
+ */
+enum class ZSBResponseState(val value: Int) {
+    Start(value = 0), // 校零开始
+    NotReady(value = 1), // 模块还未准备好较零。这个错误可能有以下原因引起：1)模块温度不稳定 2)模块故障
+    Processing( value = 2), // 模块已经在较零
+    DetectBreath(value = 3), // 模块尝试较零而且在过去的 20 秒内检测到呼吸。
+}
+
+/**
  * 接受数据信息DPI（等位替代ISB）
  */
 enum class ISBState80H(val value: Int) {

@@ -69,7 +69,8 @@
     <string name="search_start_connect">开始连接设备</string>
     <!-- SettingActivity.kt-->
     <string name="setting_zeroing">正在校零</string>
-    <string name="setting_zeroing_success">成功校零</string>
+    <string name="setting_zeroing_success">校零成功</string>
+    <string name="setting_zeroing_fail">校零失败</string>
     <string name="setting_screen_constant_success">成功设置屏幕常量</string>
     <string name="setting_shutdown">正在关机</string>
     <string name="setting_shutdown_success">关机成功</string>

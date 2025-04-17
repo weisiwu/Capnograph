@@ -71,6 +71,7 @@
     <!-- SettingActivity.kt-->
     <string name="setting_zeroing">Zeroing</string>
     <string name="setting_zeroing_success">Zeroing Success</string>
+    <string name="setting_zeroing_fail">Zeroing Fail</string>
     <string name="setting_screen_constant_success">Screen Constant Setting Success</string>
     <string name="setting_shutdown">Shutting Down</string>
     <string name="setting_shutdown_success">Shutdown Success</string>
