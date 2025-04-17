@@ -265,7 +265,7 @@ class BlueToothKit @Inject constructor(
             connectedCapnoEasy.value = null
             taskQueue.executeAllTasks()
         }
-//        println("wswTest result $result")
+        println("wswTest result $result")
     }
 
     // 是否正在扫描BLE蓝牙设备
@@ -1027,6 +1027,7 @@ class BlueToothKit @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun shutdown(callback: (() -> Unit)? = null) {
+        var isFinish = false
         taskQueue.addTasks(
             listOf(
                 Runnable {
@@ -1042,9 +1043,18 @@ class BlueToothKit @Inject constructor(
                     sendSavedData()
                 },
                 Runnable { sendContinuous() },
-                Runnable { callback?.invoke() },
+                Runnable {
+                    isFinish = true 
+                    callback?.invoke()
+                },
             )
         )
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(2000)
+            if (!isFinish) {
+                callback?.invoke()
+            }
+        }
         taskQueue.executeTask()
     }
 
@@ -1082,7 +1092,7 @@ class BlueToothKit @Inject constructor(
         wfSpeed: WF_SPEED? = null,
         callback: (() -> Unit)? = null
     ) {
-//        println("wswTest 蓝牙模块的值是什么 ${co2Scale?.value}")
+        var isFinish = false
         taskQueue.addTasks(
             listOf(
                 Runnable {
@@ -1095,9 +1105,18 @@ class BlueToothKit @Inject constructor(
                 Runnable { updateCO2Unit(co2Unit) },
                 Runnable { updateCO2Scale(co2Scale) },
                 Runnable { sendContinuous() },
-                Runnable { callback?.invoke() }
+                Runnable {
+                    isFinish = true 
+                    callback?.invoke()
+                },
             )
         )
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(2000)
+            if (!isFinish) {
+                callback?.invoke()
+            }
+        }
         taskQueue.executeTask()
     }
 
@@ -1176,6 +1195,7 @@ class BlueToothKit @Inject constructor(
         rrUp: Int = 0,
         callback: (() -> Unit)? = null
     ) {
+        var isFinish = false
         taskQueue.addTasks(
             listOf(
                 Runnable {
@@ -1187,9 +1207,18 @@ class BlueToothKit @Inject constructor(
                 },
                 Runnable { innerUpdateAlertRange(co2Low, co2Up, rrLow, rrUp) },
                 Runnable { sendContinuous() },
-                Runnable { callback?.invoke() }
+                Runnable {
+                    isFinish = true 
+                    callback?.invoke()
+                },
             )
         )
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(2000)
+            if (!isFinish) {
+                callback?.invoke()
+            }
+        }
         taskQueue.executeTask()
     }
 
@@ -1229,6 +1258,7 @@ class BlueToothKit @Inject constructor(
         newOxygenCompensation: Float = 0f,
         callback: (() -> Unit)? = null
     ) {
+        var isFinish = false
         taskQueue.addTasks(
             listOf(
                 Runnable {
@@ -1241,9 +1271,18 @@ class BlueToothKit @Inject constructor(
                 Runnable { updateNoBreath(newAsphyxiationTime) },
                 Runnable { updateGasCompensation(newOxygenCompensation) },
                 Runnable { sendContinuous() },
-                Runnable { callback?.invoke() }
+                Runnable {
+                    isFinish = true 
+                    callback?.invoke()
+                },
             )
         )
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(2000)
+            if (!isFinish) {
+                callback?.invoke()
+            }
+        }
         taskQueue.executeTask()
     }
 
