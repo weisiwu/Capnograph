@@ -50,8 +50,9 @@ val spaceSizeUnit = 1024 * 1024
 // 28800 * 10 * 36 8个小时总秒数 * 每秒10个点 * 每个点占用的内存空间
 val singleRecordMaxSize = 10
 
-// 最多存储40000个，防止数据中单条数据大于2MB（SqlList的核心组件CursorWindow对此有要求）
-val singleRecordMaxPointsNumber = 40000
+// 实测一分钟大概会录入244个点，依次类推，一个小时在15000个点左右（SqlList的核心组件CursorWindow对此有要求）
+// 同时一个小时的量不会超过2mb
+val singleRecordMaxPointsNumber = 15000
 
 @Entity(tableName = "patients")
 data class Patient(
@@ -85,7 +86,15 @@ data class LightRecord(
     val dateIndex: Int = 0,
     val patientIndex: String = "",
     val isGroupTitle: Boolean = false,
+    var pdfFilePath: String? = null,
+    // 保留字段，但是不再设置值，防止App更新后，数据库表字段不一，导致报错
+    var previewPdfFilePath: String? = null,
     val groupTitle: String = "",
+): Serializable
+
+data class RecordData(
+    @PrimaryKey(autoGenerate = false) var id: UUID = UUID.randomUUID(),
+    var data: List<CO2WavePointData> = listOf(),
 ): Serializable
 
 enum class GROUP_BY {
@@ -148,11 +157,17 @@ interface RecordDao {
     fun getAllRecords(): List<Record>
 
     // 分页查询方法
-    @Query("SELECT id, patient, startTime, endTime, patientIndex, dateIndex, isGroupTitle, groupTitle FROM records LIMIT :limit OFFSET :offset")
+    @Query("SELECT id, patient, startTime, endTime, patientIndex, dateIndex, isGroupTitle, pdfFilePath, previewPdfFilePath, groupTitle FROM records LIMIT :limit OFFSET :offset")
     fun getBatch(limit: Int, offset: Int): List<LightRecord>
 
     @Query("SELECT * FROM records WHERE id = :id")
     fun queryRecordById(id: UUID): Record?
+
+    @Query("SELECT id, patient, startTime, endTime, patientIndex, dateIndex, isGroupTitle, pdfFilePath, previewPdfFilePath, groupTitle FROM records WHERE id = :id")
+    fun queryLightRecordById(id: UUID): LightRecord?
+
+    @Query("SELECT id, data FROM records WHERE id = :id")
+    fun queryRecordDataById(id: UUID): RecordData?
 
     @Query("SELECT * FROM records ORDER BY startTime ASC LIMIT 1")
     fun queryOldestRecord(): Record?

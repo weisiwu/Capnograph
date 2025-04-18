@@ -28,9 +28,6 @@ import com.wldmedical.capnoeasy.components.DeviceType
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.NavBarComponentState
 import com.wldmedical.capnoeasy.components.ToastData
-import com.wldmedical.capnoeasy.kits.singleRecordMaxPointsNumber
-import com.wldmedical.capnoeasy.kits.singleRecordMaxSize
-import com.wldmedical.capnoeasy.kits.spaceSizeUnit
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

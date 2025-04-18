@@ -35,7 +35,9 @@ import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.RangeSelector
 import com.wldmedical.capnoeasy.components.RangeType
 import com.wldmedical.capnoeasy.components.ToastData
+import com.wldmedical.capnoeasy.kits.LightRecord
 import com.wldmedical.capnoeasy.kits.Record
+import com.wldmedical.capnoeasy.kits.RecordData
 import com.wldmedical.capnoeasy.kits.filterData
 import com.wldmedical.capnoeasy.kits.recordMaxXPoints
 import com.wldmedical.capnoeasy.kits.saveChartToPdfInBackground
@@ -72,7 +74,8 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     private val entriesCopy = mutableStateListOf<CO2WavePointData>()
 
-    private var currentRecord: Record? = null
+    private var currentRecord: RecordData? = null
+//    private var currentRecord: List<CO2WavePointData> = mutableStateListOf()
 
     private val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -148,6 +151,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     override fun onPrintTicketClick() {
         val currentData = currentRecord?.data ?: return
+//        val currentData = currentRecord ?: return
         if (currentData.isEmpty()) { return }
 
         if (!blueToothKit.gpPrinterManager.getConnectState()) {
@@ -193,25 +197,34 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
         LaunchedEffect(recordId, startValue.value) {
             lifecycleScope.launch {
+                // 对于同一条数据中，也需要分开读取，将data单独读出来，其他的一并读出来
                 val record = withContext(Dispatchers.IO) {
-                    localStorageKit.database.recordDao().queryRecordById(UUID.fromString(recordId))
+                    localStorageKit.database.recordDao().queryLightRecordById(UUID.fromString(recordId))
                 }
-                if (record != null) {
+                val recordData = withContext(Dispatchers.IO) {
+                    localStorageKit.database.recordDao().queryRecordDataById(UUID.fromString(recordId))
+                }
+                if (record != null && recordData != null) {
+                    println("wswTest 数据长度是 ${recordData.data.size}")
                     // 为导出做准备
                     if (record.pdfFilePath != null) {
                         if (record.pdfFilePath!!.isNotEmpty()) {
                             context.sourceFilePath = record.pdfFilePath!!
                             context.saveFileName = "${record.patientIndex}_${record.dateIndex}"
-                            context.currentRecord = record
+                            context.currentRecord = recordData
                         }
                     }
 
-                    val startIndex = ((startValue.value / totalLen.value) * record.data.size).toInt()
+                    val startIndex = ((startValue.value / totalLen.value) * recordData.data.size).toInt()
+//                    val startIndex = ((startValue.value / totalLen.value) * recordData.size).toInt()
                     val endIndex = startIndex + recordMaxXPoints
                     val endIndexPDF = startIndex + (recordMaxXPoints * 1.5).toInt()
-                    val safeStartIndex = startIndex.coerceAtLeast(0).coerceAtMost((record.data.size - recordMaxXPoints).coerceAtLeast(0))
-                    val safeEndIndex = endIndex.coerceAtMost(record.data.size)
-                    val safeEndIndexPDF = endIndexPDF.coerceAtMost(record.data.size)
+                    val safeStartIndex = startIndex.coerceAtLeast(0).coerceAtMost((recordData.data.size - recordMaxXPoints).coerceAtLeast(0))
+                    val safeEndIndex = endIndex.coerceAtMost(recordData.data.size)
+                    val safeEndIndexPDF = endIndexPDF.coerceAtMost(recordData.data.size)
+//                    val safeStartIndex = startIndex.coerceAtLeast(0).coerceAtMost((recordData.size - recordMaxXPoints).coerceAtLeast(0))
+//                    val safeEndIndex = endIndex.coerceAtMost(recordData.size)
+//                    val safeEndIndexPDF = endIndexPDF.coerceAtMost(recordData.size)
                     println("wswTest safeStartIndex $safeStartIndex $safeEndIndex ${safeEndIndex} ")
 
                     // 目前按照每秒100个点去算
@@ -224,7 +237,8 @@ class HistoryRecordDetailActivity : BaseActivity() {
                         if (safeStartIndex < 0) {
                             emptyList()
                         } else {
-                            record.data.slice(safeStartIndex until safeEndIndex)
+                            recordData.data.slice(safeStartIndex until safeEndIndex)
+//                            recordData.slice(safeStartIndex until safeEndIndex)
                         }
                     } else {
                         emptyList()
@@ -234,7 +248,8 @@ class HistoryRecordDetailActivity : BaseActivity() {
                         if (safeStartIndex < 0) {
                             emptyList()
                         } else {
-                            record.data.slice(safeStartIndex until safeEndIndexPDF)
+                            recordData.data.slice(safeStartIndex until safeEndIndexPDF)
+//                            recordData.slice(safeStartIndex until safeEndIndexPDF)
                         }
                     } else {
                         emptyList()
@@ -252,12 +267,18 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     // 生成趋势数据
                     val newTrendEntries = mutableListOf<Entry>()
                     var sequentialTrendIndex = 0
-                    for (i in record.data.indices) {
-                        record.data[i]?.let {
+                    for (i in recordData.data.indices) {
+                        recordData.data[i]?.let {
                             newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), it.ETCO2))
                             sequentialTrendIndex++
                         }
                     }
+//                    for (i in recordData.indices) {
+//                        recordData[i]?.let {
+//                            newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), it.ETCO2))
+//                            sequentialTrendIndex++
+//                        }
+//                    }
 
                     Snapshot.withMutableSnapshot {
                         entries.clear()

@@ -11,7 +11,6 @@ import com.wldmedical.capnoeasy.components.HistoryList
 import com.wldmedical.capnoeasy.kits.GROUP_BY
 import com.wldmedical.capnoeasy.kits.Group
 import com.wldmedical.capnoeasy.kits.LightRecord
-import com.wldmedical.capnoeasy.kits.Record
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
