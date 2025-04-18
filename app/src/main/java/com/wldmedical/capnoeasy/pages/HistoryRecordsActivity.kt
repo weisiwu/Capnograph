@@ -10,6 +10,7 @@ import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.HistoryList
 import com.wldmedical.capnoeasy.kits.GROUP_BY
 import com.wldmedical.capnoeasy.kits.Group
+import com.wldmedical.capnoeasy.kits.LightRecord
 import com.wldmedical.capnoeasy.kits.Record
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,7 +31,7 @@ class HistoryRecordsActivity : BaseActivity() {
             Group(name = getStringAcitivity(R.string.localstorage_time), type = GROUP_BY.DATE),
         )
 
-        val records = remember { mutableStateListOf<Record>() }
+        val records = remember { mutableStateListOf<LightRecord>() }
 
         LaunchedEffect(0) {
             lifecycleScope.launch {

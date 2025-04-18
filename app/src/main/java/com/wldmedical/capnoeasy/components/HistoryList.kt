@@ -53,6 +53,7 @@ import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.kits.GROUP_BY
 import com.wldmedical.capnoeasy.kits.Group
+import com.wldmedical.capnoeasy.kits.LightRecord
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.pages.HistoryRecordDetailActivity
@@ -70,10 +71,10 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryList(
-    records: MutableList<Record>,
+    records: MutableList<LightRecord>,
     state: MutableState<GROUP_BY>,
     onSearch: ((Group) -> Unit)? = null,
-    onItemClick: ((record: Record) -> UInt)? = null,
+    onItemClick: ((record: LightRecord) -> UInt)? = null,
     context: ComponentActivity,
     groups: List<Group>
 ) {
@@ -81,7 +82,7 @@ fun HistoryList(
     val formatter = DateTimeFormatter.ofPattern(getString(R.string.historylist_date_format, context), Locale.CHINA)
     val rRecords = remember { records }
     val rState = remember { state }
-    val newRecords = mutableListOf<Record>()
+    val newRecords = mutableListOf<LightRecord>()
     val options = ActivityOptionsCompat.makeCustomAnimation(context, 0, 0)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
     val configuration = LocalConfiguration.current
@@ -173,7 +174,7 @@ fun HistoryList(
                         if (rState.value == GROUP_BY.PATIENT) {
                             val patient = records[0].patient
                             newRecords.add(
-                                Record(
+                                LightRecord(
                                     patient = patient,
                                     startTime = records[0].startTime,
                                     endTime = records[0].endTime,
@@ -184,7 +185,7 @@ fun HistoryList(
                         } else {
                             val startDate = records[0].startTime
                             newRecords.add(
-                                Record(
+                                LightRecord(
                                     patient = records[0].patient,
                                     startTime = startDate,
                                     endTime = records[0].endTime,
@@ -323,18 +324,18 @@ fun HistoryListPreview() {
     }
 
     val records = mutableListOf(
-        Record(patient = patient, startTime = startTime, endTime = endTime),
-        Record(patient = patient, startTime = startTime, endTime = endTime),
-        Record(patient = patient, startTime = startTime, endTime = endTime),
-        Record(patient = patient, startTime = startTime, endTime = endTime),
-        Record(patient = patient, startTime = startTime, endTime = endTime),
-        Record(patient = patient, startTime = startTime, endTime = endTime),
-        Record(patient = patient, startTime = startTime, endTime = endTime),
-        Record(patient = patient, startTime = startTime, endTime = endTime),
-        Record(patient = patient, startTime = startTime, endTime = endTime),
-        Record(patient = patient, startTime = startTime, endTime = endTime),
-        Record(patient = patient, startTime = startTime, endTime = endTime),
-        Record(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
+        LightRecord(patient = patient, startTime = startTime, endTime = endTime),
     )
     CapnoEasyTheme {
         Box (

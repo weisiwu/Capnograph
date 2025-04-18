@@ -209,9 +209,10 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     val startIndex = ((startValue.value / totalLen.value) * record.data.size).toInt()
                     val endIndex = startIndex + recordMaxXPoints
                     val endIndexPDF = startIndex + (recordMaxXPoints * 1.5).toInt()
-                    val safeStartIndex = startIndex.coerceAtLeast(0).coerceAtMost(record.data.size - recordMaxXPoints)
+                    val safeStartIndex = startIndex.coerceAtLeast(0).coerceAtMost((record.data.size - recordMaxXPoints).coerceAtLeast(0))
                     val safeEndIndex = endIndex.coerceAtMost(record.data.size)
                     val safeEndIndexPDF = endIndexPDF.coerceAtMost(record.data.size)
+                    println("wswTest safeStartIndex $safeStartIndex $safeEndIndex ${safeEndIndex} ")
 
                     // 目前按照每秒100个点去算
                     val duration = Duration.between(record.startTime, record.endTime)
@@ -228,6 +229,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     } else {
                         emptyList()
                     }
+                    println("wswTest dlldldld")
                     val dataToUsePDF = if (safeStartIndex < safeEndIndexPDF) {
                         if (safeStartIndex < 0) {
                             emptyList()
@@ -401,6 +403,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     type = RangeType.ONESIDE,
                     valueRange = 0f..totalLen.value,
                     onValueChange = { start, end ->
+                        println("wswTest 最后的值是多少 start $start")
                         startValue.value = start
                     }
                 )

@@ -77,6 +77,17 @@ data class Record(
     val groupTitle: String = "",
 ): Serializable
 
+data class LightRecord(
+    @PrimaryKey(autoGenerate = false) var id: UUID = UUID.randomUUID(),
+    val patient: Patient,
+    val startTime: LocalDateTime,
+    var endTime: LocalDateTime,
+    val dateIndex: Int = 0,
+    val patientIndex: String = "",
+    val isGroupTitle: Boolean = false,
+    val groupTitle: String = "",
+): Serializable
+
 enum class GROUP_BY {
     ALL,
     PATIENT,
@@ -137,8 +148,8 @@ interface RecordDao {
     fun getAllRecords(): List<Record>
 
     // 分页查询方法
-    @Query("SELECT * FROM records LIMIT :limit OFFSET :offset")
-    fun getBatch(limit: Int, offset: Int): List<Record>
+    @Query("SELECT id, patient, startTime, endTime, patientIndex, dateIndex, isGroupTitle, groupTitle FROM records LIMIT :limit OFFSET :offset")
+    fun getBatch(limit: Int, offset: Int): List<LightRecord>
 
     @Query("SELECT * FROM records WHERE id = :id")
     fun queryRecordById(id: UUID): Record?
@@ -284,8 +295,8 @@ class LocalStorageKit @Inject constructor(
      * 获取所有记录列表
      * 防止数据太多，直接读取导致崩溃
      */
-    suspend fun getAllRecords(): List<Record> = withContext(Dispatchers.IO) {
-        val dataList: MutableList<Record> = mutableListOf()
+    suspend fun getAllRecords(): List<LightRecord> = withContext(Dispatchers.IO) {
+        val dataList: MutableList<LightRecord> = mutableListOf()
 
         try {
             val batchSize = 1
