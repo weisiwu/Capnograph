@@ -35,12 +35,13 @@ class HistoryRecordsActivity : BaseActivity() {
         LaunchedEffect(0) {
             lifecycleScope.launch {
                 withContext(Dispatchers.IO) {
-                    val newRecords = localStorageKit.database.recordDao().getAllRecords()
+                    val size = localStorageKit.database.recordDao().getRecordsCount()
+                    println("wswTest 一共有多少数据  ${size}？？？")
+                    val newRecords = localStorageKit.getAllRecords()
+                    println("wswTest 获取到的数据是什么  ${newRecords.size}")
                     withContext(Dispatchers.Main) {
                         records.addAll(newRecords)
                     }
-                    val size = localStorageKit.database.recordDao().getRecordsCount()
-                    println("wswTest 一共有多少数据  ${size}？？？")
                 }
             }
         }

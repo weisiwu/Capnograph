@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.room.Dao
@@ -134,6 +135,10 @@ interface RecordDao {
 
     @Query("SELECT * FROM records")
     fun getAllRecords(): List<Record>
+
+    // 分页查询方法
+    @Query("SELECT * FROM records LIMIT :limit OFFSET :offset")
+    fun getBatch(limit: Int, offset: Int): List<Record>
 
     @Query("SELECT * FROM records WHERE id = :id")
     fun queryRecordById(id: UUID): Record?
@@ -275,6 +280,27 @@ class LocalStorageKit @Inject constructor(
         }
     }
 
+    /**
+     * 获取所有记录列表
+     * 防止数据太多，直接读取导致崩溃
+     */
+    suspend fun getAllRecords(): List<Record> = withContext(Dispatchers.IO) {
+        val dataList: MutableList<Record> = mutableListOf()
+
+        try {
+            val batchSize = 1
+            val totalCount = database.recordDao().getRecordsCount()
+
+            for (offset in 0 until totalCount step batchSize) {
+                val batch = database.recordDao().getBatch(batchSize, offset)
+                dataList.addAll(batch)
+            }
+        } catch (e: Exception) {
+            Log.e("DB_ERROR", "Failed to query data", e)
+        }
+        dataList
+    }
+
     /***
      * 保存病人ETCO2记录
      * 在主页保存记录时候调用
@@ -351,24 +377,6 @@ class LocalStorageKit @Inject constructor(
             database.recordDao().insertRecord(record)
             records.add(record)
             return@withContext Result.success(true)
-        }
-    }
-
-    /***
-     * 从本地读取历史记录数据
-     */
-    suspend fun readRecordsFromLocal(): List<Record> {
-        return withContext(Dispatchers.IO) {
-            database.recordDao().getAllRecords()
-        }
-    }
-
-    /***
-     * 从本地读取历史病人数据
-     */
-    suspend fun readPatientsFromLocal(): List<Patient> {
-        return withContext(Dispatchers.IO) {
-            database.patientDto().getAllPatients()
         }
     }
 
