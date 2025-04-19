@@ -55,6 +55,7 @@ import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.util.WeakHashMap
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -264,7 +265,6 @@ class BlueToothKit @Inject constructor(
             connectedCapnoEasy.value = null
             taskQueue.executeAllTasks()
         }
-//        println("wswTest result $result")
     }
 
     // 是否正在扫描BLE蓝牙设备
@@ -301,7 +301,6 @@ class BlueToothKit @Inject constructor(
         // 设备是否成功链接
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            println("wswTest 设备新装填 $newState")
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     gatt.discoverServices()
@@ -1063,7 +1062,6 @@ class BlueToothKit @Inject constructor(
         correctZeroCallback = callback
         isCorrectZero = true
 
-        println("wswTest 接受的教龄是什么 taskQueue.taskQueueSize() ${taskQueue.taskQueueSize} ")
         taskQueue.addTasks(
             listOf(
                 Runnable {
@@ -1553,9 +1551,7 @@ class BlueToothKit @Inject constructor(
         }
 
         val DeviceStatus = data[6].toUByte().toInt() and 0x10 // 模块没有准备好进行较零
-        println("wswTest 接受的教龄是什么 DeviceStatus ${DeviceStatus}")
         if (DeviceStatus == 0x10) {
-            println("wswTest 接受的教龄是什么 isCorrectZero ${isCorrectZero}")
             if (isCorrectZero) {
                 correctZeroCallback?.invoke(false)
                 isCorrectZero = false
@@ -1582,20 +1578,17 @@ class BlueToothKit @Inject constructor(
 
     /** 处理校零，校零结果会在80h中获取，DPI=1 */
     private fun handleCorrectZero(data: ByteArray, NBFM: Int) {
-        println("wswTest 接受的教龄是什么 是否来到了这里？？？")
         if (NBFM != 2) {
             return
         }
 
         val ZSBM = data[2].toUByte().toInt() // 使用 & 0x0C 提取相关位
-        println("wswTest 接受的教龄是什么 $ZSBM ")
         when (ZSBM) {
             ZSBResponseState.Start.value,
             ZSBResponseState.Processing.value -> isCorrectZero = true
             // 其他返回，都视作校零命令直接失败
             ZSBResponseState.NotReady.value,
             ZSBResponseState.DetectBreath.value -> {
-                println("wswTest 接受的教龄是什么 开始启动回调")
                 correctZeroCallback?.invoke(false)
                 isCorrectZero = false
             }

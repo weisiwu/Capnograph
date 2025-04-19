@@ -27,7 +27,6 @@ class AudioPlayer(private val context: Context) {
 
         // 当前正在播放报警
         if (this.isPlay) {
-//            println("wswTest【报警功能调试】 退出当前循环")
             return
         }
 

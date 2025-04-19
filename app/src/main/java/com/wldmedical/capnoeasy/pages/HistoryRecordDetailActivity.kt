@@ -35,8 +35,6 @@ import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.RangeSelector
 import com.wldmedical.capnoeasy.components.RangeType
 import com.wldmedical.capnoeasy.components.ToastData
-import com.wldmedical.capnoeasy.kits.LightRecord
-import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.kits.RecordData
 import com.wldmedical.capnoeasy.kits.filterData
 import com.wldmedical.capnoeasy.kits.recordMaxXPoints
@@ -75,7 +73,6 @@ class HistoryRecordDetailActivity : BaseActivity() {
     private val entriesCopy = mutableStateListOf<CO2WavePointData>()
 
     private var currentRecord: RecordData? = null
-//    private var currentRecord: List<CO2WavePointData> = mutableStateListOf()
 
     private val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -151,7 +148,6 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     override fun onPrintTicketClick() {
         val currentData = currentRecord?.data ?: return
-//        val currentData = currentRecord ?: return
         if (currentData.isEmpty()) { return }
 
         if (!blueToothKit.gpPrinterManager.getConnectState()) {
@@ -188,8 +184,10 @@ class HistoryRecordDetailActivity : BaseActivity() {
         val trendChart: MutableState<LineChart?> = remember { mutableStateOf(null) }
         val chart: MutableState<LineChart?> = remember { mutableStateOf(null) }
         val entries = remember { mutableStateListOf<Entry>() }.apply {
-            if (this.size < recordMaxXPoints) {
-                repeat(recordMaxXPoints) { add(Entry(it.toFloat(), 0f)) }
+            val size = this.size
+            val needFillOutSize = recordMaxXPoints - size
+            if (needFillOutSize > 0) {
+                repeat(needFillOutSize) { add(Entry(it.toFloat() + size, 0f)) }
             }
         }
         val trendEntries = remember { mutableStateListOf<Entry>() }
@@ -205,7 +203,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     localStorageKit.database.recordDao().queryRecordDataById(UUID.fromString(recordId))
                 }
                 if (record != null && recordData != null) {
-                    println("wswTest 数据长度是 ${recordData.data.size}")
+                    println("wswTest[保存测试] recordData ${recordData.data.size} ___ ${recordData}")
                     // 为导出做准备
                     if (record.pdfFilePath != null) {
                         if (record.pdfFilePath!!.isNotEmpty()) {
@@ -216,18 +214,12 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     }
 
                     val startIndex = ((startValue.value / totalLen.value) * recordData.data.size).toInt()
-//                    val startIndex = ((startValue.value / totalLen.value) * recordData.size).toInt()
                     val endIndex = startIndex + recordMaxXPoints
                     val endIndexPDF = startIndex + (recordMaxXPoints * 1.5).toInt()
                     val safeStartIndex = startIndex.coerceAtLeast(0).coerceAtMost((recordData.data.size - recordMaxXPoints).coerceAtLeast(0))
                     val safeEndIndex = endIndex.coerceAtMost(recordData.data.size)
                     val safeEndIndexPDF = endIndexPDF.coerceAtMost(recordData.data.size)
-//                    val safeStartIndex = startIndex.coerceAtLeast(0).coerceAtMost((recordData.size - recordMaxXPoints).coerceAtLeast(0))
-//                    val safeEndIndex = endIndex.coerceAtMost(recordData.size)
-//                    val safeEndIndexPDF = endIndexPDF.coerceAtMost(recordData.size)
-                    println("wswTest safeStartIndex $safeStartIndex $safeEndIndex ${safeEndIndex} ")
 
-                    // 目前按照每秒100个点去算
                     val duration = Duration.between(record.startTime, record.endTime)
                     totalLen.value = max(0f, duration.seconds.toFloat()) // 总秒数
 
@@ -238,18 +230,15 @@ class HistoryRecordDetailActivity : BaseActivity() {
                             emptyList()
                         } else {
                             recordData.data.slice(safeStartIndex until safeEndIndex)
-//                            recordData.slice(safeStartIndex until safeEndIndex)
                         }
                     } else {
                         emptyList()
                     }
-                    println("wswTest dlldldld")
                     val dataToUsePDF = if (safeStartIndex < safeEndIndexPDF) {
                         if (safeStartIndex < 0) {
                             emptyList()
                         } else {
                             recordData.data.slice(safeStartIndex until safeEndIndexPDF)
-//                            recordData.slice(safeStartIndex until safeEndIndexPDF)
                         }
                     } else {
                         emptyList()
@@ -260,6 +249,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     dataToUse.forEach {
                         it?.let { it1 ->
                             newEntries.add(Entry(sequentialIndex.toFloat(), it1.co2))
+                            println("wswTest[保存测试] newEntries==== ${newEntries.size}")
                             sequentialIndex++
                         }
                     }
@@ -273,16 +263,12 @@ class HistoryRecordDetailActivity : BaseActivity() {
                             sequentialTrendIndex++
                         }
                     }
-//                    for (i in recordData.indices) {
-//                        recordData[i]?.let {
-//                            newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), it.ETCO2))
-//                            sequentialTrendIndex++
-//                        }
-//                    }
 
                     Snapshot.withMutableSnapshot {
                         entries.clear()
+                        println("wswTest[保存测试] entries 添加前  ${entries.size}")
                         entries.addAll(newEntries)
+                        println("wswTest[保存测试] entries 添加后  ${entries.size}")
 
                         // 趋势图只在读取记录后更新一次
                         if (trendEntries.size <= 0) {
@@ -398,6 +384,13 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
                     chart.value?.data = lineData
                     it.invalidate()
+
+                    // TODO: 测试代码
+                    println("wswTest[保存测试] entries ${entries.size} start")
+                    entries.forEach {
+                        println("wswTest[保存测试] it.x ${it.x} __ ${it.y}")
+                    }
+                    println("wswTest[保存测试] entries ${entries.size} end")
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -408,7 +401,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                 RangeSelector(
                     unit = "",
                     format = { time ->
-                        val partialSeconds = time.toLong() // 计算部分秒数
+                       val partialSeconds = time.toLong() // 计算部分秒数
 
                         // 将部分秒数转换为小时、分钟、秒
                         val hours = partialSeconds / 3600
@@ -424,7 +417,6 @@ class HistoryRecordDetailActivity : BaseActivity() {
                     type = RangeType.ONESIDE,
                     valueRange = 0f..totalLen.value,
                     onValueChange = { start, end ->
-                        println("wswTest 最后的值是多少 start $start")
                         startValue.value = start
                     }
                 )

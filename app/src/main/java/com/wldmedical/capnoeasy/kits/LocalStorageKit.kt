@@ -52,7 +52,8 @@ val singleRecordMaxSize = 10
 
 // 实测一分钟大概会录入244个点，依次类推，一个小时在15000个点左右（SqlList的核心组件CursorWindow对此有要求）
 // 同时一个小时的量不会超过2mb
-val singleRecordMaxPointsNumber = 15000
+val singleRecordMaxPointsNumber = 10000
+//val singleRecordMaxPointsNumber = 10
 
 @Entity(tableName = "patients")
 data class Patient(
@@ -262,6 +263,9 @@ class LocalStorageKit @Inject constructor(
     private val KEY_PATIENT_AGE = "patient_age"
     private val KEY_SHOW_TREND_CHART = "show_trend_chart"
 
+    // 上次保存时间
+    private var lastAutoSaveTime: LocalDateTime? = null
+
     // 用户语言偏好
     private val KEY_LANGUAGE = "userLanguage"
 
@@ -334,17 +338,26 @@ class LocalStorageKit @Inject constructor(
     suspend fun saveRecord(
         context: Context? = null,
         patient: Patient,
-        startTime: LocalDateTime,
+        startT: LocalDateTime,
         recordName: String = "",
         data: List<CO2WavePointData> = listOf(),
-        endTime: LocalDateTime,
         maxETCO2: Float = 0f,
         lineChart: LineChart? = null,
         currentETCO2: Float = 0f,
         showTrendingChart: Boolean = true,
         currentRR: Int = 0,
+        isAutoSave: Boolean = false
     ): Result<Boolean> {
         return withContext(Dispatchers.IO) {
+            val endTime = LocalDateTime.now()
+            val startTime = lastAutoSaveTime ?: startT
+            // 测试使用
+            if (isAutoSave) {
+                println("wswTest[保存测试] 自动保存 $startTime __ $endTime ${data.size}")
+            } else {
+                println("wswTest[保存测试] 手动保存 $startTime __ $endTime ${data.size}")
+            }
+
             val dateIndex = generateDateIndex(startTime)
             val patientIndex = generatePatientIndex(patient)
             var pdfFilePath: String? = null
@@ -367,6 +380,9 @@ class LocalStorageKit @Inject constructor(
                 patientIndex = patientIndex,
                 pdfFilePath = pdfFilePath,
             )
+
+            // 将上一次停止的时间保存下来，当做下一次开始的时间
+            lastAutoSaveTime = endTime
 
             if (pdfFilePath != null && lineChart != null && context != null) {
                  saveChartToPdfInBackground(
@@ -421,16 +437,6 @@ class LocalStorageKit @Inject constructor(
         val month = startTime.monthValue
         val day= startTime.dayOfMonth
         return year * 10000 + month * 100 + day
-    }
-
-    /***
-     * 生成记录的时间分组索引：时分秒
-     */
-    private fun generateTimeIndex(startTime: LocalDateTime): Int {
-        val hour = startTime.hour
-        val minute = startTime.minute
-        val second= startTime.second
-        return hour * 10000 + minute * 100 + second
     }
 
     /***
@@ -514,16 +520,16 @@ class LocalStorageKit @Inject constructor(
         val date2: LocalDateTime = LocalDateTime.parse("2007-12-03T10:15:30")
 
         // 给A病人添加5条记录
-        saveRecord(patient = patients[0], startTime = date1, endTime = date1)
-        saveRecord(patient = patients[0], startTime = date1, endTime = date1)
-        saveRecord(patient = patients[0], startTime = date1, endTime = date1)
-        saveRecord(patient = patients[0], startTime = date2, endTime = date2)
-        saveRecord(patient = patients[0], startTime = date2, endTime = date2)
+        saveRecord(patient = patients[0], startT = date1)
+        saveRecord(patient = patients[0], startT = date1)
+        saveRecord(patient = patients[0], startT = date1)
+        saveRecord(patient = patients[0], startT = date2)
+        saveRecord(patient = patients[0], startT = date2)
 
         // 给B病人添加2条记录
-        saveRecord(patient = patients[1], startTime = date1, endTime = date1)
-        saveRecord(patient = patients[1], startTime = date1, endTime = date1)
-        saveRecord(patient = patients[1], startTime = date2, endTime = date2)
+        saveRecord(patient = patients[1], startT = date1)
+        saveRecord(patient = patients[1], startT = date1)
+        saveRecord(patient = patients[1], startT = date2)
     }
 }
 

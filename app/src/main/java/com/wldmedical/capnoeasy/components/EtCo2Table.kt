@@ -156,7 +156,6 @@ fun AttributeLine(
                         "patientID" -> viewModel.updatePatientID(newVal)
                         "patientAge" -> {
                             val intVal = newVal.toIntOrNull() ?: 0
-                            println("wswTest 看事实吗  $intVal")
                             if (intVal >= patientAgeRange.start && intVal <= patientAgeRange.last) {
                                 viewModel.updatePatientAge(intVal)
                             }

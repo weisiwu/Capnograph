@@ -83,7 +83,6 @@ class AlertSettingActivity : BaseActivity() {
                             duration = InfinityDuration,
                         )
                     )
-                    println("wswTest 准备进行更新，111看下最新的值是什么 $minETCO2 __ $maxETCO2 __ $minRR __ $maxRR")
                     blueToothKit.updateAlertRange(
                         co2Low = minETCO2,
                         co2Up = maxETCO2,

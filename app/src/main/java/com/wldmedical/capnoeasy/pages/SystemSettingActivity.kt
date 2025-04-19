@@ -44,7 +44,6 @@ class SystemSettingActivity : BaseActivity() {
         // 存储到本地，启动的时候读取
         val language = if (newLanguage == LanguageTypes.CHINESE) "zh" else "en"
         localStorageKit.saveUserLanguageToPreferences(context = this, language)
-        println("wswTest 切换余元后 ${viewModel.language.value.cname}")
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)

@@ -46,9 +46,6 @@ fun WheelPicker(
     val (title, items, defaultValue) = config
     val defaultIndex = remember { derivedStateOf { items.indexOf(defaultValue) } }
     val state = rememberFWheelPickerState(defaultIndex.value)
-//    if(title == "CO2 Scale") {
-//        println("wswTest 组件内的值是什么 ${title} 序号是什么 ${defaultIndex}")
-//    }
 
     LaunchedEffect(state.currentIndex) {
         onValueChange?.invoke(state.currentIndex)

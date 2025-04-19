@@ -73,7 +73,6 @@ class DisplaySettingActivity : BaseActivity() {
                             ))
                         }
                         defaultScale.value = co2Scales[0]
-//                        println("wswTest 页面的值是什么 ${co2Scales[0]}")
                     }
                 }
             )
@@ -82,7 +81,6 @@ class DisplaySettingActivity : BaseActivity() {
                 config = wheelPickerConfig(items = co2Scales, title = "CO2 Scale", defaultValue = defaultScale.value),
                 unit = defaultUnit.value,
                 onValueChange = {
-//                    println("wswTest 接收到了组件内传递来的新值 $it")
                     if (it >= 0 && it < co2Scales.size) {
                         defaultScale.value = co2Scales[it]
                     }
@@ -114,9 +112,6 @@ class DisplaySettingActivity : BaseActivity() {
                             duration = InfinityDuration,
                         )
                     )
-//                    println("wswTest 在这里传入的是什么 ${defaultScale.value} ${defaultUnit.value}")
-                    // TODO: 临时测试使用
-//                    Toast.makeText(context, "Scale:${defaultScale.value} Unit:${defaultUnit.value}", Toast.LENGTH_SHORT).show()
                     blueToothKit.updateCO2UnitScale(
                         co2Scale = defaultScale.value,
                         co2Unit = defaultUnit.value,

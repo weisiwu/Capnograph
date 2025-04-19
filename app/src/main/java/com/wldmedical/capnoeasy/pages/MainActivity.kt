@@ -33,10 +33,6 @@ class MainActivity : BaseActivity() {
 
     override var pageScene = PageScene.HOME_PAGE
 
-    private  var startRecordTime: LocalDateTime? = null
-
-    private  var endRecordTime: LocalDateTime? = null
-
     private  val REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION = 1001
 
     override fun onTabClick(index: Int): Boolean {
@@ -182,8 +178,7 @@ class MainActivity : BaseActivity() {
                     recordName = "${viewModel.pdfHospitalName.value}_${viewModel.pdfReportName.value}",
                     lineChart = viewModel.lineChart,
                     data = viewModel.totalCO2WavedData.toList(),
-                    startTime = startRecordTime ?: LocalDateTime.now(),
-                    endTime = LocalDateTime.now(),
+                    startT = LocalDateTime.now(),
                     maxETCO2 = viewModel.CO2Scale.value.value,
                     showTrendingChart = viewModel.showTrendingChart.value,
                     currentETCO2 = blueToothKit.currentETCO2.value,
@@ -206,7 +201,7 @@ class MainActivity : BaseActivity() {
                 }
             }
         } else {
-            startRecordTime = LocalDateTime.now()
+            val startT = LocalDateTime.now()
             // 将自动保存记录函数传入，方便蓝牙模块在数据足够时能够自动保存
             blueToothKit.addAutoSave {
                 lifecycleScope.launch {
@@ -223,16 +218,13 @@ class MainActivity : BaseActivity() {
                         recordName = "${viewModel.pdfHospitalName.value}_${viewModel.pdfReportName.value}",
                         lineChart = viewModel.lineChart,
                         data = saveRecordData,
-                        startTime = startRecordTime ?: LocalDateTime.now(),
-                        endTime = LocalDateTime.now(),
+                        startT = startT,
                         maxETCO2 = viewModel.CO2Scale.value.value,
                         showTrendingChart = viewModel.showTrendingChart.value,
                         currentETCO2 = blueToothKit.currentETCO2.value,
                         currentRR = blueToothKit.currentRespiratoryRate.value,
+                        isAutoSave = true,
                     )
-                    startRecordTime = endRecordTime
-                    println("wswTest 开始时间 startRecordTime ${startRecordTime}")
-                    println("wswTest 结束时间 endRecordTime ${endRecordTime}")
                     // 清空已经存储的数据
                     viewModel.totalCO2WavedData.removeAll(saveRecordData)
                 }
