@@ -41,7 +41,7 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 // 最多记录数量
-val maxRecordsNumber = 100
+val maxRecordsNumber = 200
 
 // 1M字节常量
 val spaceSizeUnit = 1024 * 1024
