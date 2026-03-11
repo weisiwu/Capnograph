@@ -393,7 +393,8 @@ class DatabaseBackupHelper(private val context: Context) {
             val walFile = File(databaseFile.parent, "$databaseName-wal")
             val shmFile = File(databaseFile.parent, "$databaseName-shm")
 
-            // 2. 关闭当前数据库连接
+            // 2. 清除数据库单例并关闭当前数据库连接
+            AppDatabase.clearInstance()
             roomDatabase.close()
 
             // 3. 删除当前数据库文件、WAL 文件和 SHM 文件（如果存在）
@@ -437,11 +438,14 @@ class DatabaseBackupHelper(private val context: Context) {
             }
 
             // 9. 重新打开数据库连接
-            roomDatabase = Room.databaseBuilder(
-                context,
-                AppDatabase::class.java,
-                databaseName
-            ).build()
+            roomDatabase = AppDatabase.getDatabase(context)
+            
+            // 10. 更新 Application 中的数据库引用
+            if (context is CapnoEasyApplication) {
+                context.database = roomDatabase
+            } else if (context.applicationContext is CapnoEasyApplication) {
+                (context.applicationContext as CapnoEasyApplication).database = roomDatabase
+            }
 
             println("DatabaseBackupHelper[restoreDatabase] 恢复数据库完成")
         } catch (e: Exception) {

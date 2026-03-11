@@ -392,6 +392,7 @@ class BlueToothKit @Inject constructor(
         ) {
             // 收到通知数据
             if (characteristic?.uuid == BLECharacteristicUUID.BLEReceiveDataCha.value) {
+                // println("wswTest【波形调试】 onCharacteristicChanged 收到BLE数据，长度=${characteristic.value.size}")
                 receivedArray.addAll(characteristic.value.toList())
 
                 CoroutineScope(Dispatchers.Default).launch {
@@ -573,6 +574,7 @@ class BlueToothKit @Inject constructor(
 
         currentList.add(newData)
         _dataFlow.value = currentList // 更新 StateFlow
+        // println("wswTest【波形调试】 dataFlow已更新，当前数据量=${_dataFlow.value.size}, 最新值=${newData.value}")
     }
 
     // 已经接收到的波次数据 - 原始数据，解析出后清空
@@ -736,9 +738,12 @@ class BlueToothKit @Inject constructor(
         if (isReceiverRegistered) { // 检查是否已注册
             try {
                 activity.unregisterReceiver(discoveryReceiver)
-                isReceiverRegistered = false // 取消注册成功后，将标志位设置为 false
+            } catch (e: IllegalArgumentException) {
+                // 接收器未注册，忽略此异常
             } catch (e: Exception) {
                 Log.e("wswTest", "取消注册广播失败", e)
+            } finally {
+                isReceiverRegistered = false // 无论成功与否都重置标志位
             }
         }
 
@@ -1322,11 +1327,12 @@ class BlueToothKit @Inject constructor(
 
         when (commandM) {
             SensorCommand.CO2Waveform.value -> {
+                // println("wswTest【波形调试】 getSpecificValue 收到CO2Waveform指令，NBFM=$NBFM")
                 val result = kotlin.runCatching {
                     handleCO2Waveform(firstArray, NBFM)
                 }
                 result.onFailure {
-                    println("wswTest 解析co2波形数据，发生异常 ${it.message} ")
+                    // println("wswTest【波形调试】 解析co2波形数据，发生异常 ${it.message} ")
                     it.printStackTrace()
                 }
             }
@@ -1406,6 +1412,7 @@ class BlueToothKit @Inject constructor(
 
         // 保存到pdf中的数据和最终打印出来的数据
         // 是否保存这个数据，按照用户是否点击了开始记录开始算
+        val lastIndex = appState.totalCO2WavedData.lastOrNull()?.index ?: -1
         appState.updateTotalCO2WavedData(
             CO2WavePointData(
                 co2 = currentCO2.value,
@@ -1413,11 +1420,12 @@ class BlueToothKit @Inject constructor(
                 ETCO2 = currentETCO2.value,
                 FiCO2 = currentFiCO2,
                 // 基于前一个数据的index+1做存储，最小值为0
-                index = appState.totalCO2WavedData.takeLast(1)[0].index.coerceAtLeast(0) + 1
+                index = (lastIndex + 1).coerceAtLeast(0)
             )
         )
 
         // 这里是用于折线图展示的数据，最多不超过maxXPoints个
+        // println("wswTest【波形调试】 updateReceivedData CO2=${currentCO2.value}")
         updateReceivedData(currentPoint)
     }
 

@@ -264,16 +264,35 @@ abstract class AppDatabase : RoomDatabase() {
 
         // 获取数据库实例的静态方法
         fun getDatabase(context: Context): AppDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    DATABASE_NS
-                )
-                .addMigrations(MIGRATION_1_2)
-                .build()
-                INSTANCE = instance
-                instance
+            // 如果INSTANCE已关闭，需要重新创建
+            val currentInstance = INSTANCE
+            if (currentInstance != null && currentInstance.isOpen) {
+                return currentInstance
+            }
+            
+            return synchronized(this) {
+                // 双重检查
+                val instance = INSTANCE
+                if (instance != null && instance.isOpen) {
+                    instance
+                } else {
+                    val newInstance = Room.databaseBuilder(
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        DATABASE_NS
+                    )
+                    .addMigrations(MIGRATION_1_2)
+                    .build()
+                    INSTANCE = newInstance
+                    newInstance
+                }
+            }
+        }
+        
+        // 清除数据库实例（用于恢复数据库时）
+        fun clearInstance() {
+            synchronized(this) {
+                INSTANCE = null
             }
         }
     }
@@ -386,19 +405,21 @@ class LocalStorageKit @Inject constructor(
         remainData: List<CO2WavePointData> = listOf()
     ) {
         // 停止记录时，将不足一个chunk的数据，单独保存起来，避免丢失数据
-        currentRecordId?.let { it ->
-            val chunkIndex = this.database.co2DataDao().getCO2DataByRecordId(it).size.coerceAtLeast(0)
-            var trendData = ""
-            for (i in remainData.indices step trendStep) {
-                trendData += "_${remainData[i].ETCO2}"
+        withContext(Dispatchers.IO) {
+            currentRecordId?.let { it ->
+                val chunkIndex = database.co2DataDao().getCO2DataByRecordId(it).size.coerceAtLeast(0)
+                var trendData = ""
+                for (i in remainData.indices step trendStep) {
+                    trendData += "_${remainData[i].ETCO2}"
+                }
+                val remainCo2Data = CO2Data(
+                    recordId = it,
+                    chunkIndex = chunkIndex,
+                    trendData = trendData,
+                    data = remainData.compress()
+                )
+                database.co2DataDao().insertCO2Data(remainCo2Data)
             }
-            val remainCo2Data = CO2Data(
-                recordId = it,
-                chunkIndex = chunkIndex,
-                trendData = trendData,
-                data = remainData.compress()
-            )
-           this.database.co2DataDao().insertCO2Data(remainCo2Data)
         }
         currentRecordId = null
     }

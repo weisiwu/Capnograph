@@ -1,6 +1,7 @@
 package com.wldmedical.capnoeasy.components
 
 import android.content.Context
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.text.font.FontWeight
@@ -18,12 +21,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -125,8 +136,9 @@ fun AttributeLine(
                 )
             }
         }  else if (attribute.editable) {
-            // 不纠结在TextField里面的ContentPadding无法调整
-            // https://juejin.cn/post/6998038393003180046
+            val view = LocalView.current
+            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            
             TextField(
                 value = value,
                 singleLine = true,
@@ -146,7 +158,14 @@ fun AttributeLine(
                     .padding(0.dp)
                     .alignByBaseline()
                     .weight(1f)
-                    .background(Color.Transparent),
+                    .background(Color.Transparent)
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
+                            view.post {
+                                imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                            }
+                        }
+                    },
                 keyboardOptions = if(attribute.isNumber) KeyboardOptions(keyboardType = KeyboardType.Number) else KeyboardOptions.Default,
                 onValueChange = { newVal ->
                     when(attribute.viewModelName) {

@@ -77,13 +77,16 @@ fun EtCo2LineChart(
 
     // 处理折线图动画效果
     LaunchedEffect(blueToothKit.dataFlow) { // 监听 bluetoothKit 实例的变化
+        // println("wswTest【波形调试】 EtCo2LineChart LaunchedEffect 开始监听 dataFlow")
         blueToothKit.dataFlow.collectLatest { newData -> // 收集 Flow 的数据
+            // println("wswTest【波形调试】 EtCo2LineChart 收到dataFlow数据，size=${newData.size}")
             if (newData.isNotEmpty()) {
                 if (entries.size >= maxXPoints) {
                     entries.removeAt(0) // 删除头部元素
                 }
                 index += 1f
                 entries.add(Entry(index, newData.last().value))
+                // println("wswTest【波形调试】 EtCo2LineChart 添加新点，index=$index, value=${newData.last().value}, entries.size=${entries.size}")
             }
         }
     }

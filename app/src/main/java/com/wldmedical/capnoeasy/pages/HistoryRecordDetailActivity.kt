@@ -74,6 +74,9 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     private var currentRecord: Record? = null
 
+    // 用于打印的CO2波形数据
+    private var printableCo2Data: List<CO2WavePointData> = emptyList()
+
     private val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val uri = result.data?.data
@@ -115,34 +118,39 @@ class HistoryRecordDetailActivity : BaseActivity() {
     }
 
     override fun onPrintTicketClick() {
-        return
-        // TODO: 临时注释，等数据问题解决掉 
-//        val currentData = currentRecord?.data ?: return
-//        if (currentData.isEmpty()) { return }
-//
-//        if (!blueToothKit.gpPrinterManager.getConnectState()) {
-//            viewModel.updateToastData(
-//                ToastData(
-//                    text = getStringAcitivity(R.string.recorddetail_print_fail),
-//                    showMask = false,
-//                    duration = 1000,
-//                )
-//            )
-//            return
-//        }
-//
-//        // 对波形数据进行过滤
-//        val filteredData = filterData(currentData, viewModel.CO2Scale.value.value)
-//        val allPoints: List<Float> = filteredData.map {
-//            it.co2
-//        }
-//
-//        blueToothKit.gpPrinterManager.print(
-//            this,
-//            allPoints,
-//            localStorageKit.loadPrintSettingFromPreferences(this),
-//            viewModel.CO2Scale.value.value
-//        )
+        if (printableCo2Data.isEmpty()) {
+            viewModel.updateToastData(
+                ToastData(
+                    text = getStringAcitivity(R.string.recorddetail_record_fail),
+                    showMask = false,
+                    duration = 1000,
+                )
+            )
+            return
+        }
+
+        if (!blueToothKit.gpPrinterManager.getConnectState()) {
+            viewModel.updateToastData(
+                ToastData(
+                    text = getStringAcitivity(R.string.recorddetail_print_fail),
+                    showMask = false,
+                    duration = 1000,
+                )
+            )
+            return
+        }
+
+        val filteredData = filterData(printableCo2Data, viewModel.CO2Scale.value.value)
+        val allPoints: List<Float> = filteredData.map {
+            it.co2
+        }
+
+        blueToothKit.gpPrinterManager.print(
+            this,
+            allPoints,
+            localStorageKit.loadPrintSettingFromPreferences(this),
+            viewModel.CO2Scale.value.value
+        )
     }
 
     @SuppressLint("RememberReturnType")
@@ -151,14 +159,10 @@ class HistoryRecordDetailActivity : BaseActivity() {
         val context = this
         val recordId = UUID.fromString(intent.getStringExtra(recordIdParams))
         val totalLen = 100f
-        val startValue = remember { mutableStateOf(0f) }
+        val startValue = remember { mutableStateOf(1f) } // 初始值设为1（100%），显示记录的最后部分
         val trendChart: MutableState<LineChart?> = remember { mutableStateOf(null) }
         val chart: MutableState<LineChart?> = remember { mutableStateOf(null) }
-        val entries = remember { mutableStateListOf<Entry>() }.apply {
-            if (this.size < maxXPoints) {
-                repeat(maxXPoints) { add(Entry(it.toFloat(), 0f)) }
-            }
-        }
+        val entries = remember { mutableStateListOf<Entry>() }
         val trendEntries = remember { mutableStateListOf<Entry>() }
         val scrollState = rememberScrollState()
         // 记录关联的co2数据
@@ -175,9 +179,28 @@ class HistoryRecordDetailActivity : BaseActivity() {
         LaunchedEffect(recordId) {
             println("wswTest 记录id 开始初始化 ${recordId}")
             lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
-                    localStorageKit.database.recordDao().queryRecordById(recordId)
-                }?.let { record ->
+                val result = withContext(Dispatchers.IO) {
+                    val record = localStorageKit.database.recordDao().queryRecordById(recordId)
+                    if (record == null) return@withContext null
+
+                    // 计算record下有多少个chunk
+                    val chunkNumberValue = localStorageKit.database.co2DataDao().getCO2DataCountByRecordId(recordId)
+                    println("wswTest 当前记录下一共多少数据帧 ${chunkNumberValue}")
+
+                    // 计算record下有多少个数据点
+                    val lastChunkData = localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkNumberValue - 1)
+                    val totalPointsNumberValue = if (lastChunkData != null) {
+                        (chunkNumberValue - 1) * maxRecordDataChunkSize + lastChunkData.data.size
+                    } else {
+                        0
+                    }
+                    println("wswTest 当前记录一共多少数据点 ${totalPointsNumberValue}")
+
+                    Triple(record, chunkNumberValue, totalPointsNumberValue)
+                }
+
+                // 在主线程更新UI状态
+                result?.let { (record, chunkNumberValue, totalPointsNumberValue) ->
                     // 为导出做准备
                     if (record.pdfFilePath != null) {
                         if (record.pdfFilePath!!.isNotEmpty()) {
@@ -187,38 +210,8 @@ class HistoryRecordDetailActivity : BaseActivity() {
                         }
                     }
 
-                    // 根据当前进度条所在的百分比位置，决定当前读取第几chunk的数据
-                    // 读取指定记录下的co2Data数据
-                    // 初始化的时候读取第一、第二chunk的数据。如果不是第一chunk，则需要读取前后加一起一共三chunk的数据
-                    withContext(Dispatchers.IO) {
-                        // 计算record下有多少个chunk
-                        chunkNumber.value = localStorageKit.database.co2DataDao().getCO2DataCountByRecordId(recordId)
-                        println("wswTest 当前记录下一共多少数据帧 ${chunkNumber.value}")
-                        // 计算record下有多少个数据点
-                        totalPointsNumber.value = chunkNumber.value - 1 * maxRecordDataChunkSize
-                        println("wswTest 当前记录一共多少数据点P1 ${totalPointsNumber.value}")
-                        localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkNumber.value - 1)?.data?.let {
-                            // 加上尾chunk数据点数量
-                            totalPointsNumber.value += it.size
-                            println("wswTest 当前记录一共多少数据点P2 ${totalPointsNumber.value} __ ${it.size}")
-                        }
-                        // 先行清空当前数据，然后添加，防止数据过多，爆内存
-//                        co2Data.clear()
-//                        if (chunkIndex.value >= 1) {
-//                            localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value - 1)?.let {
-//                                println("wswTest 添加第一chunk")
-//                                co2Data.addAll(listOf(it))
-//                            }
-//                        }
-//                        localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value)?.let {
-//                            println("wswTest 添加第二chunk")
-//                            co2Data.addAll(listOf(it))
-//                        }
-//                        localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value + 1)?.let {
-//                            println("wswTest 添加第三chunk")
-//                            co2Data.addAll(listOf(it))
-//                        }
-                    }
+                    chunkNumber.value = chunkNumberValue
+                    totalPointsNumber.value = totalPointsNumberValue
                 }
             }
         }
@@ -227,61 +220,60 @@ class HistoryRecordDetailActivity : BaseActivity() {
         LaunchedEffect(startValue.value) {
             println("wswTest 记录id ${recordId} 进度发生变化===> ${startValue.value}")
             lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
-                    localStorageKit.database.recordDao().queryRecordById(recordId)
-                }?.let { record ->
+                val result = withContext(Dispatchers.IO) {
+                    val record = localStorageKit.database.recordDao().queryRecordById(recordId)
+                    if (record == null) return@withContext null
+
                     val percent = chunkNumber.value * startValue.value
                     val minus = percent % 1
-                    chunkIndex.value = ceil(percent).toInt()
-                    println("wswTest 当前的数据帧序号是 ${chunkIndex.value}")
-                    val safeStartIndex = ((if(chunkIndex.value == 0) 0 else maxRecordDataChunkSize) + minus * maxRecordDataChunkSize).toInt().coerceAtLeast(0)
-                    println("wswTest 当前进度的起始点是 $safeStartIndex")
-                    val safeEndIndex = (safeStartIndex + maxXPoints).coerceAtMost(co2Data.size)
-                    println("wswTest 当前进度的结束点是 $safeEndIndex")
+                    val currentChunkIndex = ceil(percent).toInt()
+                    println("wswTest 当前的数据帧序号是 $currentChunkIndex")
 
-                    // TODO: 待验证，是否会触发改动
-                    // 动态调整chunkIndex和数据
-                    // 先行清空当前数据，然后添加，防止数据过多，爆内存
-                    co2Data.clear()
-                    if (chunkIndex.value >= 1) {
-                        localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value - 1)?.let {
+                    // 从数据库读取CO2数据
+                    val loadedCo2Data = mutableListOf<CO2WavePointData>()
+                    if (currentChunkIndex >= 1) {
+                        localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, currentChunkIndex - 1)?.let {
                             println("wswTest 添加第一chunk")
-                            co2Data.addAll(it.data.decompressToCO2WavePointData())
+                            loadedCo2Data.addAll(it.data.decompressToCO2WavePointData())
                         }
                     }
-                    localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value)?.let {
+                    localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, currentChunkIndex)?.let {
                         println("wswTest 添加第二chunk")
-                        co2Data.addAll(it.data.decompressToCO2WavePointData())
+                        loadedCo2Data.addAll(it.data.decompressToCO2WavePointData())
                     }
-                    localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, chunkIndex.value + 1)?.let {
+                    localStorageKit.database.co2DataDao().getCO2DataByRecordIdAndChunkIndex(recordId, currentChunkIndex + 1)?.let {
                         println("wswTest 添加第三chunk")
-                        co2Data.addAll(it.data.decompressToCO2WavePointData())
+                        loadedCo2Data.addAll(it.data.decompressToCO2WavePointData())
+                    }
+
+                    // 与主页保持一致：使用 maxXPoints 作为一屏的数据量
+                    println("wswTest 加载的总数据量: ${loadedCo2Data.size} 个点")
+
+                    val filteredData = if (loadedCo2Data.size > maxXPoints) {
+                        println("wswTest 数据超过${maxXPoints}个点，从 ${loadedCo2Data.size} 个点中只取最后${maxXPoints}个")
+                        loadedCo2Data.takeLast(maxXPoints)
+                    } else {
+                        println("wswTest 数据不足${maxXPoints}个点，显示全部 ${loadedCo2Data.size} 个点")
+                        loadedCo2Data
                     }
 
                     // 生成波形数据图
                     val newEntries = mutableListOf<Entry>()
-                    var sequentialIndex = 0
-                    val dataToUse = if (safeStartIndex < safeEndIndex) {
-                        co2Data.slice(safeStartIndex until safeEndIndex)
-                    } else {
-                        emptyList()
-                    }
-                    dataToUse.forEach {
-                        newEntries.add(Entry(sequentialIndex.toFloat(), it.co2))
-                        sequentialIndex++
+                    
+                    // 将X轴缩小到4分之1，使数据更加紧凑
+                    filteredData.forEach {
+                        newEntries.add(Entry(it.index.toFloat(), it.co2))
                     }
 
-                    // 生成趋势数据，所有数据在存储前，就生成好趋势快照
-                    // 根据chunk数，来决定如何凑齐不少于100个点
+                    // 生成趋势数据
                     val newTrendEntries = mutableListOf<Entry>()
-                    val everyChunkEtoc2Number = 100 / chunkNumber.value
+                    val everyChunkEtoc2Number = if (chunkNumber.value > 0) 100 / chunkNumber.value else 100
                     println("wswTest 每个chunk需要提供多少个ETCO2点来绘制趋势图----> $everyChunkEtoc2Number")
                     var sequentialTrendIndex = 0
-                    // 将所有的chunk依次读出来，按照一定间隔获取数据点组装为趋势数据展示
                     localStorageKit.database.co2DataDao().getTrendDataByRecordId(recordId)
                         .let { trendDataStrList ->
-                            val trendDataList = trendDataStrList.joinToString("_").split("_").map { it.toFloat() }
-                            val interval = floor(trendDataList.size / 100f).toInt()
+                            val trendDataList = trendDataStrList.joinToString("_").split("_").mapNotNull { it.toFloatOrNull() }
+                            val interval = floor(trendDataList.size / 100f).toInt().coerceAtLeast(1)
                             for (i in 0 until trendDataList.size step interval) {
                                 newTrendEntries.add(
                                     Entry(sequentialTrendIndex.toFloat(), trendDataList[i])
@@ -291,7 +283,19 @@ class HistoryRecordDetailActivity : BaseActivity() {
                             }
                         }
 
+                    Triple(currentChunkIndex, Pair(filteredData, newEntries), newTrendEntries)
+                }
+                result?.let { (currentChunkIndex, dataPair, newTrendEntries) ->
+                    val (filteredCo2Data, newEntries) = dataPair
+                    chunkIndex.value = currentChunkIndex
+
+                    // 更新打印用的数据（使用过滤后的数据）
+                    context.printableCo2Data = filteredCo2Data
+
                     Snapshot.withMutableSnapshot {
+                        co2Data.clear()
+                        co2Data.addAll(filteredCo2Data)
+
                         entries.clear()
                         entries.addAll(newEntries)
 
@@ -343,6 +347,12 @@ class HistoryRecordDetailActivity : BaseActivity() {
                             xAxis.valueFormatter = object : ValueFormatter() {
                                 override fun getFormattedValue(value: Float): String { return "" }
                             }
+
+                            // 禁用横向滑动和缩放，让图表自动压缩宽度占满一屏
+                            setTouchEnabled(false)
+                            isDragEnabled = false
+                            setScaleEnabled(false)
+                            setPinchZoom(false)
 
                             trendChart.value = this
                         }

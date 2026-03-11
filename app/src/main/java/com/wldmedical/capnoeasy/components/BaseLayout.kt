@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -41,7 +42,9 @@ fun BaseLayout(
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
     Column (
-        modifier = Modifier.background(Color.White)
+        modifier = Modifier
+            .background(Color.White)
+            .imePadding()
     ) {
         ActionBar(
             viewModel = viewModel,

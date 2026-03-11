@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.lifecycle.lifecycleScope
 import com.wldmedical.capnoeasy.PageScene
 import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.components.HistoryList
@@ -12,8 +11,7 @@ import com.wldmedical.capnoeasy.kits.GROUP_BY
 import com.wldmedical.capnoeasy.kits.Group
 import com.wldmedical.capnoeasy.kits.Record
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 /***
@@ -33,15 +31,11 @@ class HistoryRecordsActivity : BaseActivity() {
 
         val records = remember { mutableStateListOf<Record>() }
 
-       LaunchedEffect(0) {
-           lifecycleScope.launch {
-               withContext(Dispatchers.IO) {
-                   val newRecords = localStorageKit.database.recordDao().getAllRecords().toList().firstOrNull()
-                   withContext(Dispatchers.Main) {
-                       newRecords?.let {
-                           records.addAll(newRecords)
-                       }
-                   }
+       LaunchedEffect(Unit) {
+           withContext(Dispatchers.IO) {
+               val newRecords = localStorageKit.database.recordDao().getAllRecords().first()
+               withContext(Dispatchers.Main) {
+                   records.addAll(newRecords)
                }
            }
        }
