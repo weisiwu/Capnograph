@@ -1,0 +1,173 @@
+---
+description: CapnoEasy Android 项目全局记忆文档，包含项目架构、技术栈、代码结构等核心信息
+alwaysApply: true
+---
+
+# CapnoEasy Android 项目记忆文档
+
+## 项目概述
+
+CapnoEasy 是 WLD Medical（万联达医疗）开发的 **医疗级二氧化碳浓度监测（Capnography）** Android 应用。通过 BLE 蓝牙连接外部 CO2 传感器模块，实时采集、展示和记录 ETCO2（呼气末二氧化碳）波形数据，支持 PDF 报告导出和热敏打印。
+
+- **包名**: `com.wldmedical.capnoeasy`
+- **最低 SDK**: 33 (Android 13)
+- **目标 SDK**: 35
+- **当前分支**: `android_single`
+
+## 技术栈
+
+| 层面 | 技术 |
+|------|------|
+| 语言 | Kotlin 2.0.0 |
+| UI | Jetpack Compose + Material3 |
+| 构建 | Gradle 8.10.2 + Kotlin DSL + AGP 8.8.0 |
+| DI | Hilt 2.51.1 |
+| 数据库 | Room 2.5.2 (当前 Schema v2) |
+| 图表 | MPAndroidChart v3.1.0 |
+| PDF | iTextPDF 5.5.13.4 + AndroidPdfViewer |
+| 蓝牙 | Android BLE API + Classic Bluetooth |
+| 图片 | Coil 2.4.0 |
+| 崩溃 | Bugly (AAR) |
+| 序列化 | Gson 2.10.1 |
+| 打印 | 自研 hotmeltprint 模块 |
+
+## 模块结构
+
+```
+CapnoEasy (rootProject)
+├── :app          — 主应用模块
+└── :hotmeltprint — 热敏打印 SDK 库模块 (Android Library)
+```
+
+## 源码目录 (app 模块)
+
+```
+com.wldmedical.capnoeasy/
+├── CapnoEasyApplication.kt    — @HiltAndroidApp 入口
+├── CapnoEasyConstant.kt       — 全局常量、枚举 (CO2_UNIT, CO2_SCALE, WF_SPEED, PageScene 等)
+├── pages/                     — Activity 页面层
+│   ├── BaseActivity.kt        — 所有页面基类，Compose setContent、权限、BLE/DB Kit 初始化
+│   ├── SplashActivity.kt      — 启动页 (LAUNCHER)
+│   ├── MainActivity.kt        — 主页：CO2 实时波形 + 数据表格 + 录制
+│   ├── SearchActivity.kt      — BLE/经典蓝牙 设备搜索与连接
+│   ├── SettingActivity.kt     — 设置入口
+│   ├── AlertSettingActivity.kt    — ETCO2/RR 报警范围
+│   ├── DisplaySettingActivity.kt  — CO2 单位、量程、扫描速度
+│   ├── ModuleSettingActivity.kt   — 大气压、窒息时间、O2 补偿
+│   ├── PrintSettingActivity.kt    — PDF/热敏、医院名、报告名
+│   ├── SystemSettingActivity.kt   — 语言、屏幕常亮
+│   ├── HistoryRecordsActivity.kt  — 历史记录列表
+│   └── HistoryRecordDetailActivity.kt — 记录详情 + PDF 导出/打印
+├── components/                — Compose 可复用 UI 组件
+│   ├── BaseLayout.kt          — 页面容器 (ActionBar + Content + NavBar)
+│   ├── ActionBar.kt / NavBar.kt — 顶栏/底栏导航 (Tab: 设备/主页/设置)
+│   ├── EtCo2LineChart.kt      — CO2 波形折线图 (MPAndroidChart AndroidView)
+│   ├── EtCo2Table.kt          — ETCO2/RR 实时数据表格
+│   ├── DeviceList.kt          — 蓝牙设备列表
+│   ├── HistoryList.kt         — 记录列表 (按日期/患者分组)
+│   ├── SettingList.kt         — 设置列表行
+│   ├── RangeSelector.kt       — 范围滑块 (报警阈值)
+│   ├── WheelPicker.kt         — 滚轮选择器
+│   ├── TypeSwitch.kt          — BLE/经典蓝牙切换
+│   ├── ActionModal.kt / AlertModal.kt / ConfirmModal.kt — 弹窗
+│   ├── Toast.kt / Loading.kt  — 轻提示/加载
+│   ├── SaveButton.kt          — 保存按钮
+│   └── CustomTextField.kt     — 自定义输入框
+├── kits/                      — 工具/服务层
+│   ├── BlueToothKit.kt        — BLE 核心：扫描、连接、GATT、数据流、反劫持
+│   ├── BlueToothTaskQueueKit.kt — BLE 写操作队列
+│   ├── CapnoEasyProtocalKit.kt  — BLE UUID 定义 + 传感器指令协议
+│   ├── BluetoothDemoData.kt   — 演示数据
+│   ├── LocalStorageKit.kt     — Room DB (Patient/Record/CO2Data) + SharedPreferences + 文件操作
+│   ├── PDFKit.kt              — iTextPDF 报告生成
+│   ├── PrintProtocalKit.kt    — 热敏打印协议
+│   ├── AlertAudioKit.kt       — 报警音频
+│   ├── ImageSelectorKit.kt    — 图片选择
+│   ├── DatabaseBackupHelperKit.kt — 数据库备份/恢复
+│   └── dbmigration/DatabaserMigration_FROM1_TO2.kt — Room 迁移 v1→v2
+├── models/
+│   └── AppStateModel.kt       — @HiltViewModel + @Singleton AppState (全局状态中心)
+└── ui/theme/
+    ├── Color.kt / Theme.kt / Type.kt — Compose 主题
+```
+
+## 架构模式
+
+- **Activity + Compose**：每个页面是一个 Activity，内部使用 `setContent` + Compose 渲染
+- **单 ViewModel**：`AppStateModel` (@HiltViewModel) 是唯一 ViewModel，持有 `AppState` (@Singleton)
+- **Intent 导航**：页面间通过 `Intent` 跳转，无 Navigation Compose 图
+- **Tab 导航**：底栏三个 Tab（设备搜索 / 主页 / 设置），通过 `BaseLayout` + `NavBar` 控制
+- **Kit 模式**：业务逻辑封装在 `kits/` 下的工具类中，通过 Manager 类在 Activity 中实例化
+
+## 数据层
+
+### Room 数据库 (`wld_medical_capnoeasy_database`)
+- **Patient** 表：name, gender, age
+- **Record** 表：id(UUID), patient, startTime, endTime, pdfFilePath
+- **CO2Data** 表：recordId(FK→Record), chunkIndex, trendData, data(GZIP 压缩的 CO2WavePointData 列表)
+- 大数据采用分 chunk 存储策略，每 chunk 最多 `maxRecordDataChunkSize` 个数据点
+- 趋势数据以 step=100 的间隔预计算存储
+
+### SharedPreferences (`wld_medical_capnoeasy_prefs`)
+- 已配对设备地址 (`paired_device_address`)
+- 各项设置持久化
+
+## BLE 蓝牙协议
+
+### 服务 UUID
+| 服务 | 16-bit UUID | 用途 |
+|------|-----------|------|
+| BLESendDataSer | 0xFFE5 | 发送数据 |
+| BLEReceiveDataSer | 0xFFE0 | 接收数据 |
+| BLEModuleParamsSer | 0xFF90 | 模块参数 |
+| BLEAntihijackSer | 0xFFC0 | 反蓝牙劫持 |
+
+### 传感器指令 (SensorCommand)
+- `CO2Waveform (0x80)` — 接收 CO2 波形
+- `Zero (0x82)` — 校零
+- `Settings (0x84)` — 读取/更改设置
+- `Expand (0xF2)` — 获取扩展信息 (硬件/软件版本)
+- `StopContinuous (0xC9)` — 停止连读模式
+- `Reset (0xF8)` — 复位
+
+### 数据流
+`BlueToothKit.dataFlow: StateFlow` → `AppStateModel.totalCO2WavedDataFlow` → `EtCo2LineChart` 渲染
+
+## 关键数据模型
+
+```kotlin
+data class CO2WavePointData(
+    val co2: Float,    // 实时 CO2 值
+    val RR: Int,       // 呼吸率
+    val ETCO2: Float,  // 呼气末 CO2
+    val FiCO2: Float,  // 吸入 CO2
+    var index: Int      // 数据索引
+)
+```
+
+## 国际化
+- 中文 (`values/strings.xml`) 和英文 (`values-en/strings.xml`)
+- 语言切换通过 `AppCompatDelegate.setApplicationLocales` 实现
+
+## Git 分支
+| 分支 | 说明 |
+|------|------|
+| `android_single` (当前) | 主开发分支 |
+| `android` | Android 早期分支 |
+| `android_single_v1` | V1 版本存档 |
+| `main` | 默认分支 |
+| `refactor` | 重构分支 |
+| `lite` (remote) | 精简版 |
+
+## 权限需求
+蓝牙 (BLUETOOTH, BLUETOOTH_ADMIN, BLUETOOTH_CONNECT, BLUETOOTH_SCAN, BLUETOOTH_ADVERTISE)、
+位置 (ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION)、
+存储 (MANAGE_EXTERNAL_STORAGE, READ/WRITE_EXTERNAL_STORAGE)、
+网络 (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE)
+
+## 编码约定
+- Kotlin DSL 构建脚本 (.gradle.kts)
+- Compose UI，无 XML 布局
+- kapt 用于 Hilt 和 Room 注解处理
+- Release 构建启用 R8 混淆和资源压缩
+- Java 11 兼容
