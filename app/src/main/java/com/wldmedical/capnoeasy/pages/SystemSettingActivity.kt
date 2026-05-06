@@ -1,8 +1,6 @@
 package com.wldmedical.capnoeasy.pages
 
-import android.os.Build
 import android.os.Bundle
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,8 +44,6 @@ class SystemSettingActivity : BaseActivity() {
         localStorageKit.saveUserLanguageToPreferences(context = this, language)
         println("wswTest 切换余元后 ${viewModel.language.value.cname}")
     }
-
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (

@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
 import com.wldmedical.capnoeasy.CapnoEasyApplication
@@ -49,8 +48,6 @@ class MainActivity : BaseActivity() {
        }
         return true
     }
-
-    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val context = this
@@ -235,8 +232,6 @@ class MainActivity : BaseActivity() {
             )
         )
     }
-
-    @RequiresApi(Build.VERSION_CODES.R)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION ) {

@@ -2,10 +2,8 @@ package com.wldmedical.capnoeasy.pages
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.core.app.ActivityOptionsCompat
@@ -27,7 +25,6 @@ class SearchActivity : BaseActivity() {
     override var pageScene = PageScene.DEVICES_LIST_PAGE
 
     @SuppressLint("MissingPermission")
-    @RequiresApi(Build.VERSION_CODES.S)
     @Composable
     override fun Content() {
         val discoveredPeripherals = viewModel.discoveredPeripherals.collectAsState()

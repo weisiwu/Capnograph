@@ -1,11 +1,9 @@
 package com.wldmedical.capnoeasy.pages
 
 import android.content.Intent
-import android.os.Build
 import android.view.WindowManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityOptionsCompat
 import com.wldmedical.capnoeasy.InfinityDuration
@@ -22,8 +20,6 @@ import com.wldmedical.capnoeasy.components.ToastData
  */
 class SettingActivity : BaseActivity() {
     override var pageScene = PageScene.SETTING_PAGE
-
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @Composable
     override fun Content() {
         val options = ActivityOptionsCompat.makeCustomAnimation(this, 0, 0)

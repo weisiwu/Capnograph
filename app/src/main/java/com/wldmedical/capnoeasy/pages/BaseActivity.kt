@@ -16,7 +16,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
 import androidx.core.view.WindowCompat
 import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityCompat
@@ -213,8 +212,6 @@ open class BaseActivity : ComponentActivity() {
             )
         }
     }
-
-    @RequiresApi(Build.VERSION_CODES.S)
     private fun checkBluetoothPermissions(): Boolean {
         val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             arrayOf(
@@ -278,7 +275,6 @@ open class BaseActivity : ComponentActivity() {
     /***
      * 生命周期函数
      */
-    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

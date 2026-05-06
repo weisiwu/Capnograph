@@ -1,8 +1,6 @@
 package com.wldmedical.capnoeasy.pages
 
 import android.annotation.SuppressLint
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
@@ -28,8 +26,6 @@ import com.wldmedical.capnoeasy.wheelPickerConfig
  */
 class DisplaySettingActivity : BaseActivity() {
     override var pageScene = PageScene.DISPLAY_CONFIG_PAGE
-
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("UnrememberedMutableState")
     @Composable
     override fun Content() {

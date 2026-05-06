@@ -1,7 +1,5 @@
 package com.wldmedical.capnoeasy.pages
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
@@ -29,8 +27,6 @@ class ModuleSettingActivity : BaseActivity() {
 
     var asphyxiationTime: Int = 0
     var o2Compensation: Float = 0f
-
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @Composable
     override fun Content() {
         asphyxiationTime = viewModel.asphyxiationTime.value

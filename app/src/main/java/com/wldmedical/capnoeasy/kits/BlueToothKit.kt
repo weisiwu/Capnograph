@@ -27,7 +27,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
@@ -130,7 +129,6 @@ class BlueToothKit @Inject constructor(
     private var checkJob: Job? = null
 
     // 获取设备信息指令，由于该指令失败概率高，所以会周期性发送，直到成功
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun fetchDeviceInfo() {
         checkJob?.cancel() // 取消之前的任务
         checkJob = CoroutineScope(Dispatchers.IO).launch {
@@ -238,24 +236,42 @@ class BlueToothKit @Inject constructor(
 
     private val bluetoothLeScanner: BluetoothLeScanner? = bluetoothAdapter?.bluetoothLeScanner
 
-    @SuppressLint("MissingPermission", "NewApi")
+    @Suppress("DEPRECATION")
+    @SuppressLint("MissingPermission")
+    private fun writeCharacteristicCompat(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        data: ByteArray,
+        type: Int
+    ): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            gatt.writeCharacteristic(characteristic, data, type)
+        } else {
+            characteristic.writeType = type
+            characteristic.value = data
+            if (gatt.writeCharacteristic(characteristic)) BluetoothGatt.GATT_SUCCESS else BluetoothGatt.GATT_FAILURE
+        }
+    }
+
+    @SuppressLint("MissingPermission")
     private fun writeDataToDevice(
         data: ByteArray? = sendArray.toByteArray(),
         type: Int = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
         characteristic: BluetoothGattCharacteristic? = currentSendDataCharacteristic
     ) {
-        val result = currentGatt?.writeCharacteristic(
-            characteristic!!,
-            data!!,
-            type
-        )
+        val targetGatt = currentGatt
+        val targetCharacteristic = characteristic
+        val targetData = data
+        if (targetGatt == null || targetCharacteristic == null || targetData == null) {
+            return
+        }
+        val result = writeCharacteristicCompat(targetGatt, targetCharacteristic, targetData, type)
         if (result == 4) {
             connectedCapnoEasy.value = null
             taskQueue.executeAllTasks()
         }
         println("wswTest result $result")
     }
-
     // 是否正在扫描BLE蓝牙设备
     private var isBLEScanning = false
 
@@ -310,7 +326,6 @@ class BlueToothKit @Inject constructor(
 
         // 发现设备服务，集中处理service和characteristic
         @SuppressLint("MissingPermission")
-        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 // 设备成功连接，开始注册服务、特征值
@@ -358,7 +373,7 @@ class BlueToothKit @Inject constructor(
                 // 反劫持
                 if (filterList.isNotEmpty()) {
                     antiHijackCharacteristic.add(filterList[0])
-                    currentGatt!!.writeCharacteristic(filterList[0], antiHijackData, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+                    writeCharacteristicCompat(currentGatt!!, filterList[0], antiHijackData, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
                 }
 
                 filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEAntihijackChaNofi.value }
@@ -385,7 +400,6 @@ class BlueToothKit @Inject constructor(
         }
 
         // 用于接收设备发送的通知数据。
-        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?
@@ -407,7 +421,6 @@ class BlueToothKit @Inject constructor(
         }
 
         // 处理特征值写入操作的结果，包括设置订阅状态
-        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         override fun onCharacteristicWrite(
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?,
@@ -647,10 +660,54 @@ class BlueToothKit @Inject constructor(
 
     /******************* 方法 *******************/
     // 判断蓝牙状态
-    @RequiresApi(Build.VERSION_CODES.S)
     private fun checkBluetoothStatus(): Int {
         if (bluetoothAdapter == null) {
             return NOT_SUPPORT_BLUETOOTH
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // 是否有链接权限
+            if (ActivityCompat.checkSelfPermission(
+                    activity,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // 未获得授权，向用户申请权限
+                ActivityCompat.requestPermissions(
+                    activity,
+                    arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
+                    REQUEST_BLUETOOTH_CONNECT_PERMISSION
+                )
+                return REQUEST_BLUETOOTH_CONNECT_PERMISSION
+            }
+
+            // 是否有扫描权限
+            if (ActivityCompat.checkSelfPermission(
+                    activity,
+                    Manifest.permission.BLUETOOTH_SCAN
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // 未获得扫描授权，向用户申请权限
+                ActivityCompat.requestPermissions(
+                    activity,
+                    arrayOf(Manifest.permission.BLUETOOTH_SCAN),
+                    REQUEST_BLUETOOTH_SCAN_PERMISSION
+                )
+                return REQUEST_BLUETOOTH_SCAN_PERMISSION
+            }
+        } else {
+            if (ActivityCompat.checkSelfPermission(
+                    activity,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    activity,
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    REQUEST_BLUETOOTH_SCAN_PERMISSION
+                )
+                return REQUEST_BLUETOOTH_SCAN_PERMISSION
+            }
         }
 
         // 未开启蓝牙
@@ -660,37 +717,6 @@ class BlueToothKit @Inject constructor(
             activity.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
             return REQUEST_ENABLE_BT
         }
-
-        // 是否有链接权限
-        if (ActivityCompat.checkSelfPermission(
-                activity,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // 未获得授权，向用户申请权限
-            ActivityCompat.requestPermissions(
-                activity,
-                arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
-                REQUEST_BLUETOOTH_CONNECT_PERMISSION
-            )
-            return REQUEST_BLUETOOTH_CONNECT_PERMISSION
-        }
-
-        // 是否有扫描权限
-        if (ActivityCompat.checkSelfPermission(
-                activity,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // 未获得扫描授权，向用户申请权限
-            ActivityCompat.requestPermissions(
-                activity,
-                arrayOf(Manifest.permission.BLUETOOTH_SCAN),
-                REQUEST_BLUETOOTH_SCAN_PERMISSION
-            )
-            return REQUEST_BLUETOOTH_SCAN_PERMISSION
-        }
-
         // 设备支持蓝牙
         return CHECK_SUCCESS
     }
@@ -753,7 +779,6 @@ class BlueToothKit @Inject constructor(
     private var isReceiverRegistered = false // 用于跟踪注册状态的标志位
 
     // 扫描流程集合
-    @RequiresApi(Build.VERSION_CODES.S)
     public fun searchDevices(
         type: BluetoothType = BluetoothType.ALL,
         scanFinish: (() -> Unit)? = null, // 扫描结束
@@ -829,7 +854,6 @@ class BlueToothKit @Inject constructor(
 
     // 链接上CapnoEasy后，需要尽快发送初始化信息，否则会断开
     @SuppressLint("MissingPermission")
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun initCapnoEasyConection(getSystemInfo: Boolean = false) {
         // 写服务注册就绪，开始发送设备初初始化命令
         val filterList = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLESendDataCha.value }
@@ -965,7 +989,6 @@ class BlueToothKit @Inject constructor(
     }
 
     // 发送接受波形数据请求
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     private fun sendContinuous() {
         sendArray.add(SensorCommand.CO2Waveform.value.toByte())
@@ -975,7 +998,6 @@ class BlueToothKit @Inject constructor(
     }
 
     // 发送停止接受波形数据请求
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     private fun sendStopContinuous() {
         sendArray.add(SensorCommand.StopContinuous.value.toByte())
@@ -984,7 +1006,6 @@ class BlueToothKit @Inject constructor(
     }
 
     // 发送当前存储数据
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun sendSavedData() {
         if (connectedCapnoEasyGATT.value == null || currentSendDataCharacteristic == null) {
@@ -997,7 +1018,6 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 发送关机指令 */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun shutdown(callback: (() -> Unit)? = null) {
         taskQueue.addTasks(
@@ -1016,7 +1036,6 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 发送校零指令 */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun correctZero(callback: (() -> Unit)? = null) {
         correctZeroCallback = callback
@@ -1035,7 +1054,6 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 更新CO2单位/CO2Scale */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun updateCO2UnitScale(
         co2Unit: CO2_UNIT? = null,
@@ -1054,8 +1072,6 @@ class BlueToothKit @Inject constructor(
         )
         taskQueue.executeTask()
     }
-
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun updateCO2Unit(
         co2Unit: CO2_UNIT? = null,
@@ -1077,8 +1093,6 @@ class BlueToothKit @Inject constructor(
             sendSavedData()
         }
     }
-
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun updateCO2Scale(
         co2Scale: CO2_SCALE? = null,
@@ -1118,7 +1132,6 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 调整ETCO2/RR的报警范围 */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun updateAlertRange(
         co2Low: Float = 0f,
@@ -1139,7 +1152,6 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 调整ETCO2/RR的报警范围 */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     fun innerUpdateAlertRange(
         co2Low: Float = 0f,
@@ -1168,7 +1180,6 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 设置模块参数: 窒息时间/氧气补偿 */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun updateNoBreathAndCompensation(
         newAsphyxiationTime: Int = 0,
         newOxygenCompensation: Float = 0f,
@@ -1187,7 +1198,6 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 设置模块参数: 窒息时间 */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun updateNoBreath(
         newAsphyxiationTime: Int = 0,
     ) {
@@ -1200,7 +1210,6 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 设置模块参数: 氧气补偿 */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun updateGasCompensation(
         newOxygenCompensation: Float = 0f
     ) {
@@ -1300,7 +1309,6 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 从蓝牙返回数据中解析返回值 */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun getSpecificValue(firstArray: ByteArray) {
         if (firstArray.size < 2) {
             return
@@ -1538,7 +1546,6 @@ class BlueToothKit @Inject constructor(
     }
 
     /** 处理系统扩展 */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun handleSystemExpand(data: ByteArray) {
         val buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
 
