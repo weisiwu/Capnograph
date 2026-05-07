@@ -190,8 +190,9 @@ class MainActivity : BaseActivity() {
 
         // 正在记录中，点击为保存动作
         if (isRecording) {
+            val remainData = viewModel.totalCO2WavedData.toList()
             lifecycleScope.launch {
-                localStorageKit.stopRecord()
+                localStorageKit.stopRecord(remainData)
             }
         } else {
             // 点击后创建记录

@@ -42,6 +42,7 @@ import com.wldmedical.capnoeasy.kits.decompressToCO2WavePointData
 import com.wldmedical.capnoeasy.kits.filterData
 import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
 import com.wldmedical.capnoeasy.kits.maxXPoints
+import com.wldmedical.capnoeasy.kits.saveChartToPdfInBackground
 import com.wldmedical.capnoeasy.maxMaskZIndex
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.capnoeasy.recordIdParams
@@ -76,6 +77,8 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     // 用于打印的CO2波形数据
     private var printableCo2Data: List<CO2WavePointData> = emptyList()
+    private var currentLineChart: LineChart? = null
+    private var currentRecordId: UUID? = null
 
     private val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -112,13 +115,10 @@ class HistoryRecordDetailActivity : BaseActivity() {
 
     // 保存PDF文件
     override fun onSavePDFClick() {
-        if (this.sourceFilePath.isNotEmpty()) {
-            createPdfDocument()
-        }
-    }
-
-    override fun onPrintTicketClick() {
-        if (printableCo2Data.isEmpty()) {
+        val record = currentRecord
+        val lineChart = currentLineChart
+        val outputPath = sourceFilePath
+        if (record == null || lineChart == null || outputPath.isEmpty()) {
             viewModel.updateToastData(
                 ToastData(
                     text = getStringAcitivity(R.string.recorddetail_record_fail),
@@ -128,29 +128,94 @@ class HistoryRecordDetailActivity : BaseActivity() {
             )
             return
         }
+        lifecycleScope.launch {
+            val allCo2Data = loadAllCo2Data(record.id)
+            if (allCo2Data.isEmpty()) {
+                viewModel.updateToastData(
+                    ToastData(
+                        text = getStringAcitivity(R.string.recorddetail_record_fail),
+                        showMask = false,
+                        duration = 1000,
+                    )
+                )
+                return@launch
+            }
+            saveChartToPdfInBackground(
+                lineChart = lineChart,
+                data = allCo2Data,
+                filePath = outputPath,
+                record = record,
+                maxETCO2 = viewModel.CO2Scale.value.value,
+                currentETCO2 = allCo2Data.lastOrNull()?.ETCO2 ?: 0f,
+                currentRR = allCo2Data.lastOrNull()?.RR ?: 0,
+                printSetting = localStorageKit.loadPrintSettingFromPreferences(this@HistoryRecordDetailActivity),
+                showTrendingChart = viewModel.showTrendingChart.value,
+                context = this@HistoryRecordDetailActivity,
+                onComplete = { success ->
+                    if (success) {
+                        createPdfDocument()
+                    }
+                }
+            )
+        }
+    }
 
-        if (!blueToothKit.gpPrinterManager.getConnectState()) {
+    override fun onPrintTicketClick() {
+        val recordId = currentRecordId
+        if (recordId == null) {
             viewModel.updateToastData(
                 ToastData(
-                    text = getStringAcitivity(R.string.recorddetail_print_fail),
+                    text = getStringAcitivity(R.string.recorddetail_record_fail),
                     showMask = false,
                     duration = 1000,
                 )
             )
             return
         }
+        lifecycleScope.launch {
+            val allCo2Data = loadAllCo2Data(recordId)
+            if (allCo2Data.isEmpty()) {
+                viewModel.updateToastData(
+                    ToastData(
+                        text = getStringAcitivity(R.string.recorddetail_record_fail),
+                        showMask = false,
+                        duration = 1000,
+                    )
+                )
+                return@launch
+            }
 
-        val filteredData = filterData(printableCo2Data, viewModel.CO2Scale.value.value)
-        val allPoints: List<Float> = filteredData.map {
-            it.co2
+            if (!blueToothKit.gpPrinterManager.getConnectState()) {
+                viewModel.updateToastData(
+                    ToastData(
+                        text = getStringAcitivity(R.string.recorddetail_print_fail),
+                        showMask = false,
+                        duration = 1000,
+                    )
+                )
+                return@launch
+            }
+
+            val filteredData = filterData(allCo2Data, viewModel.CO2Scale.value.value)
+            val allPoints: List<Float> = filteredData.map {
+                it.co2
+            }
+
+            blueToothKit.gpPrinterManager.print(
+                this@HistoryRecordDetailActivity,
+                allPoints,
+                localStorageKit.loadPrintSettingFromPreferences(this@HistoryRecordDetailActivity),
+                viewModel.CO2Scale.value.value
+            )
         }
+    }
 
-        blueToothKit.gpPrinterManager.print(
-            this,
-            allPoints,
-            localStorageKit.loadPrintSettingFromPreferences(this),
-            viewModel.CO2Scale.value.value
-        )
+    private suspend fun loadAllCo2Data(recordId: UUID): List<CO2WavePointData> {
+        return withContext(Dispatchers.IO) {
+            localStorageKit.database.co2DataDao()
+                .getCO2DataByRecordId(recordId)
+                .flatMap { it.data.decompressToCO2WavePointData() }
+        }
     }
 
     @SuppressLint("RememberReturnType")
@@ -158,6 +223,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
     override fun Content() {
         val context = this
         val recordId = UUID.fromString(intent.getStringExtra(recordIdParams))
+        currentRecordId = recordId
         val totalLen = 100f
         val startValue = remember { mutableStateOf(1f) } // 初始值设为1（100%），显示记录的最后部分
         val trendChart: MutableState<LineChart?> = remember { mutableStateOf(null) }
@@ -349,18 +415,11 @@ class HistoryRecordDetailActivity : BaseActivity() {
                             }
 
                             // 禁用横向滑动和缩放，让图表自动压缩宽度占满一屏
-                            setTouchEnabled(false)
-                            isDragEnabled = false
-                            setScaleEnabled(false)
-                            setPinchZoom(false)
-
                             trendChart.value = this
                         }
                     },
                     update = {
-                        // 设置数据
-                        val dataSet = LineDataSet(trendEntries, getStringAcitivity(R.string.chart_trending))
-                        dataSet.lineWidth = 2f
+                        val dataSet = LineDataSet(trendEntries, "ETCO2")
                         dataSet.setDrawCircles(false) // 不绘制圆点
                         dataSet.setDrawValues(false) // 不绘制具体的值
                         val lineData = LineData(dataSet)
@@ -406,6 +465,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                         }
 
                         chart.value = this
+                        currentLineChart = this
                     }
                 },
                 update = {

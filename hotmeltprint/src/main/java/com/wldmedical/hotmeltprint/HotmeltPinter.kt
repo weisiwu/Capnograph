@@ -401,8 +401,10 @@ class HotmeltPinter {
         dataSet.lineWidth = 1f
         dataSet.color = Color.BLACK
         dataSet.setDrawCircles(false) // 不绘制圆点
+        dataSet.setDrawValues(false)
         val lineData = LineData(dataSet)
         copyLineChart.data = lineData
+        copyLineChart.notifyDataSetChanged()
         copyLineChart.invalidate()
         copyLineChart.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),

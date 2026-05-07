@@ -407,18 +407,20 @@ class LocalStorageKit @Inject constructor(
         // 停止记录时，将不足一个chunk的数据，单独保存起来，避免丢失数据
         withContext(Dispatchers.IO) {
             currentRecordId?.let { it ->
-                val chunkIndex = database.co2DataDao().getCO2DataByRecordId(it).size.coerceAtLeast(0)
-                var trendData = ""
-                for (i in remainData.indices step trendStep) {
-                    trendData += "_${remainData[i].ETCO2}"
+                if (remainData.isNotEmpty()) {
+                    val chunkIndex = database.co2DataDao().getCO2DataByRecordId(it).size.coerceAtLeast(0)
+                    var trendData = ""
+                    for (i in remainData.indices step trendStep) {
+                        trendData += "_${remainData[i].ETCO2}"
+                    }
+                    val remainCo2Data = CO2Data(
+                        recordId = it,
+                        chunkIndex = chunkIndex,
+                        trendData = trendData,
+                        data = remainData.compress()
+                    )
+                    database.co2DataDao().insertCO2Data(remainCo2Data)
                 }
-                val remainCo2Data = CO2Data(
-                    recordId = it,
-                    chunkIndex = chunkIndex,
-                    trendData = trendData,
-                    data = remainData.compress()
-                )
-                database.co2DataDao().insertCO2Data(remainCo2Data)
             }
         }
         currentRecordId = null

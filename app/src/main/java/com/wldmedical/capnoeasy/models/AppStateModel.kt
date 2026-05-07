@@ -359,7 +359,10 @@ class AppStateModel @Inject constructor(
     }
     // 对内存中存储的全部波形数据做取chunk操作
     fun delSavedCO2WavedDataChunk() {
-        appState.totalCO2WavedData.subList(0, maxRecordDataChunkSize.coerceAtLeast(appState.totalCO2WavedData.size - 1)).clear()
+        val endIndex = minOf(maxRecordDataChunkSize, appState.totalCO2WavedData.size)
+        if (endIndex > 0) {
+            appState.totalCO2WavedData.subList(0, endIndex).clear()
+        }
         appState.totalCO2WavedDataFlow.value = appState.totalCO2WavedData.toList()
     }
 

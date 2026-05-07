@@ -267,14 +267,14 @@ class SaveChartToPdfTask(
 
     private fun addETCO2LineChart(document: Document) {
         val filteredData = filterData(data, maxETCO2)
-        val totalPoints = filteredData.size
-        val currentPageData = data.subList(0, totalPoints)
+        val currentPageData = filteredData
         val width = 1000 // 设置宽度
         val height = 800 // 设置高度
 
         // 生成当前页的 Bitmap
         val currentPageBitmap = Bitmap.createBitmap(1000, 800, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(currentPageBitmap)
+        canvas.drawColor(android.graphics.Color.WHITE)
 
         // 绘制当前页的图表
         val copyLineChart = LineChart(originalLineChart.context)
@@ -299,10 +299,12 @@ class SaveChartToPdfTask(
         }
         val dataSet = LineDataSet(segment, "ETCO2")
         dataSet.lineWidth = 1f
+        dataSet.color = android.graphics.Color.BLACK
         dataSet.setDrawCircles(false) // 不绘制圆点
         dataSet.setDrawValues(false) // 不绘制具体的值
         val lineData = LineData(dataSet)
         copyLineChart.data = lineData
+        copyLineChart.notifyDataSetChanged()
         copyLineChart.invalidate()
         copyLineChart.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
@@ -334,6 +336,7 @@ class SaveChartToPdfTask(
         // 生成当前页的 Bitmap
         val currentPageBitmap = Bitmap.createBitmap(1000, 800, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(currentPageBitmap)
+        canvas.drawColor(android.graphics.Color.WHITE)
 
         // 绘制当前页的图表
         val copyLineChart = LineChart(originalLineChart.context)
@@ -355,10 +358,12 @@ class SaveChartToPdfTask(
         // 绘制当前页的数据
         val dataSet = LineDataSet(newTrendEntries, getString(R.string.chart_trending, context))
         dataSet.lineWidth = 1f
+        dataSet.color = android.graphics.Color.BLACK
         dataSet.setDrawCircles(false) // 不绘制圆点
         dataSet.setDrawValues(false) // 不绘制具体的值
         val lineData = LineData(dataSet)
         copyLineChart.data = lineData
+        copyLineChart.notifyDataSetChanged()
         copyLineChart.invalidate()
         copyLineChart.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
@@ -450,6 +455,7 @@ fun saveChartToPdfInBackground(
     record: Record? = null,
     showTrendingChart: Boolean = true,
     context: Context,
+    onComplete: (Boolean) -> Unit = {},
 ) {
     // 反转列表
     val reversedList = data.filterNotNull().asReversed()
@@ -473,6 +479,6 @@ fun saveChartToPdfInBackground(
         printSetting = printSetting,
         context = context,
         showTrendingChart = showTrendingChart,
-        onComplete = {},
+        onComplete = onComplete,
     ).execute()
 }
