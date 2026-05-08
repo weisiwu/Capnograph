@@ -31,6 +31,7 @@
     <string name="recorddetail_loading">正在加载中</string>
     <string name="recorddetail_print_fail">打印失败，未连接打印机</string>
     <string name="recorddetail_record_fail">记录失败，未连接仪器</string>
+    <string name="recorddetail_pdf_fail">PDF导出失败</string>
     <!-- MainActivity.kt-->
     <string name="main_record_save_success">记录保存成功</string>
     <string name="main_record_save_check">保存的记录可在设置>历史记录中查看</string>

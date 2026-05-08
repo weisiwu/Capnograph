@@ -79,12 +79,13 @@ class HistoryRecordDetailActivity : BaseActivity() {
     private var printableCo2Data: List<CO2WavePointData> = emptyList()
     private var currentLineChart: LineChart? = null
     private var currentRecordId: UUID? = null
+    private var exportPdfFilePath: String = ""
 
     private val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val uri = result.data?.data
             if (uri != null) {
-                savePdfToUri(sourceFilePath, uri)
+                savePdfToUri(exportPdfFilePath, uri)
             }
         }
     }
@@ -116,24 +117,31 @@ class HistoryRecordDetailActivity : BaseActivity() {
     // 保存PDF文件
     override fun onSavePDFClick() {
         val record = currentRecord
-        val lineChart = currentLineChart
-        val outputPath = sourceFilePath
-        if (record == null || lineChart == null || outputPath.isEmpty()) {
+        if (record == null) {
             viewModel.updateToastData(
                 ToastData(
-                    text = getStringAcitivity(R.string.recorddetail_record_fail),
+                    text = getStringAcitivity(R.string.recorddetail_pdf_fail),
                     showMask = false,
                     duration = 1000,
                 )
             )
             return
         }
+        val lineChart = currentLineChart ?: LineChart(this).apply {
+            xAxis.position = XAxis.XAxisPosition.BOTTOM
+            axisRight.isEnabled = false
+            description.isEnabled = false
+            axisLeft.axisMinimum = 0f
+            axisLeft.axisMaximum = viewModel.CO2Scale.value.value
+        }
+        val outputPath = File(cacheDir, "${saveFileName.ifEmpty { record.patientIndex }}.pdf").absolutePath
+        exportPdfFilePath = outputPath
         lifecycleScope.launch {
             val allCo2Data = loadAllCo2Data(record.id)
             if (allCo2Data.isEmpty()) {
                 viewModel.updateToastData(
                     ToastData(
-                        text = getStringAcitivity(R.string.recorddetail_record_fail),
+                        text = getStringAcitivity(R.string.recorddetail_pdf_fail),
                         showMask = false,
                         duration = 1000,
                     )
@@ -154,6 +162,14 @@ class HistoryRecordDetailActivity : BaseActivity() {
                 onComplete = { success ->
                     if (success) {
                         createPdfDocument()
+                    } else {
+                        viewModel.updateToastData(
+                            ToastData(
+                                text = getStringAcitivity(R.string.recorddetail_pdf_fail),
+                                showMask = false,
+                                duration = 1000,
+                            )
+                        )
                     }
                 }
             )
@@ -268,12 +284,15 @@ class HistoryRecordDetailActivity : BaseActivity() {
                 // 在主线程更新UI状态
                 result?.let { (record, chunkNumberValue, totalPointsNumberValue) ->
                     // 为导出做准备
-                    if (record.pdfFilePath != null) {
-                        if (record.pdfFilePath!!.isNotEmpty()) {
-                            context.sourceFilePath = record.pdfFilePath!!
-                            context.saveFileName = "${record.patientIndex}_${record.dateIndex}"
-                            context.currentRecord = record
-                        }
+                    context.currentRecord = record
+                    context.saveFileName = "${record.patientIndex}_${record.dateIndex}"
+                    context.exportPdfFilePath = if (!record.pdfFilePath.isNullOrEmpty()) {
+                        record.pdfFilePath!!
+                    } else {
+                        File(
+                            context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOCUMENTS),
+                            "${context.saveFileName}.pdf"
+                        ).absolutePath
                     }
 
                     chunkNumber.value = chunkNumberValue

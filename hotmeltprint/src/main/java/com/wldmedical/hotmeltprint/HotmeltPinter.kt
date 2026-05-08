@@ -372,7 +372,7 @@ class HotmeltPinter {
         axisMaximum: Float,
     ): Bitmap {
         val width = max(500, (currentPageData.size / 500) * 1000) // 设置宽度
-        val height = 450 // 设置高度
+        val height = 280 // 设置高度
 
         // 生成当前页的 Bitmap
         val currentPageBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)

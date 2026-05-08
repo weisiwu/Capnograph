@@ -34,6 +34,7 @@ import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.PrintSetting
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.FileOutputStream
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.CountDownLatch
@@ -90,17 +91,20 @@ class SaveChartToPdfTask(
 ) : AsyncTask<Void, Void, Boolean>() {
 
     private val latch = CountDownLatch(1) // 添加 CountDownLatch
+    @Volatile
+    private var pdfGenerationSuccess = false
 
     // 复制图表，并将整体数据切分为段落渲染为bitmap
     override fun onPreExecute() {
         Handler(Looper.getMainLooper()).post {
             try {
                 println("wswTest 保存的pdf位置 ${filePath}")
-                savePDF(filePath)
-                latch.countDown()
+                pdfGenerationSuccess = savePDF(filePath)
             } catch (e: Exception) {
                 println("wswTest PDFKit 遇到了错误 ${e.message}")
                 e.printStackTrace()
+                pdfGenerationSuccess = false
+            } finally {
                 latch.countDown()
             }
         }
@@ -115,12 +119,7 @@ class SaveChartToPdfTask(
             e.printStackTrace()
             return false
         }
-        return try {
-            true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
+        return pdfGenerationSuccess
     }
 
     @Deprecated("Deprecated in Java")
@@ -265,14 +264,46 @@ class SaveChartToPdfTask(
         canvas.restoreState()
     }
 
+    private fun configurePdfChart(chart: LineChart) {
+        chart.legend.isEnabled = false
+        chart.description.isEnabled = false
+        chart.axisRight.isEnabled = false
+        chart.axisLeft.textSize = 6f
+        chart.axisLeft.setLabelCount(4, true)
+        chart.axisLeft.axisMinimum = 0f
+        chart.axisLeft.axisMaximum = if (maxETCO2 > 0f) maxETCO2 else originalLineChart.axisLeft.axisMaximum
+        chart.xAxis.textSize = 6f
+        chart.xAxis.setDrawLabels(false)
+        chart.xAxis.setDrawGridLines(false)
+        chart.setExtraOffsets(4f, 4f, 8f, 4f)
+        chart.setMinOffset(4f)
+    }
+
+    private fun addChartTitle(document: Document, title: String, spacingBefore: Float = 8f) {
+        val titleFont = Font(baseFont, 10f, Font.BOLD)
+        val paragraph = Paragraph(title, titleFont)
+        paragraph.alignment = Element.ALIGN_CENTER
+        paragraph.spacingBefore = spacingBefore
+        paragraph.spacingAfter = 2f
+        document.add(paragraph)
+    }
+
+    private fun addVerticalSpacing(document: Document, spacingBefore: Float) {
+        val paragraph = Paragraph(" ", Font(baseFont, 4f, Font.NORMAL))
+        paragraph.spacingBefore = spacingBefore
+        paragraph.spacingAfter = 0f
+        document.add(paragraph)
+    }
+
     private fun addETCO2LineChart(document: Document) {
+        addChartTitle(document, "ETCO2", 18f)
         val filteredData = filterData(data, maxETCO2)
         val currentPageData = filteredData
         val width = 1000 // 设置宽度
-        val height = 800 // 设置高度
+        val height = 340 // 设置高度
 
         // 生成当前页的 Bitmap
-        val currentPageBitmap = Bitmap.createBitmap(1000, 800, Bitmap.Config.ARGB_8888)
+        val currentPageBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(currentPageBitmap)
         canvas.drawColor(android.graphics.Color.WHITE)
 
@@ -286,6 +317,7 @@ class SaveChartToPdfTask(
         copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
         copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
         copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
+        configurePdfChart(copyLineChart)
         copyLineChart.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
@@ -323,6 +355,7 @@ class SaveChartToPdfTask(
     }
 
     private fun addETCO2TrendChart(document: Document) {
+        addChartTitle(document, getString(R.string.chart_trending, context), 8f)
         // 生成趋势数据
         val newTrendEntries = mutableListOf<Entry>()
         var sequentialTrendIndex = 0
@@ -331,10 +364,10 @@ class SaveChartToPdfTask(
             sequentialTrendIndex++
         }
         val width = 1000 // 设置宽度
-        val height = 800 // 设置高度
+        val height = 260 // 设置高度
 
         // 生成当前页的 Bitmap
-        val currentPageBitmap = Bitmap.createBitmap(1000, 800, Bitmap.Config.ARGB_8888)
+        val currentPageBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(currentPageBitmap)
         canvas.drawColor(android.graphics.Color.WHITE)
 
@@ -348,6 +381,7 @@ class SaveChartToPdfTask(
         copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
         copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
         copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
+        configurePdfChart(copyLineChart)
         copyLineChart.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
@@ -383,6 +417,7 @@ class SaveChartToPdfTask(
 
     private fun addPDFFooter(document: Document) {
         val contentFont = Font(baseFont, 12f, Font.NORMAL)
+        addVerticalSpacing(document, 10f)
 
         val table = PdfPTable(2)
         table.widthPercentage = 100f
@@ -404,10 +439,17 @@ class SaveChartToPdfTask(
         document.add(table)
     }
 
-    private fun savePDF(filePath: String, watermark: Boolean = false) {
-        try {
-            val document = Document()
-            val writer = PdfWriter.getInstance(document, FileOutputStream(filePath))
+    private fun savePDF(filePath: String, watermark: Boolean = false): Boolean {
+        val outputFile = File(filePath)
+        val tempFile = File("${filePath}.tmp")
+        var document: Document? = null
+        return try {
+            outputFile.parentFile?.mkdirs()
+            if (tempFile.exists()) {
+                tempFile.delete()
+            }
+            document = Document()
+            val writer = PdfWriter.getInstance(document, FileOutputStream(tempFile))
 
             document.open()
 
@@ -438,10 +480,34 @@ class SaveChartToPdfTask(
             }
 
             document.close()
+            if (tempFile.exists() && tempFile.length() > 0L) {
+                tempFile.copyTo(outputFile, overwrite = true)
+                tempFile.delete()
+                val success = outputFile.exists() && outputFile.length() > 0L
+                println("wswTest PDFKit 生成结果 success=$success path=${outputFile.absolutePath} size=${outputFile.length()}")
+                success
+            } else {
+                println("wswTest PDFKit 临时PDF生成失败 path=${tempFile.absolutePath} exists=${tempFile.exists()} size=${if (tempFile.exists()) tempFile.length() else 0}")
+                false
+            }
         } catch (e: Exception) {
+            println("wswTest PDFKit savePDF失败 path=$filePath error=${e.message}")
             e.printStackTrace()
+            if (tempFile.exists()) {
+                tempFile.delete()
+            }
+            false
+        } finally {
+            try {
+                if (document?.isOpen == true) {
+                    document.close()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
+
 }
 
 fun saveChartToPdfInBackground(
