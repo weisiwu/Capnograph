@@ -9,6 +9,7 @@ package com.wldmedical.capnoeasy.kits
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.os.AsyncTask
 import android.os.Handler
 import android.os.Looper
@@ -18,6 +19,7 @@ import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.itextpdf.text.Document
 import com.itextpdf.text.Element
 import com.itextpdf.text.Font
@@ -30,6 +32,7 @@ import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.RR_UNIT
 import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.PrintSetting
@@ -86,6 +89,7 @@ class SaveChartToPdfTask(
     private val record: Record? = null,
     private val context: Context,
     private val showTrendingChart: Boolean,
+    private val co2Unit: String,
     private val printSetting: PrintSetting? = null,
     private val onComplete: (Boolean) -> Unit // 添加回调
 ) : AsyncTask<Void, Void, Boolean>() {
@@ -210,12 +214,12 @@ class SaveChartToPdfTask(
         table.widthPercentage = 100f
         table.setWidths(floatArrayOf(1f, 1f))
 
-        val ETCO2Cell = PdfPCell(Paragraph("ETCO2：${currentETCO2}", contentFont))
+        val ETCO2Cell = PdfPCell(Paragraph("ETCO2\uFF1A${currentETCO2} ${co2Unit}", contentFont))
         ETCO2Cell.horizontalAlignment = Element.ALIGN_CENTER
         ETCO2Cell.border = Rectangle.NO_BORDER
         table.addCell(ETCO2Cell)
 
-        val RRCell = PdfPCell(Paragraph("${getString(R.string.pdf_respiratory_rate, context)}${currentRR}", contentFont))
+        val RRCell = PdfPCell(Paragraph("${getString(R.string.pdf_respiratory_rate, context)}${currentRR} ${RR_UNIT}", contentFont))
         RRCell.horizontalAlignment = Element.ALIGN_CENTER
         RRCell.border = Rectangle.NO_BORDER
         table.addCell(RRCell)
@@ -264,7 +268,7 @@ class SaveChartToPdfTask(
         canvas.restoreState()
     }
 
-    private fun configurePdfChart(chart: LineChart) {
+    private fun configurePdfChart(chart: LineChart, drawXAxisLabels: Boolean = false, xAxisPointStep: Float = 1f) {
         chart.legend.isEnabled = false
         chart.description.isEnabled = false
         chart.axisRight.isEnabled = false
@@ -273,10 +277,35 @@ class SaveChartToPdfTask(
         chart.axisLeft.axisMinimum = 0f
         chart.axisLeft.axisMaximum = if (maxETCO2 > 0f) maxETCO2 else originalLineChart.axisLeft.axisMaximum
         chart.xAxis.textSize = 6f
-        chart.xAxis.setDrawLabels(false)
+        chart.xAxis.setDrawLabels(drawXAxisLabels)
+        chart.xAxis.setLabelCount(5, true)
+        chart.xAxis.valueFormatter = object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                val seconds = value * xAxisPointStep / POINTS_PER_SECOND
+                return formatTimeAxisLabel(seconds)
+            }
+        }
         chart.xAxis.setDrawGridLines(false)
-        chart.setExtraOffsets(4f, 4f, 8f, 4f)
+        chart.setExtraOffsets(8f, 12f, 8f, 14f)
         chart.setMinOffset(4f)
+    }
+
+    private fun formatTimeAxisLabel(seconds: Float): String {
+        val totalSeconds = seconds.toInt()
+        if (totalSeconds < 60) {
+            return "${totalSeconds}s"
+        }
+        val minutes = totalSeconds / 60
+        val remainSeconds = totalSeconds % 60
+        return "${minutes}m${remainSeconds}s"
+    }
+
+    private fun drawYAxisUnit(canvas: Canvas) {
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        paint.color = android.graphics.Color.BLACK
+        paint.textSize = 20f
+        paint.textAlign = Paint.Align.LEFT
+        canvas.drawText(co2Unit, 12f, 24f, paint)
     }
 
     private fun addChartTitle(document: Document, title: String, spacingBefore: Float = 8f) {
@@ -317,7 +346,7 @@ class SaveChartToPdfTask(
         copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
         copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
         copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
-        configurePdfChart(copyLineChart)
+        configurePdfChart(copyLineChart, true, 1f)
         copyLineChart.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
@@ -344,6 +373,7 @@ class SaveChartToPdfTask(
         )
         copyLineChart.layout(0, 0, width, height)
         copyLineChart.draw(canvas)
+        drawYAxisUnit(canvas)
 
         // 添加图像到文档
         val stream = ByteArrayOutputStream()
@@ -381,7 +411,7 @@ class SaveChartToPdfTask(
         copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
         copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
         copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
-        configurePdfChart(copyLineChart)
+        configurePdfChart(copyLineChart, true, 50f)
         copyLineChart.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
@@ -405,6 +435,7 @@ class SaveChartToPdfTask(
         )
         copyLineChart.layout(0, 0, width, height)
         copyLineChart.draw(canvas)
+        drawYAxisUnit(canvas)
 
         // 添加图像到文档
         val stream = ByteArrayOutputStream()
@@ -520,6 +551,7 @@ fun saveChartToPdfInBackground(
     printSetting: PrintSetting? = null,
     record: Record? = null,
     showTrendingChart: Boolean = true,
+    co2Unit: String = "",
     context: Context,
     onComplete: (Boolean) -> Unit = {},
 ) {
@@ -545,6 +577,7 @@ fun saveChartToPdfInBackground(
         printSetting = printSetting,
         context = context,
         showTrendingChart = showTrendingChart,
+        co2Unit = co2Unit,
         onComplete = onComplete,
     ).execute()
 }

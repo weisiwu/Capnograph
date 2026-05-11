@@ -158,6 +158,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                 currentRR = allCo2Data.lastOrNull()?.RR ?: 0,
                 printSetting = localStorageKit.loadPrintSettingFromPreferences(this@HistoryRecordDetailActivity),
                 showTrendingChart = viewModel.showTrendingChart.value,
+                co2Unit = viewModel.CO2Unit.value.value,
                 context = this@HistoryRecordDetailActivity,
                 onComplete = { success ->
                     if (success) {
