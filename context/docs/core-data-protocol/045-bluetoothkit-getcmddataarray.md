@@ -1,0 +1,45 @@
+# BlueToothKit.getCMDDataArray
+
+来源批次：蓝牙、协议、数据与业务服务实体补充。
+定位入口：`context/entity-id-mapping.md`（L299）。
+领域：协议函数。
+聚合章节：核心函数与方法。
+
+## 实体定位
+
+- 实体：`BlueToothKit.getCMDDataArray`
+- ID / 别名：frame extraction, 提取协议帧
+- 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/BlueToothKit.kt`, `app/src/main/java/com/wldmedical/capnoeasy/kits/CapnoEasyProtocalKit.kt`
+- 原始补充上下文：`.cursor/rules/project-memory.mdc`
+- 备注：从接收队列中定位受支持 CMD 并按 NBF 取完整帧
+
+## 补充职责
+
+从接收队列提取一帧完整 CMD/NBF/DB/CKS 数据。
+
+## 关键 ID / 别名
+
+- 定位别名：frame extraction, 提取协议帧
+- 关键字段 / 方法：`receivedArray`、`supportCMDs`、`nbf + 2`。
+
+## 关键字段 / 方法
+
+- 主要字段、方法或协议值：`receivedArray`、`supportCMDs`、`nbf + 2`。
+- 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/BlueToothKit.kt`, `app/src/main/java/com/wldmedical/capnoeasy/kits/CapnoEasyProtocalKit.kt`
+
+## 主要调用点
+
+`onCharacteristicChanged`。
+
+## 注意事项
+
+`command` 只取初始 peek，循环丢弃时没有重新赋值，当前行为按代码记录。
+
+## 最小验证方式
+
+检查 while 段
+
+## 同步要求
+
+- 如果该实体的职责、ID / 别名、源文件、调用点或行为发生变化，同步更新本文档和 `context/entity-id-mapping.md`。
+- 如果源码与本文不一致，以当前源码为准，并修正文档。
