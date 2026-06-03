@@ -10,11 +10,11 @@
 - ID / 别名：PDF/hotmelt output type, 输出类型
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/pages/PrintSettingActivity.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：打印设置页 PDF/热敏输出和详情趋势图开关共用模型
+- 备注：打印设置页 PDF/热敏输出、PDF 模板、水印开关和详情趋势图开关共用模型
 
 ## 补充职责
 
-打印设置页 PDF/热敏输出和详情趋势图开关共用模型。
+打印设置页 PDF/热敏输出、PDF 模板、水印开关和详情趋势图开关共用模型。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ PDF/hotmelt output type, 输出类型
 
 ## 注意事项
 
-打印设置页 PDF/热敏输出和详情趋势图开关共用模型。
+打印设置页 PDF/热敏输出、PDF 模板、水印开关和详情趋势图开关共用模型；`id` 可能是输出类型、模板模式或开关值。
 
 ## 最小验证方式
 

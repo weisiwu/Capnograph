@@ -95,6 +95,17 @@ class MainActivity : BaseActivity() {
             printSetting.age?.let { viewModel.updatePatientAge(it) }
             printSetting.reportName?.let { viewModel.updatePdfReportName(it) }
             printSetting.isPDF.let { viewModel.updateIsPDF(it) }
+            viewModel.updatePdfTemplateMode(printSetting.pdfTemplateMode)
+            viewModel.updatePdfWatermarkEnabled(
+                printSetting.pdfWatermarkEnabled
+                    ?: (printSetting.pdfTemplateMode == PrintSetting.PDF_TEMPLATE_DEBUG)
+            )
+            viewModel.updatePdfWatermarkText(
+                printSetting.pdfWatermarkText ?: PrintSetting.DEFAULT_PDF_WATERMARK_TEXT
+            )
+            viewModel.updatePdfWatermarkOpacity(
+                printSetting.pdfWatermarkOpacity ?: PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY
+            )
             printSetting.pdfDepart?.let { viewModel.updatePatientDepartment(it) }
             printSetting.pdfBedNumber?.let { viewModel.updatePatientBedNumber(it) }
             printSetting.pdfIDNumber?.let { viewModel.updatePatientID(it) }

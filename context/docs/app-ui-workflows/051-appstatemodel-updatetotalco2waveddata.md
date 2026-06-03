@@ -10,11 +10,11 @@
 - ID / 别名：waveform memory buffer, 记录波形缓存
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/models/AppStateModel.kt`, `app/src/main/java/com/wldmedical/capnoeasy/kits/BlueToothKit.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：记录中追加 CO2WavePointData；停止后清空内存数据和 StateFlow
+- 备注：记录中追加带采样时间的 CO2WavePointData；停止后清空内存数据和 StateFlow
 
 ## 补充职责
 
-记录中追加 CO2WavePointData；停止后清空内存数据和 StateFlow。
+记录中追加带采样时间的 CO2WavePointData；停止后清空内存数据和 StateFlow。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ waveform memory buffer, 记录波形缓存
 
 ## 注意事项
 
-记录中追加 CO2WavePointData；停止后清空内存数据和 StateFlow。
+记录中追加 CO2WavePointData 时由蓝牙数据入口写入 `sampleTimeMillis = System.currentTimeMillis()`，供 PDF 报告按真实采样时间切段和定位横坐标；停止后清空内存数据和 StateFlow。
 
 ## 最小验证方式
 

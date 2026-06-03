@@ -312,6 +312,10 @@ class LocalStorageKit @Inject constructor(
     private val KEY_HOSPITAL_NAME = "hospital_name"
     private val KEY_REPORT_NAME = "report_name"
     private val KEY_OUTPUT_PDF = "is_output_pdf"
+    private val KEY_PDF_TEMPLATE_MODE = "pdf_template_mode"
+    private val KEY_PDF_WATERMARK_ENABLED = "pdf_watermark_enabled"
+    private val KEY_PDF_WATERMARK_TEXT = "pdf_watermark_text"
+    private val KEY_PDF_WATERMARK_OPACITY = "pdf_watermark_opacity"
     private val KEY_PDFDEPART = "pdfDepart"
     private val KEY_PDFBEDNUMBER = "pdfBedNumber"
     private val KEY_PDFIDNUMBER = "pdfIDNumber"
@@ -539,6 +543,10 @@ class LocalStorageKit @Inject constructor(
         hospitalName: String? = null,
         reportName: String? = null,
         isPDF: Boolean = true,
+        pdfTemplateMode: String? = null,
+        pdfWatermarkEnabled: Boolean? = null,
+        pdfWatermarkText: String? = null,
+        pdfWatermarkOpacity: Float? = null,
         depart: String? = null,
         bedNumber: String? = null,
         idNumber: String? = null,
@@ -552,6 +560,12 @@ class LocalStorageKit @Inject constructor(
             hospitalName?.let { putString(KEY_HOSPITAL_NAME, it) }
             reportName?.let { putString(KEY_REPORT_NAME, it) }
             putBoolean(KEY_OUTPUT_PDF, isPDF)
+            pdfTemplateMode?.let { putString(KEY_PDF_TEMPLATE_MODE, it) }
+            pdfWatermarkEnabled?.let { putBoolean(KEY_PDF_WATERMARK_ENABLED, it) }
+            pdfWatermarkText?.let { putString(KEY_PDF_WATERMARK_TEXT, it) }
+            pdfWatermarkOpacity?.let {
+                putFloat(KEY_PDF_WATERMARK_OPACITY, it.coerceIn(0f, 1f))
+            }
             depart?.let { putString(KEY_PDFDEPART, it) }
             bedNumber?.let { putString(KEY_PDFBEDNUMBER, it) }
             idNumber?.let { putString(KEY_PDFIDNUMBER, it) }
@@ -568,6 +582,22 @@ class LocalStorageKit @Inject constructor(
         PrintSetting.hospitalName = prefs.getString(KEY_HOSPITAL_NAME, null)
         PrintSetting.reportName = prefs.getString(KEY_REPORT_NAME, null)
         PrintSetting.isPDF = prefs.getBoolean(KEY_OUTPUT_PDF, true)
+        PrintSetting.pdfTemplateMode = prefs.getString(
+            KEY_PDF_TEMPLATE_MODE,
+            PrintSetting.PDF_TEMPLATE_OFFICIAL
+        ) ?: PrintSetting.PDF_TEMPLATE_OFFICIAL
+        PrintSetting.pdfWatermarkEnabled = if (prefs.contains(KEY_PDF_WATERMARK_ENABLED)) {
+            prefs.getBoolean(KEY_PDF_WATERMARK_ENABLED, false)
+        } else {
+            null
+        }
+        PrintSetting.pdfWatermarkText = prefs.getString(KEY_PDF_WATERMARK_TEXT, null)
+        PrintSetting.pdfWatermarkOpacity = if (prefs.contains(KEY_PDF_WATERMARK_OPACITY)) {
+            prefs.getFloat(KEY_PDF_WATERMARK_OPACITY, PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY)
+                .coerceIn(0f, 1f)
+        } else {
+            null
+        }
         PrintSetting.pdfDepart = prefs.getString(KEY_PDFDEPART, null)
         PrintSetting.pdfBedNumber = prefs.getString(KEY_PDFBEDNUMBER, null)
         PrintSetting.pdfIDNumber = prefs.getString(KEY_PDFIDNUMBER, null)

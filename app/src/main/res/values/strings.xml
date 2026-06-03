@@ -53,6 +53,13 @@
     <string name="print_pdf_hospital_name">医院名称</string>
     <string name="print_input_name">请输入名称</string>
     <string name="print_pdf_report_name">报告名称</string>
+    <string name="print_pdf_template_official">正式报告</string>
+    <string name="print_pdf_template_debug">调试报告</string>
+    <string name="print_pdf_watermark_enable">启用水印</string>
+    <string name="print_pdf_watermark_disable">关闭水印</string>
+    <string name="print_pdf_watermark_text">水印文字</string>
+    <string name="print_pdf_watermark_opacity">水印透明度</string>
+    <string name="print_input_watermark_opacity">请输入0-1</string>
     <string name="print_pdf_depart">科室</string>
     <string name="print_input_depart">请输入科室</string>
     <string name="print_pdf_id">ID号</string>

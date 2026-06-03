@@ -11,20 +11,20 @@
 - ID / 别名：waveform metrics row, PDF 波形指标行
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：每段波形下输出 EtCO2、FiCO2、RR、SpO2、PR
+- 备注：每段波形下输出 EtCO2、FiCO2、RR 的均值/最大/最小/段末统计
 
 ## 补充职责
 
-在每段波形下方输出最新点的 EtCO2、FiCO2、RR，并按参考报告样式保留 SpO2/PR 占位。
+在每段波形下方输出 EtCO2、FiCO2、RR 的分段统计，格式为均值/最大/最小/段末；当前模型没有 SpO2/PR 字段，因此不显示血氧和脉率占位。
 
 ## 关键 ID / 别名
 
 - 定位别名：waveform metrics row, PDF 波形指标行
-- 关键字段 / 方法：`EtCO2`、`FiCO2`、`RR`、`SpO2:-- %`、`PR:-- bpm`。
+- 关键字段 / 方法：`buildMetrics`、`metricStats`、`formatMetricStats`、`EtCO2`、`FiCO2`、`RR`。
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`EtCO2`、`FiCO2`、`RR`、`SpO2:-- %`、`PR:-- bpm`。
+- 主要字段、方法或协议值：`buildMetrics`、`metricStats`、`formatMetricStats`、`EtCO2`、`FiCO2`、`RR`。
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 
 ## 主要调用点
@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-当前历史波形模型没有 SpO2/PR 字段，因此 PDF 指标行使用 `--` 占位；RR 单位应为 `bpm`。
+统计值只接收有限数值；RR 过滤掉 `<= 0` 的无效值。当前历史波形模型没有 SpO2/PR 字段，因此 PDF 指标行不显示血氧和脉率；未来接入血氧模块后，应先从数据模型补字段再显示。RR 单位应为 `bpm`。
 
 ## 最小验证方式
 

@@ -12,11 +12,11 @@
 - 源文件：`app/src/main/res/values-en/strings.xml`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
 - 关联总览文档：`context/docs/platform-resources.md`
-- 备注：英文本地化字符串
+- 备注：英文本地化字符串；包含 PDF 模板和水印设置文案
 
 ## 补充职责
 
-英文本地化字符串资源。
+英文本地化字符串资源，包含 PDF 模板、水印开关、水印文字和水印透明度输入提示。
 
 ## 关键 ID / 别名
 
@@ -24,7 +24,7 @@
 
 ## 关键字段 / 方法
 
-`values-en/strings.xml`；支持 `en` locale；多数 key 与中文默认资源对齐。
+`values-en/strings.xml`；支持 `en` locale；多数 key 与中文默认资源对齐；PDF 模板/水印 key 与中文默认资源保持同名。
 
 ## 主要调用点
 

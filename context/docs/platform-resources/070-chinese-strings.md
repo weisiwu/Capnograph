@@ -12,11 +12,11 @@
 - 源文件：`app/src/main/res/values/strings.xml`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
 - 关联总览文档：`context/docs/platform-resources.md`
-- 备注：默认字符串资源
+- 备注：默认字符串资源；包含 PDF 模板和水印设置文案
 
 ## 补充职责
 
-默认中文字符串资源和 `R.string.*` key 来源。
+默认中文字符串资源和 `R.string.*` key 来源，包含 PDF 模板、水印开关、水印文字和水印透明度输入提示。
 
 ## 关键 ID / 别名
 
@@ -24,7 +24,7 @@
 
 ## 关键字段 / 方法
 
-`values/strings.xml`；`app_name=CapnoEasy`；`app_version=v1.0.0`；包含页面标题、设置、报警、PDF、历史、表格、导航等 key。
+`values/strings.xml`；`app_name=CapnoEasy`；`app_version=v1.0.0`；包含页面标题、设置、报警、PDF、历史、表格、导航等 key；新增 PDF 模板/水印 key：`print_pdf_template_official`、`print_pdf_template_debug`、`print_pdf_watermark_enable`、`print_pdf_watermark_disable`、`print_pdf_watermark_text`、`print_pdf_watermark_opacity`、`print_input_watermark_opacity`。
 
 ## 主要调用点
 

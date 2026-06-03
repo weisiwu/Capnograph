@@ -11,11 +11,11 @@
 - ID / 别名：GZIP decompress, 波形解压
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/LocalStorageKit.kt`
 - 原始补充上下文：`app/data_version_list.txt`
-- 备注：GZIP 解压并用 Gson 还原 CO2WavePointData 列表
+- 备注：GZIP 解压并用 Gson 还原 CO2WavePointData 列表，旧数据缺失采样时间戳时回退为 0
 
 ## 补充职责
 
-GZIP 解压并反序列化波形列表。
+GZIP 解压并反序列化波形列表；旧 BLOB 中没有 `sampleTimeMillis` 时会按默认 0 还原，PDF 由此识别旧数据并回退到固定采样率时间轴。
 
 ## 关键 ID / 别名
 
@@ -33,7 +33,7 @@ GZIP 解压并反序列化波形列表。
 
 ## 注意事项
 
-输入必须是该压缩格式。
+输入必须是该压缩格式。缺失 `sampleTimeMillis` 的旧 JSON 仍可读取，后续 PDF 使用 `record.startTime + index / POINTS_PER_SECOND` 兜底。
 
 ## 最小验证方式
 

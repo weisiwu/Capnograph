@@ -99,7 +99,7 @@
 | 058 | Room Compiler | 三方依赖 | `context/docs/platform-resources/058-room-compiler.md` | Room 注解处理器 |
 | 059 | Room KTX | 三方依赖 | `context/docs/platform-resources/059-room-ktx.md` | Room 协程/Flow 支持 |
 | 060 | Gson | 三方依赖 | `context/docs/platform-resources/060-gson.md` | CO2WavePointData 压缩前 JSON 序列化和迁移解析 |
-| 061 | iTextPDF | 三方依赖 | `context/docs/platform-resources/061-itextpdf.md` | PDF 报告生成 |
+| 061 | iTextPDF | 三方依赖 | `context/docs/platform-resources/061-itextpdf.md` | PDF 报告生成、section 分页和可配置水印 |
 | 062 | AndroidPdfViewer | 三方依赖 | `context/docs/platform-resources/062-androidpdfviewer.md` | app 模块声明，排除 `com.android.support` |
 | 063 | AndroidX Collection | 三方依赖 | `context/docs/platform-resources/063-androidx-collection.md` | app 模块声明的集合工具依赖 |
 | 064 | Bugly CrashReport AAR | 三方依赖 | `context/docs/platform-resources/064-bugly-crashreport-aar.md` | 本地 AAR 崩溃上报 |

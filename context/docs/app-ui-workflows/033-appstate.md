@@ -10,11 +10,11 @@
 - ID / 别名：global state, 全局状态
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/models/AppStateModel.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：单例状态容器
+- 备注：单例状态容器，包含 PDF 输出、模板和水印状态
 
 ## 补充职责
 
-Singleton 状态容器，集中保存当前页面、Tab、全局弹层、设备列表、记录状态、实时指标、设置值、患者信息和发现设备流。
+Singleton 状态容器，集中保存当前页面、Tab、全局弹层、设备列表、记录状态、实时指标、设置值、患者信息和发现设备流。PDF 设置状态包括输出类型、模板模式、水印开关、水印文字和水印透明度。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ global state, 全局状态
 
 ## 注意事项
 
-单例状态容器。
+单例状态容器。PDF 水印透明度默认来自 `PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY`，AppStateModel 更新时会限制在 0-1。
 
 ## 最小验证方式
 

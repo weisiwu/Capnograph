@@ -32,9 +32,18 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 public object PrintSetting {
+    const val PDF_TEMPLATE_OFFICIAL = "official"
+    const val PDF_TEMPLATE_DEBUG = "debug"
+    const val DEFAULT_PDF_WATERMARK_TEXT = "万联达仪器"
+    const val DEFAULT_PDF_WATERMARK_OPACITY = 0.3f
+
     var hospitalName: String? = null
     var reportName: String? = null
     var isPDF: Boolean = true
+    var pdfTemplateMode: String = PDF_TEMPLATE_OFFICIAL
+    var pdfWatermarkEnabled: Boolean? = null
+    var pdfWatermarkText: String? = null
+    var pdfWatermarkOpacity: Float? = null
     var pdfDepart: String? = null
     var pdfBedNumber: String? = null
     var pdfIDNumber: String? = null

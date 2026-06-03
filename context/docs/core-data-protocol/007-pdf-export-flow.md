@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-`SaveChartToPdfTask` 用 `AsyncTask` + 主线程生成 Canvas 波形 bitmap；PDF 版式参考纸质报告单，标题固定为 `呼气末二氧化碳监测报告单`，包含住院号、床位号、科室、姓名、性别、年龄、身高/体重占位、记录开始/结束时间、检测时长、报告生成时间、设备编号、从记录开头连续切分的最多三段 14 秒波形、指标行、按当前 CO2 单位换算的 EtCO2 参考值和签字栏；字体为 `assets/fonts/SimSun.ttf`。
+`SaveChartToPdfTask` 用 `AsyncTask` + 主线程生成 Canvas 波形 bitmap；PDF 版式参考纸质报告单，标题、页边距、字体、表格列宽、section 高度、波形尺寸、分段参数和模板默认水印由 `PdfReportTemplateConfig` 集中管理。默认标题为 `呼气末二氧化碳监测报告单`，内容包含住院号、床位号、科室、姓名、性别、年龄、身高/体重占位、记录开始/结束时间、检测时长、报告生成时间、设备编号、全程摘要、从记录开头连续切分的最多三段 14 秒波形、EtCO2/FiCO2/RR 分段统计、按当前 CO2 单位换算的 EtCO2 参考值和签字栏；字体为 `assets/fonts/SimSun.ttf`。正式报告模板默认关闭水印，调试报告模板默认启用水印；`PrintSetting` 可覆盖水印开关、文字和透明度，启用后通过 iText page event 在每页底层绘制。新记录的波形段和横坐标优先使用 `CO2WavePointData.sampleTimeMillis`，旧记录回退到 `record.startTime + index / POINTS_PER_SECOND`。波形图内显示横纵轴主刻度标签，并按当前 CO2 单位把 EtCO2 正常范围绘制为浅色范围带。全程摘要和分段统计均输出均值/最大/最小/段末，当前没有 SpO2/PR 数据模型字段，PDF 不输出血氧和脉率占位。基础信息、摘要、每段波形和 footer/signature 通过 section 渲染器检查剩余页面空间，不足时分页；footer/signature 始终在全部内容之后出现在最后一页。
 
 ## 最小验证方式
 

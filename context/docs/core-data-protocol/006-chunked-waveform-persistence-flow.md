@@ -11,11 +11,11 @@
 - ID / 别名：chunk storage, GZIP, trendData, 分块存储
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/components/EtCo2LineChart.kt`, `app/src/main/java/com/wldmedical/capnoeasy/kits/LocalStorageKit.kt`
 - 原始补充上下文：`app/data_version_list.txt`
-- 备注：`maxRecordDataChunkSize=100`，GZIP+Gson 压缩波形，`trendStep=100` 预存趋势数据
+- 备注：`maxRecordDataChunkSize=100`，GZIP+Gson 压缩含采样时间戳的波形，`trendStep=100` 预存趋势数据
 
 ## 补充职责
 
-将波形按 chunk 压缩写入 `co2_data`，并预留趋势数据字符串。
+将波形按 chunk 压缩写入 `co2_data`，并预留趋势数据字符串；新记录的每个 CO2WavePointData 会在 JSON 中携带 `sampleTimeMillis`。
 
 ## 关键 ID / 别名
 
@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-`trendData` 使用下划线拼接 ETCO2；chunk 唯一约束为 `recordId + chunkIndex`。
+`trendData` 使用下划线拼接 ETCO2；chunk 唯一约束为 `recordId + chunkIndex`。`sampleTimeMillis` 存在于压缩 BLOB 内，不新增 Room 列，因此无需数据库迁移；旧 BLOB 缺失该字段时按 0 处理。
 
 ## 最小验证方式
 

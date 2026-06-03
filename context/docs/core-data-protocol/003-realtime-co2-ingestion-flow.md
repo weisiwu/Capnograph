@@ -11,11 +11,11 @@
 - ID / 别名：dataFlow, 波形数据流, 实时监测
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/BlueToothKit.kt`, `app/src/main/java/com/wldmedical/capnoeasy/models/AppStateModel.kt`, `app/src/main/java/com/wldmedical/capnoeasy/components/EtCo2LineChart.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：BLE 通知解析为 CO2/RR/ETCO2/FICO2 后更新 StateFlow 和实时波形
+- 备注：BLE 通知解析为 CO2/RR/ETCO2/FICO2 后带采样时间戳更新 StateFlow 和实时波形
 
 ## 补充职责
 
-将 BLE 通知帧解析为实时 CO2/RR/ETCO2/FiCO2，并驱动图表与记录缓存。
+将 BLE 通知帧解析为实时 CO2/RR/ETCO2/FiCO2，并在记录缓存的 CO2WavePointData 上写入 `sampleTimeMillis = System.currentTimeMillis()`，驱动图表与记录缓存。
 
 ## 关键 ID / 别名
 
@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-`dataFlow` 只保留 `maxXPoints = 500`；长期记录由 `AppStateModel.totalCO2WavedData` 缓存后写 Room。
+`dataFlow` 只保留 `maxXPoints = 500`；长期记录由 `AppStateModel.totalCO2WavedData` 缓存后写 Room。实时图表的 `DataPoint` 仍使用滚动 index，历史 PDF 波形使用 `CO2WavePointData.sampleTimeMillis` 还原真实时间轴。
 
 ## 最小验证方式
 

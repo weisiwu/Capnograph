@@ -11,20 +11,20 @@
 - ID / 别名：local storage, Room, SharedPreferences, 本地存储
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/LocalStorageKit.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：数据库、偏好设置、文件和记录持久化逻辑
+- 备注：数据库、偏好设置、文件和记录持久化逻辑；打印偏好包含 PDF 模板/水印配置
 
 ## 补充职责
 
-本地数据服务，负责 Room、SharedPreferences、记录和打印偏好。
+本地数据服务，负责 Room、SharedPreferences、记录和打印偏好；打印偏好包含 PDF 模板模式和水印开关/文字/透明度。
 
 ## 关键 ID / 别名
 
 - 定位别名：local storage, Room, SharedPreferences, 本地存储
-- 关键字段 / 方法：`database`、`currentRecordId`、`saveRecord`、`stopRecord`、`saveUserPrintSettingToPreferences`。
+- 关键字段 / 方法：`database`、`currentRecordId`、`saveRecord`、`stopRecord`、`saveUserPrintSettingToPreferences`、`loadPrintSettingFromPreferences`。
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`database`、`currentRecordId`、`saveRecord`、`stopRecord`、`saveUserPrintSettingToPreferences`。
+- 主要字段、方法或协议值：`database`、`currentRecordId`、`saveRecord`、`stopRecord`、`saveUserPrintSettingToPreferences`、`loadPrintSettingFromPreferences`、`KEY_PDF_TEMPLATE_MODE`、`KEY_PDF_WATERMARK_ENABLED`、`KEY_PDF_WATERMARK_TEXT`、`KEY_PDF_WATERMARK_OPACITY`。
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/LocalStorageKit.kt`
 
 ## 主要调用点

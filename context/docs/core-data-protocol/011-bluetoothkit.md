@@ -11,11 +11,11 @@
 - ID / 别名：BLE核心, 蓝牙, 扫描, 连接, GATT
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/BlueToothKit.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：BLE 和经典蓝牙操作、反劫持、数据流
+- 备注：BLE 和经典蓝牙操作、反劫持、数据流；记录波形点时写入采样时间戳
 
 ## 补充职责
 
-蓝牙核心服务，负责扫描、连接、GATT、命令队列、实时数据流和设备状态。
+蓝牙核心服务，负责扫描、连接、GATT、命令队列、实时数据流和设备状态；记录 CO2WavePointData 时写入 `sampleTimeMillis`。
 
 ## 关键 ID / 别名
 
@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-同时持有 CapnoEasy 与 GP 打印机状态；classic CapnoEasy 连接未实现。
+同时持有 CapnoEasy 与 GP 打印机状态；classic CapnoEasy 连接未实现。`sampleTimeMillis` 使用 App 本机收到波形帧时的时间，供历史 PDF 时间轴使用。
 
 ## 最小验证方式
 

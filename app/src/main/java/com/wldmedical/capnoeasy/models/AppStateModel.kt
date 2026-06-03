@@ -27,6 +27,7 @@ import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.NavBarComponentState
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
+import com.wldmedical.hotmeltprint.PrintSetting
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +42,7 @@ data class CO2WavePointData(
     val RR: Int = 0,
     val ETCO2: Float = 0f,
     val FiCO2: Float = 0f,
+    val sampleTimeMillis: Long = 0L,
     var index: Int = 0
 ): Serializable
 
@@ -179,6 +181,18 @@ class AppState @Inject constructor() {
 
     // 是否以PDF格式输出
     val isPDF: MutableState<Boolean> = mutableStateOf(true)
+
+    // PDF 报告模板
+    val pdfTemplateMode: MutableState<String> = mutableStateOf(PrintSetting.PDF_TEMPLATE_OFFICIAL)
+
+    // PDF 水印开关
+    val pdfWatermarkEnabled: MutableState<Boolean> = mutableStateOf(false)
+
+    // PDF 水印文字
+    val pdfWatermarkText: MutableState<String> = mutableStateOf(PrintSetting.DEFAULT_PDF_WATERMARK_TEXT)
+
+    // PDF 水印透明度
+    val pdfWatermarkOpacity: MutableState<Float> = mutableFloatStateOf(PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY)
 
     // 病人相关数据都会出现在打印结果中
     // 病人姓名
@@ -506,6 +520,30 @@ class AppStateModel @Inject constructor(
     val isPDF = appState.isPDF
     fun updateIsPDF(newVal: Boolean) {
         appState.isPDF.value = newVal
+    }
+
+    // pdf设置-报告模板
+    val pdfTemplateMode = appState.pdfTemplateMode
+    fun updatePdfTemplateMode(newVal: String) {
+        appState.pdfTemplateMode.value = newVal
+    }
+
+    // pdf设置-水印开关
+    val pdfWatermarkEnabled = appState.pdfWatermarkEnabled
+    fun updatePdfWatermarkEnabled(newVal: Boolean) {
+        appState.pdfWatermarkEnabled.value = newVal
+    }
+
+    // pdf设置-水印文字
+    val pdfWatermarkText = appState.pdfWatermarkText
+    fun updatePdfWatermarkText(newVal: String) {
+        appState.pdfWatermarkText.value = newVal
+    }
+
+    // pdf设置-水印透明度
+    val pdfWatermarkOpacity = appState.pdfWatermarkOpacity
+    fun updatePdfWatermarkOpacity(newVal: Float) {
+        appState.pdfWatermarkOpacity.value = newVal.coerceIn(0f, 1f)
     }
 
     // 附近蓝牙设备-扫描结果

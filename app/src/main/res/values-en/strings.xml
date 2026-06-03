@@ -54,6 +54,13 @@
     <string name="print_pdf_hospital_name">Hospital Name</string>
     <string name="print_input_name">Please enter the name</string>
     <string name="print_pdf_report_name">Report Name</string>
+    <string name="print_pdf_template_official">Official Report</string>
+    <string name="print_pdf_template_debug">Debug Report</string>
+    <string name="print_pdf_watermark_enable">Enable Watermark</string>
+    <string name="print_pdf_watermark_disable">Disable Watermark</string>
+    <string name="print_pdf_watermark_text">Watermark Text</string>
+    <string name="print_pdf_watermark_opacity">Watermark Opacity</string>
+    <string name="print_input_watermark_opacity">Please enter 0-1</string>
     <string name="print_pdf_depart">Department</string>
     <string name="print_input_depart">Please enter the department</string>
     <string name="print_pdf_id">ID Number</string>

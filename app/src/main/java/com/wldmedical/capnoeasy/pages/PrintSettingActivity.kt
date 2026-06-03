@@ -31,6 +31,7 @@ import com.wldmedical.capnoeasy.components.CustomType
 import com.wldmedical.capnoeasy.components.LoadingData
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.TypeSwitch
+import com.wldmedical.hotmeltprint.PrintSetting
 
 data class OutputType(
     override val name: String,
@@ -53,6 +54,12 @@ class PrintSettingActivity : BaseActivity() {
         pdfReportName = viewModel.pdfReportName.value
         val isPDF = remember { mutableStateOf(viewModel.isPDF.value) }
         val showTrendingChart = remember { mutableStateOf(viewModel.showTrendingChart.value) }
+        val pdfTemplateMode = remember { mutableStateOf(viewModel.pdfTemplateMode.value) }
+        val pdfWatermarkEnabled = remember { mutableStateOf(viewModel.pdfWatermarkEnabled.value) }
+        val pdfWatermarkText = remember { mutableStateOf(viewModel.pdfWatermarkText.value) }
+        val pdfWatermarkOpacity = remember {
+            mutableStateOf(formatWatermarkOpacity(viewModel.pdfWatermarkOpacity.value))
+        }
 
         val context = this
 
@@ -78,6 +85,73 @@ class PrintSettingActivity : BaseActivity() {
                 value = pdfReportName,
                 onValueChange = {
                     pdfReportName = it
+                }
+            )
+
+            Spacer(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+            )
+
+            // PDF报告模板
+            TypeSwitch(
+                selectedIndex = if (pdfTemplateMode.value == PrintSetting.PDF_TEMPLATE_DEBUG) 1 else 0,
+                onTypeClick = { type ->
+                    pdfTemplateMode.value = type.id
+                    pdfWatermarkEnabled.value = type.id == PrintSetting.PDF_TEMPLATE_DEBUG
+                },
+                types = arrayOf(
+                    OutputType(
+                        name = getStringAcitivity(R.string.print_pdf_template_official),
+                        id = PrintSetting.PDF_TEMPLATE_OFFICIAL,
+                        index = 0,
+                    ),
+                    OutputType(
+                        name = getStringAcitivity(R.string.print_pdf_template_debug),
+                        id = PrintSetting.PDF_TEMPLATE_DEBUG,
+                        index = 1,
+                    ),
+                )
+            )
+
+            Spacer(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+            )
+
+            // PDF水印开关
+            TypeSwitch(
+                selectedIndex = if (pdfWatermarkEnabled.value) 0 else 1,
+                onTypeClick = { type ->
+                    pdfWatermarkEnabled.value = type.id == "是"
+                },
+                types = arrayOf(
+                    OutputType(
+                        name = getStringAcitivity(R.string.print_pdf_watermark_enable),
+                        id = "是",
+                        index = 0,
+                    ),
+                    OutputType(
+                        name = getStringAcitivity(R.string.print_pdf_watermark_disable),
+                        id = "否",
+                        index = 1,
+                    ),
+                )
+            )
+
+            CustomTextField(
+                title = getStringAcitivity(R.string.print_pdf_watermark_text),
+                defaultText = PrintSetting.DEFAULT_PDF_WATERMARK_TEXT,
+                value = pdfWatermarkText.value,
+                onValueChange = {
+                    pdfWatermarkText.value = it
+                }
+            )
+
+            CustomTextField(
+                title = getStringAcitivity(R.string.print_pdf_watermark_opacity),
+                defaultText = getStringAcitivity(R.string.print_input_watermark_opacity),
+                value = pdfWatermarkOpacity.value,
+                onValueChange = {
+                    pdfWatermarkOpacity.value = it
                 }
             )
 
@@ -152,12 +226,21 @@ class PrintSettingActivity : BaseActivity() {
                         viewModel.updatePdfReportName(pdfReportName)
                         viewModel.updateIsPDF(isPDF.value)
                         viewModel.updateShowTrendingChart(showTrendingChart.value)
+                        val normalizedWatermarkOpacity = parseWatermarkOpacity(pdfWatermarkOpacity.value)
+                        viewModel.updatePdfTemplateMode(pdfTemplateMode.value)
+                        viewModel.updatePdfWatermarkEnabled(pdfWatermarkEnabled.value)
+                        viewModel.updatePdfWatermarkText(pdfWatermarkText.value)
+                        viewModel.updatePdfWatermarkOpacity(normalizedWatermarkOpacity)
                         // 将打印设置存储到用户偏好中
                         localStorageKit.saveUserPrintSettingToPreferences(
                             context = context,
                             hospitalName = pdfHospitalName,
                             reportName = pdfReportName,
                             isPDF = isPDF.value,
+                            pdfTemplateMode = pdfTemplateMode.value,
+                            pdfWatermarkEnabled = pdfWatermarkEnabled.value,
+                            pdfWatermarkText = pdfWatermarkText.value,
+                            pdfWatermarkOpacity = normalizedWatermarkOpacity,
                             showTrendingChart = showTrendingChart.value
                         )
 
@@ -191,5 +274,15 @@ class PrintSettingActivity : BaseActivity() {
                     .height(16.dp)
             )
         }
+    }
+
+    private fun parseWatermarkOpacity(value: String): Float {
+        return value.toFloatOrNull()
+            ?.coerceIn(0f, 1f)
+            ?: PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY
+    }
+
+    private fun formatWatermarkOpacity(value: Float): String {
+        return value.coerceIn(0f, 1f).toString()
     }
 }

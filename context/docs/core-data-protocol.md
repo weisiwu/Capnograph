@@ -203,12 +203,13 @@
 | 160 | 设置与常量 | o2CompensationRange | [160-o2compensationrange.md](core-data-protocol/160-o2compensationrange.md) | O2补偿范围 |
 | 161 | 设置与常量 | airPressureRange | [161-airpressurerange.md](core-data-protocol/161-airpressurerange.md) | 大气压范围 |
 | 162 | 设置与常量 | patientAgeRange | [162-patientagerange.md](core-data-protocol/162-patientagerange.md) | 年龄范围 |
+| 163 | PDF 配置 | PdfReportTemplateConfig | [163-pdfreporttemplateconfig.md](core-data-protocol/163-pdfreporttemplateconfig.md) | PDF template config, PDF 报告模板配置 |
 
 ## 建议验证
 
 | 验证 | 命令 / 方法 | 目的 |
 | --- | --- | --- |
-| 文档实体覆盖 | `find context/docs/core-data-protocol -name "*.md" | wc -l` | 确认任务实体文档数量为 162。 |
+| 文档实体覆盖 | `find context/docs/core-data-protocol -name "*.md" | wc -l` | 确认任务实体文档数量为 163。 |
 | 定位表链接 | `rg -n "context/docs/core-data-protocol/[0-9]{3}-" context/entity-id-mapping.md` | 确认任务实体能从定位表跳转到独立文档。 |
 | 关键实体抽查 | `rg -n "BlueToothKit.searchDevices|SensorCommand.CO2Waveform|DATABASE_NS|patientAgeRange" context/docs/core-data-protocol context/entity-id-mapping.md` | 确认蓝牙、协议、存储和常量实体可检索。 |
 | Kotlin 编译检查 | `./gradlew :app:compileDebugKotlin` | 本次只改 context，不强制运行；若业务代码随后改动再运行。 |

@@ -15,16 +15,16 @@
 
 ## 补充职责
 
-异步 PDF 任务，主线程渲染 chart bitmap，后台等待结果回调；报告基础信息区会使用传入的记录、打印设置和可选设备序列号，页脚 EtCO2 参考值按 `co2Unit` 换算。
+异步 PDF 任务，主线程渲染 chart bitmap，后台等待结果回调；报告基础信息区会使用传入的记录、打印设置和可选设备序列号，页脚 EtCO2 参考值按 `co2Unit` 换算，水印配置由 `PrintSetting` 覆盖正式/调试模板默认值，并通过 section 渲染入口在内容不足一页时自动换页。
 
 ## 关键 ID / 别名
 
 - 定位别名：chart to PDF task, 图表导出 PDF 任务
-- 关键字段 / 方法：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`、`co2Unit`、`deviceSerial`。
+- 关键字段 / 方法：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`、`WatermarkPageEvent`、`resolveWatermarkConfig`、`addReportSection`、`ensurePageSpace`、`co2Unit`、`deviceSerial`。
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`、`co2Unit`、`deviceSerial`。
+- 主要字段、方法或协议值：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`、`WatermarkPageEvent`、`resolveWatermarkConfig`、`addReportSection`、`ensurePageSpace`、`co2Unit`、`deviceSerial`。
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 
 ## 主要调用点
@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-`AsyncTask` 已过时但当前代码仍使用；失败时回调 false。
+`AsyncTask` 已过时但当前代码仍使用；失败时回调 false。PDF 内容按基础信息、全程摘要、波形段、页脚/签字这些 section 渲染，section 渲染前通过 `PdfWriter.getVerticalPosition(true)` 估算剩余空间，不足则 `document.newPage()`。启用水印时设置 `WatermarkPageEvent`，在每页结束时向 `directContentUnder` 重复绘制文字水印。
 
 ## 最小验证方式
 

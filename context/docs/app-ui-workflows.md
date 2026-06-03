@@ -160,3 +160,7 @@
 | 143 | L285 | `HistoryList` | UI 函数 | `context/docs/app-ui-workflows/143-historylist-2.md` |
 | 144 | L373 | patientParams | 导航 | `context/docs/app-ui-workflows/144-patientparams.md` |
 | 145 | L374 | recordIdParams | 导航 | `context/docs/app-ui-workflows/145-recordidparams.md` |
+| 146 | L171 | `AppStateModel.updatePdfTemplateMode` | 状态函数 | `context/docs/app-ui-workflows/146-appstatemodel-updatepdftemplatemode.md` |
+| 147 | L172 | `AppStateModel.updatePdfWatermarkEnabled` | 状态函数 | `context/docs/app-ui-workflows/147-appstatemodel-updatepdfwatermarkenabled.md` |
+| 148 | L173 | `AppStateModel.updatePdfWatermarkText` | 状态函数 | `context/docs/app-ui-workflows/148-appstatemodel-updatepdfwatermarktext.md` |
+| 149 | L174 | `AppStateModel.updatePdfWatermarkOpacity` | 状态函数 | `context/docs/app-ui-workflows/149-appstatemodel-updatepdfwatermarkopacity.md` |
