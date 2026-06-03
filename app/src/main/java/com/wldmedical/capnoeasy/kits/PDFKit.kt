@@ -38,7 +38,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.text.DecimalFormat
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -77,10 +76,14 @@ private data class PdfReportTemplateConfig(
     val abnormalHeaderSectionHeight: Float = 44f,
     val waveformSectionHeight: Float = 150f,
     val footerSectionHeight: Float = 92f,
-    val detailColumnWidths: List<Float> = listOf(1f, 1f),
+    val detailColumnWidths: List<Float> = listOf(1f, 1f, 1f, 1f),
+    val detailFieldColumnWidths: List<Float> = listOf(1f, 1.8f),
     val detailSpacingBefore: Float = 12f,
     val detailSpacingAfter: Float = 22f,
     val fieldPaddingBottom: Float = 14f,
+    val fieldLabelPaddingRight: Float = 2f,
+    val fieldValuePaddingBottom: Float = 1.5f,
+    val fieldValueBorderWidth: Float = 0.5f,
     val horizontalRuleHeight: Float = 8f,
     val horizontalRuleBorderWidth: Float = 1f,
     val summaryColumnWidths: List<Float> = listOf(1f, 1f, 1f),
@@ -158,7 +161,6 @@ private const val REPORT_ETCO2_REFERENCE_MIN_MMHG = 32f
 private const val REPORT_ETCO2_REFERENCE_MAX_MMHG = 42f
 private const val KPA_PER_MMHG = 0.133322f
 private const val PERCENT_PER_MMHG = 0.13157895f
-private const val REPORT_UNFILLED_VALUE = "未填写"
 
 /**
  * 过滤数据，消除数据中连续超过 10 个小于最大值 10% 的数据
@@ -248,6 +250,7 @@ class SaveChartToPdfTask(
 
     private data class ReportSegment(
         val points: List<CO2WavePointData>,
+        val sequenceNumber: Int,
         val startIndex: Int,
         val startMillis: Long? = null,
         val endMillis: Long? = null,
@@ -299,7 +302,6 @@ class SaveChartToPdfTask(
     private val decimalFormat = DecimalFormat("0.#")
     private val fullDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
-    private val reportGeneratedAt: LocalDateTime = LocalDateTime.now()
     private val usesSampleTimeline = data.isNotEmpty() && data.all { it.sampleTimeMillis > 0L }
 
     private fun addPDFHeader(document: Document) {
@@ -337,20 +339,14 @@ class SaveChartToPdfTask(
         table.spacingBefore = templateConfig.detailSpacingBefore
         table.spacingAfter = templateConfig.detailSpacingAfter
 
-        addFieldCell(table, "住院号", printSetting?.pdfIDNumber, minChars = 9)
-        addFieldCell(table, "床位号", printSetting?.pdfBedNumber, minChars = 8)
-        addFieldCell(table, "科室", displayValue(printSetting?.pdfDepart), minChars = 8)
-        addFieldCell(table, "姓名", patientName(), minChars = 8)
-        addFieldCell(table, "性别", patientGender(), minChars = 4)
-        addFieldCell(table, "年龄", patientAge(), suffix = "岁", minChars = 5)
-        addFieldCell(table, "身高", REPORT_UNFILLED_VALUE, suffix = "厘米", minChars = 6)
-        addFieldCell(table, "体重", REPORT_UNFILLED_VALUE, suffix = "千克", minChars = 6)
-        addFieldCell(table, "开始时间", formatRecordDateTime(record?.startTime), minChars = 19)
-        addFieldCell(table, "结束时间", formatRecordDateTime(record?.endTime), minChars = 19)
-        addFieldCell(table, "检测时长", formatRecordDuration(), minChars = 8)
-        addFieldCell(table, "报告时间", formatRecordDateTime(reportGeneratedAt), minChars = 19)
-        addFieldCell(table, "设备编号", displayValue(deviceSerial), minChars = 12)
-        addEmptyCell(table)
+        addFieldCell(table, "住院号", printSetting?.pdfIDNumber)
+        addFieldCell(table, "床位号", printSetting?.pdfBedNumber)
+        addFieldCell(table, "姓名", patientName())
+        addFieldCell(table, "性别", patientGender())
+        addFieldCell(table, "科室", printSetting?.pdfDepart)
+        repeat(3) {
+            addEmptyCell(table)
+        }
 
         document.add(table)
     }
@@ -386,19 +382,29 @@ class SaveChartToPdfTask(
     private fun addFieldCell(
         table: PdfPTable,
         label: String,
-        value: String?,
-        suffix: String = "",
-        minChars: Int = 6
+        value: String?
     ) {
-        val phrase = Phrase()
-        phrase.add(Chunk(label, reportFormFont))
-        phrase.add(Chunk("  ", reportFormFont))
-        phrase.add(underlinedChunk(value, minChars))
-        if (suffix.isNotBlank()) {
-            phrase.add(Chunk(" $suffix", reportFormFont))
-        }
-        val cell = PdfPCell(phrase)
+        val fieldTable = PdfPTable(templateConfig.detailFieldColumnWidths.size)
+        fieldTable.widthPercentage = 100f
+        fieldTable.setWidths(templateConfig.detailFieldColumnWidths.toFloatArray())
+
+        val labelCell = PdfPCell(Phrase("$label：", reportFormFont))
+        labelCell.border = Rectangle.NO_BORDER
+        labelCell.horizontalAlignment = Element.ALIGN_RIGHT
+        labelCell.paddingRight = templateConfig.fieldLabelPaddingRight
+        labelCell.paddingBottom = templateConfig.fieldValuePaddingBottom
+        fieldTable.addCell(labelCell)
+
+        val valueCell = PdfPCell(Phrase(fieldDisplayValue(value), reportFormFont))
+        valueCell.border = Rectangle.BOTTOM
+        valueCell.setBorderWidthBottom(templateConfig.fieldValueBorderWidth)
+        valueCell.horizontalAlignment = Element.ALIGN_LEFT
+        valueCell.paddingBottom = templateConfig.fieldValuePaddingBottom
+        fieldTable.addCell(valueCell)
+
+        val cell = PdfPCell(fieldTable)
         cell.border = Rectangle.NO_BORDER
+        cell.setPadding(0f)
         cell.paddingBottom = templateConfig.fieldPaddingBottom
         table.addCell(cell)
     }
@@ -425,32 +431,7 @@ class SaveChartToPdfTask(
         ?.takeIf { it.isNotBlank() }
         ?: record?.patient?.gender?.title
 
-    private fun patientAge(): String? {
-        val settingAge = printSetting?.age?.takeIf { it > 0 }
-        return (settingAge ?: record?.patient?.age?.takeIf { it > 0 })?.toString()
-    }
-
-    private fun displayValue(value: String?): String {
-        return value?.takeIf { it.isNotBlank() } ?: REPORT_UNFILLED_VALUE
-    }
-
-    private fun formatRecordDateTime(value: LocalDateTime?): String {
-        return value?.format(fullDateTimeFormatter) ?: REPORT_UNFILLED_VALUE
-    }
-
-    private fun formatRecordDuration(): String {
-        val start = record?.startTime ?: return REPORT_UNFILLED_VALUE
-        val end = record.endTime
-        val totalSeconds = Duration.between(start, end).seconds.coerceAtLeast(0L)
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
-        val seconds = totalSeconds % 60
-        return when {
-            hours > 0 -> "${hours}小时${minutes}分${seconds}秒"
-            minutes > 0 -> "${minutes}分${seconds}秒"
-            else -> "${seconds}秒"
-        }
-    }
+    private fun fieldDisplayValue(value: String?): String = value?.takeIf { it.isNotBlank() } ?: ""
 
     private inner class WatermarkPageEvent(
         private val watermarkConfig: PdfWatermarkConfig
@@ -537,12 +518,13 @@ class SaveChartToPdfTask(
     }
 
     private fun addWaveformSections(document: Document, writer: PdfWriter) {
+        if (data.isEmpty()) return
+
         val segments = buildAbnormalReportSegments()
         addReportSection(document, writer, templateConfig.abnormalHeaderSectionHeight) {
             val title = Paragraph("异常片段（${resolveEventContextSeconds()}秒上下文波形）", reportHeaderFont)
             title.spacingAfter = templateConfig.summaryTitleSpacingAfter
             document.add(title)
-
             val summaryText = if (segments.isEmpty()) {
                 "未检测到超过报告阈值的 EtCO2/RR 异常。${abnormalCriteriaText()}"
             } else {
@@ -550,6 +532,8 @@ class SaveChartToPdfTask(
             }
             document.add(Paragraph(summaryText, reportSmallFont))
         }
+
+        if (segments.isEmpty()) return
 
         segments.forEachIndexed { index, segment ->
             addReportSection(document, writer, templateConfig.waveformSectionHeight) {
@@ -563,32 +547,33 @@ class SaveChartToPdfTask(
     private fun buildAbnormalReportSegments(): List<ReportSegment> {
         if (data.isEmpty()) return emptyList()
         val windows = buildAbnormalWindows()
-        return windows.mapNotNull { window ->
+        return windows.mapIndexedNotNull { index, window ->
             val segmentPoints = data.filter { point ->
                 val pointMillis = pointTimelineMillis(point)
                 pointMillis >= window.startMillis && pointMillis <= window.endMillis
             }
-            if (segmentPoints.isEmpty()) return@mapNotNull null
+            if (segmentPoints.isEmpty()) return@mapIndexedNotNull null
 
             ReportSegment(
                 points = segmentPoints,
+                sequenceNumber = index + 1,
                 startIndex = segmentPoints.first().index,
-                startMillis = if (hasSampleTimeline()) window.startMillis else null,
-                endMillis = if (hasSampleTimeline()) window.endMillis else null,
+                startMillis = displayTimelineMillis(window.startMillis),
+                endMillis = displayTimelineMillis(window.endMillis),
                 durationMillis = (window.endMillis - window.startMillis).coerceAtLeast(1000L),
                 reasonText = window.reasons.sorted().joinToString("；"),
-                eventStartMillis = if (hasSampleTimeline()) window.eventStartMillis else null,
-                eventEndMillis = if (hasSampleTimeline()) window.eventEndMillis else null
+                eventStartMillis = displayTimelineMillis(window.eventStartMillis),
+                eventEndMillis = displayTimelineMillis(window.eventEndMillis)
             )
         }
     }
 
     private fun buildAbnormalWindows(): List<AbnormalWindow> {
         val events = buildAbnormalEvents()
-        if (events.isEmpty()) return emptyList()
+        if (data.isEmpty() || events.isEmpty()) return emptyList()
 
         val firstMillis = pointTimelineMillis(data.first())
-        val lastMillis = pointTimelineMillis(data.last())
+        val lastMillis = pointTimelineMillis(data.last()).coerceAtLeast(firstMillis + 1000L)
         val contextMillis = resolveEventContextMillis()
         val halfContextMillis = contextMillis / 2
 
@@ -597,29 +582,34 @@ class SaveChartToPdfTask(
             var windowStart = eventCenterMillis - halfContextMillis
             var windowEnd = windowStart + contextMillis
 
+            if (event.startMillis < windowStart) {
+                windowStart = event.startMillis
+            }
+            if (event.endMillis > windowEnd) {
+                windowEnd = event.endMillis
+            }
             if (windowStart < firstMillis) {
-                windowEnd += firstMillis - windowStart
+                windowEnd = (windowEnd + firstMillis - windowStart).coerceAtMost(lastMillis)
                 windowStart = firstMillis
             }
             if (windowEnd > lastMillis) {
-                windowStart -= windowEnd - lastMillis
+                windowStart = (windowStart - (windowEnd - lastMillis)).coerceAtLeast(firstMillis)
                 windowEnd = lastMillis
             }
-            windowStart = windowStart.coerceAtLeast(firstMillis)
-            windowEnd = windowEnd.coerceAtLeast(windowStart)
 
             AbnormalWindow(
                 startMillis = windowStart,
-                endMillis = windowEnd,
+                endMillis = windowEnd.coerceAtLeast(windowStart + 1L),
                 eventStartMillis = event.startMillis,
-                eventEndMillis = event.endMillis,
+                eventEndMillis = event.endMillis.coerceAtLeast(event.startMillis),
                 reasons = event.reasons
             )
         }.sortedBy { it.startMillis }
 
+        val mergeGapMillis = templateConfig.abnormalMergeGapSeconds.coerceAtLeast(0) * 1000L
         return windows.fold(mutableListOf()) { merged, window ->
             val last = merged.lastOrNull()
-            if (last != null && window.startMillis <= last.endMillis) {
+            if (last != null && window.startMillis <= last.endMillis + mergeGapMillis) {
                 merged[merged.lastIndex] = AbnormalWindow(
                     startMillis = last.startMillis,
                     endMillis = max(last.endMillis, window.endMillis),
@@ -714,7 +704,7 @@ class SaveChartToPdfTask(
         val reasons = mutableSetOf<String>()
         abnormalEtco2RangeValues()?.let { (low, high) ->
             val value = point.ETCO2
-            if (isValidMetricValue(value) && value > 0f) {
+            if (isValidMetricValue(value)) {
                 when {
                     value < low -> reasons.add("EtCO2 < ${formatReferenceNumber(low)}$co2Unit")
                     value > high -> reasons.add("EtCO2 > ${formatReferenceNumber(high)}$co2Unit")
@@ -723,20 +713,22 @@ class SaveChartToPdfTask(
         }
 
         val rr = point.RR
-        if (rr > 0) {
+        if (rr >= 0) {
             when {
                 rr < templateConfig.abnormalRrLow -> reasons.add("RR < ${templateConfig.abnormalRrLow}$RR_UNIT")
                 rr > templateConfig.abnormalRrHigh -> reasons.add("RR > ${templateConfig.abnormalRrHigh}$RR_UNIT")
             }
         }
+
         return reasons
     }
 
     private fun abnormalCriteriaText(): String {
         val etco2Text = abnormalEtco2RangeValues()?.let { (low, high) ->
             "EtCO2 < ${formatReferenceNumber(low)}$co2Unit 或 > ${formatReferenceNumber(high)}$co2Unit"
-        } ?: "EtCO2 阈值未启用"
-        return "判定阈值：$etco2Text；RR < ${templateConfig.abnormalRrLow}$RR_UNIT 或 > ${templateConfig.abnormalRrHigh}$RR_UNIT。"
+        } ?: "EtCO2 阈值未配置"
+        val rrText = "RR < ${templateConfig.abnormalRrLow}$RR_UNIT 或 > ${templateConfig.abnormalRrHigh}$RR_UNIT"
+        return "阈值：$etco2Text；$rrText。"
     }
 
     private fun abnormalEtco2RangeValues(): Pair<Float, Float>? {
@@ -766,7 +758,13 @@ class SaveChartToPdfTask(
     }
 
     private fun resolveEventContextMillis(): Long {
-        return resolveEventContextSeconds() * 1000L
+        return resolveEventContextSeconds().toLong() * 1000L
+    }
+
+    private fun displayTimelineMillis(timelineMillis: Long): Long? {
+        if (hasSampleTimeline()) return timelineMillis
+        val recordStart = record?.startTime ?: return null
+        return localDateTimeToEpochMillis(recordStart) + timelineMillis
     }
 
     private fun hasSampleTimeline(): Boolean {
@@ -946,7 +944,7 @@ class SaveChartToPdfTask(
             if (bucket.isEmpty()) return@mapNotNull null
             val values = bucket.map { it.ETCO2 }
             TrendBucket(
-                millis = bucket.sumOf { pointTimelineMillis(it) } / bucket.size,
+                millis = bucket.sumOf { point -> pointTimelineMillis(point) } / bucket.size,
                 average = values.sum() / values.size,
                 min = values.minOrNull() ?: return@mapNotNull null,
                 max = values.maxOrNull() ?: return@mapNotNull null
@@ -1074,7 +1072,7 @@ class SaveChartToPdfTask(
         plotWidth: Float
     ): Float {
         val segmentStart = segment.startMillis
-        return if (segmentStart != null && point.sampleTimeMillis > 0L) {
+        return if (hasSampleTimeline() && segmentStart != null && point.sampleTimeMillis > 0L) {
             val elapsedMillis = (point.sampleTimeMillis - segmentStart)
                 .coerceIn(0L, segment.durationMillis)
             plotLeft + plotWidth * elapsedMillis / segment.durationMillis.toFloat()
@@ -1178,6 +1176,18 @@ class SaveChartToPdfTask(
         return decimalFormat.format(value.toDouble())
     }
 
+    private fun formatDurationAxisLabel(durationMillis: Long): String {
+        val totalSeconds = (durationMillis / 1000L).coerceAtLeast(0L)
+        val hours = totalSeconds / 3600L
+        val minutes = (totalSeconds % 3600L) / 60L
+        val seconds = totalSeconds % 60L
+        return when {
+            hours > 0L -> "${hours}h${minutes}m"
+            minutes > 0L -> "${minutes}m${seconds}s"
+            else -> "${seconds}s"
+        }
+    }
+
     private fun formatMeasurementRange(segment: ReportSegment): String {
         if (segment.startMillis != null && segment.endMillis != null) {
             val segmentStart = epochMillisToLocalDateTime(segment.startMillis)
@@ -1199,22 +1209,14 @@ class SaveChartToPdfTask(
         return "${eventStart.format(fullDateTimeFormatter)}--${eventEnd.format(timeFormatter)}"
     }
 
-    private fun formatDurationAxisLabel(elapsedMillis: Long): String {
-        val totalSeconds = (elapsedMillis / 1000L).coerceAtLeast(0L)
-        val hours = totalSeconds / 3600L
-        val minutes = (totalSeconds % 3600L) / 60L
-        val seconds = totalSeconds % 60L
-        return when {
-            hours > 0 -> "${hours}h${minutes}m"
-            minutes > 0 -> "${minutes}m"
-            else -> "${seconds}s"
-        }
-    }
-
     private fun epochMillisToLocalDateTime(epochMillis: Long): LocalDateTime {
         return Instant.ofEpochMilli(epochMillis)
             .atZone(ZoneId.systemDefault())
             .toLocalDateTime()
+    }
+
+    private fun localDateTimeToEpochMillis(value: LocalDateTime): Long {
+        return value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     private fun indexToNanos(index: Int): Long {
@@ -1290,7 +1292,7 @@ class SaveChartToPdfTask(
             // 添加文件标题: 医院名称和报告名称
             addPDFHeader(document)
 
-            // 添加记录基础信息：住院号、床位号、姓名、性别、年龄等表单字段
+            // 添加记录基础信息：住院号、床位号、科室、姓名、性别等表单字段
             addReportSection(document, writer, templateConfig.detailSectionHeight) {
                 addPDFDetail(document)
             }

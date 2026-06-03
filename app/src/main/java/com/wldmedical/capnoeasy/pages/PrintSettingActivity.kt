@@ -63,7 +63,6 @@ class PrintSettingActivity : BaseActivity() {
         val pdfEventContextSeconds = remember {
             mutableStateOf(viewModel.pdfEventContextSeconds.value.toString())
         }
-
         val context = this
 
         Column(
@@ -165,10 +164,6 @@ class PrintSettingActivity : BaseActivity() {
                 onValueChange = {
                     pdfEventContextSeconds.value = it
                 }
-            )
-
-            Spacer(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
             )
 
             // 输出类型: 保存PDF或者热熔打印
@@ -310,4 +305,5 @@ class PrintSettingActivity : BaseActivity() {
             )
             ?: PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS
     }
+
 }
