@@ -511,6 +511,7 @@
 | 实体 | ID / 别名 | 领域 | 源文件 | 补充上下文 | 备注 |
 | --- | --- | --- | --- | --- | --- |
 | Gradle wrapper | `./gradlew`, `gradle-8.10.2-all`, Gradle 包装器 | 构建 | `gradlew`, `gradle/wrapper/gradle-wrapper.properties` | `context/docs/platform-resources/090-gradle-wrapper.md` | 本地构建/测试入口。 |
+| app debug install and launch task | `:app:installDebugAndLaunch`, `:app:reinstallDebugAndLaunch`, `:app:launchDebugApp`, `:app:uninstallDebugApp`, `adbSerial` | 构建 | `app/build.gradle.kts`, `app/src/main/AndroidManifest.xml` | `context/docs/platform-resources/095-app-debug-install-and-launch.md` | Debug 安装后自动启动；签名冲突时可先卸载再安装。 |
 | app unit test | ExampleUnitTest, app 单元测试 | 测试 | `app/src/test/java/com/wldmedical/capnoeasy/ExampleUnitTest.kt` | `context/docs/platform-resources/091-app-unit-test.md` | app JVM 测试占位文件。 |
 | app instrumented test | ExampleInstrumentedTest, app 仪器测试 | 测试 | `app/src/androidTest/java/com/wldmedical/capnoeasy/ExampleInstrumentedTest.kt` | `context/docs/platform-resources/092-app-instrumented-test.md` | app Android 测试占位文件。 |
 | hotmeltprint unit test | ExampleUnitTest, hotmeltprint 单元测试 | 测试 | `hotmeltprint/src/test/java/com/wldmedical/hotmeltprint/ExampleUnitTest.kt` | `context/docs/platform-resources/093-hotmeltprint-unit-test.md` | hotmeltprint JVM 测试占位文件。 |

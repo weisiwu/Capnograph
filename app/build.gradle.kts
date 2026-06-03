@@ -7,6 +7,7 @@ plugins {
 }
 
 val vicoVersion = "2.0.1"
+val debugApplicationId = "com.wldmedical.capnoeasy"
 
 android {
     namespace = "com.wldmedical.capnoeasy"
@@ -124,4 +125,90 @@ dependencies {
 // Allow references to generated code
 kapt {
     correctErrorTypes = true
+}
+
+fun adbCommand(vararg args: String): List<String> = buildList {
+    add("adb")
+    providers.gradleProperty("adbSerial").orNull
+        ?.takeIf { it.isNotBlank() }
+        ?.let {
+            add("-s")
+            add(it)
+        }
+    addAll(args)
+}
+
+fun runLaunchDebugApp() {
+    project.exec {
+        commandLine(
+            adbCommand(
+                "shell",
+                "monkey",
+                "-p",
+                debugApplicationId,
+                "-c",
+                "android.intent.category.LAUNCHER",
+                "1"
+            )
+        )
+    }
+}
+
+fun runAdbIgnoringExit(vararg args: String) =
+    project.exec {
+        isIgnoreExitValue = true
+        commandLine(adbCommand(*args))
+    }
+
+val uninstallDebugApp by tasks.registering {
+    group = "install"
+    description = "Uninstalls the app from a connected Android device before a debug reinstall."
+
+    doLast {
+        val result = runAdbIgnoringExit("uninstall", debugApplicationId)
+        val fallbackResult = if (result.exitValue == 0) {
+            result
+        } else {
+            runAdbIgnoringExit("shell", "pm", "uninstall", "--user", "0", debugApplicationId)
+        }
+
+        if (fallbackResult.exitValue != 0) {
+            logger.lifecycle("No existing $debugApplicationId install was removed; continuing.")
+        }
+    }
+}
+
+val launchDebugApp by tasks.registering {
+    group = "install"
+    description = "Launches the installed Debug app on a connected Android device."
+
+    doLast {
+        runLaunchDebugApp()
+    }
+}
+
+tasks.register("installDebugAndLaunch") {
+    group = "install"
+    description = "Installs the Debug build and launches it on a connected Android device."
+    dependsOn("installDebug")
+
+    doLast {
+        runLaunchDebugApp()
+    }
+}
+
+tasks.matching { it.name == "installDebug" }.configureEach {
+    mustRunAfter(uninstallDebugApp)
+}
+
+launchDebugApp.configure {
+    mustRunAfter("installDebug")
+}
+
+tasks.register("reinstallDebugAndLaunch") {
+    group = "install"
+    description = "Uninstalls any existing app, installs the Debug build, and launches it."
+    dependsOn(uninstallDebugApp)
+    dependsOn("installDebug")
+    dependsOn(launchDebugApp)
 }

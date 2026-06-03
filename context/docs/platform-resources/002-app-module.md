@@ -24,11 +24,11 @@
 
 ## 关键字段 / 方法
 
-`namespace`/`applicationId` 均为 `com.wldmedical.capnoeasy`；`compileSdk=35`、`minSdk=30`、`targetSdk=35`、`versionCode=3`、`versionName="1.2"`；启用 Compose、Hilt、kapt。
+`namespace`/`applicationId` 均为 `com.wldmedical.capnoeasy`；`compileSdk=35`、`minSdk=30`、`targetSdk=35`、`versionCode=3`、`versionName="1.2"`；启用 Compose、Hilt、kapt；Debug 安装启动任务使用同一 applicationId。
 
 ## 主要调用点
 
-`app/src/main/AndroidManifest.xml` 绑定 `.CapnoEasyApplication`、Splash launcher 和页面 Activity；依赖 `project(":hotmeltprint")` 输出热敏打印能力。
+`app/src/main/AndroidManifest.xml` 绑定 `.CapnoEasyApplication`、Splash launcher 和页面 Activity；依赖 `project(":hotmeltprint")` 输出热敏打印能力；`app/build.gradle.kts` 提供 `:app:installDebugAndLaunch` 和 `:app:reinstallDebugAndLaunch` 用于安装后自动打开应用。
 
 ## 注意事项
 
@@ -36,7 +36,7 @@ release 构建开启 `isMinifyEnabled=true` 和 `isShrinkResources=true`；Manif
 
 ## 最小验证方式
 
-`./gradlew :app:assembleDebug`，Manifest 变更可用 `./gradlew :app:processDebugMainManifest`。
+`./gradlew :app:assembleDebug`，Manifest 变更可用 `./gradlew :app:processDebugMainManifest`；安装后启动流程用 `./gradlew :app:installDebugAndLaunch` 或 `./gradlew :app:reinstallDebugAndLaunch`。
 
 ## 同步要求
 

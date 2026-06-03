@@ -28,7 +28,7 @@
 
 ## 主要调用点
 
-开发机、CI 或 Android Studio 同步可通过 wrapper 执行一致版本的 Gradle。Unix/macOS 下 `gradlew` 在 Git 索引中应保持 `100755` 可执行模式。
+开发机、CI 或 Android Studio 同步可通过 wrapper 执行一致版本的 Gradle。Unix/macOS 下 `gradlew` 在 Git 索引中应保持 `100755` 可执行模式。连接设备后可通过 wrapper 执行 `:app:installDebugAndLaunch` 或 `:app:reinstallDebugAndLaunch` 完成安装并启动。
 
 ## 注意事项
 
@@ -36,7 +36,7 @@
 
 ## 最小验证方式
 
-`./gradlew --version`。
+`./gradlew --version`；连接设备后可执行 `./gradlew :app:installDebugAndLaunch`。
 
 ## 同步要求
 

@@ -28,7 +28,7 @@
 
 ## 主要调用点
 
-所有推荐验证命令都通过 wrapper 执行，避免依赖本机全局 Gradle 版本。
+所有推荐验证命令都通过 wrapper 执行，避免依赖本机全局 Gradle 版本；Debug 安装启动流程通过 `:app:installDebugAndLaunch` 或 `:app:reinstallDebugAndLaunch` 执行。
 
 ## 注意事项
 
@@ -36,7 +36,7 @@
 
 ## 最小验证方式
 
-`./gradlew --version`；安装依赖并验证 Debug 构建可执行 `./gradlew :app:assembleDebug`。本机 JDK 路径应按 `JDK_SETUP.md` 写入用户级 Gradle 配置；临时构建可用 `-Dorg.gradle.java.home=<local JDK home>` 覆盖。
+`./gradlew --version`；安装依赖并验证 Debug 构建可执行 `./gradlew :app:assembleDebug`；连接设备后验证安装并启动可执行 `./gradlew :app:installDebugAndLaunch`。本机 JDK 路径应按 `JDK_SETUP.md` 写入用户级 Gradle 配置；临时构建可用 `-Dorg.gradle.java.home=<local JDK home>` 覆盖。
 
 ## 同步要求
 
