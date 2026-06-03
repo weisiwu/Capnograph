@@ -94,12 +94,12 @@
 | 053 | Coil | 三方依赖 | `context/docs/platform-resources/053-coil.md` | app 模块声明的图片加载依赖 |
 | 054 | Accompanist DrawablePainter | 三方依赖 | `context/docs/platform-resources/054-accompanist-drawablepainter.md` | app 模块声明的 drawable painter 辅助库 |
 | 055 | Accompanist Pager | 三方依赖 | `context/docs/platform-resources/055-accompanist-pager.md` | EtCo2LineChart 使用 HorizontalPager 和 PagerIndicator |
-| 056 | MPAndroidChart | 三方依赖 | `context/docs/platform-resources/056-mpandroidchart.md` | 实时图表、历史图表和打印 Bitmap 渲染；PDF 报告单波形由 Canvas 手绘 |
+| 056 | MPAndroidChart | 三方依赖 | `context/docs/platform-resources/056-mpandroidchart.md` | 实时图表、历史图表和打印 Bitmap 渲染；PDF 报告单全程趋势和异常上下文波形由 Canvas 手绘 |
 | 057 | Room Runtime | 三方依赖 | `context/docs/platform-resources/057-room-runtime.md` | Room 数据库运行时 |
 | 058 | Room Compiler | 三方依赖 | `context/docs/platform-resources/058-room-compiler.md` | Room 注解处理器 |
 | 059 | Room KTX | 三方依赖 | `context/docs/platform-resources/059-room-ktx.md` | Room 协程/Flow 支持 |
 | 060 | Gson | 三方依赖 | `context/docs/platform-resources/060-gson.md` | CO2WavePointData 压缩前 JSON 序列化和迁移解析 |
-| 061 | iTextPDF | 三方依赖 | `context/docs/platform-resources/061-itextpdf.md` | PDF 报告生成、section 分页和可配置水印 |
+| 061 | iTextPDF | 三方依赖 | `context/docs/platform-resources/061-itextpdf.md` | PDF 报告生成、section 分页、全程趋势、异常上下文波形和可配置水印 |
 | 062 | AndroidPdfViewer | 三方依赖 | `context/docs/platform-resources/062-androidpdfviewer.md` | app 模块声明，排除 `com.android.support` |
 | 063 | AndroidX Collection | 三方依赖 | `context/docs/platform-resources/063-androidx-collection.md` | app 模块声明的集合工具依赖 |
 | 064 | Bugly CrashReport AAR | 三方依赖 | `context/docs/platform-resources/064-bugly-crashreport-aar.md` | 本地 AAR 崩溃上报 |
@@ -108,8 +108,8 @@
 | 067 | AndroidX Test JUnit | 测试依赖 | `context/docs/platform-resources/067-androidx-test-junit.md` | Android instrumentation JUnit 扩展 |
 | 068 | Espresso Core | 测试依赖 | `context/docs/platform-resources/068-espresso-core.md` | Android UI/instrumentation 测试依赖 |
 | 069 | Compose UI Test | 测试依赖 | `context/docs/platform-resources/069-compose-ui-test.md` | app Compose UI 测试和 debug manifest 依赖 |
-| 070 | Chinese strings | 资源 | `context/docs/platform-resources/070-chinese-strings.md` | 默认字符串资源 |
-| 071 | English strings | 资源 | `context/docs/platform-resources/071-english-strings.md` | 英文本地化字符串 |
+| 070 | Chinese strings | 资源 | `context/docs/platform-resources/070-chinese-strings.md` | 默认字符串资源；包含 PDF 模板、水印和异常上下文设置文案 |
+| 071 | English strings | 资源 | `context/docs/platform-resources/071-english-strings.md` | 英文本地化字符串；包含 PDF 模板、水印和异常上下文设置文案 |
 | 072 | locales_config | 资源 | `context/docs/platform-resources/072-locales-config.md` | 语言切换的 Locale 配置 |
 | 073 | Theme resources | 资源 | `context/docs/platform-resources/073-theme-resources.md` | XML 主题和颜色资源 |
 | 074 | Compose theme | UI 主题 | `context/docs/platform-resources/074-compose-theme.md` | Compose Material 主题 |

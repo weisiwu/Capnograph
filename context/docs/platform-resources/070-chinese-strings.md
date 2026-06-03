@@ -12,11 +12,11 @@
 - 源文件：`app/src/main/res/values/strings.xml`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
 - 关联总览文档：`context/docs/platform-resources.md`
-- 备注：默认字符串资源；包含 PDF 模板、水印和异常上下文设置文案
+- 备注：默认字符串资源；包含 PDF 模板、水印和异常波形上下文设置文案
 
 ## 补充职责
 
-默认中文字符串资源和 `R.string.*` key 来源，包含 PDF 模板、水印开关、水印文字、水印透明度输入提示和异常波形上下文秒数输入提示。
+默认中文字符串资源和 `R.string.*` key 来源，包含 PDF 模板、水印开关、水印文字、水印透明度和异常波形上下文秒数输入提示。
 
 ## 关键 ID / 别名
 

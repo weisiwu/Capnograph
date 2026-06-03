@@ -7,18 +7,18 @@
 ## 实体定位
 
 - 实体：Print preferences flow
-- ID / 别名：report settings, 输出类型, 打印设置, PDF 水印配置, 异常上下文
+- ID / 别名：report settings, 输出类型, 打印设置, PDF 水印配置
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/pages/PrintSettingActivity.kt`, `app/src/main/java/com/wldmedical/capnoeasy/kits/LocalStorageKit.kt`, `hotmeltprint/src/main/java/com/wldmedical/hotmeltprint/HotmeltPinter.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：保存医院名、报告名、PDF/热敏输出、PDF 模板/水印配置、异常上下文秒数和详情趋势图选项到 SharedPreferences
+- 备注：保存医院名、报告名、PDF/热敏输出、PDF 模板/水印配置、异常波形上下文秒数和详情趋势图选项到 SharedPreferences
 
 ## 补充职责
 
-保存医院名、报告名、PDF/热敏输出、PDF 模板/水印配置、异常片段上下文秒数和详情趋势图选项到 SharedPreferences。
+保存医院名、报告名、PDF/热敏输出、PDF 模板/水印配置、异常波形上下文秒数和详情趋势图选项到 SharedPreferences。
 
 ## 关键 ID / 别名
 
-report settings, 输出类型, 打印设置, PDF 水印配置, 异常上下文
+report settings, 输出类型, 打印设置, PDF 水印配置
 
 ## 关键字段 / 方法
 
@@ -31,7 +31,7 @@ report settings, 输出类型, 打印设置, PDF 水印配置, 异常上下文
 
 ## 注意事项
 
-打印设置页保存水印透明度前会裁剪到 `0..1`；正式模板默认关闭水印，调试模板默认启用水印，用户保存的开关会覆盖模板默认值。异常波形上下文秒数输入保存前限制在 10-300，默认 60 秒，用于 PDF 异常片段上下文窗口。
+打印设置页保存水印透明度前会裁剪到 `0..1`；正式模板默认关闭水印，调试模板默认启用水印，用户保存的开关会覆盖模板默认值。异常波形上下文秒数默认 `60`，保存和读取时裁剪到 `10..300`。
 
 ## 最小验证方式
 

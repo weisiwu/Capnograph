@@ -12,7 +12,7 @@
 - 源文件：`app/build.gradle.kts`, `hotmeltprint/build.gradle.kts`, `app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
 - 关联总览文档：`context/docs/build-platform.md`
-- 备注：PDF 报告生成；正文 section 分页、全程趋势/异常上下文波形、可配置水印和最后页签字栏由 `PDFKit.kt` 控制
+- 备注：PDF 报告生成；正文 section 分页、全程趋势、异常上下文波形、可配置水印和最后页签字栏由 `PDFKit.kt` 控制
 
 ## 补充职责
 
@@ -28,11 +28,11 @@ PDF 生成库，用于纸质报告单样式报告导出，当前通过 `PdfWrite
 
 ## 主要调用点
 
-`PDFKit.kt` 使用 `Document`、`PdfWriter`、`PdfPTable`、`PdfPCell`、`PdfPageEventHelper`、`PdfGState` 等生成报告，并嵌入 Canvas 手绘的全程 EtCO2 趋势 bitmap 和异常上下文 CO2 波形 bitmap。基础信息、摘要、趋势图、异常片段和 footer/signature 作为 section 渲染；footer/signature 总是在全部内容之后输出，空间不足时进入最后新页。
+`PDFKit.kt` 使用 `Document`、`PdfWriter`、`PdfPTable`、`PdfPCell`、`PdfPageEventHelper`、`PdfGState` 等生成报告，并嵌入 Canvas 手绘的全程 EtCO2 趋势和异常上下文 CO2 波形 bitmap。基础信息、摘要、趋势、异常片段和 footer/signature 作为 section 渲染；footer/signature 总是在全部内容之后输出，空间不足时进入最后新页。
 
 ## 注意事项
 
-库版本较旧；PDF 改动需验证中文字体、表单字段、section 分页、可配置水印、最后页签字栏、手绘趋势/波形图片和 SAF 导出。
+库版本较旧；PDF 改动需验证中文字体、表单字段、section 分页、可配置水印、最后页签字栏、手绘波形图片和 SAF 导出。
 
 ## 最小验证方式
 

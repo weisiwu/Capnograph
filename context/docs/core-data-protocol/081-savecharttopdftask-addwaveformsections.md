@@ -1,45 +1,43 @@
 # SaveChartToPdfTask.addWaveformSections
 
 来源批次：蓝牙、协议、数据与业务服务实体补充。
-定位入口：`context/entity-id-mapping.md`（L338）。
+定位入口：`context/entity-id-mapping.md`。
 领域：PDF 函数。
 聚合章节：核心函数与方法。
 
 ## 实体定位
 
 - 实体：`SaveChartToPdfTask.addWaveformSections`
-- ID / 别名：report waveform sections, PDF 报告波形段
+- ID / 别名：report waveform sections, PDF 报告异常上下文波形
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
-- 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：识别 EtCO2/RR 异常并加入默认 60 秒、可配置的上下文 CO2 波形
+- 原始补充上下文：长记录报告方案 1
+- 备注：按 EtCO2/RR 报告阈值输出异常上下文 CO2 波形，默认 60 秒上下文且可配置为 10-300 秒
 
 ## 补充职责
 
-构建 PDF 的“异常片段”section。函数先输出异常片段标题和判定阈值说明，再调用 `buildAbnormalReportSegments`，按 EtCO2/RR 异常事件生成上下文窗口，向 PDF 添加异常原因、测量时间、手绘 CO2 波形图和分段统计；新记录优先用 `CO2WavePointData.sampleTimeMillis` 定位真实时间窗口，旧记录按 `index / POINTS_PER_SECOND` 兜底。
+构建 PDF 的“异常片段”section。函数调用 `buildAbnormalReportSegments` 从记录数据里识别 EtCO2/RR 异常事件，再用 `buildAbnormalWindows` 生成上下文窗口，最后添加段标题、测量时间、异常时间、手绘 CO2 波形图和段统计。
 
 ## 关键 ID / 别名
 
-- 定位别名：report waveform sections, PDF 报告波形段
-- 关键字段 / 方法：`resolveEventContextSeconds`、`resolveEventContextMillis`、`buildAbnormalReportSegments`、`buildAbnormalWindows`、`buildAbnormalEvents`、`abnormalReasons`、`abnormalCriteriaText`、`addWaveformHeader`、`addWaveformChart`、`addWaveformMetrics`。
+- 定位别名：report waveform sections, PDF 报告异常上下文波形
+- 关键字段 / 方法：`buildAbnormalReportSegments`、`buildAbnormalEvents`、`buildAbnormalWindows`、`resolveEventContextSeconds`、`abnormalReasons`、`addWaveformHeader`、`addWaveformChart`、`addWaveformMetrics`
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS=60`、`MIN_PDF_EVENT_CONTEXT_SECONDS=10`、`MAX_PDF_EVENT_CONTEXT_SECONDS=300`、`resolveEventContextSeconds`、`buildAbnormalReportSegments`、`buildAbnormalWindows`、`buildAbnormalEvents`、`abnormalReasons`、`addWaveformHeader`、`addWaveformChart`、`addWaveformMetrics`。
+- 主要字段、方法或协议值：`PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS=60`、`PrintSetting.MIN_PDF_EVENT_CONTEXT_SECONDS=10`、`PrintSetting.MAX_PDF_EVENT_CONTEXT_SECONDS=300`、`templateConfig.abnormalEtco2LowMmHg=25`、`templateConfig.abnormalEtco2HighMmHg=50`、`templateConfig.abnormalRrLow=5`、`templateConfig.abnormalRrHigh=30`
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 
 ## 主要调用点
 
-`SaveChartToPdfTask.savePDF`。
-
-每段统计行显示 EtCO2、FiCO2、RR 的均值/最大/最小/段末，避免把段指标误解为稳定值。
+`SaveChartToPdfTask.savePDF` 在全程趋势之后调用。
 
 ## 注意事项
 
-异常判定当前来自报告阈值：EtCO2 低于 25mmHg 或高于 50mmHg、RR 低于 5bpm 或高于 30bpm；EtCO2 阈值会按当前 `co2Unit` 换算为 kPa 或 `%`。异常窗口默认 60 秒，由 `PrintSetting.pdfEventContextSeconds` 覆盖并限制在 10-300 秒；窗口以事件中点为中心，靠近记录边界时自动贴边，相互重叠的窗口会合并。没有异常时仍输出一行“未检测到超过报告阈值的 EtCO2/RR 异常”。新记录测量时间通过 `sampleTimeMillis` 转本地时间显示；旧记录或混合缺失时间戳的数据仍通过 `record.startTime + pointIndex / POINTS_PER_SECOND` 兜底。
+当前没有真实报警事件流和报警阈值快照，PDF 端暂时从已存 `CO2WavePointData.ETCO2` 和 `RR` 回算报告异常。上下文秒数来自 `PrintSetting.pdfEventContextSeconds`，缺省使用 60 秒，保存和读取时都裁剪到 `10..300`。如果没有异常，section 仍会输出“未检测到超过报告阈值的 EtCO2/RR 异常”和阈值说明。
 
 ## 最小验证方式
 
-`./gradlew :app:compileDebugKotlin`; 手动导出 PDF 检查全程趋势、异常片段说明和 60 秒上下文波形。
+`./gradlew :app:compileDebugKotlin`; 手动导出含正常记录和异常记录的 PDF，检查无异常提示、异常原因、异常时间、上下文窗口长度和段统计。
 
 ## 同步要求
 

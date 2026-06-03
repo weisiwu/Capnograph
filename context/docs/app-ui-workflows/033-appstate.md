@@ -10,11 +10,11 @@
 - ID / 别名：global state, 全局状态
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/models/AppStateModel.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：单例状态容器，包含 PDF 输出、模板、水印和异常上下文秒数状态
+- 备注：单例状态容器，包含 PDF 输出、模板、水印、异常波形上下文秒数和患者信息状态
 
 ## 补充职责
 
-Singleton 状态容器，集中保存当前页面、Tab、全局弹层、设备列表、记录状态、实时指标、设置值、患者信息和发现设备流。PDF 设置状态包括输出类型、模板模式、水印开关、水印文字、水印透明度和异常上下文秒数。
+Singleton 状态容器，集中保存当前页面、Tab、全局弹层、设备列表、记录状态、实时指标、设置值、患者信息和发现设备流。PDF 设置状态包括输出类型、模板模式、水印开关、水印文字、水印透明度和异常波形上下文秒数。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ global state, 全局状态
 
 ## 注意事项
 
-单例状态容器。PDF 水印透明度默认来自 `PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY`，AppStateModel 更新时会限制在 0-1。PDF 异常上下文秒数默认来自 `PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS=60`，更新时限制在 10-300。
+单例状态容器。PDF 水印透明度默认来自 `PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY`，AppStateModel 更新时会限制在 0-1；PDF 异常波形上下文秒数默认来自 `PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS`，AppStateModel 更新时会限制在 `10..300`。趋势/波形版式和异常阈值仍由 `PdfReportTemplateConfig` 管理。
 
 ## 最小验证方式
 

@@ -11,20 +11,20 @@
 - ID / 别名：chart to PDF task, 图表导出 PDF 任务
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：PDF 导出任务，按模板/打印设置解析水印和异常上下文秒数
+- 备注：PDF 导出任务，按模板/打印设置解析水印并渲染全程摘要、全程 EtCO2 趋势、异常上下文波形和页脚签字
 
 ## 补充职责
 
-异步 PDF 任务，主线程渲染趋势/波形 bitmap，后台等待结果回调；报告基础信息区会使用传入的记录、打印设置和可选设备序列号，页脚 EtCO2 参考值按 `co2Unit` 换算，水印配置和异常上下文秒数由 `PrintSetting` 覆盖正式/调试模板默认值，并通过 section 渲染入口在内容不足一页时自动换页。
+异步 PDF 任务，主线程渲染波形 bitmap，后台等待结果回调；报告基础信息区读取打印设置和记录里的住院号、床位号、科室、姓名、性别，空值只保留等长下划线，页脚 EtCO2 参考值按 `co2Unit` 换算，水印配置由 `PrintSetting` 覆盖模板默认值，并通过 section 渲染入口在内容不足一页时自动换页。
 
 ## 关键 ID / 别名
 
 - 定位别名：chart to PDF task, 图表导出 PDF 任务
-- 关键字段 / 方法：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`、`WatermarkPageEvent`、`resolveWatermarkConfig`、`resolveEventContextSeconds`、`addTrendSection`、`addReportSection`、`ensurePageSpace`、`co2Unit`、`deviceSerial`。
+- 关键字段 / 方法：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`、`WatermarkPageEvent`、`resolveWatermarkConfig`、`addReportSection`、`ensurePageSpace`、`addTrendSection`、`addWaveformSections`、`buildAbnormalReportSegments`、`co2Unit`、`deviceSerial`。
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`、`WatermarkPageEvent`、`resolveWatermarkConfig`、`resolveEventContextSeconds`、`addTrendSection`、`addReportSection`、`ensurePageSpace`、`co2Unit`、`deviceSerial`。
+- 主要字段、方法或协议值：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`、`WatermarkPageEvent`、`resolveWatermarkConfig`、`addReportSection`、`ensurePageSpace`、`addTrendSection`、`addWaveformSections`、`buildAbnormalReportSegments`、`co2Unit`、`deviceSerial`。
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 
 ## 主要调用点
@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-`AsyncTask` 已过时但当前代码仍使用；失败时回调 false。PDF 内容按基础信息、全程摘要、全程趋势、异常上下文波形、页脚/签字这些 section 渲染，section 渲染前通过 `PdfWriter.getVerticalPosition(true)` 估算剩余空间，不足则 `document.newPage()`。启用水印时设置 `WatermarkPageEvent`，在每页结束时向 `directContentUnder` 重复绘制文字水印。
+`AsyncTask` 已过时但当前代码仍使用；失败时回调 false。PDF 内容按基础信息、全程摘要、全程 EtCO2 趋势、异常上下文波形、页脚/签字这些 section 渲染，section 渲染前通过 `PdfWriter.getVerticalPosition(true)` 估算剩余空间，不足则 `document.newPage()`。启用水印时设置 `WatermarkPageEvent`，在每页结束时向 `directContentUnder` 重复绘制文字水印。
 
 ## 最小验证方式
 

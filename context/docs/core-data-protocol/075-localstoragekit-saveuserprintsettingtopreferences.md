@@ -11,11 +11,11 @@
 - ID / 别名：save print prefs, 保存打印偏好
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/LocalStorageKit.kt`, `hotmeltprint/src/main/java/com/wldmedical/hotmeltprint/HotmeltPinter.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：保存医院名、报告名、患者信息、输出类型、PDF 模板/水印配置、异常上下文秒数和趋势图开关
+- 备注：保存医院名、报告名、患者信息、输出类型、PDF 模板/水印配置、异常波形上下文秒数和趋势图开关
 
 ## 补充职责
 
-保存打印/PDF/患者偏好，包括 PDF 模板模式、可选水印配置和异常片段上下文秒数。
+保存打印/PDF/患者偏好，包括 PDF 模板模式、可选水印配置、异常波形上下文秒数和详情趋势图选项。
 
 ## 关键 ID / 别名
 
@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-可选字段为 null 时不覆盖旧值；`isPDF` 总是写入。`pdfWatermarkOpacity` 保存前限制在 0-1；`pdfEventContextSeconds` 保存前限制在 10-300，默认由 `PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS=60` 提供。
+可选字段为 null 时不覆盖旧值；`isPDF` 总是写入。`pdfWatermarkOpacity` 保存前限制在 0-1；`pdfEventContextSeconds` 保存前限制在 `10..300`，用于 PDF 异常上下文波形窗口。
 
 ## 最小验证方式
 

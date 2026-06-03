@@ -11,11 +11,11 @@
 - ID / 别名：local storage, Room, SharedPreferences, 本地存储
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/LocalStorageKit.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：数据库、偏好设置、文件和记录持久化逻辑；打印偏好包含 PDF 模板/水印和异常上下文秒数配置
+- 备注：数据库、偏好设置、文件和记录持久化逻辑；打印偏好包含 PDF 模板/水印配置、异常波形上下文秒数和详情趋势图选项
 
 ## 补充职责
 
-本地数据服务，负责 Room、SharedPreferences、记录和打印偏好；打印偏好包含 PDF 模板模式、水印开关/文字/透明度和异常上下文秒数。
+本地数据服务，负责 Room、SharedPreferences、记录和打印偏好；打印偏好包含 PDF 模板模式、水印开关/文字/透明度、异常波形上下文秒数和详情趋势图选项。
 
 ## 关键 ID / 别名
 
@@ -24,7 +24,7 @@
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`database`、`currentRecordId`、`saveRecord`、`stopRecord`、`saveUserPrintSettingToPreferences`、`loadPrintSettingFromPreferences`、`KEY_PDF_TEMPLATE_MODE`、`KEY_PDF_WATERMARK_ENABLED`、`KEY_PDF_WATERMARK_TEXT`、`KEY_PDF_WATERMARK_OPACITY`、`KEY_PDF_EVENT_CONTEXT_SECONDS`。
+- 主要字段、方法或协议值：`database`、`currentRecordId`、`saveRecord`、`stopRecord`、`saveUserPrintSettingToPreferences`、`loadPrintSettingFromPreferences`、`KEY_PDF_TEMPLATE_MODE`、`KEY_PDF_WATERMARK_ENABLED`、`KEY_PDF_WATERMARK_TEXT`、`KEY_PDF_WATERMARK_OPACITY`、`KEY_PDF_EVENT_CONTEXT_SECONDS`、`KEY_SHOW_TREND_CHART`。
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/LocalStorageKit.kt`
 
 ## 主要调用点
