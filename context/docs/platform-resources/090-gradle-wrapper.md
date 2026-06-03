@@ -28,7 +28,7 @@
 
 ## 主要调用点
 
-开发机、CI 或 Android Studio 同步可通过 wrapper 执行一致版本的 Gradle。
+开发机、CI 或 Android Studio 同步可通过 wrapper 执行一致版本的 Gradle。Unix/macOS 下 `gradlew` 在 Git 索引中应保持 `100755` 可执行模式。
 
 ## 注意事项
 

@@ -24,7 +24,7 @@ Android library 模块，封装本地 GPrinter SDK JAR，并为 app 提供蓝牙
 
 ## 关键字段 / 方法
 
-`namespace="com.wldmedical.hotmeltprint"`、`compileSdk=35`、`minSdk=24`；使用 Android library 与 Kotlin Android 插件。
+`namespace="com.wldmedical.hotmeltprint"`、`compileSdk=35`、`minSdk=24`；使用 Android library 与 Kotlin Android 插件；模块资源包含 `hotmeltprint/src/main/res/drawable/logo.png`。
 
 ## 主要调用点
 
@@ -32,11 +32,11 @@ Android library 模块，封装本地 GPrinter SDK JAR，并为 app 提供蓝牙
 
 ## 注意事项
 
-Manifest 当前为空；打印权限依赖 app 层声明。`SDKLib.jar` 同时经 fileTree 和 `files("libs/SDKLib.jar")` 声明，调整依赖时注意重复引入。
+Manifest 当前为空；打印权限依赖 app 层声明。`SDKLib.jar` 同时经 fileTree 和 `files("libs/SDKLib.jar")` 声明，调整依赖时注意重复引入。`drawable/logo.png` 必须保持真实 PNG 格式，release 资源合并会严格校验图片内容。
 
 ## 最小验证方式
 
-`./gradlew :hotmeltprint:assembleDebug`；实际打印需真机和 GPrinter 设备。
+`./gradlew :hotmeltprint:assembleDebug`；涉及库资源时同时运行 `./gradlew :app:assembleRelease`；实际打印需真机和 GPrinter 设备。
 
 ## 同步要求
 

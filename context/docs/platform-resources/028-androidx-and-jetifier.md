@@ -16,7 +16,7 @@
 
 ## 补充职责
 
-全局 AndroidX、Jetifier、R class 和优化开关。
+全局 AndroidX、Jetifier、R class 和打包兼容开关。
 
 ## 关键 ID / 别名
 
@@ -24,7 +24,7 @@
 
 ## 关键字段 / 方法
 
-`android.useAndroidX=true`、`android.enableJetifier=true`、`android.nonTransitiveRClass=true`、`android.enableR8=true`、`android.zipAlign=true`。
+`android.useAndroidX=true`、`android.enableJetifier=true`、`android.nonTransitiveRClass=true`、`android.zipAlign=true`。AGP 8 已移除 `android.enableR8` 项目属性；release R8 压缩由 `app/build.gradle.kts` 的 `isMinifyEnabled=true` 控制。
 
 ## 主要调用点
 

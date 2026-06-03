@@ -12,7 +12,7 @@
 | `build.gradle.kts` | 根工程插件声明。 |
 | `gradle/libs.versions.toml` | 插件与依赖版本目录。 |
 | `gradle/wrapper/gradle-wrapper.properties` | Gradle wrapper 发行包版本和下载地址。 |
-| `gradle.properties` | Gradle、AndroidX、Jetifier、R8、Java home 等全局设置。 |
+| `gradle.properties` | Gradle、AndroidX、Jetifier、ZipAlign 等项目级设置。 |
 | `app/build.gradle.kts` | 主 Android 应用模块构建配置。 |
 | `hotmeltprint/build.gradle.kts` | 热敏打印 Android Library 模块构建配置。 |
 
@@ -58,7 +58,7 @@
 | AndroidX | `android.useAndroidX` | `true` | `gradle.properties` |
 | Jetifier | `android.enableJetifier` | `true` | `gradle.properties` |
 | Non-transitive R | `android.nonTransitiveRClass` | `true` | `gradle.properties` |
-| R8 | `android.enableR8` | `true` | `gradle.properties` |
+| Release minification | `isMinifyEnabled` / R8 | release 为 `true` | `app/build.gradle.kts` |
 | ZipAlign | `android.zipAlign` | `true` | `gradle.properties` |
 
 备注：项目级 `gradle.properties` 不提交机器相关的 `org.gradle.java.home`。不同机器把本机 JDK 路径写入用户级 `~/.gradle/gradle.properties`，Windows 仍使用 `C:\\Program Files\\Java\\jdk-17`，本机 macOS 使用 `/opt/homebrew/Cellar/openjdk@21/21.0.10/libexec/openjdk.jdk/Contents/Home`。配置说明见 `JDK_SETUP.md`。
@@ -184,5 +184,6 @@
 - `app/build.gradle.kts` 定义 `val vicoVersion = "2.0.1"`，当前未被依赖使用；`gradle/libs.versions.toml` 定义 `firebase-config-ktx`，当前也未被模块 build 文件引用。
 - `foundation-layout-android` 在 app 依赖中重复声明 4 次，`mpandroidchart` 在 hotmeltprint 依赖中重复声明 3 次，`SDKLib.jar` 可能被 fileTree 和显式 files 重复引入。
 - `.cursor/rules/project-memory.mdc` 中 app 最低 SDK 33 与构建文件不一致；当前事实是 app `minSdk=30`，hotmeltprint `minSdk=24`。
+- AGP 8 已移除项目属性 `android.enableR8`；release 压缩由 `app/build.gradle.kts` 的 `isMinifyEnabled=true` 控制。
 - 依赖坐标变更后，最低验证是 `./gradlew :app:assembleDebug :hotmeltprint:assembleDebug`；涉及注解处理还应执行 `./gradlew :app:kaptDebugKotlin`。
 - 资源或 Manifest 变更后的上下文见 `context/docs/platform-resources.md`。

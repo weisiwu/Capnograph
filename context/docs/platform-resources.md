@@ -10,12 +10,13 @@
 | `build.gradle.kts` | 根工程插件声明。 |
 | `gradle/libs.versions.toml` | 插件与依赖版本目录。 |
 | `gradle/wrapper/gradle-wrapper.properties` | Gradle wrapper 发行包版本和下载地址。 |
-| `gradle.properties` | Gradle、AndroidX、Jetifier、R8、Java home 等全局设置。 |
+| `gradle.properties` | Gradle、AndroidX、Jetifier、ZipAlign 等项目级设置。 |
 | `app/build.gradle.kts` | 主应用模块 ID、SDK、版本、资源打包和依赖入口。 |
 | `hotmeltprint/build.gradle.kts` | 热敏打印库模块 ID、SDK、依赖入口。 |
 | `app/src/main/AndroidManifest.xml` | app 权限、硬件特性、Application、Activity、Bugly metadata。 |
 | `hotmeltprint/src/main/AndroidManifest.xml` | 打印库 Manifest，目前为空壳 manifest。 |
 | `app/src/main/res/` | 字符串、主题、图标、图片、音频、xml 配置等 Android 资源。 |
+| `hotmeltprint/src/main/res/` | 热敏打印库打包进 app 的 Android 资源。 |
 | `app/src/main/assets/fonts/SimSun.ttf` | PDF/报告可用的宋体字体资源。 |
 | `app/libs/crashreport-4.1.9.3.aar` | 本地 Bugly CrashReport AAR。 |
 | `hotmeltprint/libs/SDKLib.jar` | GPrinter 热敏打印 SDK JAR。 |
@@ -30,6 +31,7 @@
 - Gradle wrapper 使用华为云 `gradle-8.10.2-all.zip`；构建脚本均为 Kotlin DSL；机器相关 JDK 路径不写入项目级 `gradle.properties`，按 `JDK_SETUP.md` 写入用户级 Gradle 配置。
 - app Manifest 声明蓝牙、定位、存储和网络权限；SplashActivity 是 launcher，其他 Activity exported=false。
 - `values/strings.xml` 是默认中文资源，`values-en/strings.xml` 是英文资源，`locales_config.xml` 声明 `en` 和 `zh`。
+- `hotmeltprint/src/main/res/drawable/logo.png` 是热敏打印模块随库合入 app 的 logo 资源，文件扩展名和真实格式都必须为 PNG，否则 release 资源合并会失败。
 - Bugly AAR 和 GPrinter SDK JAR 是本地二进制依赖；CrashReport 初始化当前在 Application 中注释。
 
 ## 实体文档索引
@@ -62,7 +64,7 @@
 | 024 | Kotlin kapt | 构建平台 | `context/docs/platform-resources/024-kotlin-kapt.md` | Hilt 和 Room 注解处理使用 kapt |
 | 025 | Kotlin JVM plugin | 构建平台 | `context/docs/platform-resources/025-kotlin-jvm-plugin.md` | 根构建脚本声明但当前没有模块应用 |
 | 026 | Android SDK levels | Android 平台 | `context/docs/platform-resources/026-android-sdk-levels.md` | 以模块 build 文件为准 |
-| 027 | Java and Kotlin JVM target | 构建平台 | `context/docs/platform-resources/027-java-and-kotlin-jvm-target.md` | 模块目标字节码为 Java 11；Gradle 属性里配置了 JDK 17 路径 |
+| 027 | Java and Kotlin JVM target | 构建平台 | `context/docs/platform-resources/027-java-and-kotlin-jvm-target.md` | 模块目标字节码为 Java 11；机器相关 JDK 路径不写入项目级配置 |
 | 028 | AndroidX and Jetifier | Android 平台 | `context/docs/platform-resources/028-androidx-and-jetifier.md` | AndroidX、Jetifier 和非传递 R 类配置 |
 | 029 | Jetpack Compose UI | UI 平台 | `context/docs/platform-resources/029-jetpack-compose-ui.md` | app 模块的 Compose、BOM、Material3、Navigation Compose 基础 UI 能力 |
 | 030 | Hilt dependency injection | 依赖注入 | `context/docs/platform-resources/030-hilt-dependency-injection.md` | app 模块应用 Hilt 插件并配置 Hilt compiler |
@@ -110,7 +112,7 @@
 | 072 | locales_config | 资源 | `context/docs/platform-resources/072-locales-config.md` | 语言切换的 Locale 配置 |
 | 073 | Theme resources | 资源 | `context/docs/platform-resources/073-theme-resources.md` | XML 主题和颜色资源 |
 | 074 | Compose theme | UI 主题 | `context/docs/platform-resources/074-compose-theme.md` | Compose Material 主题 |
-| 075 | App logos | 资源 | `context/docs/platform-resources/075-app-logos.md` | 品牌资源 |
+| 075 | App logos | 资源 | `context/docs/platform-resources/075-app-logos.md` | 应用与热敏打印模块品牌资源 |
 | 076 | Launcher icons | 资源 | `context/docs/platform-resources/076-launcher-icons.md` | 启动器图标资源 |
 | 077 | Print icons | 资源 | `context/docs/platform-resources/077-print-icons.md` | 打印和 PDF UI 图片 |
 | 078 | Range slider assets | 资源 | `context/docs/platform-resources/078-range-slider-assets.md` | 范围选择器滑块资源 |
@@ -135,6 +137,7 @@
 
 - 文档或映射变更：检查 `context/entity-id-mapping.md` 是否指向单实体文件，并确认 `context/docs/platform-resources/` 下有 94 个 Markdown 文件。
 - 资源 key 变更：运行 `./gradlew :app:assembleDebug`，并用 `rg "R\.(string|drawable|raw|xml)\.<key>" app/src/main/java` 核对调用点。
+- Android 图片资源格式变更：运行 `file <path>` 或 `sips -g format <path>` 确认扩展名与真实格式一致，并运行 `./gradlew :app:assembleDebug :app:assembleRelease` 覆盖 debug 与 release 资源编译。
 - Manifest/权限变更：运行 `./gradlew :app:processDebugMainManifest` 或 `./gradlew :app:assembleDebug`，并在 Android 12+ 设备验证蓝牙运行时权限。
 - 打印 SDK/JAR 变更：运行 `./gradlew :hotmeltprint:assembleDebug`，真机连接 GPrinter 设备验证 `HotmeltPinter.connect` 和 `print`。
 - 测试入口变更：JVM 测试用 `:app:testDebugUnitTest` 和 `:hotmeltprint:testDebugUnitTest`；instrumentation 测试需要连接设备后执行 `connectedDebugAndroidTest`。
