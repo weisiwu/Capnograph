@@ -94,12 +94,12 @@
 | 053 | Coil | 三方依赖 | `context/docs/platform-resources/053-coil.md` | app 模块声明的图片加载依赖 |
 | 054 | Accompanist DrawablePainter | 三方依赖 | `context/docs/platform-resources/054-accompanist-drawablepainter.md` | app 模块声明的 drawable painter 辅助库 |
 | 055 | Accompanist Pager | 三方依赖 | `context/docs/platform-resources/055-accompanist-pager.md` | EtCo2LineChart 使用 HorizontalPager 和 PagerIndicator |
-| 056 | MPAndroidChart | 三方依赖 | `context/docs/platform-resources/056-mpandroidchart.md` | 实时图表、历史图表和打印 Bitmap 渲染；PDF 报告单全程趋势和异常上下文波形由 Canvas 手绘 |
+| 056 | MPAndroidChart | 三方依赖 | `context/docs/platform-resources/056-mpandroidchart.md` | 实时图表、历史图表和打印 Bitmap 渲染；PDF 报告单连续 15 秒波形段由 Canvas 手绘 |
 | 057 | Room Runtime | 三方依赖 | `context/docs/platform-resources/057-room-runtime.md` | Room 数据库运行时 |
 | 058 | Room Compiler | 三方依赖 | `context/docs/platform-resources/058-room-compiler.md` | Room 注解处理器 |
 | 059 | Room KTX | 三方依赖 | `context/docs/platform-resources/059-room-ktx.md` | Room 协程/Flow 支持 |
 | 060 | Gson | 三方依赖 | `context/docs/platform-resources/060-gson.md` | CO2WavePointData 压缩前 JSON 序列化和迁移解析 |
-| 061 | iTextPDF | 三方依赖 | `context/docs/platform-resources/061-itextpdf.md` | PDF 报告生成、section 分页、全程趋势、异常上下文波形和可配置水印 |
+| 061 | iTextPDF | 三方依赖 | `context/docs/platform-resources/061-itextpdf.md` | PDF 报告生成、section 分页、连续 15 秒波形段和可配置水印 |
 | 062 | AndroidPdfViewer | 三方依赖 | `context/docs/platform-resources/062-androidpdfviewer.md` | app 模块声明，排除 `com.android.support` |
 | 063 | AndroidX Collection | 三方依赖 | `context/docs/platform-resources/063-androidx-collection.md` | app 模块声明的集合工具依赖 |
 | 064 | Bugly CrashReport AAR | 三方依赖 | `context/docs/platform-resources/064-bugly-crashreport-aar.md` | 本地 AAR 崩溃上报 |

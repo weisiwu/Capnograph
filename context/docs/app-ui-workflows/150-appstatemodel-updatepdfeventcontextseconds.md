@@ -10,11 +10,11 @@
 - ID / 别名：PDF event context seconds, PDF异常上下文秒数
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/models/AppStateModel.kt`, `hotmeltprint/src/main/java/com/wldmedical/hotmeltprint/HotmeltPinter.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：更新 PDF 异常片段上下文秒数并限制在 10-300，默认 60
+- 备注：更新并保存 PDF 异常上下文秒数状态；当前 PDF 导出固定按 15 秒连续波形切段，不再使用该值
 
 ## 补充职责
 
-更新 AppState 中的 PDF 异常片段上下文秒数。默认值来自 `PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS`，用于 PDF 报告异常事件的上下文波形窗口。
+更新 AppState 中的 PDF 异常片段上下文秒数。默认值来自 `PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS`，当前仍用于设置页状态和偏好保存，但 PDF 报告已改为固定 15 秒连续波形段，不再读取该值。
 
 ## 关键 ID / 别名
 
@@ -32,7 +32,7 @@
 
 ## 注意事项
 
-函数内部使用 `coerceIn(10, 300)`；持久化保存/读取也会限制到 10-300。PDF 渲染时 `PrintSetting.pdfEventContextSeconds` 为空则回退到模板默认 60 秒。
+函数内部使用 `coerceIn(10, 300)`；持久化保存/读取也会限制到 10-300。当前 PDF 渲染固定按 15 秒连续波形切段，不再根据 `PrintSetting.pdfEventContextSeconds` 调整窗口长度。
 
 ## 最小验证方式
 

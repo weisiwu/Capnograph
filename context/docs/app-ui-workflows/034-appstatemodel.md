@@ -31,7 +31,7 @@ ViewModel, HiltViewModel
 
 ## 注意事项
 
-当前项目唯一 ViewModel。`updatePdfWatermarkOpacity` 会将输入限制在 0-1；`updatePdfEventContextSeconds` 会将异常波形上下文秒数限制在 `10..300`。趋势/波形版式和异常阈值仍由 `PdfReportTemplateConfig` 控制。
+当前项目唯一 ViewModel。`updatePdfWatermarkOpacity` 会将输入限制在 0-1；`updatePdfEventContextSeconds` 会将异常波形上下文秒数限制在 `10..300`。当前 PDF 导出固定按 15 秒连续波形切段，不再使用异常上下文秒数；波形版式和每段秒数由 `PdfReportTemplateConfig` 控制。
 
 ## 最小验证方式
 

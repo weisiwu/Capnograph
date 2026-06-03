@@ -8,36 +8,36 @@
 ## 实体定位
 
 - 实体：`SaveChartToPdfTask.addWaveformSections`
-- ID / 别名：report waveform sections, PDF 报告异常上下文波形
+- ID / 别名：report waveform sections, PDF 报告连续波形段
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 - 原始补充上下文：长记录报告方案 1
-- 备注：按 EtCO2/RR 报告阈值输出异常上下文 CO2 波形，默认 60 秒上下文且可配置为 10-300 秒
+- 备注：按完整记录时间轴输出连续 CO2 波形，每段固定 15 秒
 
 ## 补充职责
 
-构建 PDF 的“异常片段”section。函数调用 `buildAbnormalReportSegments` 从记录数据里识别 EtCO2/RR 异常事件，再用 `buildAbnormalWindows` 生成上下文窗口，最后添加段标题、测量时间、异常时间、手绘 CO2 波形图和段统计。
+构建 PDF 的连续波形 section。函数调用 `buildWaveformSegments` 按完整记录时间轴把 CO2 数据切成固定 15 秒窗口，最后添加段标题、测量时间、手绘 CO2 波形图和段统计。
 
 ## 关键 ID / 别名
 
-- 定位别名：report waveform sections, PDF 报告异常上下文波形
-- 关键字段 / 方法：`buildAbnormalReportSegments`、`buildAbnormalEvents`、`buildAbnormalWindows`、`resolveEventContextSeconds`、`abnormalReasons`、`addWaveformHeader`、`addWaveformChart`、`addWaveformMetrics`
+- 定位别名：report waveform sections, PDF 报告连续波形段
+- 关键字段 / 方法：`buildWaveformSegments`、`waveformSegmentDurationSeconds`、`addWaveformHeader`、`addWaveformChart`、`addWaveformMetrics`
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS=60`、`PrintSetting.MIN_PDF_EVENT_CONTEXT_SECONDS=10`、`PrintSetting.MAX_PDF_EVENT_CONTEXT_SECONDS=300`、`templateConfig.abnormalEtco2LowMmHg=25`、`templateConfig.abnormalEtco2HighMmHg=50`、`templateConfig.abnormalRrLow=5`、`templateConfig.abnormalRrHigh=30`
+- 主要字段、方法或协议值：`templateConfig.waveformSegmentDurationSeconds=15`、`buildWaveformSegments`、`pointTimelineMillis`、`displayTimelineMillis`、`timelineMillisToPointIndex`
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 
 ## 主要调用点
 
-`SaveChartToPdfTask.savePDF` 在全程趋势之后调用。
+`SaveChartToPdfTask.savePDF` 在基础信息之后调用。
 
 ## 注意事项
 
-当前没有真实报警事件流和报警阈值快照，PDF 端暂时从已存 `CO2WavePointData.ETCO2` 和 `RR` 回算报告异常。上下文秒数来自 `PrintSetting.pdfEventContextSeconds`，缺省使用 60 秒，保存和读取时都裁剪到 `10..300`。如果没有异常，section 仍会输出“未检测到超过报告阈值的 EtCO2/RR 异常”和阈值说明。
+当前 PDF 不再从 `CO2WavePointData.ETCO2` 和 `RR` 回算报告异常，也不输出无异常提示或阈值说明。切段优先使用 `sampleTimeMillis` 真实采样时间；旧数据无时间戳时回退到 index 和 `POINTS_PER_SECOND`。`PrintSetting.pdfEventContextSeconds` 仍可保存，但当前导出固定使用 15 秒连续波形段。
 
 ## 最小验证方式
 
-`./gradlew :app:compileDebugKotlin`; 手动导出含正常记录和异常记录的 PDF，检查无异常提示、异常原因、异常时间、上下文窗口长度和段统计。
+`./gradlew :app:compileDebugKotlin`; 手动导出长记录 PDF，检查全记录按 15 秒连续切段、测量时间、波形和段统计。
 
 ## 同步要求
 

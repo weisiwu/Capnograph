@@ -31,7 +31,7 @@ global state, 全局状态
 
 ## 注意事项
 
-单例状态容器。PDF 水印透明度默认来自 `PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY`，AppStateModel 更新时会限制在 0-1；PDF 异常波形上下文秒数默认来自 `PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS`，AppStateModel 更新时会限制在 `10..300`。趋势/波形版式和异常阈值仍由 `PdfReportTemplateConfig` 管理。
+单例状态容器。PDF 水印透明度默认来自 `PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY`，AppStateModel 更新时会限制在 0-1；PDF 异常波形上下文秒数默认来自 `PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS`，AppStateModel 更新时会限制在 `10..300`，但当前 PDF 导出固定按 15 秒连续波形切段，不再使用该值。波形版式和每段秒数由 `PdfReportTemplateConfig` 管理。
 
 ## 最小验证方式
 

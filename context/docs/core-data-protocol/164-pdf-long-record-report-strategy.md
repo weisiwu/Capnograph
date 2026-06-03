@@ -8,23 +8,23 @@
 ## 实体定位
 
 - 实体：PDF long record report strategy
-- ID / 别名：long PDF record, 长记录报告, 全程趋势, 异常上下文波形
+- ID / 别名：long PDF record, 长记录报告, 连续波形, 15秒波形段
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`, `app/src/main/java/com/wldmedical/capnoeasy/pages/PrintSettingActivity.kt`
-- 原始补充上下文：用户要求选择“方案 1”，异常给 60 秒上下文波形且时间可配置，并要求记录调研信息
-- 备注：长时间监测报告采用全程摘要 + 全程 EtCO2 趋势 + 异常上下文波形；不支持固定只取开头 42 秒作为正式报告策略
+- 原始补充上下文：历史上曾按“方案 1”输出异常 60 秒上下文波形并记录调研信息；当前需求已改为连续 15 秒波形段
+- 备注：长时间监测报告直接按完整记录时间轴输出连续 15 秒波形段；不再输出全程摘要、全程趋势或异常上下文波形
 
 ## 补充职责
 
-记录 PDF 长记录展示策略、实现边界和调研依据。当前报告把长记录拆为三层：全程摘要提供数值概览，全程 EtCO2 趋势覆盖完整时间轴，异常上下文波形提供可读的原始波形证据。
+记录 PDF 长记录展示策略、实现边界和调研依据。当前报告直接把完整记录时间轴切成连续 15 秒 CO2 波形段，按段输出原始波形和 EtCO2/FiCO2/RR 统计。
 
 ## 关键 ID / 别名
 
-- 定位别名：long PDF record, 长记录报告, 全程趋势, 异常上下文波形
-- 关键字段 / 方法：`addReportSummary`、`addTrendSection`、`createTrendBitmap`、`addWaveformSections`、`buildAbnormalReportSegments`、`buildAbnormalEvents`、`buildAbnormalWindows`、`resolveEventContextSeconds`
+- 定位别名：long PDF record, 长记录报告, 连续波形, 15秒波形段
+- 关键字段 / 方法：`addWaveformSections`、`buildWaveformSegments`、`createWaveformBitmap`、`addWaveformMetrics`、`waveformSegmentDurationSeconds`
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`defaultEventContextSeconds=60`、`MIN_PDF_EVENT_CONTEXT_SECONDS=10`、`MAX_PDF_EVENT_CONTEXT_SECONDS=300`、`trendMaxBuckets=1200`、`abnormalEtco2LowMmHg=25`、`abnormalEtco2HighMmHg=50`、`abnormalRrLow=5`、`abnormalRrHigh=30`
+- 主要字段、方法或协议值：`waveformSegmentDurationSeconds=15`、`waveformXAxisLabelStepSeconds=5`、`buildWaveformSegments`、`pointTimelineMillis`、`displayTimelineMillis`
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 
 ## 调研记录
@@ -42,19 +42,19 @@
 
 ## 当前实现
 
-`savePDF` 渲染顺序为：页眉、基础信息、全程摘要、全程趋势、异常片段、页脚/签字。`createTrendBitmap` 对全记录 EtCO2 做桶聚合，最多 `1200` 桶，绘制平均线和 min/max 竖向范围线。
+`savePDF` 渲染顺序为：页眉、基础信息、连续 15 秒波形段、页脚/签字。`addWaveformSections` 不再按 EtCO2/RR 阈值筛选异常，也不输出无异常提示、异常原因或异常时间。
 
-`addWaveformSections` 只输出超过报告阈值的异常上下文窗口。当前回退阈值为 EtCO2 `<25` 或 `>50mmHg`、RR `<5` 或 `>30bpm`；EtCO2 阈值会按当前 CO2 单位换算。上下文窗口默认 `60` 秒，通过打印设置 `pdfEventContextSeconds` 配置，保存和读取时裁剪到 `10..300` 秒。窗口会在记录边界内截断，重叠或相近窗口按 `abnormalMergeGapSeconds` 合并。没有异常时，PDF 显示“未检测到超过报告阈值的 EtCO2/RR 异常”并仍输出阈值说明。
+`buildWaveformSegments` 优先按 `CO2WavePointData.sampleTimeMillis` 切分真实采样时间轴；旧记录没有采样时间时回退到 `index / POINTS_PER_SECOND`。每段固定 15 秒，横轴标签默认 0/5/10/15 秒。`PrintSetting.pdfEventContextSeconds` 仍可保存和加载，但当前 PDF 导出不再读取该值。
 
 ## 注意事项
 
-当前数据模型没有保存真实报警事件、报警阈值快照、呼吸状态或 SpO2/PR 字段；PDF 暂时从已存 `CO2WavePointData.ETCO2` 和 `RR` 重新计算异常。后续如果记录模型补充真实事件流或报警配置快照，应优先使用事件流和快照阈值，而不是继续依赖报告端回算。
+当前数据模型没有保存 SpO2/PR 字段；PDF 分段统计仍只输出 EtCO2、FiCO2 和 RR。后续如果重新引入事件报告，应优先使用真实事件流和快照阈值，而不是在报告端临时回算异常。
 
 ## 最小验证方式
 
-`./gradlew :app:compileDebugKotlin`；手动导出包含正常记录和长记录的 PDF，检查摘要、全程 EtCO2 趋势、异常上下文波形、无异常提示和上下文秒数配置。
+`./gradlew :app:compileDebugKotlin`；手动导出长记录 PDF，检查完整记录按 15 秒连续切段、页脚签字和分段统计。
 
 ## 同步要求
 
-- 如果 PDF 长记录展示策略、异常阈值、上下文秒数范围、调研结论或源文件发生变化，同步更新本文档和 `context/entity-id-mapping.md`。
+- 如果 PDF 长记录展示策略、波形段秒数、调研结论或源文件发生变化，同步更新本文档和 `context/entity-id-mapping.md`。
 - 如果源码与本文不一致，以当前源码为准，并修正文档。

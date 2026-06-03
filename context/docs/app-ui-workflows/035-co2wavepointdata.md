@@ -14,7 +14,7 @@
 
 ## 补充职责
 
-记录/渲染波形的 Serializable 数据点，字段为 co2、RR、ETCO2、FiCO2、sampleTimeMillis、index；PDF 报告全程摘要和分段统计使用 ETCO2、FiCO2、RR，波形分段和横轴优先使用 sampleTimeMillis。
+记录/渲染波形的 Serializable 数据点，字段为 co2、RR、ETCO2、FiCO2、sampleTimeMillis、index；PDF 报告的 15 秒分段统计使用 ETCO2、FiCO2、RR，波形分段和横轴优先使用 sampleTimeMillis。
 
 ## 关键 ID / 别名
 

@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-可选字段为 null 时不覆盖旧值；`isPDF` 总是写入。`pdfWatermarkOpacity` 保存前限制在 0-1；`pdfEventContextSeconds` 保存前限制在 `10..300`，用于 PDF 异常上下文波形窗口。
+可选字段为 null 时不覆盖旧值；`isPDF` 总是写入。`pdfWatermarkOpacity` 保存前限制在 0-1；`pdfEventContextSeconds` 保存前限制在 `10..300`，但当前 PDF 导出固定按 15 秒连续波形切段，不再读取该值。
 
 ## 最小验证方式
 

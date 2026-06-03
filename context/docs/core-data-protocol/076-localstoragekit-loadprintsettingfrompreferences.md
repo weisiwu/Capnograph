@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-`age` 默认 0；`showTrendingChart` 默认 true。`pdfTemplateMode` 默认 `PDF_TEMPLATE_OFFICIAL`；未保存水印开关或透明度时对应字段保持 null，PDF 渲染回退到模板默认。透明度读取后限制在 0-1；异常上下文秒数读取后限制在 `10..300`，未保存时保持 null 并回退到模板默认 60 秒。
+`age` 默认 0；`showTrendingChart` 默认 true。`pdfTemplateMode` 默认 `PDF_TEMPLATE_OFFICIAL`；未保存水印开关或透明度时对应字段保持 null，PDF 渲染回退到模板默认。透明度读取后限制在 0-1；异常上下文秒数读取后限制在 `10..300`，未保存时保持 null。当前 PDF 导出固定按 15 秒连续波形切段，不再读取该秒数。
 
 ## 最小验证方式
 

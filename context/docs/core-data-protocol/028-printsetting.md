@@ -33,7 +33,7 @@ PDF/小票共享打印配置；PDF 报告基础信息区会读取 `pdfDepart`、
 
 ## 注意事项
 
-全局 object，可被偏好读取覆盖。PDF 报告科室字段来自 `pdfDepart`，缺值时报告只保留等长下划线，便于导出或编辑后填写。`pdfTemplateMode` 默认为正式报告；`pdfWatermarkEnabled` 为 null 时 PDF 使用模板默认值，正式模板默认关闭水印，调试模板默认启用水印。水印文字默认 `万联达仪器`，透明度默认 `0.3` 且读取/保存时限制在 `0..1`。`pdfEventContextSeconds` 为 null 时 PDF 使用模板默认 60 秒；有保存值时限制在 `10..300`。趋势/波形版式和异常阈值仍由 `PdfReportTemplateConfig` 控制。
+全局 object，可被偏好读取覆盖。PDF 报告科室字段来自 `pdfDepart`，缺值时报告只保留等长下划线，便于导出或编辑后填写。`pdfTemplateMode` 默认为正式报告；`pdfWatermarkEnabled` 为 null 时 PDF 使用模板默认值，正式模板默认关闭水印，调试模板默认启用水印。水印文字默认 `万联达仪器`，透明度默认 `0.3` 且读取/保存时限制在 `0..1`。`pdfEventContextSeconds` 仍可保存并限制在 `10..300`，但当前 PDF 导出固定按 15 秒连续波形切段，不再使用该值。波形版式和每段秒数由 `PdfReportTemplateConfig` 控制。
 
 ## 最小验证方式
 
