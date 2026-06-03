@@ -106,6 +106,9 @@ class MainActivity : BaseActivity() {
             viewModel.updatePdfWatermarkOpacity(
                 printSetting.pdfWatermarkOpacity ?: PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY
             )
+            viewModel.updatePdfEventContextSeconds(
+                printSetting.pdfEventContextSeconds ?: PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS
+            )
             printSetting.pdfDepart?.let { viewModel.updatePatientDepartment(it) }
             printSetting.pdfBedNumber?.let { viewModel.updatePatientBedNumber(it) }
             printSetting.pdfIDNumber?.let { viewModel.updatePatientID(it) }

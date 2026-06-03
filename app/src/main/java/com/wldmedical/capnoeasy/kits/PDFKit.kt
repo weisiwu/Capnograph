@@ -71,10 +71,10 @@ private data class PdfReportTemplateConfig(
     val smallFontSize: Float = 9.5f,
     val hospitalSpacingAfter: Float = 2f,
     val titleSpacingAfter: Float = 4f,
-    val segmentSeconds: Int = 14,
-    val maxSegments: Int = 3,
     val detailSectionHeight: Float = 190f,
     val summarySectionHeight: Float = 44f,
+    val trendSectionHeight: Float = 156f,
+    val abnormalHeaderSectionHeight: Float = 44f,
     val waveformSectionHeight: Float = 150f,
     val footerSectionHeight: Float = 92f,
     val detailColumnWidths: List<Float> = listOf(1f, 1f),
@@ -93,6 +93,18 @@ private data class PdfReportTemplateConfig(
     val waveformMetricsSpacingBefore: Float = 2f,
     val waveformMetricsSpacingAfter: Float = 4f,
     val waveformImageMaxHeight: Float = 106f,
+    val trendImageMaxHeight: Float = 110f,
+    val trendBitmapWidth: Int = 1600,
+    val trendBitmapHeight: Int = 280,
+    val trendPlotLeft: Float = 72f,
+    val trendPlotTop: Float = 14f,
+    val trendPlotRight: Float = 1536f,
+    val trendPlotBottom: Float = 218f,
+    val trendGridVerticalLines: Int = 12,
+    val trendGridHorizontalLines: Int = 18,
+    val trendMajorGridVerticalEvery: Int = 3,
+    val trendMajorGridHorizontalEvery: Int = 3,
+    val trendMaxBuckets: Int = 1200,
     val waveformBitmapWidth: Int = 1600,
     val waveformBitmapHeight: Int = 260,
     val waveformPlotLeft: Float = 72f,
@@ -113,6 +125,12 @@ private data class PdfReportTemplateConfig(
     val footerReferenceSpacingBefore: Float = 10f,
     val footerReferenceSpacingAfter: Float = 34f,
     val footerSignatureColumnWidths: List<Float> = listOf(2.4f, 1f),
+    val defaultEventContextSeconds: Int = PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS,
+    val abnormalMergeGapSeconds: Int = 5,
+    val abnormalEtco2LowMmHg: Float = 25f,
+    val abnormalEtco2HighMmHg: Float = 50f,
+    val abnormalRrLow: Int = 5,
+    val abnormalRrHigh: Int = 30,
     val defaultWatermarkEnabled: Boolean = false,
     val defaultWatermarkText: String = PrintSetting.DEFAULT_PDF_WATERMARK_TEXT,
     val defaultWatermarkOpacity: Float = PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY,
@@ -120,13 +138,7 @@ private data class PdfReportTemplateConfig(
     val watermarkRotation: Float = 45f,
     val watermarkHorizontalSpacingMultiplier: Float = 2f,
     val watermarkVerticalSpacingMultiplier: Float = 5f,
-) {
-    val segmentPoints: Int
-        get() = POINTS_PER_SECOND * segmentSeconds
-
-    val segmentMillis: Long
-        get() = segmentSeconds * 1000L
-}
+)
 
 private val PDF_OFFICIAL_REPORT_TEMPLATE_CONFIG = PdfReportTemplateConfig()
 private val PDF_DEBUG_REPORT_TEMPLATE_CONFIG = PDF_OFFICIAL_REPORT_TEMPLATE_CONFIG.copy(
@@ -238,7 +250,32 @@ class SaveChartToPdfTask(
         val points: List<CO2WavePointData>,
         val startIndex: Int,
         val startMillis: Long? = null,
-        val endMillis: Long? = null
+        val endMillis: Long? = null,
+        val durationMillis: Long,
+        val reasonText: String? = null,
+        val eventStartMillis: Long? = null,
+        val eventEndMillis: Long? = null
+    )
+
+    private data class AbnormalEvent(
+        val startMillis: Long,
+        val endMillis: Long,
+        val reasons: Set<String>
+    )
+
+    private data class AbnormalWindow(
+        val startMillis: Long,
+        val endMillis: Long,
+        val eventStartMillis: Long,
+        val eventEndMillis: Long,
+        val reasons: Set<String>
+    )
+
+    private data class TrendBucket(
+        val millis: Long,
+        val average: Float,
+        val min: Float,
+        val max: Float
     )
 
     private data class MetricStats(
@@ -263,6 +300,7 @@ class SaveChartToPdfTask(
     private val fullDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
     private val reportGeneratedAt: LocalDateTime = LocalDateTime.now()
+    private val usesSampleTimeline = data.isNotEmpty() && data.all { it.sampleTimeMillis > 0L }
 
     private fun addPDFHeader(document: Document) {
         printSetting?.hospitalName
@@ -478,8 +516,41 @@ class SaveChartToPdfTask(
         return PdfWatermarkConfig(text = text, opacity = opacity)
     }
 
+    private fun addTrendSection(document: Document, writer: PdfWriter) {
+        if (data.isEmpty()) return
+        addReportSection(document, writer, templateConfig.trendSectionHeight) {
+            val title = Paragraph("全程趋势（EtCO2）", reportHeaderFont)
+            title.spacingAfter = templateConfig.summaryTitleSpacingAfter
+            document.add(title)
+
+            val bitmap = createTrendBitmap()
+            val stream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            val image = Image.getInstance(stream.toByteArray())
+            image.alignment = Element.ALIGN_CENTER
+            image.scaleToFit(
+                document.pageSize.width - document.leftMargin() - document.rightMargin(),
+                templateConfig.trendImageMaxHeight
+            )
+            document.add(image)
+        }
+    }
+
     private fun addWaveformSections(document: Document, writer: PdfWriter) {
-        val segments = buildReportSegments()
+        val segments = buildAbnormalReportSegments()
+        addReportSection(document, writer, templateConfig.abnormalHeaderSectionHeight) {
+            val title = Paragraph("异常片段（${resolveEventContextSeconds()}秒上下文波形）", reportHeaderFont)
+            title.spacingAfter = templateConfig.summaryTitleSpacingAfter
+            document.add(title)
+
+            val summaryText = if (segments.isEmpty()) {
+                "未检测到超过报告阈值的 EtCO2/RR 异常。${abnormalCriteriaText()}"
+            } else {
+                "共识别 ${segments.size} 个异常上下文窗口。${abnormalCriteriaText()}"
+            }
+            document.add(Paragraph(summaryText, reportSmallFont))
+        }
+
         segments.forEachIndexed { index, segment ->
             addReportSection(document, writer, templateConfig.waveformSectionHeight) {
                 addWaveformHeader(document, segment, index)
@@ -489,48 +560,107 @@ class SaveChartToPdfTask(
         }
     }
 
-    private fun buildReportSegments(): List<ReportSegment> {
+    private fun buildAbnormalReportSegments(): List<ReportSegment> {
         if (data.isEmpty()) return emptyList()
-        if (data.all { it.sampleTimeMillis > 0L }) {
-            return buildTimedReportSegments()
+        val windows = buildAbnormalWindows()
+        return windows.mapNotNull { window ->
+            val segmentPoints = data.filter { point ->
+                val pointMillis = pointTimelineMillis(point)
+                pointMillis >= window.startMillis && pointMillis <= window.endMillis
+            }
+            if (segmentPoints.isEmpty()) return@mapNotNull null
+
+            ReportSegment(
+                points = segmentPoints,
+                startIndex = segmentPoints.first().index,
+                startMillis = if (hasSampleTimeline()) window.startMillis else null,
+                endMillis = if (hasSampleTimeline()) window.endMillis else null,
+                durationMillis = (window.endMillis - window.startMillis).coerceAtLeast(1000L),
+                reasonText = window.reasons.sorted().joinToString("；"),
+                eventStartMillis = if (hasSampleTimeline()) window.eventStartMillis else null,
+                eventEndMillis = if (hasSampleTimeline()) window.eventEndMillis else null
+            )
         }
-        return buildIndexedReportSegments()
     }
 
-    private fun buildTimedReportSegments(): List<ReportSegment> {
-        val firstMillis = data.first().sampleTimeMillis
-        val lastMillis = data.last().sampleTimeMillis
-        val segmentCount = min(
-            templateConfig.maxSegments,
-            (((lastMillis - firstMillis).coerceAtLeast(0L) / templateConfig.segmentMillis) + 1).toInt()
-        )
-        return (0 until segmentCount).mapNotNull { segmentIndex ->
-            val segmentStart = firstMillis + segmentIndex * templateConfig.segmentMillis
-            val segmentLimit = segmentStart + templateConfig.segmentMillis
-            val segmentPoints = data.filter { point ->
-                point.sampleTimeMillis >= segmentStart && point.sampleTimeMillis < segmentLimit
+    private fun buildAbnormalWindows(): List<AbnormalWindow> {
+        val events = buildAbnormalEvents()
+        if (events.isEmpty()) return emptyList()
+
+        val firstMillis = pointTimelineMillis(data.first())
+        val lastMillis = pointTimelineMillis(data.last())
+        val contextMillis = resolveEventContextMillis()
+        val halfContextMillis = contextMillis / 2
+
+        val windows = events.map { event ->
+            val eventCenterMillis = event.startMillis + (event.endMillis - event.startMillis) / 2
+            var windowStart = eventCenterMillis - halfContextMillis
+            var windowEnd = windowStart + contextMillis
+
+            if (windowStart < firstMillis) {
+                windowEnd += firstMillis - windowStart
+                windowStart = firstMillis
             }
-            if (segmentPoints.isEmpty()) {
-                null
+            if (windowEnd > lastMillis) {
+                windowStart -= windowEnd - lastMillis
+                windowEnd = lastMillis
+            }
+            windowStart = windowStart.coerceAtLeast(firstMillis)
+            windowEnd = windowEnd.coerceAtLeast(windowStart)
+
+            AbnormalWindow(
+                startMillis = windowStart,
+                endMillis = windowEnd,
+                eventStartMillis = event.startMillis,
+                eventEndMillis = event.endMillis,
+                reasons = event.reasons
+            )
+        }.sortedBy { it.startMillis }
+
+        return windows.fold(mutableListOf()) { merged, window ->
+            val last = merged.lastOrNull()
+            if (last != null && window.startMillis <= last.endMillis) {
+                merged[merged.lastIndex] = AbnormalWindow(
+                    startMillis = last.startMillis,
+                    endMillis = max(last.endMillis, window.endMillis),
+                    eventStartMillis = min(last.eventStartMillis, window.eventStartMillis),
+                    eventEndMillis = max(last.eventEndMillis, window.eventEndMillis),
+                    reasons = last.reasons + window.reasons
+                )
             } else {
-                ReportSegment(
-                    points = segmentPoints,
-                    startIndex = segmentPoints.first().index,
-                    startMillis = segmentStart,
-                    endMillis = min(segmentLimit, lastMillis)
+                merged.add(window)
+            }
+            merged
+        }
+    }
+
+    private fun buildAbnormalEvents(): List<AbnormalEvent> {
+        val events = mutableListOf<AbnormalEvent>()
+        val mergeGapMillis = templateConfig.abnormalMergeGapSeconds * 1000L
+        var currentEvent: AbnormalEvent? = null
+
+        data.forEach { point ->
+            val reasons = abnormalReasons(point)
+            if (reasons.isEmpty()) return@forEach
+
+            val pointMillis = pointTimelineMillis(point)
+            val current = currentEvent
+            currentEvent = if (current != null && pointMillis - current.endMillis <= mergeGapMillis) {
+                current.copy(
+                    endMillis = pointMillis,
+                    reasons = current.reasons + reasons
+                )
+            } else {
+                current?.let { events.add(it) }
+                AbnormalEvent(
+                    startMillis = pointMillis,
+                    endMillis = pointMillis,
+                    reasons = reasons
                 )
             }
         }
-    }
-
-    private fun buildIndexedReportSegments(): List<ReportSegment> {
-        val pointsPerSegment = templateConfig.segmentPoints
-        val segmentCount = min(templateConfig.maxSegments, (data.size + pointsPerSegment - 1) / pointsPerSegment)
-        return (0 until segmentCount).map { segmentIndex ->
-            val startIndex = segmentIndex * pointsPerSegment
-            val endIndex = min(data.size, startIndex + pointsPerSegment)
-            ReportSegment(data.subList(startIndex, endIndex), startIndex)
-        }
+        currentEvent?.let { events.add(it) }
+        return events
     }
 
     private fun addWaveformHeader(document: Document, segment: ReportSegment, index: Int) {
@@ -538,7 +668,15 @@ class SaveChartToPdfTask(
         table.widthPercentage = 100f
         table.spacingBefore = if (index == 0) 0f else templateConfig.waveformHeaderSpacingBefore
 
-        val cell = PdfPCell(Phrase("测量时间：  ${formatMeasurementRange(segment)}", reportHeaderFont))
+        val title = segment.reasonText?.let { "异常片段 ${index + 1}：$it" } ?: "异常片段 ${index + 1}"
+        val phrase = Phrase()
+        phrase.add(Chunk(title, reportHeaderFont))
+        phrase.add(Chunk("\n测量时间：  ${formatMeasurementRange(segment)}", reportHeaderFont))
+        formatEventRange(segment)?.let {
+            phrase.add(Chunk("\n异常时间：  $it", reportSmallFont))
+        }
+
+        val cell = PdfPCell(phrase)
         cell.border = Rectangle.NO_BORDER
         cell.horizontalAlignment = Element.ALIGN_LEFT
         cell.paddingBottom = templateConfig.waveformHeaderPaddingBottom
@@ -572,6 +710,77 @@ class SaveChartToPdfTask(
         document.add(paragraph)
     }
 
+    private fun abnormalReasons(point: CO2WavePointData): Set<String> {
+        val reasons = mutableSetOf<String>()
+        abnormalEtco2RangeValues()?.let { (low, high) ->
+            val value = point.ETCO2
+            if (isValidMetricValue(value) && value > 0f) {
+                when {
+                    value < low -> reasons.add("EtCO2 < ${formatReferenceNumber(low)}$co2Unit")
+                    value > high -> reasons.add("EtCO2 > ${formatReferenceNumber(high)}$co2Unit")
+                }
+            }
+        }
+
+        val rr = point.RR
+        if (rr > 0) {
+            when {
+                rr < templateConfig.abnormalRrLow -> reasons.add("RR < ${templateConfig.abnormalRrLow}$RR_UNIT")
+                rr > templateConfig.abnormalRrHigh -> reasons.add("RR > ${templateConfig.abnormalRrHigh}$RR_UNIT")
+            }
+        }
+        return reasons
+    }
+
+    private fun abnormalCriteriaText(): String {
+        val etco2Text = abnormalEtco2RangeValues()?.let { (low, high) ->
+            "EtCO2 < ${formatReferenceNumber(low)}$co2Unit 或 > ${formatReferenceNumber(high)}$co2Unit"
+        } ?: "EtCO2 阈值未启用"
+        return "判定阈值：$etco2Text；RR < ${templateConfig.abnormalRrLow}$RR_UNIT 或 > ${templateConfig.abnormalRrHigh}$RR_UNIT。"
+    }
+
+    private fun abnormalEtco2RangeValues(): Pair<Float, Float>? {
+        return when (co2Unit) {
+            CO2_UNIT.MMHG.value -> Pair(
+                templateConfig.abnormalEtco2LowMmHg,
+                templateConfig.abnormalEtco2HighMmHg
+            )
+            CO2_UNIT.KPA.value -> Pair(
+                templateConfig.abnormalEtco2LowMmHg * KPA_PER_MMHG,
+                templateConfig.abnormalEtco2HighMmHg * KPA_PER_MMHG
+            )
+            CO2_UNIT.PERCENT.value -> Pair(
+                templateConfig.abnormalEtco2LowMmHg * PERCENT_PER_MMHG,
+                templateConfig.abnormalEtco2HighMmHg * PERCENT_PER_MMHG
+            )
+            else -> null
+        }
+    }
+
+    private fun resolveEventContextSeconds(): Int {
+        return (printSetting?.pdfEventContextSeconds ?: templateConfig.defaultEventContextSeconds)
+            .coerceIn(
+                PrintSetting.MIN_PDF_EVENT_CONTEXT_SECONDS,
+                PrintSetting.MAX_PDF_EVENT_CONTEXT_SECONDS
+            )
+    }
+
+    private fun resolveEventContextMillis(): Long {
+        return resolveEventContextSeconds() * 1000L
+    }
+
+    private fun hasSampleTimeline(): Boolean {
+        return usesSampleTimeline
+    }
+
+    private fun pointTimelineMillis(point: CO2WavePointData): Long {
+        return if (hasSampleTimeline()) {
+            point.sampleTimeMillis
+        } else {
+            point.index.toLong() * 1000L / POINTS_PER_SECOND
+        }
+    }
+
     private fun buildMetrics(points: List<CO2WavePointData>): ReportMetrics {
         return ReportMetrics(
             etco2 = metricStats(points) { it.ETCO2 },
@@ -602,6 +811,165 @@ class SaveChartToPdfTask(
         return !value.isNaN() && !value.isInfinite()
     }
 
+    private fun createTrendBitmap(): Bitmap {
+        val width = templateConfig.trendBitmapWidth
+        val height = templateConfig.trendBitmapHeight
+        val plotLeft = templateConfig.trendPlotLeft
+        val plotTop = templateConfig.trendPlotTop
+        val plotRight = templateConfig.trendPlotRight
+        val plotBottom = templateConfig.trendPlotBottom
+        val plotWidth = plotRight - plotLeft
+        val plotHeight = plotBottom - plotTop
+        val yMax = reportYAxisMax()
+        val startMillis = pointTimelineMillis(data.first())
+        val endMillis = pointTimelineMillis(data.last()).coerceAtLeast(startMillis + 1L)
+        val durationMillis = (endMillis - startMillis).coerceAtLeast(1L)
+
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(android.graphics.Color.WHITE)
+
+        val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.rgb(224, 224, 224)
+            strokeWidth = templateConfig.waveformGridStrokeWidth
+        }
+        val majorGridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.rgb(178, 178, 178)
+            strokeWidth = templateConfig.waveformMajorGridStrokeWidth
+        }
+        val referenceRangePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.argb(38, 42, 148, 88)
+            style = Paint.Style.FILL
+        }
+        val axisPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.BLACK
+            strokeWidth = templateConfig.waveformAxisStrokeWidth
+            style = Paint.Style.STROKE
+        }
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.BLACK
+            textSize = templateConfig.waveformAxisTextSize
+        }
+
+        drawEtco2ReferenceRange(canvas, plotLeft, plotRight, plotBottom, plotHeight, yMax, referenceRangePaint)
+
+        for (i in 0..templateConfig.trendGridVerticalLines) {
+            val x = plotLeft + plotWidth * i / templateConfig.trendGridVerticalLines
+            val paint = if (i % templateConfig.trendMajorGridVerticalEvery == 0) majorGridPaint else gridPaint
+            canvas.drawLine(x, plotTop, x, plotBottom, paint)
+        }
+        for (i in 0..templateConfig.trendGridHorizontalLines) {
+            val y = plotBottom - plotHeight * i / templateConfig.trendGridHorizontalLines
+            val paint = if (i % templateConfig.trendMajorGridHorizontalEvery == 0) majorGridPaint else gridPaint
+            canvas.drawLine(plotLeft, y, plotRight, y, paint)
+        }
+        canvas.drawRect(plotLeft, plotTop, plotRight, plotBottom, axisPaint)
+
+        textPaint.textAlign = Paint.Align.RIGHT
+        yAxisTickValues(yMax).forEach { value ->
+            val y = plotBottom - plotHeight * value / yMax
+            val baseline = (y + 8f).coerceIn(plotTop + 8f, plotBottom + 8f)
+            canvas.drawText(formatAxisNumber(value), plotLeft - 10f, baseline, textPaint)
+        }
+        canvas.save()
+        canvas.rotate(-90f, 25f, plotTop + plotHeight / 2f)
+        textPaint.textAlign = Paint.Align.CENTER
+        canvas.drawText("($co2Unit)", 25f, plotTop + plotHeight / 2f, textPaint)
+        canvas.restore()
+
+        textPaint.textAlign = Paint.Align.CENTER
+        for (i in 0..4) {
+            val elapsed = durationMillis * i / 4
+            val x = plotLeft + plotWidth * i / 4
+            canvas.drawText(formatDurationAxisLabel(elapsed), x, height - 20f, textPaint)
+        }
+
+        val buckets = buildTrendBuckets(startMillis, durationMillis)
+        if (buckets.isEmpty()) {
+            textPaint.textAlign = Paint.Align.CENTER
+            canvas.drawText("No valid EtCO2 data", plotLeft + plotWidth / 2f, plotTop + plotHeight / 2f, textPaint)
+            return bitmap
+        }
+
+        val rangePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.rgb(120, 120, 120)
+            strokeWidth = 1.4f
+            style = Paint.Style.STROKE
+        }
+        buckets.forEach { bucket ->
+            val x = trendX(bucket.millis, startMillis, durationMillis, plotLeft, plotWidth)
+            val minY = trendY(bucket.min, yMax, plotBottom, plotHeight)
+            val maxY = trendY(bucket.max, yMax, plotBottom, plotHeight)
+            canvas.drawLine(x, minY, x, maxY, rangePaint)
+        }
+
+        if (buckets.size > 1) {
+            val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = android.graphics.Color.BLACK
+                strokeWidth = templateConfig.waveformLineStrokeWidth
+                style = Paint.Style.STROKE
+            }
+            val path = Path()
+            buckets.forEachIndexed { index, bucket ->
+                val x = trendX(bucket.millis, startMillis, durationMillis, plotLeft, plotWidth)
+                val y = trendY(bucket.average, yMax, plotBottom, plotHeight)
+                if (index == 0) {
+                    path.moveTo(x, y)
+                } else {
+                    path.lineTo(x, y)
+                }
+            }
+            canvas.drawPath(path, linePaint)
+        }
+
+        return bitmap
+    }
+
+    private fun buildTrendBuckets(startMillis: Long, durationMillis: Long): List<TrendBucket> {
+        val validPoints = data.filter { point ->
+            isValidMetricValue(point.ETCO2) && point.ETCO2 > 0f
+        }
+        if (validPoints.isEmpty()) return emptyList()
+
+        val bucketCount = min(templateConfig.trendMaxBuckets, validPoints.size).coerceAtLeast(1)
+        val grouped = Array(bucketCount) { mutableListOf<CO2WavePointData>() }
+        validPoints.forEach { point ->
+            val relativeMillis = (pointTimelineMillis(point) - startMillis).coerceIn(0L, durationMillis)
+            val bucketIndex = min(
+                bucketCount - 1,
+                (relativeMillis * bucketCount / durationMillis).toInt()
+            )
+            grouped[bucketIndex].add(point)
+        }
+
+        return grouped.mapNotNull { bucket ->
+            if (bucket.isEmpty()) return@mapNotNull null
+            val values = bucket.map { it.ETCO2 }
+            TrendBucket(
+                millis = bucket.sumOf { pointTimelineMillis(it) } / bucket.size,
+                average = values.sum() / values.size,
+                min = values.minOrNull() ?: return@mapNotNull null,
+                max = values.maxOrNull() ?: return@mapNotNull null
+            )
+        }
+    }
+
+    private fun trendX(
+        millis: Long,
+        startMillis: Long,
+        durationMillis: Long,
+        plotLeft: Float,
+        plotWidth: Float
+    ): Float {
+        val elapsedMillis = (millis - startMillis).coerceIn(0L, durationMillis)
+        return plotLeft + plotWidth * elapsedMillis / durationMillis.toFloat()
+    }
+
+    private fun trendY(value: Float, yMax: Float, plotBottom: Float, plotHeight: Float): Float {
+        val normalizedY = min(max(value, 0f), yMax) / yMax
+        return plotBottom - normalizedY * plotHeight
+    }
+
     private fun createWaveformBitmap(segment: ReportSegment): Bitmap {
         val points = segment.points
         val width = templateConfig.waveformBitmapWidth
@@ -613,6 +981,7 @@ class SaveChartToPdfTask(
         val plotWidth = plotRight - plotLeft
         val plotHeight = plotBottom - plotTop
         val yMax = reportYAxisMax()
+        val durationSeconds = segmentDurationSeconds(segment)
 
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -667,9 +1036,10 @@ class SaveChartToPdfTask(
         canvas.restore()
 
         textPaint.textAlign = Paint.Align.CENTER
-        for (second in 0..templateConfig.segmentSeconds step templateConfig.waveformXAxisLabelStepSeconds) {
-            val x = plotLeft + plotWidth * second / templateConfig.segmentSeconds
-            val label = if (second == templateConfig.segmentSeconds) "${second}(s)" else second.toString()
+        val xAxisStep = waveformXAxisStepSeconds(durationSeconds)
+        for (second in 0..durationSeconds step xAxisStep) {
+            val x = plotLeft + plotWidth * second / durationSeconds
+            val label = if (second == durationSeconds) "${second}(s)" else second.toString()
             canvas.drawText(label, x, height - 20f, textPaint)
         }
 
@@ -680,7 +1050,7 @@ class SaveChartToPdfTask(
                 style = Paint.Style.STROKE
             }
             val path = Path()
-            points.take(templateConfig.segmentPoints).forEachIndexed { index, point ->
+            points.forEachIndexed { index, point ->
                 val x = waveformX(point, index, segment, plotLeft, plotWidth)
                 val normalizedY = min(max(point.co2, 0f), yMax) / yMax
                 val y = plotBottom - normalizedY * plotHeight
@@ -706,11 +1076,31 @@ class SaveChartToPdfTask(
         val segmentStart = segment.startMillis
         return if (segmentStart != null && point.sampleTimeMillis > 0L) {
             val elapsedMillis = (point.sampleTimeMillis - segmentStart)
-                .coerceIn(0L, templateConfig.segmentMillis)
-            plotLeft + plotWidth * elapsedMillis / templateConfig.segmentMillis.toFloat()
+                .coerceIn(0L, segment.durationMillis)
+            plotLeft + plotWidth * elapsedMillis / segment.durationMillis.toFloat()
         } else {
-            val pointDenominator = (templateConfig.segmentPoints - 1).coerceAtLeast(1).toFloat()
-            plotLeft + plotWidth * fallbackIndex / pointDenominator
+            val segmentPoints = durationMillisToPoints(segment.durationMillis).coerceAtLeast(1)
+            val elapsedPoints = (point.index - segment.startIndex).coerceAtLeast(fallbackIndex)
+                .coerceIn(0, segmentPoints)
+            plotLeft + plotWidth * elapsedPoints / segmentPoints.toFloat()
+        }
+    }
+
+    private fun segmentDurationSeconds(segment: ReportSegment): Int {
+        return ((segment.durationMillis + 999L) / 1000L).toInt().coerceAtLeast(1)
+    }
+
+    private fun durationMillisToPoints(durationMillis: Long): Int {
+        return ((durationMillis * POINTS_PER_SECOND) / 1000L).toInt().coerceAtLeast(1)
+    }
+
+    private fun waveformXAxisStepSeconds(durationSeconds: Int): Int {
+        return when {
+            durationSeconds <= 14 -> templateConfig.waveformXAxisLabelStepSeconds
+            durationSeconds <= 60 -> 10
+            durationSeconds <= 120 -> 20
+            durationSeconds <= 300 -> 60
+            else -> max(1, durationSeconds / 5)
         }
     }
 
@@ -799,6 +1189,26 @@ class SaveChartToPdfTask(
         val endIndex = segment.startIndex + segment.points.size.coerceAtLeast(1)
         val segmentEnd = start.plusNanos(indexToNanos(endIndex))
         return "${segmentStart.format(fullDateTimeFormatter)}--${segmentEnd.format(timeFormatter)}"
+    }
+
+    private fun formatEventRange(segment: ReportSegment): String? {
+        val eventStartMillis = segment.eventStartMillis ?: return null
+        val eventEndMillis = segment.eventEndMillis ?: return null
+        val eventStart = epochMillisToLocalDateTime(eventStartMillis)
+        val eventEnd = epochMillisToLocalDateTime(eventEndMillis)
+        return "${eventStart.format(fullDateTimeFormatter)}--${eventEnd.format(timeFormatter)}"
+    }
+
+    private fun formatDurationAxisLabel(elapsedMillis: Long): String {
+        val totalSeconds = (elapsedMillis / 1000L).coerceAtLeast(0L)
+        val hours = totalSeconds / 3600L
+        val minutes = (totalSeconds % 3600L) / 60L
+        val seconds = totalSeconds % 60L
+        return when {
+            hours > 0 -> "${hours}h${minutes}m"
+            minutes > 0 -> "${minutes}m"
+            else -> "${seconds}s"
+        }
     }
 
     private fun epochMillisToLocalDateTime(epochMillis: Long): LocalDateTime {
@@ -890,7 +1300,8 @@ class SaveChartToPdfTask(
                 addReportSummary(document)
             }
 
-            // 按纸质报告单样式从记录开头绘制最多三段连续 14 秒 CO2 波形。
+            // 长记录优先展示全程趋势，再展示异常事件上下文波形。
+            addTrendSection(document, writer)
             addWaveformSections(document, writer)
 
             // PDF页脚

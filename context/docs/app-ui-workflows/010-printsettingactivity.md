@@ -10,11 +10,11 @@
 - ID / 别名：PRINT_CONFIG_PAGE, 打印设置
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/pages/PrintSettingActivity.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：PDF、PDF 水印和热敏打印设置
+- 备注：PDF、PDF 水印、异常上下文秒数和热敏打印设置
 
 ## 补充职责
 
-打印设置页，编辑医院名/报告名/PDF 水印文字和透明度，用 TypeSwitch 控制正式/调试报告模板、水印开关、PDF/热敏输出和详情页趋势图展示，并写入 SharedPreferences。
+打印设置页，编辑医院名/报告名/PDF 水印文字和透明度、异常片段上下文秒数，用 TypeSwitch 控制正式/调试报告模板、水印开关、PDF/热敏输出和详情页趋势图展示，并写入 SharedPreferences。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ PRINT_CONFIG_PAGE, 打印设置
 
 ## 注意事项
 
-PDF 和热敏打印设置；水印配置包含模板、开关、文字和透明度，透明度保存前限制到 `0..1`。
+PDF 和热敏打印设置；水印配置包含模板、开关、文字和透明度，透明度保存前限制到 `0..1`。异常片段上下文秒数保存前限制到 `10..300`，默认 `60`。
 
 ## 最小验证方式
 

@@ -60,6 +60,9 @@ class PrintSettingActivity : BaseActivity() {
         val pdfWatermarkOpacity = remember {
             mutableStateOf(formatWatermarkOpacity(viewModel.pdfWatermarkOpacity.value))
         }
+        val pdfEventContextSeconds = remember {
+            mutableStateOf(viewModel.pdfEventContextSeconds.value.toString())
+        }
 
         val context = this
 
@@ -155,6 +158,15 @@ class PrintSettingActivity : BaseActivity() {
                 }
             )
 
+            CustomTextField(
+                title = getStringAcitivity(R.string.print_pdf_event_context_seconds),
+                defaultText = getStringAcitivity(R.string.print_input_event_context_seconds),
+                value = pdfEventContextSeconds.value,
+                onValueChange = {
+                    pdfEventContextSeconds.value = it
+                }
+            )
+
             Spacer(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
             )
@@ -227,10 +239,13 @@ class PrintSettingActivity : BaseActivity() {
                         viewModel.updateIsPDF(isPDF.value)
                         viewModel.updateShowTrendingChart(showTrendingChart.value)
                         val normalizedWatermarkOpacity = parseWatermarkOpacity(pdfWatermarkOpacity.value)
+                        val normalizedEventContextSeconds =
+                            parseEventContextSeconds(pdfEventContextSeconds.value)
                         viewModel.updatePdfTemplateMode(pdfTemplateMode.value)
                         viewModel.updatePdfWatermarkEnabled(pdfWatermarkEnabled.value)
                         viewModel.updatePdfWatermarkText(pdfWatermarkText.value)
                         viewModel.updatePdfWatermarkOpacity(normalizedWatermarkOpacity)
+                        viewModel.updatePdfEventContextSeconds(normalizedEventContextSeconds)
                         // 将打印设置存储到用户偏好中
                         localStorageKit.saveUserPrintSettingToPreferences(
                             context = context,
@@ -241,6 +256,7 @@ class PrintSettingActivity : BaseActivity() {
                             pdfWatermarkEnabled = pdfWatermarkEnabled.value,
                             pdfWatermarkText = pdfWatermarkText.value,
                             pdfWatermarkOpacity = normalizedWatermarkOpacity,
+                            pdfEventContextSeconds = normalizedEventContextSeconds,
                             showTrendingChart = showTrendingChart.value
                         )
 
@@ -284,5 +300,14 @@ class PrintSettingActivity : BaseActivity() {
 
     private fun formatWatermarkOpacity(value: Float): String {
         return value.coerceIn(0f, 1f).toString()
+    }
+
+    private fun parseEventContextSeconds(value: String): Int {
+        return value.toIntOrNull()
+            ?.coerceIn(
+                PrintSetting.MIN_PDF_EVENT_CONTEXT_SECONDS,
+                PrintSetting.MAX_PDF_EVENT_CONTEXT_SECONDS
+            )
+            ?: PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS
     }
 }

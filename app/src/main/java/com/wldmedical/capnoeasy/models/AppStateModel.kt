@@ -194,6 +194,9 @@ class AppState @Inject constructor() {
     // PDF 水印透明度
     val pdfWatermarkOpacity: MutableState<Float> = mutableFloatStateOf(PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY)
 
+    // PDF 异常片段上下文秒数
+    val pdfEventContextSeconds: MutableState<Int> = mutableIntStateOf(PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS)
+
     // 病人相关数据都会出现在打印结果中
     // 病人姓名
     val patientName: MutableState<String?> = mutableStateOf(null)
@@ -544,6 +547,15 @@ class AppStateModel @Inject constructor(
     val pdfWatermarkOpacity = appState.pdfWatermarkOpacity
     fun updatePdfWatermarkOpacity(newVal: Float) {
         appState.pdfWatermarkOpacity.value = newVal.coerceIn(0f, 1f)
+    }
+
+    // pdf设置-异常片段上下文秒数
+    val pdfEventContextSeconds = appState.pdfEventContextSeconds
+    fun updatePdfEventContextSeconds(newVal: Int) {
+        appState.pdfEventContextSeconds.value = newVal.coerceIn(
+            PrintSetting.MIN_PDF_EVENT_CONTEXT_SECONDS,
+            PrintSetting.MAX_PDF_EVENT_CONTEXT_SECONDS
+        )
     }
 
     // 附近蓝牙设备-扫描结果

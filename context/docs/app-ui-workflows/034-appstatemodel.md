@@ -10,11 +10,11 @@
 - ID / 别名：ViewModel, HiltViewModel
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/models/AppStateModel.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：当前项目唯一 ViewModel，暴露 PDF 输出、模板和水印设置入口
+- 备注：当前项目唯一 ViewModel，暴露 PDF 输出、模板、水印和异常上下文秒数设置入口
 
 ## 补充职责
 
-唯一 HiltViewModel，暴露 AppState 的 Compose State/StateFlow，并提供 update* 函数作为页面和组件的状态写入口。PDF 设置入口包含输出类型、模板模式、水印开关、水印文字和水印透明度。
+唯一 HiltViewModel，暴露 AppState 的 Compose State/StateFlow，并提供 update* 函数作为页面和组件的状态写入口。PDF 设置入口包含输出类型、模板模式、水印开关、水印文字、水印透明度和异常上下文秒数。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ ViewModel, HiltViewModel
 
 ## 注意事项
 
-当前项目唯一 ViewModel。`updatePdfWatermarkOpacity` 会将输入限制在 0-1。
+当前项目唯一 ViewModel。`updatePdfWatermarkOpacity` 会将输入限制在 0-1；`updatePdfEventContextSeconds` 会将输入限制在 10-300。
 
 ## 最小验证方式
 

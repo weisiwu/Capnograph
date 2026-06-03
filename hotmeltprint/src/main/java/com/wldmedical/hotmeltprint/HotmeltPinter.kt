@@ -36,6 +36,9 @@ public object PrintSetting {
     const val PDF_TEMPLATE_DEBUG = "debug"
     const val DEFAULT_PDF_WATERMARK_TEXT = "万联达仪器"
     const val DEFAULT_PDF_WATERMARK_OPACITY = 0.3f
+    const val DEFAULT_PDF_EVENT_CONTEXT_SECONDS = 60
+    const val MIN_PDF_EVENT_CONTEXT_SECONDS = 10
+    const val MAX_PDF_EVENT_CONTEXT_SECONDS = 300
 
     var hospitalName: String? = null
     var reportName: String? = null
@@ -44,6 +47,7 @@ public object PrintSetting {
     var pdfWatermarkEnabled: Boolean? = null
     var pdfWatermarkText: String? = null
     var pdfWatermarkOpacity: Float? = null
+    var pdfEventContextSeconds: Int? = null
     var pdfDepart: String? = null
     var pdfBedNumber: String? = null
     var pdfIDNumber: String? = null

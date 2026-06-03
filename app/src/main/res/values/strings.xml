@@ -60,6 +60,8 @@
     <string name="print_pdf_watermark_text">水印文字</string>
     <string name="print_pdf_watermark_opacity">水印透明度</string>
     <string name="print_input_watermark_opacity">请输入0-1</string>
+    <string name="print_pdf_event_context_seconds">异常波形上下文(秒)</string>
+    <string name="print_input_event_context_seconds">请输入10-300</string>
     <string name="print_pdf_depart">科室</string>
     <string name="print_input_depart">请输入科室</string>
     <string name="print_pdf_id">ID号</string>

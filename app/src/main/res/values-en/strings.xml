@@ -61,6 +61,8 @@
     <string name="print_pdf_watermark_text">Watermark Text</string>
     <string name="print_pdf_watermark_opacity">Watermark Opacity</string>
     <string name="print_input_watermark_opacity">Please enter 0-1</string>
+    <string name="print_pdf_event_context_seconds">Abnormal Waveform Context (s)</string>
+    <string name="print_input_event_context_seconds">Please enter 10-300</string>
     <string name="print_pdf_depart">Department</string>
     <string name="print_input_depart">Please enter the department</string>
     <string name="print_pdf_id">ID Number</string>

@@ -316,6 +316,7 @@ class LocalStorageKit @Inject constructor(
     private val KEY_PDF_WATERMARK_ENABLED = "pdf_watermark_enabled"
     private val KEY_PDF_WATERMARK_TEXT = "pdf_watermark_text"
     private val KEY_PDF_WATERMARK_OPACITY = "pdf_watermark_opacity"
+    private val KEY_PDF_EVENT_CONTEXT_SECONDS = "pdf_event_context_seconds"
     private val KEY_PDFDEPART = "pdfDepart"
     private val KEY_PDFBEDNUMBER = "pdfBedNumber"
     private val KEY_PDFIDNUMBER = "pdfIDNumber"
@@ -547,6 +548,7 @@ class LocalStorageKit @Inject constructor(
         pdfWatermarkEnabled: Boolean? = null,
         pdfWatermarkText: String? = null,
         pdfWatermarkOpacity: Float? = null,
+        pdfEventContextSeconds: Int? = null,
         depart: String? = null,
         bedNumber: String? = null,
         idNumber: String? = null,
@@ -565,6 +567,15 @@ class LocalStorageKit @Inject constructor(
             pdfWatermarkText?.let { putString(KEY_PDF_WATERMARK_TEXT, it) }
             pdfWatermarkOpacity?.let {
                 putFloat(KEY_PDF_WATERMARK_OPACITY, it.coerceIn(0f, 1f))
+            }
+            pdfEventContextSeconds?.let {
+                putInt(
+                    KEY_PDF_EVENT_CONTEXT_SECONDS,
+                    it.coerceIn(
+                        PrintSetting.MIN_PDF_EVENT_CONTEXT_SECONDS,
+                        PrintSetting.MAX_PDF_EVENT_CONTEXT_SECONDS
+                    )
+                )
             }
             depart?.let { putString(KEY_PDFDEPART, it) }
             bedNumber?.let { putString(KEY_PDFBEDNUMBER, it) }
@@ -595,6 +606,17 @@ class LocalStorageKit @Inject constructor(
         PrintSetting.pdfWatermarkOpacity = if (prefs.contains(KEY_PDF_WATERMARK_OPACITY)) {
             prefs.getFloat(KEY_PDF_WATERMARK_OPACITY, PrintSetting.DEFAULT_PDF_WATERMARK_OPACITY)
                 .coerceIn(0f, 1f)
+        } else {
+            null
+        }
+        PrintSetting.pdfEventContextSeconds = if (prefs.contains(KEY_PDF_EVENT_CONTEXT_SECONDS)) {
+            prefs.getInt(
+                KEY_PDF_EVENT_CONTEXT_SECONDS,
+                PrintSetting.DEFAULT_PDF_EVENT_CONTEXT_SECONDS
+            ).coerceIn(
+                PrintSetting.MIN_PDF_EVENT_CONTEXT_SECONDS,
+                PrintSetting.MAX_PDF_EVENT_CONTEXT_SECONDS
+            )
         } else {
             null
         }
