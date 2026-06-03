@@ -10,11 +10,11 @@
 - ID / 别名：save PDF action, 保存 PDF
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/pages/HistoryRecordDetailActivity.kt`, `app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：读取记录所有 CO2 数据并异步生成 PDF
+- 备注：读取记录所有 CO2 数据、打印偏好和当前设备序列号并异步生成 PDF
 
 ## 补充职责
 
-读取记录所有 CO2 数据并异步生成 PDF。
+读取记录所有 CO2 数据、打印偏好和当前 `BlueToothKit.sSerialNumber`，并异步生成 PDF。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ save PDF action, 保存 PDF
 
 ## 注意事项
 
-读取记录所有 CO2 数据并异步生成 PDF。
+读取记录所有 CO2 数据、打印偏好和当前设备序列号并异步生成 PDF；设备序列号传给 `saveChartToPdfInBackground(deviceSerial=...)`，用于 PDF 基础信息区的设备编号。
 
 ## 最小验证方式
 

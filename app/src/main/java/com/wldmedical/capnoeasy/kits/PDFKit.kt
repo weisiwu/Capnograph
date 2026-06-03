@@ -29,6 +29,7 @@ import com.itextpdf.text.pdf.PdfGState
 import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
+import com.wldmedical.capnoeasy.CO2_UNIT
 import com.wldmedical.capnoeasy.RR_UNIT
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.PrintSetting
@@ -36,6 +37,8 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.text.DecimalFormat
+import java.time.Duration
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.CountDownLatch
 import kotlin.math.max
@@ -48,7 +51,12 @@ private const val REPORT_SEGMENT_SECONDS = 14
 private const val REPORT_SEGMENT_POINTS = POINTS_PER_SECOND * REPORT_SEGMENT_SECONDS
 private const val REPORT_MAX_SEGMENTS = 3
 private const val REPORT_TITLE = "呼气末二氧化碳监测报告单"
-private const val REPORT_ETCO2_REFERENCE = "EtCO2 参考值：32-42mmHg"
+private const val REPORT_ETCO2_REFERENCE_LABEL = "EtCO2 参考值"
+private const val REPORT_ETCO2_REFERENCE_MIN_MMHG = 32f
+private const val REPORT_ETCO2_REFERENCE_MAX_MMHG = 42f
+private const val KPA_PER_MMHG = 0.133322f
+private const val PERCENT_PER_MMHG = 0.13157895f
+private const val REPORT_UNFILLED_VALUE = "未填写"
 
 /**
  * 过滤数据，消除数据中连续超过 10 个小于最大值 10% 的数据
@@ -94,6 +102,7 @@ class SaveChartToPdfTask(
     private val context: Context,
     private val showTrendingChart: Boolean,
     private val co2Unit: String,
+    private val deviceSerial: String? = null,
     private val printSetting: PrintSetting? = null,
     private val onComplete: (Boolean) -> Unit // 添加回调
 ) : AsyncTask<Void, Void, Boolean>() {
@@ -147,6 +156,7 @@ class SaveChartToPdfTask(
     private val decimalFormat = DecimalFormat("0.#")
     private val fullDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+    private val reportGeneratedAt: LocalDateTime = LocalDateTime.now()
 
     private fun addPDFHeader(document: Document) {
         printSetting?.hospitalName
@@ -177,19 +187,25 @@ class SaveChartToPdfTask(
     }
 
     private fun addPDFDetail(document: Document) {
-        val table = PdfPTable(4)
+        val table = PdfPTable(2)
         table.widthPercentage = 100f
-        table.setWidths(floatArrayOf(1.2f, 1.2f, 1.45f, 0.9f))
+        table.setWidths(floatArrayOf(1f, 1f))
         table.spacingBefore = 12f
-        table.spacingAfter = 28f
+        table.spacingAfter = 22f
 
         addFieldCell(table, "住院号", printSetting?.pdfIDNumber, minChars = 9)
         addFieldCell(table, "床位号", printSetting?.pdfBedNumber, minChars = 8)
+        addFieldCell(table, "科室", displayValue(printSetting?.pdfDepart), minChars = 8)
         addFieldCell(table, "姓名", patientName(), minChars = 8)
         addFieldCell(table, "性别", patientGender(), minChars = 4)
         addFieldCell(table, "年龄", patientAge(), suffix = "岁", minChars = 5)
-        addFieldCell(table, "身高", null, suffix = "厘米", minChars = 6)
-        addFieldCell(table, "体重", null, suffix = "千克", minChars = 6)
+        addFieldCell(table, "身高", REPORT_UNFILLED_VALUE, suffix = "厘米", minChars = 6)
+        addFieldCell(table, "体重", REPORT_UNFILLED_VALUE, suffix = "千克", minChars = 6)
+        addFieldCell(table, "开始时间", formatRecordDateTime(record?.startTime), minChars = 19)
+        addFieldCell(table, "结束时间", formatRecordDateTime(record?.endTime), minChars = 19)
+        addFieldCell(table, "检测时长", formatRecordDuration(), minChars = 8)
+        addFieldCell(table, "报告时间", formatRecordDateTime(reportGeneratedAt), minChars = 19)
+        addFieldCell(table, "设备编号", displayValue(deviceSerial), minChars = 12)
         addEmptyCell(table)
 
         document.add(table)
@@ -240,6 +256,28 @@ class SaveChartToPdfTask(
     private fun patientAge(): String? {
         val settingAge = printSetting?.age?.takeIf { it > 0 }
         return (settingAge ?: record?.patient?.age?.takeIf { it > 0 })?.toString()
+    }
+
+    private fun displayValue(value: String?): String {
+        return value?.takeIf { it.isNotBlank() } ?: REPORT_UNFILLED_VALUE
+    }
+
+    private fun formatRecordDateTime(value: LocalDateTime?): String {
+        return value?.format(fullDateTimeFormatter) ?: REPORT_UNFILLED_VALUE
+    }
+
+    private fun formatRecordDuration(): String {
+        val start = record?.startTime ?: return REPORT_UNFILLED_VALUE
+        val end = record.endTime
+        val totalSeconds = Duration.between(start, end).seconds.coerceAtLeast(0L)
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+        return when {
+            hours > 0 -> "${hours}小时${minutes}分${seconds}秒"
+            minutes > 0 -> "${minutes}分${seconds}秒"
+            else -> "${seconds}秒"
+        }
     }
 
     private fun addRepeatedWatermark(writer: PdfWriter, pageSize: Rectangle) {
@@ -427,7 +465,7 @@ class SaveChartToPdfTask(
     }
 
     private fun reportYAxisMax(): Float {
-        if (co2Unit == "mmHg") return 90f
+        if (co2Unit == CO2_UNIT.MMHG.value) return 90f
         return if (maxETCO2 > 0f) maxETCO2 else 90f
     }
 
@@ -439,6 +477,27 @@ class SaveChartToPdfTask(
 
     private fun formatNumber(value: Float?): String {
         if (value == null || value.isNaN() || value.isInfinite()) return "--"
+        return decimalFormat.format(value.toDouble())
+    }
+
+    private fun etco2ReferenceText(): String? {
+        val unit = co2Unit.takeIf { it.isNotBlank() } ?: return null
+        val (minValue, maxValue) = when (unit) {
+            CO2_UNIT.MMHG.value -> Pair(REPORT_ETCO2_REFERENCE_MIN_MMHG, REPORT_ETCO2_REFERENCE_MAX_MMHG)
+            CO2_UNIT.KPA.value -> Pair(
+                REPORT_ETCO2_REFERENCE_MIN_MMHG * KPA_PER_MMHG,
+                REPORT_ETCO2_REFERENCE_MAX_MMHG * KPA_PER_MMHG
+            )
+            CO2_UNIT.PERCENT.value -> Pair(
+                REPORT_ETCO2_REFERENCE_MIN_MMHG * PERCENT_PER_MMHG,
+                REPORT_ETCO2_REFERENCE_MAX_MMHG * PERCENT_PER_MMHG
+            )
+            else -> return null
+        }
+        return "$REPORT_ETCO2_REFERENCE_LABEL：${formatReferenceNumber(minValue)}-${formatReferenceNumber(maxValue)}$unit"
+    }
+
+    private fun formatReferenceNumber(value: Float): String {
         return decimalFormat.format(value.toDouble())
     }
 
@@ -455,10 +514,12 @@ class SaveChartToPdfTask(
     }
 
     private fun addPDFFooter(document: Document) {
-        val reference = Paragraph(REPORT_ETCO2_REFERENCE, reportSmallFont)
-        reference.spacingBefore = 10f
-        reference.spacingAfter = 34f
-        document.add(reference)
+        etco2ReferenceText()?.let {
+            val reference = Paragraph(it, reportSmallFont)
+            reference.spacingBefore = 10f
+            reference.spacingAfter = 34f
+            document.add(reference)
+        }
 
         val table = PdfPTable(2)
         table.widthPercentage = 100f
@@ -550,6 +611,7 @@ fun saveChartToPdfInBackground(
     record: Record? = null,
     showTrendingChart: Boolean = true,
     co2Unit: String = "",
+    deviceSerial: String? = null,
     context: Context,
     onComplete: (Boolean) -> Unit = {},
 ) {
@@ -570,6 +632,7 @@ fun saveChartToPdfInBackground(
         context = context,
         showTrendingChart = showTrendingChart,
         co2Unit = co2Unit,
+        deviceSerial = deviceSerial,
         onComplete = onComplete,
     ).execute()
 }

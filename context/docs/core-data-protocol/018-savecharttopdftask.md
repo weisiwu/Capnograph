@@ -15,16 +15,16 @@
 
 ## 补充职责
 
-异步 PDF 任务，主线程渲染 chart bitmap，后台等待结果回调。
+异步 PDF 任务，主线程渲染 chart bitmap，后台等待结果回调；报告基础信息区会使用传入的记录、打印设置和可选设备序列号，页脚 EtCO2 参考值按 `co2Unit` 换算。
 
 ## 关键 ID / 别名
 
 - 定位别名：chart to PDF task, 图表导出 PDF 任务
-- 关键字段 / 方法：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`。
+- 关键字段 / 方法：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`、`co2Unit`、`deviceSerial`。
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`。
+- 主要字段、方法或协议值：`onPreExecute`、`doInBackground`、`onPostExecute`、`savePDF`、`co2Unit`、`deviceSerial`。
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 
 ## 主要调用点

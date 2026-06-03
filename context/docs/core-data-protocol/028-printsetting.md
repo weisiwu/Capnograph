@@ -11,11 +11,11 @@
 - ID / 别名：print settings, 打印设置
 - 源文件：`hotmeltprint/src/main/java/com/wldmedical/hotmeltprint/HotmeltPinter.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：共享打印设置对象
+- 备注：共享打印设置对象；PDF 报告基础信息读取 `pdfDepart`、床位号、住院号和患者信息
 
 ## 补充职责
 
-PDF/小票共享打印配置。
+PDF/小票共享打印配置；PDF 报告基础信息区会读取 `pdfDepart`、`pdfBedNumber`、`pdfIDNumber`、`name`、`gender`、`age`。
 
 ## 关键 ID / 别名
 
@@ -33,7 +33,7 @@ PDF/小票共享打印配置。
 
 ## 注意事项
 
-全局 object，可被偏好读取覆盖。
+全局 object，可被偏好读取覆盖。PDF 报告科室字段来自 `pdfDepart`，缺值时报告显示 `未填写`。
 
 ## 最小验证方式
 

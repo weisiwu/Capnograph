@@ -159,6 +159,7 @@ class HistoryRecordDetailActivity : BaseActivity() {
                 printSetting = localStorageKit.loadPrintSettingFromPreferences(this@HistoryRecordDetailActivity),
                 showTrendingChart = viewModel.showTrendingChart.value,
                 co2Unit = viewModel.CO2Unit.value.value,
+                deviceSerial = blueToothKit.sSerialNumber.value,
                 context = this@HistoryRecordDetailActivity,
                 onComplete = { success ->
                     if (success) {
