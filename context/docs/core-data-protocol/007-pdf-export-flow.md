@@ -11,11 +11,11 @@
 - ID / 别名：save PDF, PDF 报告导出
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/pages/HistoryRecordDetailActivity.kt`, `app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`, `app/src/main/assets/fonts/SimSun.ttf`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：记录详情生成 PDF、写 cache，再通过系统创建文档保存
+- 备注：记录详情生成纸质报告单样式 PDF、写 cache，再通过系统创建文档保存
 
 ## 补充职责
 
-历史详情页读取全量 CO2Data，生成 cache PDF，再通过系统文档创建器保存。
+历史详情页读取全量 CO2Data，生成纸质报告单样式 cache PDF，再通过系统文档创建器保存。
 
 ## 关键 ID / 别名
 
@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-`SaveChartToPdfTask` 用 `AsyncTask` + 主线程生成 chart bitmap；字体为 `assets/fonts/SimSun.ttf`。
+`SaveChartToPdfTask` 用 `AsyncTask` + 主线程生成 Canvas 波形 bitmap；PDF 版式参考纸质报告单，包含表单信息、最多三段 14 秒波形、指标行、EtCO2 参考值和签字栏；字体为 `assets/fonts/SimSun.ttf`。
 
 ## 最小验证方式
 

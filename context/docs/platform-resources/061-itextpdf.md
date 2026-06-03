@@ -16,7 +16,7 @@
 
 ## 补充职责
 
-PDF 生成库，用于报告导出。
+PDF 生成库，用于纸质报告单样式报告导出。
 
 ## 关键 ID / 别名
 
@@ -28,11 +28,11 @@ PDF 生成库，用于报告导出。
 
 ## 主要调用点
 
-`PDFKit.kt` 使用 `Document`、`PdfWriter`、`PdfPTable`、`PdfPCell`、`PdfGState` 等生成报告。
+`PDFKit.kt` 使用 `Document`、`PdfWriter`、`PdfPTable`、`PdfPCell`、`PdfGState` 等生成报告，并嵌入 Canvas 手绘的 14 秒 CO2 波形 bitmap。
 
 ## 注意事项
 
-库版本较旧；PDF 改动需验证中文字体、表格、图表图片和 SAF 导出。
+库版本较旧；PDF 改动需验证中文字体、表单字段、手绘波形图片和 SAF 导出。
 
 ## 最小验证方式
 

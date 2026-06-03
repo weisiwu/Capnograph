@@ -11,20 +11,20 @@
 - ID / 别名：PDF task entry, PDF 任务入口
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：反转数据、重排 index 并启动 SaveChartToPdfTask
+- 备注：按记录时间顺序复制数据、重排 index 并启动 SaveChartToPdfTask
 
 ## 补充职责
 
-反转数据、重排 index，启动 PDF 任务。
+按记录时间顺序复制数据、重排 index，启动 PDF 任务。
 
 ## 关键 ID / 别名
 
 - 定位别名：PDF task entry, PDF 任务入口
-- 关键字段 / 方法：`asReversed`、`item.index = i`、`SaveChartToPdfTask.execute()`。
+- 关键字段 / 方法：`mapIndexed { item.copy(index = index) }`、`SaveChartToPdfTask.execute()`。
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`asReversed`、`item.index = i`、`SaveChartToPdfTask.execute()`。
+- 主要字段、方法或协议值：`mapIndexed { item.copy(index = index) }`、`SaveChartToPdfTask.execute()`。
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 
 ## 主要调用点
@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-会原地修改反转列表元素的 index。
+使用副本重排 index，不原地修改数据库解压出的波形点；PDF 报告按记录时间从左到右绘制。
 
 ## 最小验证方式
 

@@ -16,7 +16,7 @@ data class wheelPickerConfig<out E: BaseEnmu<V>, V>(
     val defaultValue: E
 )
 
-val RR_UNIT: String = "bmp"
+val RR_UNIT: String = "bpm"
 val TIME_UNIT: String = "S"
 val O2_UNIT: String = "%"
 

@@ -121,9 +121,9 @@
 | 078 | 核心函数与方法 | filterData | [078-filterdata.md](core-data-protocol/078-filterdata.md) | waveform filter, 波形过滤 |
 | 079 | 核心函数与方法 | saveChartToPdfInBackground | [079-savecharttopdfinbackground.md](core-data-protocol/079-savecharttopdfinbackground.md) | PDF task entry, PDF 任务入口 |
 | 080 | 核心函数与方法 | SaveChartToPdfTask.savePDF | [080-savecharttopdftask-savepdf.md](core-data-protocol/080-savecharttopdftask-savepdf.md) | PDF render pipeline, PDF 生成流程 |
-| 081 | 核心函数与方法 | SaveChartToPdfTask.configurePdfChart | [081-savecharttopdftask-configurepdfchart.md](core-data-protocol/081-savecharttopdftask-configurepdfchart.md) | configure PDF chart, PDF 图表配置 |
-| 082 | 核心函数与方法 | SaveChartToPdfTask.addETCO2LineChart | [082-savecharttopdftask-addetco2linechart.md](core-data-protocol/082-savecharttopdftask-addetco2linechart.md) | add waveform chart, PDF 波形图 |
-| 083 | 核心函数与方法 | SaveChartToPdfTask.addETCO2TrendChart | [083-savecharttopdftask-addetco2trendchart.md](core-data-protocol/083-savecharttopdftask-addetco2trendchart.md) | add trend chart, PDF 趋势图 |
+| 081 | 核心函数与方法 | SaveChartToPdfTask.addWaveformSections | [081-savecharttopdftask-addwaveformsections.md](core-data-protocol/081-savecharttopdftask-addwaveformsections.md) | report waveform sections, PDF 报告波形段 |
+| 082 | 核心函数与方法 | SaveChartToPdfTask.createWaveformBitmap | [082-savecharttopdftask-createwaveformbitmap.md](core-data-protocol/082-savecharttopdftask-createwaveformbitmap.md) | manual waveform bitmap, PDF 手绘波形网格 |
+| 083 | 核心函数与方法 | SaveChartToPdfTask.addWaveformMetrics | [083-savecharttopdftask-addwaveformmetrics.md](core-data-protocol/083-savecharttopdftask-addwaveformmetrics.md) | waveform metrics row, PDF 波形指标行 |
 | 084 | 核心函数与方法 | AudioPlayer.playAlertAudio | [084-audioplayer-playalertaudio.md](core-data-protocol/084-audioplayer-playalertaudio.md) | play alert, 播放报警音 |
 | 085 | 核心函数与方法 | AudioPlayer.stopAudio | [085-audioplayer-stopaudio.md](core-data-protocol/085-audioplayer-stopaudio.md) | stop alert, 停止报警音 |
 | 086 | 核心函数与方法 | saveImageToInternalStorage | [086-saveimagetointernalstorage.md](core-data-protocol/086-saveimagetointernalstorage.md) | save print image, 保存内部图片 |

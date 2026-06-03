@@ -15,16 +15,16 @@
 
 ## 补充职责
 
-PDF 生成与波形过滤工具。
+PDF 生成与波形过滤工具；PDF 导出使用纸质报告单样式，按 14 秒窗口手绘 CO2 波形网格和指标行。
 
 ## 关键 ID / 别名
 
 - 定位别名：PDF, 报告导出
-- 关键字段 / 方法：`filterData`、`saveChartToPdfInBackground`、`SaveChartToPdfTask`、`fontPath`。
+- 关键字段 / 方法：`filterData`、`saveChartToPdfInBackground`、`SaveChartToPdfTask`、`addWaveformSections`、`createWaveformBitmap`、`fontPath`。
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`filterData`、`saveChartToPdfInBackground`、`SaveChartToPdfTask`、`fontPath`。
+- 主要字段、方法或协议值：`filterData`、`saveChartToPdfInBackground`、`SaveChartToPdfTask`、`addWaveformSections`、`createWaveformBitmap`、`fontPath`。
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 
 ## 主要调用点
@@ -33,7 +33,7 @@ PDF 生成与波形过滤工具。
 
 ## 注意事项
 
-`baseFont` 在文件加载时创建，依赖 SimSun 字体资产。
+`baseFont` 在文件加载时创建，依赖 SimSun 字体资产。PDF 波形 bitmap 由 Android Canvas 手绘，不再使用 MPAndroidChart 的默认图表样式。
 
 ## 最小验证方式
 

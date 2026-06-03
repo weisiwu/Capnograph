@@ -12,11 +12,11 @@
 - 源文件：`gradle/libs.versions.toml`, `app/build.gradle.kts`, `hotmeltprint/build.gradle.kts`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
 - 关联总览文档：`context/docs/build-platform.md`
-- 备注：实时图表、历史图表、PDF 图表和打印 Bitmap 渲染
+- 备注：实时图表、历史图表和打印 Bitmap 渲染；PDF 报告单波形由 Canvas 手绘
 
 ## 补充职责
 
-折线图渲染库，覆盖实时、历史、PDF 和打印图表。
+折线图渲染库，覆盖实时、历史和打印图表；PDF 报告单波形由 `PDFKit` 用 Android Canvas 手绘，不再使用 MPAndroidChart 默认样式。
 
 ## 关键 ID / 别名
 
@@ -28,11 +28,11 @@
 
 ## 主要调用点
 
-`EtCo2LineChart`、`HistoryRecordDetailActivity`、`PDFKit`、`HotmeltPinter` 使用 `LineChart` 和相关 data/axis API。
+`EtCo2LineChart`、`HistoryRecordDetailActivity`、`HotmeltPinter` 使用 `LineChart` 和相关 data/axis API。`PDFKit` 仍接收 `LineChart` 作为任务入口参数，但报告单波形 bitmap 已改为 Canvas 手绘。
 
 ## 注意事项
 
-`hotmeltprint/build.gradle.kts` 中 `libs.mpandroidchart` 重复声明 3 次；图表变更需同时验证 UI、PDF、打印 bitmap。
+`hotmeltprint/build.gradle.kts` 中 `libs.mpandroidchart` 重复声明 3 次；图表变更需验证 UI 和打印 bitmap，PDF 模板变更需单独导出报告单验证。
 
 ## 最小验证方式
 

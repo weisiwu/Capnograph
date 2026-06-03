@@ -159,12 +159,12 @@
 | --- | --- | --- | --- | --- |
 | Hilt Android | `com.google.dagger:hilt-android:2.51.1`, `hilt-android-compiler` | `:app`, `:hotmeltprint` | `CapnoEasyApplication` 使用 `@HiltAndroidApp`；`AppStateModel`/Activity/Kit 构造注入依赖 compiler。 | `:app:kaptDebugKotlin` 或 `:app:assembleDebug` 验证注解处理。 |
 | Hilt Navigation Compose | `androidx.hilt:hilt-navigation-compose:1.1.0-alpha01` | `:app` | 依赖已声明。 | 当前未检出 `hiltViewModel` 直接调用；若引入 NavHost ViewModel 作用域需补文档。 |
-| MPAndroidChart | `com.github.PhilJay:MPAndroidChart:v3.1.0` | `:app`, `:hotmeltprint` | `EtCo2LineChart`, `HistoryRecordDetailActivity`, `PDFKit`, `HotmeltPinter` 使用 `LineChart` 渲染实时/历史/PDF/打印图表。 | `hotmeltprint/build.gradle.kts` 重复声明 3 次；图表变更需页面、PDF、打印 bitmap 均验证。 |
+| MPAndroidChart | `com.github.PhilJay:MPAndroidChart:v3.1.0` | `:app`, `:hotmeltprint` | `EtCo2LineChart`, `HistoryRecordDetailActivity`, `HotmeltPinter` 使用 `LineChart` 渲染实时/历史/打印图表；PDF 报告单波形由 `PDFKit` 用 Canvas 手绘。 | `hotmeltprint/build.gradle.kts` 重复声明 3 次；图表变更需页面和打印 bitmap 验证，PDF 模板变更需导出报告单验证。 |
 | Room Runtime | `androidx.room:room-runtime:2.5.2` | `:app` | `LocalStorageKit` 定义 Room database/entity/dao 运行时。 | schema 输出到 `app/schemas`；数据库变更需迁移和 schema 验证。 |
 | Room Compiler | `androidx.room:room-compiler:2.5.2` | `:app` kapt | Room 注解处理器。 | `kapt` 配置 `room.schemaLocation=$projectDir/schemas`；运行 `:app:kaptDebugKotlin`。 |
 | Room KTX | `androidx.room:room-ktx:2.5.2` | `:app` | Room 协程/Flow 支持。 | 数据访问变更需结合 `LocalStorageKit` 验证。 |
 | Gson | `com.google.code.gson:gson:2.10.1` | `:app` | `LocalStorageKit` 序列化/反序列化 Patient、CO2WavePointData；迁移脚本解析旧数据。 | 数据模型字段变更需兼容历史 JSON。 |
-| iTextPDF | `com.itextpdf:itextpdf:5.5.13.4` | `:app`, `:hotmeltprint` | `PDFKit` 生成 PDF 报告，打印模块也声明。 | 验证中文字体、图表图片和 SAF 导出；库版本较旧，升级需回归 PDF 格式。 |
+| iTextPDF | `com.itextpdf:itextpdf:5.5.13.4` | `:app`, `:hotmeltprint` | `PDFKit` 生成纸质报告单样式 PDF，打印模块也声明。 | 验证中文字体、表单字段、手绘波形图片和 SAF 导出；库版本较旧，升级需回归 PDF 格式。 |
 | AndroidPdfViewer | `com.github.barteksc:android-pdf-viewer:3.2.0-beta.1` | `:app` | 依赖已声明并排除 `com.android.support`。 | 当前源码未检出直接调用；如启用 PDF 预览需补 Activity/组件映射。 |
 | AndroidX Collection | `androidx.collection:collection:1.2.0` | `:app` | 依赖已声明。 | 当前源码未检出直接调用；移除前全局检查。 |
 | Bugly CrashReport AAR | `app/libs/crashreport-4.1.9.3.aar`, `com.tencent.bugly.crashreport.CrashReport` | `:app` | Application import CrashReport；Manifest 配置 Bugly app id/version/debug metadata。 | `CrashReport.initCrashReport` 当前被注释；重新启用需网络权限和崩溃上报验证。 |

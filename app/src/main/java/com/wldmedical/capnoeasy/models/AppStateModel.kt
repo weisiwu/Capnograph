@@ -147,7 +147,7 @@ class AppState @Inject constructor() {
     // app版本
     val appVersion: MutableState<String> = mutableStateOf("")
 
-    // 是否在导出的PDF报告中展示趋势图
+    // 是否在历史详情页展示趋势图
     val showTrendingChart: MutableState<Boolean> = mutableStateOf(true)
 
     // 固件版本

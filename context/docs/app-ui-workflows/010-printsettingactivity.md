@@ -14,7 +14,7 @@
 
 ## 补充职责
 
-打印设置页，编辑医院名/报告名，用 TypeSwitch 控制 PDF/热敏输出和趋势图展示，并写入 SharedPreferences。
+打印设置页，编辑医院名/报告名，用 TypeSwitch 控制 PDF/热敏输出和详情页趋势图展示，并写入 SharedPreferences。
 
 ## 关键 ID / 别名
 

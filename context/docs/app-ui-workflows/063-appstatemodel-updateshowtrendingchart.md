@@ -10,11 +10,11 @@
 - ID / 别名：trend chart state, 趋势图开关
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/models/AppStateModel.kt`, `app/src/main/java/com/wldmedical/capnoeasy/pages/PrintSettingActivity.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：控制 PDF/详情页趋势图是否展示
+- 备注：控制详情页趋势图是否展示；PDF 报告单固定输出波形段
 
 ## 补充职责
 
-控制 PDF/详情页趋势图是否展示。
+控制详情页趋势图是否展示；PDF 报告单固定输出最近最多三段 14 秒波形，不再读取该开关决定趋势图。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ trend chart state, 趋势图开关
 
 ## 注意事项
 
-控制 PDF/详情页趋势图是否展示。
+控制详情页趋势图是否展示；PDF 报告单固定输出波形段。
 
 ## 最小验证方式
 

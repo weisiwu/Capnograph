@@ -94,7 +94,7 @@
 | 053 | Coil | 三方依赖 | `context/docs/platform-resources/053-coil.md` | app 模块声明的图片加载依赖 |
 | 054 | Accompanist DrawablePainter | 三方依赖 | `context/docs/platform-resources/054-accompanist-drawablepainter.md` | app 模块声明的 drawable painter 辅助库 |
 | 055 | Accompanist Pager | 三方依赖 | `context/docs/platform-resources/055-accompanist-pager.md` | EtCo2LineChart 使用 HorizontalPager 和 PagerIndicator |
-| 056 | MPAndroidChart | 三方依赖 | `context/docs/platform-resources/056-mpandroidchart.md` | 实时图表、历史图表、PDF 图表和打印 Bitmap 渲染 |
+| 056 | MPAndroidChart | 三方依赖 | `context/docs/platform-resources/056-mpandroidchart.md` | 实时图表、历史图表和打印 Bitmap 渲染；PDF 报告单波形由 Canvas 手绘 |
 | 057 | Room Runtime | 三方依赖 | `context/docs/platform-resources/057-room-runtime.md` | Room 数据库运行时 |
 | 058 | Room Compiler | 三方依赖 | `context/docs/platform-resources/058-room-compiler.md` | Room 注解处理器 |
 | 059 | Room KTX | 三方依赖 | `context/docs/platform-resources/059-room-ktx.md` | Room 协程/Flow 支持 |

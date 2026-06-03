@@ -10,11 +10,11 @@
 - ID / 别名：report settings, 输出类型, 打印设置
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/pages/PrintSettingActivity.kt`, `app/src/main/java/com/wldmedical/capnoeasy/kits/LocalStorageKit.kt`, `hotmeltprint/src/main/java/com/wldmedical/hotmeltprint/HotmeltPinter.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：保存医院名、报告名、PDF/热敏输出和趋势图选项到 SharedPreferences
+- 备注：保存医院名、报告名、PDF/热敏输出和详情趋势图选项到 SharedPreferences
 
 ## 补充职责
 
-保存医院名、报告名、PDF/热敏输出和趋势图选项到 SharedPreferences。
+保存医院名、报告名、PDF/热敏输出和详情趋势图选项到 SharedPreferences。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ report settings, 输出类型, 打印设置
 
 ## 注意事项
 
-保存医院名、报告名、PDF/热敏输出和趋势图选项到 SharedPreferences。
+保存医院名、报告名、PDF/热敏输出和详情趋势图选项到 SharedPreferences。
 
 ## 最小验证方式
 

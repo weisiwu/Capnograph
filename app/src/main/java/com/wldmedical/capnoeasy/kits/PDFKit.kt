@@ -10,41 +10,44 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Path
 import android.os.AsyncTask
 import android.os.Handler
 import android.os.Looper
-import android.view.View
-import androidx.compose.ui.graphics.Color
 import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.formatter.ValueFormatter
+import com.itextpdf.text.Chunk
 import com.itextpdf.text.Document
 import com.itextpdf.text.Element
 import com.itextpdf.text.Font
 import com.itextpdf.text.Image
+import com.itextpdf.text.PageSize
 import com.itextpdf.text.Paragraph
+import com.itextpdf.text.Phrase
 import com.itextpdf.text.Rectangle
 import com.itextpdf.text.pdf.BaseFont
 import com.itextpdf.text.pdf.PdfGState
 import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
-import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.RR_UNIT
-import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.PrintSetting
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.text.DecimalFormat
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.CountDownLatch
+import kotlin.math.max
+import kotlin.math.min
 
 // 使用支持中文的字体
 val fontPath = "assets/fonts/SimSun.ttf"
 val baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
+private const val REPORT_SEGMENT_SECONDS = 14
+private const val REPORT_SEGMENT_POINTS = POINTS_PER_SECOND * REPORT_SEGMENT_SECONDS
+private const val REPORT_MAX_SEGMENTS = 3
+private const val REPORT_WAVE_SPEED = "12.5mm/s"
 
 /**
  * 过滤数据，消除数据中连续超过 10 个小于最大值 10% 的数据
@@ -131,100 +134,114 @@ class SaveChartToPdfTask(
         onComplete(result) // 调用回调函数
     }
 
-    private fun addPDFHeader(
-        document: Document,
-    ) {
-        val titleFont = Font(baseFont, 20f, Font.BOLD)
-        val contentFont = Font(baseFont, 12f, Font.NORMAL)
+    private data class ReportSegment(
+        val points: List<CO2WavePointData>,
+        val startIndex: Int
+    )
 
-        // 医院名称
-        printSetting?.hospitalName?.let {
-            val title1 = Paragraph(it ?: "", titleFont)
-            title1.alignment = Element.ALIGN_CENTER
-            document.add(title1)
-        }
+    private val reportTitleFont = Font(baseFont, 18f, Font.BOLD)
+    private val reportHeaderFont = Font(baseFont, 11f, Font.BOLD)
+    private val reportFormFont = Font(baseFont, 10.5f, Font.NORMAL)
+    private val reportSmallFont = Font(baseFont, 9.5f, Font.NORMAL)
+    private val decimalFormat = DecimalFormat("0.#")
+    private val fullDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 
-        // 记录名称
-        printSetting?.reportName?.let {
-            val title2 = Paragraph(it ?: "", titleFont)
-            title2.alignment = Element.ALIGN_CENTER
-            document.add(title2)            
-        }
+    private fun addPDFHeader(document: Document) {
+        printSetting?.hospitalName
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                val hospital = Paragraph(it, Font(baseFont, 12f, Font.BOLD))
+                hospital.alignment = Element.ALIGN_CENTER
+                hospital.spacingAfter = 2f
+                document.add(hospital)
+            }
 
-        // 添加标题和表格之间的间距
-        val spacingParagraph = Paragraph(" ", contentFont)
-        spacingParagraph.spacingBefore = 10f // 设置标题后的间距
-        document.add(spacingParagraph)
+        val reportName = printSetting?.reportName
+            ?.takeIf { it.isNotBlank() }
+            ?: "二氧化碳反应曲线报告单"
+        val title = Paragraph(reportName, reportTitleFont)
+        title.alignment = Element.ALIGN_CENTER
+        title.spacingAfter = 4f
+        document.add(title)
+        addHorizontalRule(document)
+    }
+
+    private fun addHorizontalRule(document: Document) {
+        val table = PdfPTable(1)
+        table.widthPercentage = 100f
+        val cell = PdfPCell(Phrase(""))
+        cell.border = Rectangle.TOP
+        cell.borderWidth = 1f
+        cell.fixedHeight = 8f
+        table.addCell(cell)
+        document.add(table)
     }
 
     private fun addPDFDetail(document: Document) {
-        val contentFont = Font(baseFont, 12f, Font.NORMAL)
-
-        // 创建一个三列的表格
-        val table = PdfPTable(3)
-        // 设置表格宽度为页面宽度
+        val table = PdfPTable(4)
         table.widthPercentage = 100f
-        // 设置表格的列宽比例，这里设置为 1:1:1，表示三列等宽
-        table.setWidths(floatArrayOf(1f, 1f, 1f))
+        table.setWidths(floatArrayOf(1.2f, 1.2f, 1.45f, 0.9f))
+        table.spacingBefore = 12f
+        table.spacingAfter = 28f
 
-        // 添加表头单元格
-        val nameCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_name, context)}${printSetting?.name ?: ""}", contentFont))
-        nameCell.horizontalAlignment = Element.ALIGN_LEFT
-        nameCell.border = Rectangle.NO_BORDER
-        table.addCell(nameCell)
+        addFieldCell(table, "住院号", printSetting?.pdfIDNumber, minChars = 9)
+        addFieldCell(table, "床位号", printSetting?.pdfBedNumber, minChars = 8)
+        addFieldCell(table, "姓名", patientName(), minChars = 8)
+        addFieldCell(table, "性别", patientGender(), minChars = 4)
+        addFieldCell(table, "年龄", patientAge(), suffix = "岁", minChars = 5)
+        addFieldCell(table, "身高", null, suffix = "厘米", minChars = 6)
+        addFieldCell(table, "体重", null, suffix = "千克", minChars = 6)
+        addEmptyCell(table)
 
-        val genderCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_gender, context)}${printSetting?.gender ?: ""}", contentFont))
-        genderCell.horizontalAlignment = Element.ALIGN_LEFT
-        genderCell.border = Rectangle.NO_BORDER
-        table.addCell(genderCell)
-
-        val ageCell = PdfPCell(Paragraph("${getString(R.string.pdf_patient_age, context)}${printSetting?.age ?: ""}${getString(R.string.pdf_patient_age_unit, context)}", contentFont))
-        ageCell.horizontalAlignment = Element.ALIGN_LEFT
-        ageCell.border = Rectangle.NO_BORDER
-        table.addCell(ageCell)
-
-        val departCell = PdfPCell(Paragraph("${getString(R.string.pdf_department, context)}${printSetting?.pdfDepart ?: ""}", contentFont))
-        departCell.horizontalAlignment = Element.ALIGN_LEFT
-        departCell.border = Rectangle.NO_BORDER
-        table.addCell(departCell)
-
-        val idCell = PdfPCell(Paragraph("${getString(R.string.pdf_id_number, context)}${printSetting?.pdfIDNumber ?: ""}", contentFont))
-        idCell.horizontalAlignment = Element.ALIGN_LEFT
-        idCell.border = Rectangle.NO_BORDER
-        table.addCell(idCell)
-
-        val bedCell = PdfPCell(Paragraph("${getString(R.string.pdf_bed_number, context)}${printSetting?.pdfBedNumber ?: ""}", contentFont))
-        bedCell.horizontalAlignment = Element.ALIGN_LEFT
-        bedCell.border = Rectangle.NO_BORDER
-        table.addCell(bedCell)
-
-        // 将表格添加到文档中
         document.add(table)
     }
 
-    private fun addPDFETCO2(document: Document) {
-        val contentFont = Font(baseFont, 12f, Font.NORMAL)
+    private fun addFieldCell(
+        table: PdfPTable,
+        label: String,
+        value: String?,
+        suffix: String = "",
+        minChars: Int = 6
+    ) {
+        val phrase = Phrase()
+        phrase.add(Chunk(label, reportFormFont))
+        phrase.add(Chunk("  ", reportFormFont))
+        phrase.add(underlinedChunk(value, minChars))
+        if (suffix.isNotBlank()) {
+            phrase.add(Chunk(" $suffix", reportFormFont))
+        }
+        val cell = PdfPCell(phrase)
+        cell.border = Rectangle.NO_BORDER
+        cell.paddingBottom = 14f
+        table.addCell(cell)
+    }
 
-        // 设置上间距
-        val upperSpacingParagraph = Paragraph(" ", contentFont)
-        upperSpacingParagraph.spacingBefore = 10f
-        document.add(upperSpacingParagraph)
+    private fun addEmptyCell(table: PdfPTable) {
+        val cell = PdfPCell(Phrase(""))
+        cell.border = Rectangle.NO_BORDER
+        table.addCell(cell)
+    }
 
-        val table = PdfPTable(2)
-        table.widthPercentage = 100f
-        table.setWidths(floatArrayOf(1f, 1f))
+    private fun underlinedChunk(value: String?, minChars: Int): Chunk {
+        val normalized = value?.takeIf { it.isNotBlank() } ?: ""
+        val text = normalized.padEnd(max(minChars, normalized.length + 2), ' ')
+        return Chunk(text, reportFormFont).apply {
+            setUnderline(0.5f, -2f)
+        }
+    }
 
-        val ETCO2Cell = PdfPCell(Paragraph("ETCO2\uFF1A${currentETCO2} ${co2Unit}", contentFont))
-        ETCO2Cell.horizontalAlignment = Element.ALIGN_CENTER
-        ETCO2Cell.border = Rectangle.NO_BORDER
-        table.addCell(ETCO2Cell)
+    private fun patientName(): String? = printSetting?.name
+        ?.takeIf { it.isNotBlank() }
+        ?: record?.patient?.name
 
-        val RRCell = PdfPCell(Paragraph("${getString(R.string.pdf_respiratory_rate, context)}${currentRR} ${RR_UNIT}", contentFont))
-        RRCell.horizontalAlignment = Element.ALIGN_CENTER
-        RRCell.border = Rectangle.NO_BORDER
-        table.addCell(RRCell)
+    private fun patientGender(): String? = printSetting?.gender
+        ?.takeIf { it.isNotBlank() }
+        ?: record?.patient?.gender?.title
 
-        document.add(table)
+    private fun patientAge(): String? {
+        val settingAge = printSetting?.age?.takeIf { it > 0 }
+        return (settingAge ?: record?.patient?.age?.takeIf { it > 0 })?.toString()
     }
 
     private fun addRepeatedWatermark(writer: PdfWriter, pageSize: Rectangle) {
@@ -268,205 +285,207 @@ class SaveChartToPdfTask(
         canvas.restoreState()
     }
 
-    private fun configurePdfChart(chart: LineChart, drawXAxisLabels: Boolean = false, xAxisPointStep: Float = 1f) {
-        chart.legend.isEnabled = false
-        chart.description.isEnabled = false
-        chart.axisRight.isEnabled = false
-        chart.axisLeft.textSize = 6f
-        chart.axisLeft.setLabelCount(4, true)
-        chart.axisLeft.axisMinimum = 0f
-        chart.axisLeft.axisMaximum = if (maxETCO2 > 0f) maxETCO2 else originalLineChart.axisLeft.axisMaximum
-        chart.xAxis.textSize = 6f
-        chart.xAxis.setDrawLabels(drawXAxisLabels)
-        chart.xAxis.setLabelCount(5, true)
-        chart.xAxis.valueFormatter = object : ValueFormatter() {
-            override fun getFormattedValue(value: Float): String {
-                val seconds = value * xAxisPointStep / POINTS_PER_SECOND
-                return formatTimeAxisLabel(seconds)
+    private fun addWaveformSections(document: Document) {
+        val segments = buildReportSegments()
+        segments.forEachIndexed { index, segment ->
+            addWaveformHeader(document, segment, index)
+            addWaveformChart(document, segment)
+            addWaveformMetrics(document, segment)
+        }
+    }
+
+    private fun buildReportSegments(): List<ReportSegment> {
+        if (data.isEmpty()) return emptyList()
+        val pointsPerSegment = REPORT_SEGMENT_POINTS
+        val segments = mutableListOf<ReportSegment>()
+        var endIndex = data.size
+        repeat(REPORT_MAX_SEGMENTS) {
+            if (endIndex <= 0) return@repeat
+            val startIndex = max(0, endIndex - pointsPerSegment)
+            segments.add(0, ReportSegment(data.subList(startIndex, endIndex), startIndex))
+            endIndex = startIndex
+        }
+        return segments
+    }
+
+    private fun addWaveformHeader(document: Document, segment: ReportSegment, index: Int) {
+        val table = PdfPTable(2)
+        table.widthPercentage = 100f
+        table.setWidths(floatArrayOf(3f, 1f))
+        table.spacingBefore = if (index == 0) 0f else 14f
+
+        val left = PdfPCell(Phrase("测量时间：  ${formatMeasurementRange(segment)}", reportHeaderFont))
+        left.border = Rectangle.NO_BORDER
+        left.horizontalAlignment = Element.ALIGN_LEFT
+        left.paddingBottom = 2f
+        table.addCell(left)
+
+        val right = PdfPCell(Phrase(REPORT_WAVE_SPEED, reportHeaderFont))
+        right.border = Rectangle.NO_BORDER
+        right.horizontalAlignment = Element.ALIGN_RIGHT
+        right.paddingBottom = 2f
+        table.addCell(right)
+
+        document.add(table)
+    }
+
+    private fun addWaveformChart(document: Document, segment: ReportSegment) {
+        val bitmap = createWaveformBitmap(segment.points)
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        val image = Image.getInstance(stream.toByteArray())
+        image.alignment = Element.ALIGN_CENTER
+        image.scaleToFit(
+            document.pageSize.width - document.leftMargin() - document.rightMargin(),
+            106f
+        )
+        document.add(image)
+    }
+
+    private fun addWaveformMetrics(document: Document, segment: ReportSegment) {
+        val latest = segment.points.lastOrNull()
+        val text = "EtCO2:${formatNumber(latest?.ETCO2)} $co2Unit    " +
+            "FiCO2:${formatNumber(latest?.FiCO2)} $co2Unit    " +
+            "RR:${latest?.RR?.takeIf { it > 0 }?.toString() ?: "--"} $RR_UNIT    " +
+            "SpO2:-- %    PR:-- $RR_UNIT"
+        val paragraph = Paragraph(text, reportSmallFont)
+        paragraph.spacingBefore = 2f
+        paragraph.spacingAfter = 4f
+        document.add(paragraph)
+    }
+
+    private fun createWaveformBitmap(points: List<CO2WavePointData>): Bitmap {
+        val width = 1600
+        val height = 260
+        val plotLeft = 72f
+        val plotTop = 12f
+        val plotRight = 1536f
+        val plotBottom = 204f
+        val plotWidth = plotRight - plotLeft
+        val plotHeight = plotBottom - plotTop
+        val yMax = reportYAxisMax()
+
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(android.graphics.Color.WHITE)
+
+        val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.rgb(224, 224, 224)
+            strokeWidth = 1f
+        }
+        val majorGridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.rgb(178, 178, 178)
+            strokeWidth = 1.3f
+        }
+        val axisPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.BLACK
+            strokeWidth = 2f
+            style = Paint.Style.STROKE
+        }
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.BLACK
+            textSize = 24f
+        }
+
+        for (i in 0..70) {
+            val x = plotLeft + plotWidth * i / 70f
+            val paint = if (i % 5 == 0) majorGridPaint else gridPaint
+            canvas.drawLine(x, plotTop, x, plotBottom, paint)
+        }
+        for (i in 0..18) {
+            val y = plotBottom - plotHeight * i / 18f
+            val paint = if (i % 3 == 0) majorGridPaint else gridPaint
+            canvas.drawLine(plotLeft, y, plotRight, y, paint)
+        }
+        canvas.drawRect(plotLeft, plotTop, plotRight, plotBottom, axisPaint)
+
+        textPaint.textAlign = Paint.Align.RIGHT
+        canvas.drawText(formatAxisNumber(yMax), plotLeft - 10f, plotTop + 8f, textPaint)
+        canvas.drawText("0", plotLeft - 10f, plotBottom + 8f, textPaint)
+        canvas.save()
+        canvas.rotate(-90f, 25f, plotTop + plotHeight / 2f)
+        textPaint.textAlign = Paint.Align.CENTER
+        canvas.drawText("($co2Unit)", 25f, plotTop + plotHeight / 2f, textPaint)
+        canvas.restore()
+
+        textPaint.textAlign = Paint.Align.CENTER
+        for (second in 0..REPORT_SEGMENT_SECONDS step 2) {
+            val x = plotLeft + plotWidth * second / REPORT_SEGMENT_SECONDS
+            val label = if (second == REPORT_SEGMENT_SECONDS) "${second}(s)" else second.toString()
+            canvas.drawText(label, x, height - 20f, textPaint)
+        }
+
+        if (points.size > 1) {
+            val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = android.graphics.Color.BLACK
+                strokeWidth = 2.4f
+                style = Paint.Style.STROKE
             }
+            val path = Path()
+            points.take(REPORT_SEGMENT_POINTS).forEachIndexed { index, point ->
+                val x = plotLeft + plotWidth * index / (REPORT_SEGMENT_POINTS - 1).toFloat()
+                val normalizedY = min(max(point.co2, 0f), yMax) / yMax
+                val y = plotBottom - normalizedY * plotHeight
+                if (index == 0) {
+                    path.moveTo(x, y)
+                } else {
+                    path.lineTo(x, y)
+                }
+            }
+            canvas.drawPath(path, linePaint)
         }
-        chart.xAxis.setDrawGridLines(false)
-        chart.setExtraOffsets(8f, 12f, 8f, 14f)
-        chart.setMinOffset(4f)
+
+        return bitmap
     }
 
-    private fun formatTimeAxisLabel(seconds: Float): String {
-        val totalSeconds = seconds.toInt()
-        if (totalSeconds < 60) {
-            return "${totalSeconds}s"
-        }
-        val minutes = totalSeconds / 60
-        val remainSeconds = totalSeconds % 60
-        return "${minutes}m${remainSeconds}s"
+    private fun reportYAxisMax(): Float {
+        if (co2Unit == "mmHg") return 90f
+        return if (maxETCO2 > 0f) maxETCO2 else 90f
     }
 
-    private fun drawYAxisUnit(canvas: Canvas) {
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint.color = android.graphics.Color.BLACK
-        paint.textSize = 20f
-        paint.textAlign = Paint.Align.LEFT
-        canvas.drawText(co2Unit, 12f, 24f, paint)
+    private fun formatAxisNumber(value: Float): String = if (value % 1f == 0f) {
+        value.toInt().toString()
+    } else {
+        decimalFormat.format(value.toDouble())
     }
 
-    private fun addChartTitle(document: Document, title: String, spacingBefore: Float = 8f) {
-        val titleFont = Font(baseFont, 10f, Font.BOLD)
-        val paragraph = Paragraph(title, titleFont)
-        paragraph.alignment = Element.ALIGN_CENTER
-        paragraph.spacingBefore = spacingBefore
-        paragraph.spacingAfter = 2f
-        document.add(paragraph)
+    private fun formatNumber(value: Float?): String {
+        if (value == null || value.isNaN() || value.isInfinite()) return "--"
+        return decimalFormat.format(value.toDouble())
     }
 
-    private fun addVerticalSpacing(document: Document, spacingBefore: Float) {
-        val paragraph = Paragraph(" ", Font(baseFont, 4f, Font.NORMAL))
-        paragraph.spacingBefore = spacingBefore
-        paragraph.spacingAfter = 0f
-        document.add(paragraph)
+    private fun formatMeasurementRange(segment: ReportSegment): String {
+        val start = record?.startTime ?: return "--"
+        val segmentStart = start.plusNanos(indexToNanos(segment.startIndex))
+        val endIndex = segment.startIndex + segment.points.size.coerceAtLeast(1) - 1
+        val segmentEnd = start.plusNanos(indexToNanos(endIndex))
+        return "${segmentStart.format(fullDateTimeFormatter)}--${segmentEnd.format(timeFormatter)}"
     }
 
-    private fun addETCO2LineChart(document: Document) {
-        addChartTitle(document, "ETCO2", 18f)
-        val filteredData = filterData(data, maxETCO2)
-        val currentPageData = filteredData
-        val width = 1000 // 设置宽度
-        val height = 340 // 设置高度
-
-        // 生成当前页的 Bitmap
-        val currentPageBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(currentPageBitmap)
-        canvas.drawColor(android.graphics.Color.WHITE)
-
-        // 绘制当前页的图表
-        val copyLineChart = LineChart(originalLineChart.context)
-        copyLineChart.setBackgroundColor(Color.Transparent.value.toInt())
-        copyLineChart.xAxis.position = originalLineChart.xAxis.position
-        copyLineChart.axisRight.isEnabled = originalLineChart.axisRight.isEnabled
-        copyLineChart.description.isEnabled = originalLineChart.description.isEnabled
-        copyLineChart.axisLeft.axisMinimum = originalLineChart.axisLeft.axisMinimum
-        copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
-        copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
-        copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
-        configurePdfChart(copyLineChart, true, 1f)
-        copyLineChart.measure(
-            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
-        )
-        copyLineChart.layout(0, 0, width, height)
-        copyLineChart.requestLayout()
-
-        // 绘制当前页的数据
-        val segment = currentPageData.map {
-            Entry(it.index.toFloat(), it.co2)
-        }
-        val dataSet = LineDataSet(segment, "ETCO2")
-        dataSet.lineWidth = 1f
-        dataSet.color = android.graphics.Color.BLACK
-        dataSet.setDrawCircles(false) // 不绘制圆点
-        dataSet.setDrawValues(false) // 不绘制具体的值
-        val lineData = LineData(dataSet)
-        copyLineChart.data = lineData
-        copyLineChart.notifyDataSetChanged()
-        copyLineChart.invalidate()
-        copyLineChart.measure(
-            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
-        )
-        copyLineChart.layout(0, 0, width, height)
-        copyLineChart.draw(canvas)
-        drawYAxisUnit(canvas)
-
-        // 添加图像到文档
-        val stream = ByteArrayOutputStream()
-        currentPageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-        val image = Image.getInstance(stream.toByteArray())
-        image.scaleToFit(document.pageSize.width * 0.9f, document.pageSize.height * 0.9f)
-
-        document.add(image)
-    }
-
-    private fun addETCO2TrendChart(document: Document) {
-        addChartTitle(document, getString(R.string.chart_trending, context), 8f)
-        // 生成趋势数据
-        val newTrendEntries = mutableListOf<Entry>()
-        var sequentialTrendIndex = 0
-        for (i in data.indices step 50) {
-            newTrendEntries.add(Entry(sequentialTrendIndex.toFloat(), data[i].ETCO2))
-            sequentialTrendIndex++
-        }
-        val width = 1000 // 设置宽度
-        val height = 260 // 设置高度
-
-        // 生成当前页的 Bitmap
-        val currentPageBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(currentPageBitmap)
-        canvas.drawColor(android.graphics.Color.WHITE)
-
-        // 绘制当前页的图表
-        val copyLineChart = LineChart(originalLineChart.context)
-        copyLineChart.setBackgroundColor(Color.Transparent.value.toInt())
-        copyLineChart.xAxis.position = originalLineChart.xAxis.position
-        copyLineChart.axisRight.isEnabled = originalLineChart.axisRight.isEnabled
-        copyLineChart.description.isEnabled = originalLineChart.description.isEnabled
-        copyLineChart.axisLeft.axisMinimum = originalLineChart.axisLeft.axisMinimum
-        copyLineChart.axisLeft.axisMaximum = originalLineChart.axisLeft.axisMaximum
-        copyLineChart.xAxis.valueFormatter = originalLineChart.xAxis.valueFormatter
-        copyLineChart.axisLeft.valueFormatter = originalLineChart.axisLeft.valueFormatter
-        configurePdfChart(copyLineChart, true, 50f)
-        copyLineChart.measure(
-            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
-        )
-        copyLineChart.layout(0, 0, width, height)
-        copyLineChart.requestLayout()
-
-        // 绘制当前页的数据
-        val dataSet = LineDataSet(newTrendEntries, getString(R.string.chart_trending, context))
-        dataSet.lineWidth = 1f
-        dataSet.color = android.graphics.Color.BLACK
-        dataSet.setDrawCircles(false) // 不绘制圆点
-        dataSet.setDrawValues(false) // 不绘制具体的值
-        val lineData = LineData(dataSet)
-        copyLineChart.data = lineData
-        copyLineChart.notifyDataSetChanged()
-        copyLineChart.invalidate()
-        copyLineChart.measure(
-            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
-        )
-        copyLineChart.layout(0, 0, width, height)
-        copyLineChart.draw(canvas)
-        drawYAxisUnit(canvas)
-
-        // 添加图像到文档
-        val stream = ByteArrayOutputStream()
-        currentPageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-        val image = Image.getInstance(stream.toByteArray())
-        image.scaleToFit(document.pageSize.width * 0.9f, document.pageSize.height * 0.9f)
-
-        document.add(image)
+    private fun indexToNanos(index: Int): Long {
+        return index.toLong() * 1_000_000_000L / POINTS_PER_SECOND
     }
 
     private fun addPDFFooter(document: Document) {
-        val contentFont = Font(baseFont, 12f, Font.NORMAL)
-        addVerticalSpacing(document, 10f)
+        val reference = Paragraph("EtCO2 参考值：32-42mmHg", reportSmallFont)
+        reference.spacingBefore = 10f
+        reference.spacingAfter = 34f
+        document.add(reference)
 
         val table = PdfPTable(2)
         table.widthPercentage = 100f
-        table.setWidths(floatArrayOf(1f, 1f))
+        table.setWidths(floatArrayOf(2.4f, 1f))
+        val blankCell = PdfPCell(Phrase(""))
+        blankCell.border = Rectangle.NO_BORDER
+        table.addCell(blankCell)
 
-        val doctorCell = PdfPCell(Paragraph(getString(R.string.pdf_reporter, context), contentFont))
-        doctorCell.horizontalAlignment = Element.ALIGN_CENTER
-        doctorCell.border = Rectangle.NO_BORDER
-        table.addCell(doctorCell)
-
-        val formatter = DateTimeFormatter.ofPattern(getString(R.string.pdf_date_format, context))
-        val endTimeStr = if (record?.endTime != null) record.endTime.format(formatter) else ""
-        val timeCell = PdfPCell(Paragraph("${getString(R.string.pdf_report_time, context)}${endTimeStr}", contentFont))
-        timeCell.horizontalAlignment = Element.ALIGN_CENTER
-        timeCell.border = Rectangle.NO_BORDER
-        table.addCell(timeCell)
-
-        // 将表格添加到文档中
+        val signaturePhrase = Phrase()
+        signaturePhrase.add(Chunk("签字：", reportFormFont))
+        signaturePhrase.add(underlinedChunk(null, 9))
+        val signatureCell = PdfPCell(signaturePhrase)
+        signatureCell.border = Rectangle.NO_BORDER
+        signatureCell.horizontalAlignment = Element.ALIGN_LEFT
+        table.addCell(signatureCell)
         document.add(table)
     }
 
@@ -479,7 +498,7 @@ class SaveChartToPdfTask(
             if (tempFile.exists()) {
                 tempFile.delete()
             }
-            document = Document()
+            document = Document(PageSize.A4, 36f, 36f, 32f, 32f)
             val writer = PdfWriter.getInstance(document, FileOutputStream(tempFile))
 
             document.open()
@@ -487,20 +506,11 @@ class SaveChartToPdfTask(
             // 添加文件标题: 医院名称和报告名称
             addPDFHeader(document)
 
-            // 添加记录基础信息：姓名、性别、年龄、科室、ID、床号
+            // 添加记录基础信息：住院号、床位号、姓名、性别、年龄等表单字段
             addPDFDetail(document)
 
-            // 打印波形图相关的ETCO2、RR值
-            addPDFETCO2(document)
-
-            // 趋势图
-            if (showTrendingChart) {
-                addETCO2TrendChart(document)
-            }
-
-            // 保存ETCO2曲线图
-            // 当前会压缩波形数据，将波形数据中，连续多少个小于XX的数据去除
-            addETCO2LineChart(document)
+            // 按纸质报告单样式绘制最多三段 14 秒 CO2 波形。
+            addWaveformSections(document)
 
             // PDF页脚
             addPDFFooter(document)
@@ -555,20 +565,14 @@ fun saveChartToPdfInBackground(
     context: Context,
     onComplete: (Boolean) -> Unit = {},
 ) {
-    // 反转列表
-    val reversedList = data.filterNotNull().asReversed()
-
-    // 更新 index 值
-    for (i in reversedList.indices) {
-        val item = reversedList[i]
-        if (item != null) {
-            item.index = i
-        }
+    // PDF 报告按记录时间从左到右绘制，使用副本重排 index，避免修改数据库解压出的对象。
+    val reportData = data.mapIndexed { index, item ->
+        item.copy(index = index)
     }
 
     SaveChartToPdfTask(
         lineChart,
-        data = reversedList,
+        data = reportData,
         filePath = filePath,
         record = record,
         maxETCO2 = maxETCO2,

@@ -11,7 +11,7 @@
 - ID / 别名：PDF render pipeline, PDF 生成流程
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：生成临时 PDF，添加页眉、基础信息、ETCO2/RR、趋势图、波形图、页脚和可选水印
+- 备注：生成临时 PDF，添加报告单页眉、表单信息、固定 14 秒波形段、参考值、签字和可选水印
 
 ## 补充职责
 
@@ -20,11 +20,11 @@
 ## 关键 ID / 别名
 
 - 定位别名：PDF render pipeline, PDF 生成流程
-- 关键字段 / 方法：`${filePath}.tmp`、`addPDFHeader`、`addPDFDetail`、`addETCO2TrendChart`、`addETCO2LineChart`、`addPDFFooter`。
+- 关键字段 / 方法：`${filePath}.tmp`、`addPDFHeader`、`addPDFDetail`、`addWaveformSections`、`addPDFFooter`。
 
 ## 关键字段 / 方法
 
-- 主要字段、方法或协议值：`${filePath}.tmp`、`addPDFHeader`、`addPDFDetail`、`addETCO2TrendChart`、`addETCO2LineChart`、`addPDFFooter`。
+- 主要字段、方法或协议值：`${filePath}.tmp`、`Document(PageSize.A4, ...)`、`addPDFHeader`、`addPDFDetail`、`addWaveformSections`、`addPDFFooter`。
 - 直接源码入口：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 
 ## 主要调用点
@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-临时文件非空才覆盖输出；失败删除 tmp。
+临时文件非空才覆盖输出；失败删除 tmp。报告单样式包含医院/报告名、住院号/床位号/姓名/性别/年龄/身高/体重、最多三段 14 秒 CO2 波形、每段测量时间和指标行、EtCO2 参考值、签字栏。
 
 ## 最小验证方式
 

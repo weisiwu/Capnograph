@@ -10,11 +10,11 @@
 - ID / 别名：print settings content, 打印设置内容
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/pages/PrintSettingActivity.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：保存医院名、报告名、输出类型和趋势图开关
+- 备注：保存医院名、报告名、输出类型和详情趋势图开关
 
 ## 补充职责
 
-保存医院名、报告名、输出类型和趋势图开关。
+保存医院名、报告名、输出类型和详情趋势图开关。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ print settings content, 打印设置内容
 
 ## 注意事项
 
-保存医院名、报告名、输出类型和趋势图开关。
+保存医院名、报告名、输出类型和详情趋势图开关。
 
 ## 最小验证方式
 

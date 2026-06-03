@@ -14,7 +14,7 @@
 
 ## 补充职责
 
-记录/渲染波形的 Serializable 数据点，字段为 co2、RR、ETCO2、FiCO2、index。
+记录/渲染波形的 Serializable 数据点，字段为 co2、RR、ETCO2、FiCO2、index；PDF 报告指标行使用 ETCO2、FiCO2、RR。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ waveform point, CO2数据点, 波形点
 
 ## 注意事项
 
-字段：`co2`、`RR`、`ETCO2`、`FiCO2`、`index`。
+字段：`co2`、`RR`、`ETCO2`、`FiCO2`、`index`。当前没有 SpO2/PR 历史字段，PDF 报告按 `--` 占位。
 
 ## 最小验证方式
 
