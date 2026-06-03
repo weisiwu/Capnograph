@@ -1,6 +1,6 @@
 # 平台、资源、清单与测试入口
 
-本文档是 `temp-task-list-1-platform-resources.md` 的总览/索引。实体级事实以 `context/docs/platform-resources/` 下的单个 Markdown 文件为准：一个实体对应一个上下文文档；`context/entity-id-mapping.md` 的本批实体 `补充上下文` 均应指向这些单实体文件。
+本文档是平台、依赖、资源实体补充批次的总览/索引。实体级事实以 `context/docs/platform-resources/` 下的单个 Markdown 文件为准：一个实体对应一个上下文文档；`context/entity-id-mapping.md` 的本批实体 `补充上下文` 均应指向这些单实体文件。
 
 ## 源文件范围
 

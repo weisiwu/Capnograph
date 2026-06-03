@@ -1,6 +1,6 @@
 # AndroidX and Jetifier
 
-来源任务：`temp-task-list-1-platform-resources.md`。
+来源批次：平台、依赖、资源实体补充。
 定位入口：`context/entity-id-mapping.md`（L61）。
 领域：Android 平台。
 实体级上下文：`context/docs/platform-resources/028-androidx-and-jetifier.md`。

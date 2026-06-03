@@ -126,7 +126,7 @@
 
 ## 三方依赖实体核对
 
-本节按 `temp-task-list-1-platform-resources.md` 的三方依赖实体逐项补充责任、调用点、注意事项和最小验证。坐标以 `gradle/libs.versions.toml`、`app/build.gradle.kts`、`hotmeltprint/build.gradle.kts` 为准。
+本节按平台、依赖、资源实体补充批次中的三方依赖实体逐项补充责任、调用点、注意事项和最小验证。坐标以 `gradle/libs.versions.toml`、`app/build.gradle.kts`、`hotmeltprint/build.gradle.kts` 为准。
 
 ### AndroidX、Compose 与 UI 依赖
 

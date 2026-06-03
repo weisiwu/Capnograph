@@ -1,6 +1,6 @@
 # Hilt Android
 
-来源任务：`temp-task-list-1-platform-resources.md`。
+来源批次：平台、依赖、资源实体补充。
 定位入口：`context/entity-id-mapping.md`（L455）。
 领域：三方依赖。
 实体级上下文：`context/docs/platform-resources/050-hilt-android.md`。
