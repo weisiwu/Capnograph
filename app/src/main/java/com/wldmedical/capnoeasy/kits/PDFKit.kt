@@ -47,7 +47,8 @@ val baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBED
 private const val REPORT_SEGMENT_SECONDS = 14
 private const val REPORT_SEGMENT_POINTS = POINTS_PER_SECOND * REPORT_SEGMENT_SECONDS
 private const val REPORT_MAX_SEGMENTS = 3
-private const val REPORT_WAVE_SPEED = "12.5mm/s"
+private const val REPORT_TITLE = "呼气末二氧化碳监测报告单"
+private const val REPORT_ETCO2_REFERENCE = "EtCO2 参考值：32-42mmHg"
 
 /**
  * 过滤数据，消除数据中连续超过 10 个小于最大值 10% 的数据
@@ -157,10 +158,7 @@ class SaveChartToPdfTask(
                 document.add(hospital)
             }
 
-        val reportName = printSetting?.reportName
-            ?.takeIf { it.isNotBlank() }
-            ?: "二氧化碳反应曲线报告单"
-        val title = Paragraph(reportName, reportTitleFont)
+        val title = Paragraph(REPORT_TITLE, reportTitleFont)
         title.alignment = Element.ALIGN_CENTER
         title.spacingAfter = 4f
         document.add(title)
@@ -297,34 +295,24 @@ class SaveChartToPdfTask(
     private fun buildReportSegments(): List<ReportSegment> {
         if (data.isEmpty()) return emptyList()
         val pointsPerSegment = REPORT_SEGMENT_POINTS
-        val segments = mutableListOf<ReportSegment>()
-        var endIndex = data.size
-        repeat(REPORT_MAX_SEGMENTS) {
-            if (endIndex <= 0) return@repeat
-            val startIndex = max(0, endIndex - pointsPerSegment)
-            segments.add(0, ReportSegment(data.subList(startIndex, endIndex), startIndex))
-            endIndex = startIndex
+        val segmentCount = min(REPORT_MAX_SEGMENTS, (data.size + pointsPerSegment - 1) / pointsPerSegment)
+        return (0 until segmentCount).map { segmentIndex ->
+            val startIndex = segmentIndex * pointsPerSegment
+            val endIndex = min(data.size, startIndex + pointsPerSegment)
+            ReportSegment(data.subList(startIndex, endIndex), startIndex)
         }
-        return segments
     }
 
     private fun addWaveformHeader(document: Document, segment: ReportSegment, index: Int) {
-        val table = PdfPTable(2)
+        val table = PdfPTable(1)
         table.widthPercentage = 100f
-        table.setWidths(floatArrayOf(3f, 1f))
         table.spacingBefore = if (index == 0) 0f else 14f
 
-        val left = PdfPCell(Phrase("测量时间：  ${formatMeasurementRange(segment)}", reportHeaderFont))
-        left.border = Rectangle.NO_BORDER
-        left.horizontalAlignment = Element.ALIGN_LEFT
-        left.paddingBottom = 2f
-        table.addCell(left)
-
-        val right = PdfPCell(Phrase(REPORT_WAVE_SPEED, reportHeaderFont))
-        right.border = Rectangle.NO_BORDER
-        right.horizontalAlignment = Element.ALIGN_RIGHT
-        right.paddingBottom = 2f
-        table.addCell(right)
+        val cell = PdfPCell(Phrase("测量时间：  ${formatMeasurementRange(segment)}", reportHeaderFont))
+        cell.border = Rectangle.NO_BORDER
+        cell.horizontalAlignment = Element.ALIGN_LEFT
+        cell.paddingBottom = 2f
+        table.addCell(cell)
 
         document.add(table)
     }
@@ -457,7 +445,7 @@ class SaveChartToPdfTask(
     private fun formatMeasurementRange(segment: ReportSegment): String {
         val start = record?.startTime ?: return "--"
         val segmentStart = start.plusNanos(indexToNanos(segment.startIndex))
-        val endIndex = segment.startIndex + segment.points.size.coerceAtLeast(1) - 1
+        val endIndex = segment.startIndex + segment.points.size.coerceAtLeast(1)
         val segmentEnd = start.plusNanos(indexToNanos(endIndex))
         return "${segmentStart.format(fullDateTimeFormatter)}--${segmentEnd.format(timeFormatter)}"
     }
@@ -467,7 +455,7 @@ class SaveChartToPdfTask(
     }
 
     private fun addPDFFooter(document: Document) {
-        val reference = Paragraph("EtCO2 参考值：32-42mmHg", reportSmallFont)
+        val reference = Paragraph(REPORT_ETCO2_REFERENCE, reportSmallFont)
         reference.spacingBefore = 10f
         reference.spacingAfter = 34f
         document.add(reference)
@@ -509,7 +497,7 @@ class SaveChartToPdfTask(
             // 添加记录基础信息：住院号、床位号、姓名、性别、年龄等表单字段
             addPDFDetail(document)
 
-            // 按纸质报告单样式绘制最多三段 14 秒 CO2 波形。
+            // 按纸质报告单样式从记录开头绘制最多三段连续 14 秒 CO2 波形。
             addWaveformSections(document)
 
             // PDF页脚

@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-`SaveChartToPdfTask` 用 `AsyncTask` + 主线程生成 Canvas 波形 bitmap；PDF 版式参考纸质报告单，包含表单信息、最多三段 14 秒波形、指标行、EtCO2 参考值和签字栏；字体为 `assets/fonts/SimSun.ttf`。
+`SaveChartToPdfTask` 用 `AsyncTask` + 主线程生成 Canvas 波形 bitmap；PDF 版式参考纸质报告单，标题固定为 `呼气末二氧化碳监测报告单`，包含表单信息、从记录开头连续切分的最多三段 14 秒波形、指标行、固定文案 `EtCO2 参考值：32-42mmHg` 和签字栏；字体为 `assets/fonts/SimSun.ttf`。
 
 ## 最小验证方式
 

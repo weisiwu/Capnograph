@@ -15,7 +15,7 @@
 
 ## 补充职责
 
-PDF 生成与波形过滤工具；PDF 导出使用纸质报告单样式，按 14 秒窗口手绘 CO2 波形网格和指标行。
+PDF 生成与波形过滤工具；PDF 导出使用固定标题的纸质报告单样式，从记录开头按 14 秒窗口手绘 CO2 波形网格和指标行。
 
 ## 关键 ID / 别名
 
@@ -33,7 +33,7 @@ PDF 生成与波形过滤工具；PDF 导出使用纸质报告单样式，按 14
 
 ## 注意事项
 
-`baseFont` 在文件加载时创建，依赖 SimSun 字体资产。PDF 波形 bitmap 由 Android Canvas 手绘，不再使用 MPAndroidChart 的默认图表样式。
+`baseFont` 在文件加载时创建，依赖 SimSun 字体资产。PDF 波形 bitmap 由 Android Canvas 手绘，不再使用 MPAndroidChart 的默认图表样式。报告正文标题固定为 `呼气末二氧化碳监测报告单`，不读取打印设置里的 `reportName`。
 
 ## 最小验证方式
 

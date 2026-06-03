@@ -11,11 +11,11 @@
 - ID / 别名：report waveform sections, PDF 报告波形段
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/kits/PDFKit.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：将最近最多三段 14 秒 CO2 波形加入纸质报告单
+- 备注：从记录开头连续加入最多三段 14 秒 CO2 波形，最后一段可不足 14 秒
 
 ## 补充职责
 
-构建最近最多三段 14 秒波形，按时间顺序向 PDF 添加测量时间、`12.5mm/s`、手绘波形图和指标行。
+从记录开头构建最多三段连续 14 秒波形，按时间顺序向 PDF 添加测量时间、手绘波形图和指标行；写死的 `12.5mm/s` 速度文案已删除。
 
 ## 关键 ID / 别名
 
@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-测量时间通过 `record.startTime + pointIndex / POINTS_PER_SECOND` 推算；历史数据少于 14 秒时仍输出一段短波形。
+测量时间通过 `record.startTime + pointIndex / POINTS_PER_SECOND` 推算，并使用区间结束边界显示 0-14、14-28 这种连续范围；历史数据少于 14 秒时仍输出一段短波形，数据不足 42 秒时只有最后一段不足 14 秒。
 
 ## 最小验证方式
 
