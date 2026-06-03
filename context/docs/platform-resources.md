@@ -27,7 +27,7 @@
 - 根工程名为 `CapnoEasy`，包含 `:app` 和 `:hotmeltprint` 两个模块。
 - app namespace/applicationId 为 `com.wldmedical.capnoeasy`，`compileSdk=35`、`minSdk=30`、`targetSdk=35`、`versionName=1.2`。
 - hotmeltprint namespace 为 `com.wldmedical.hotmeltprint`，`compileSdk=35`、`minSdk=24`。
-- Gradle wrapper 使用华为云 `gradle-8.10.2-all.zip`；构建脚本均为 Kotlin DSL；macOS/Linux 执行时需覆盖 `gradle.properties` 中的 Windows `org.gradle.java.home`。
+- Gradle wrapper 使用华为云 `gradle-8.10.2-all.zip`；构建脚本均为 Kotlin DSL；机器相关 JDK 路径不写入项目级 `gradle.properties`，按 `JDK_SETUP.md` 写入用户级 Gradle 配置。
 - app Manifest 声明蓝牙、定位、存储和网络权限；SplashActivity 是 launcher，其他 Activity exported=false。
 - `values/strings.xml` 是默认中文资源，`values-en/strings.xml` 是英文资源，`locales_config.xml` 声明 `en` 和 `zh`。
 - Bugly AAR 和 GPrinter SDK JAR 是本地二进制依赖；CrashReport 初始化当前在 Application 中注释。

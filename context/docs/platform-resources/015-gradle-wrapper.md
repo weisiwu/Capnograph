@@ -36,7 +36,7 @@
 
 ## 最小验证方式
 
-`./gradlew --version`；安装依赖并验证 Debug 构建可执行 `./gradlew :app:assembleDebug`。在 macOS/Linux 环境中如 `gradle.properties` 的 Windows `org.gradle.java.home` 导致失败，用 `-Dorg.gradle.java.home=<local JDK home>` 覆盖。
+`./gradlew --version`；安装依赖并验证 Debug 构建可执行 `./gradlew :app:assembleDebug`。本机 JDK 路径应按 `JDK_SETUP.md` 写入用户级 Gradle 配置；临时构建可用 `-Dorg.gradle.java.home=<local JDK home>` 覆盖。
 
 ## 同步要求
 

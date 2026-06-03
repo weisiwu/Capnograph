@@ -9,14 +9,14 @@
 
 - 实体：Java and Kotlin JVM target
 - ID / 别名：`JavaVersion.VERSION_11`, `jvmTarget=11`, `org.gradle.java.home`
-- 源文件：`gradle.properties`, `app/build.gradle.kts`, `hotmeltprint/build.gradle.kts`
+- 源文件：`gradle.properties`, `app/build.gradle.kts`, `hotmeltprint/build.gradle.kts`, `JDK_SETUP.md`
 - 原始补充上下文：`context/docs/build-platform.md`
 - 关联总览文档：`context/docs/build-platform.md`
-- 备注：模块目标字节码为 Java 11；Gradle 属性里配置了 JDK 17 路径
+- 备注：模块目标字节码为 Java 11；机器相关 JDK 路径放到用户级 Gradle 配置
 
 ## 补充职责
 
-控制模块 Java/Kotlin 字节码目标和 Gradle 使用的 Java Home。
+控制模块 Java/Kotlin 字节码目标，并说明每台机器如何配置 Gradle 使用的 Java Home。
 
 ## 关键 ID / 别名
 
@@ -24,19 +24,19 @@
 
 ## 关键字段 / 方法
 
-两个模块 `sourceCompatibility`/`targetCompatibility` 为 `JavaVersion.VERSION_11`，Kotlin `jvmTarget="11"`；`gradle.properties` 配置 `org.gradle.java.home=C:\Program Files\Java\jdk-17`。
+两个模块 `sourceCompatibility`/`targetCompatibility` 为 `JavaVersion.VERSION_11`，Kotlin `jvmTarget="11"`；项目级 `gradle.properties` 不再配置 `org.gradle.java.home`。本机路径写入用户级 `~/.gradle/gradle.properties`，Windows 示例值保留在 `JDK_SETUP.md`：`org.gradle.java.home=C:\\Program Files\\Java\\jdk-17`。
 
 ## 主要调用点
 
-Java/Kotlin 编译任务和 Gradle daemon 使用这些设置。
+Java/Kotlin 编译任务使用模块字节码目标；Gradle daemon 使用用户级 Gradle 配置、Android Studio Gradle JDK、`JAVA_HOME` 或命令行 `-Dorg.gradle.java.home=...` 解析本机 JDK。
 
 ## 注意事项
 
-该 Java Home 是 Windows 路径；在 macOS/Linux 环境需要本机 Gradle/JDK 配置覆盖。本机依赖安装验证使用 Homebrew OpenJDK 21，并通过命令行参数覆盖：`-Dorg.gradle.java.home=/opt/homebrew/Cellar/openjdk@21/21.0.10/libexec/openjdk.jdk/Contents/Home`。跨机器执行时替换为实际 JDK home。
+不要在项目级 `gradle.properties` 提交机器相关 JDK 绝对路径。本机已写入用户级 `~/.gradle/gradle.properties`：`org.gradle.java.home=/opt/homebrew/Cellar/openjdk@21/21.0.10/libexec/openjdk.jdk/Contents/Home`。Windows 机器按 `JDK_SETUP.md` 写入用户级配置并保留当前 Windows 值：`org.gradle.java.home=C:\\Program Files\\Java\\jdk-17`。
 
 ## 最小验证方式
 
-`./gradlew --version -Dorg.gradle.java.home=<local JDK home>` 与 `./gradlew :app:assembleDebug -Dorg.gradle.java.home=<local JDK home>`。
+`./gradlew --version` 与 `./gradlew :app:assembleDebug`；若用户级 Gradle 配置不可用，可临时使用 `-Dorg.gradle.java.home=<local JDK home>`。
 
 ## 同步要求
 

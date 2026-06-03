@@ -54,14 +54,14 @@
 | Java source compatibility | `sourceCompatibility` | `JavaVersion.VERSION_11` | 两个 Android 模块 |
 | Java target compatibility | `targetCompatibility` | `JavaVersion.VERSION_11` | 两个 Android 模块 |
 | Kotlin JVM target | `jvmTarget` | `11` | 两个 Android 模块 |
-| Gradle Java home | `org.gradle.java.home` | `C:\\Program Files\\Java\\jdk-17` | `gradle.properties` |
+| Gradle Java home | `org.gradle.java.home` | 项目级不配置；每台机器写入用户级 `~/.gradle/gradle.properties` | `JDK_SETUP.md` |
 | AndroidX | `android.useAndroidX` | `true` | `gradle.properties` |
 | Jetifier | `android.enableJetifier` | `true` | `gradle.properties` |
 | Non-transitive R | `android.nonTransitiveRClass` | `true` | `gradle.properties` |
 | R8 | `android.enableR8` | `true` | `gradle.properties` |
 | ZipAlign | `android.zipAlign` | `true` | `gradle.properties` |
 
-备注：当前 `org.gradle.java.home` 是 Windows 路径；在 macOS/Linux 上执行 wrapper 时需要用 `-Dorg.gradle.java.home=<local JDK home>` 覆盖。本机依赖安装验证使用 `/opt/homebrew/Cellar/openjdk@21/21.0.10/libexec/openjdk.jdk/Contents/Home`，`./gradlew :app:assembleDebug` 可成功解析依赖并完成 Debug 构建。
+备注：项目级 `gradle.properties` 不提交机器相关的 `org.gradle.java.home`。不同机器把本机 JDK 路径写入用户级 `~/.gradle/gradle.properties`，Windows 仍使用 `C:\\Program Files\\Java\\jdk-17`，本机 macOS 使用 `/opt/homebrew/Cellar/openjdk@21/21.0.10/libexec/openjdk.jdk/Contents/Home`。配置说明见 `JDK_SETUP.md`。
 
 ## UI 与应用框架 ID
 
