@@ -1,0 +1,4 @@
+interface:
+  display_name: "上下文感知开发"
+  short_description: "编码前解析仓库上下文，并保持上下文文档同步。"
+  default_prompt: "使用 context-aware-dev 解析相关项目上下文，检查源码，完成请求的修改，运行验证，并同步上下文文档。"
