@@ -1,6 +1,9 @@
 *.iml
 .DS_Store
 
+# Local agent runtime state
+.deepseek/
+
 # Android / Gradle
 **/.gradle/
 **/.kotlin/

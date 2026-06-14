@@ -13,6 +13,9 @@
 | `gradle/libs.versions.toml` | 插件与依赖版本目录。 |
 | `gradle/wrapper/gradle-wrapper.properties` | Gradle wrapper 发行包版本和下载地址。 |
 | `gradle.properties` | Gradle、AndroidX、Jetifier、ZipAlign 等项目级设置。 |
+| `compose.yaml` | Android Docker 打包镜像依赖入口。 |
+| `docker/android-builder/Dockerfile` | Android 打包镜像构建定义。 |
+| `docker/android-builder/README.md` | Android 打包镜像使用说明。 |
 | `app/build.gradle.kts` | 主 Android 应用模块构建配置。 |
 | `hotmeltprint/build.gradle.kts` | 热敏打印 Android Library 模块构建配置。 |
 
@@ -21,6 +24,7 @@
 | 能力 | ID / 坐标 | 版本 / 值 | 应用位置 | 备注 |
 | --- | --- | --- | --- | --- |
 | Gradle wrapper | `./gradlew`, `gradle-8.10.2-all` | 8.10.2 | 根工程 | wrapper URL 为 `https://repo.huaweicloud.com/gradle/gradle-8.10.2-all.zip`。 |
+| Android builder Docker image | CABI, `android-builder`, `wei123098/capnograph-android-builder:android-35-agp-8.8.0` | android-35 / build-tools 35.0.0 / JDK 17 | 根工程 `compose.yaml` | 用于在 Docker/CI 中运行 `scripts/package.sh --target android`，避免依赖本机 Android SDK。 |
 | Gradle Kotlin DSL | `.gradle.kts` | n/a | 根工程、`:app`、`:hotmeltprint` | 构建脚本均使用 Kotlin DSL。 |
 | Version catalog | `gradle/libs.versions.toml`, `libs.*` | n/a | 根工程、模块 | 插件和多数依赖的集中别名与版本来源。 |
 | Android Gradle Plugin | `com.android.application`, `com.android.library`, `agp` | 8.8.0 | `:app`、`:hotmeltprint` | 插件别名定义在版本目录。 |

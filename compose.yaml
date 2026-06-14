@@ -1,0 +1,22 @@
+name: capnograph
+
+services:
+  android-builder:
+    image: wei123098/capnograph-android-builder:android-35-agp-8.8.0
+    platform: linux/amd64
+    entrypoint: []
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - capnograph-gradle-cache:/home/builder/.gradle
+    command:
+      - scripts/package.sh
+      - --target
+      - android
+      - --variant
+      - debug
+      - --
+      - --no-daemon
+
+volumes:
+  capnograph-gradle-cache:

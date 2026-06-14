@@ -1,0 +1,6 @@
+# Project-local Oh My Pi settings for CapnoGraph.
+# Keep this file free of credentials and machine-specific paths.
+skills:
+  customDirectories:
+    - .omp/skills
+    - skills

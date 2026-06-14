@@ -49,6 +49,7 @@
 | 实体 | ID / 别名 | 领域 | 源文件 | 补充上下文 | 备注 |
 | --- | --- | --- | --- | --- | --- |
 | Gradle wrapper | `./gradlew`, `gradle-8.10.2-all`, Gradle 8.10.2 | 构建平台 | `gradlew`, `gradle/wrapper/gradle-wrapper.properties` | `context/docs/platform-resources/015-gradle-wrapper.md` | 本地构建和测试入口；wrapper 使用华为云 Gradle 8.10.2 all 包。 |
+| Android builder Docker image | CABI, android-builder, Docker Compose, `wei123098/capnograph-android-builder:android-35-agp-8.8.0` | 构建平台 | `compose.yaml`, `docker/android-builder/Dockerfile`, `docker/android-builder/README.md` | `context/docs/platform-resources/CABI.md` | Android 打包镜像依赖和 Docker Compose 入口。 |
 | Gradle Kotlin DSL | `.gradle.kts`, `settings.gradle.kts`, Kotlin DSL | 构建平台 | `settings.gradle.kts`, `build.gradle.kts`, `app/build.gradle.kts`, `hotmeltprint/build.gradle.kts` | `context/docs/platform-resources/016-gradle-kotlin-dsl.md` | 根工程和模块构建脚本均使用 Kotlin DSL。 |
 | Gradle version catalog | `libs.versions.toml`, `libs.*`, `libs.plugins.*`, 版本目录 | 构建平台 | `gradle/libs.versions.toml` | `context/docs/platform-resources/017-gradle-version-catalog.md` | 插件和多数依赖的集中别名与版本来源。 |
 | Maven repositories | `google`, `mavenCentral`, `gradlePluginPortal`, `jitpack.io`, Huawei repo, Aliyun mirrors | 构建平台 | `settings.gradle.kts` | `context/docs/platform-resources/018-maven-repositories.md` | 插件和依赖仓库配置。 |

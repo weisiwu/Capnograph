@@ -14,6 +14,7 @@ This branch consolidates the platform-specific CapnoGraph codebases into a singl
 ├── apps/
 │   ├── android/        # Android Gradle project
 │   └── ios/            # iOS Xcode project
+├── .omp/               # Oh My Pi project skills, tools, and prompt additions
 ├── context/            # AI-readable project context
 ├── scripts/
 │   └── package.sh      # Target-based packaging wrapper
@@ -35,11 +36,29 @@ scripts/package.sh --target ios --variant release --export-options-plist ExportO
 Android builds run from `apps/android` and currently package the `:app` module.
 iOS builds run from `apps/ios` with the `CapnoGraph` scheme. By default, Xcode DerivedData is written to `apps/ios/build/DerivedData` so root-level packaging does not depend on a user-specific DerivedData location.
 
+Android packaging can also run through the pinned Docker builder image declared in `compose.yaml`.
+
+```bash
+docker compose run --rm android-builder scripts/package.sh --target android --variant debug -- --no-daemon
+docker compose run --rm android-builder scripts/package.sh --target android --variant release -- --no-daemon
+```
+
+## Oh My Pi
+
+Project-local Oh My Pi configuration lives under `.omp/`.
+
+- Skills: `capno-context`, `capno-android`, `capno-ios-parity`, `capno-packaging`.
+- Tools: `capno_context_lookup` for entity/context lookup and `capno_package` for packaging command previews or execution.
+- `.omp/config.yml` also exposes the repository-level `skills/context-aware-dev` skill through `skills.customDirectories`.
+
+Start `omp` from the repository root, or use `omp --cwd ~/Desktop/work/WLD/Capnograph`.
+
 ## Versions And Dependencies
 
 Android:
 
 - Gradle wrapper: `apps/android/gradle/wrapper/gradle-wrapper.properties`.
+- Docker builder image: `wei123098/capnograph-android-builder:android-35-agp-8.8.0`.
 - Android Gradle Plugin: `8.8.0`.
 - Kotlin: `2.0.0`.
 - App SDKs: `compileSdk 35`, `minSdk 30`, `targetSdk 35`.
