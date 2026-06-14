@@ -5,14 +5,14 @@
 
 - ID: `CL-AP`
 - 类型: `class`
-- 领域: src
-- 来源: `app/src/main/java/com/wldmedical/capnoeasy/kits/AlertAudioKit.kt:15`
+- 领域: apps
+- 来源: `apps/ios/CapnoGraph/BluetoothManage.swift:172`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
 - `AudioPlayer` 是 `class` 类型的代码符号。
-- 它位于 `app/src/main/java/com/wldmedical/capnoeasy/kits/AlertAudioKit.kt`，归属领域 `src`。
+- 它位于 `apps/ios/CapnoGraph/BluetoothManage.swift`，归属领域 `apps`。
 - 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
 
 ## 使用建议
