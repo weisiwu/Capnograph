@@ -4,20 +4,23 @@
 ## 定位
 
 - ID: `EN-CUT`
-- 类型: `enum`
+- 类型: `enum` (String)
 - 领域: apps
 - 来源: `apps/ios/CapnoGraph/AppConfigManage.swift:9`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `CO2UnitType` 是 `enum` 类型的代码符号。
-- 它位于 `apps/ios/CapnoGraph/AppConfigManage.swift`，归属领域 `apps`。
-- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
+- `CO2UnitType` 定义了 iOS 端支持的 CO2 浓度单位枚举。
+- **case KPa**: 千帕（rawValue "KPa"）。
+- **case Percentage**: 百分比（rawValue "%"）。
+- **case mmHg**: 毫米汞柱（rawValue "mmHg"），为默认单位。
+- 与 Android 端的 `CO2_UNIT` 枚举对应。
 
-## 使用建议
+## 调用链
 
-- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
-- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
-- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
+- `AppConfigManage.CO2Unit` 和 `BluetoothManager.CO2Unit` 存储当前单位。
+- `DisplayConfigView` 中的 Picker 使用此枚举提供单位选择。
+- `LineChartView` 和 `TableView` 根据单位格式化数据展示。
+- 单位变化时联动更新 `CO2Scale` 的可用选项。
 <!-- context-seed:end -->

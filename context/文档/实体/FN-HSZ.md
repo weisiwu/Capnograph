@@ -11,13 +11,8 @@
 
 ## 上下文
 
-- `handleSetZero` 是 `function` 类型的代码符号。
-- 它位于 `apps/ios/CapnoGraph/ConfigView.swift`，归属领域 `apps`。
-- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
-
-## 使用建议
-
-- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
-- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
-- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
+- `handleSetZero` 是 iOS 端的 CO2 传感器校零处理函数。
+- 流程：检查蓝牙连接 → 调用 `bluetoothManager.correctZero()` 发送校零指令 → 设置 loading → 成功后清空 loading 并显示完成 Toast。
+- 失败时调用 `handleSetZeroFail`。
+- 在 `BaseConfigContainerView` 的"校零"按钮中调用。
 <!-- context-seed:end -->

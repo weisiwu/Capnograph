@@ -4,20 +4,20 @@
 ## 定位
 
 - ID: `ST-BCCV`
-- 类型: `struct`
+- 类型: `struct` (View)
 - 领域: apps
 - 来源: `apps/ios/CapnoGraph/ConfigView.swift:16`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `BaseConfigContainerView` 是 `struct` 类型的代码符号。
-- 它位于 `apps/ios/CapnoGraph/ConfigView.swift`，归属领域 `apps`。
-- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
+- `BaseConfigContainerView<Content: View>` 是所有二级设置页面的通用容器包装视图。
+- 接收 `configType: ConfigItemTypes` 和 `@ViewBuilder content` 闭包。
+- 包含统一的安全区域处理、蓝牙连接状态按钮、校零按钮和关机按钮（位于页面底部）。
+- `handleShutdown` / `handleSetZero` / `handleSetZeroFail` 是此容器内关联的按钮操作处理函数。
+- `checkBluetoothStatus()` 在操作前检查蓝牙连接状态。
 
 ## 使用建议
 
-- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
-- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
-- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
+- 所有设置页面（系统、显示、报警、模块）都通过此容器包裹，确保统一的布局和操作按钮。
 <!-- context-seed:end -->

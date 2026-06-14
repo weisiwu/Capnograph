@@ -4,20 +4,20 @@
 ## 定位
 
 - ID: `ST-CI`
-- 类型: `struct`
+- 类型: `struct` (View)
 - 领域: apps
 - 来源: `apps/ios/CapnoGraph/ConfigView.swift:45`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `ConfigItem` 是 `struct` 类型的代码符号。
-- 它位于 `apps/ios/CapnoGraph/ConfigView.swift`，归属领域 `apps`。
-- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
+- `ConfigItem` 是设置页菜单项的单个行组件。
+- **参数**：`titleKey: String`（多语言 key）、`configType: ConfigItemTypes`（类型）、`action: () -> Void`（点击回调）。
+- 渲染布局：左侧标题 + 右侧箭头图标（`setting_right_arrow`）。
+- 在 `ConfigView` 的 List 中被多个实例化，形成设置菜单列表。
 
-## 使用建议
+## 调用链
 
-- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
-- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
-- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
+- 由 `ConfigView` 批量创建，对应设置页的各个菜单项。
+- 点击后通过 `configType` 分发到对应的子页面。
 <!-- context-seed:end -->

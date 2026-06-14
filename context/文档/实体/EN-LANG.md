@@ -4,20 +4,21 @@
 ## 定位
 
 - ID: `EN-LANG`
-- 类型: `enum`
+- 类型: `enum` (String)
 - 领域: apps
 - 来源: `apps/ios/CapnoGraph/AppConfigManage.swift:4`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `Languages` 是 `enum` 类型的代码符号。
-- 它位于 `apps/ios/CapnoGraph/AppConfigManage.swift`，归属领域 `apps`。
-- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
+- `Languages` 是 iOS 端支持的语言枚举。
+- **case Chinese**: 中文（rawValue 为"中文"）。
+- **case English**: 英文（rawValue 为"English"）。
+- 用于 `AppConfigManage.language` 属性，控制应用界面的中/英文切换。
+- 与 Android 端的 `LanguageTypes` 枚举对应。
 
-## 使用建议
+## 调用链
 
-- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
-- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
-- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
+- `SystemConfigView` 中的 `RadioButtonGroup` + `RadioButton` 使用此枚举渲染语言选择 UI。
+- 切换语言后，所有通过 `getTextByKey()` 获取的文本自动切换语言。
 <!-- context-seed:end -->

@@ -11,13 +11,16 @@
 
 ## 上下文
 
-- `ConfigItemTypes` 是 `enum` 类型的代码符号。
-- 它位于 `apps/ios/CapnoGraph/ConfigView.swift`，归属领域 `apps`。
-- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
+- `ConfigItemTypes` 定义了设置页菜单项的类型枚举。
+- **case System**: 系统设置，打开 `SystemConfigView`。
+- **case Alert**: 报警参数设置。
+- **case Display**: 显示参数设置。
+- **case Module**: 模块参数设置。
+- **case Print**: 打印设置。
+- 用于 `ConfigView` 中通过 switch 分发到对应设置页面。
 
-## 使用建议
+## 调用链
 
-- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
-- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
-- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
+- `ConfigView` 的 `NavigationLink` 根据此枚举类型推送对应的二级设置页面。
+- 与 Android 端的 `SettingType` 枚举对应。
 <!-- context-seed:end -->

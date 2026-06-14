@@ -4,20 +4,27 @@
 ## 定位
 
 - ID: `ST-CV`
-- 类型: `struct`
+- 类型: `struct` (View)
 - 领域: apps
 - 来源: `apps/ios/CapnoGraph/ConfigView.swift:114`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `ConfigView` 是 `struct` 类型的代码符号。
-- 它位于 `apps/ios/CapnoGraph/ConfigView.swift`，归属领域 `apps`。
-- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
+- `ConfigView` 是 iOS 端的设置一级页，位于 `ActionsTabView` 的第三个 Tab（`PageTypes.Config`）。
+- 通过 `BaseConfigContainerView` 包裹，底部包含蓝牙连接状态、校零和关机按钮。
+- **设置菜单项**（通过 `ConfigItem` 渲染）：
+  - 显示设置 → `DisplayConfigView`
+  - 报警设置 → `AlertConfigView`
+  - 模块参数 → `ModuleConfigView`
+  - 打印设置（iOS 暂未实现）
+  - 系统设置 → `SystemConfigView`
+  - 设备列表 → `SearchDeviceListView`
+- 通过 `NavigationStack` 管理二级页面的导航堆栈。
+- 校零/关机操作通过 `bluetoothManager.correctZero()` / `bluetoothManager.shutdown()` 执行。
 
-## 使用建议
+## 调用链
 
-- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
-- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
-- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
+- 底部 Tab 导航进入。
+- 与 Android 端的 `SettingActivity` + `SettingList` 对应。
 <!-- context-seed:end -->

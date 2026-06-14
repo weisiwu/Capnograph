@@ -11,13 +11,8 @@
 
 ## 上下文
 
-- `calculateOffsetX` 是 `function` 类型的代码符号。
-- 它位于 `apps/ios/CapnoGraph/AlertConfigView.swift`，归属领域 `apps`。
-- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
-
-## 使用建议
-
-- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
-- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
-- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
+- `calculateOffsetX(for value: CGFloat, in geometry: GeometryProxy, with valueRange: CGFloat, minV minimumValue: Float) -> CGFloat` 是滑块偏移量计算函数。
+- 根据当前值、范围总宽、最小值和 GeometryProxy 计算滑块上方数值标签的偏移位置。
+- 确保数值标签始终对齐在滑块按钮上方。
+- 在 `RangeSlider` 和 `SingleSlider` 中使用。
 <!-- context-seed:end -->

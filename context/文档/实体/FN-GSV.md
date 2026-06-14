@@ -11,13 +11,8 @@
 
 ## 上下文
 
-- `getSpecificValue` 是 `function` 类型的代码符号。
-- 它位于 `apps/ios/CapnoGraph/BluetoothManage.swift`，归属领域 `apps`。
-- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
-
-## 使用建议
-
-- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
-- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
-- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
+- `getSpecificValue(data: [UInt8], startBit: Int, length: Int) -> Int` 是蓝牙数据帧解析工具函数。
+- 从原始字节数据中提取指定起始位和长度的数值。
+- 用于解析蓝牙协议中各参数字段的位置。
+- 在 `handleCO2Waveform` 和 `handleCO2Status` 中调用。
 <!-- context-seed:end -->

@@ -11,13 +11,14 @@
 
 ## 上下文
 
-- `registerCharacteristic` 是 `function` 类型的代码符号。
-- 它位于 `apps/ios/CapnoGraph/BluetoothManage.swift`，归属领域 `apps`。
-- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
+- `registerCharacteristic(characteristics: [CBCharacteristic], for service: CBService)` 是特征值注册函数。
+- 在 `peripheral(_:didDiscoverCharacteristicsFor:error:)` 委托回调中调用。
+- 遍历特征值列表，根据 UUID 匹配发送特征值、接收特征值、反劫持特征值。
+- 为需要通知的特征值设置通知（`setNotifyValue(true)`）。
 
-## 使用建议
+## 调用链
 
-- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
-- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
-- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
+- 服务发现后自动调用。
+- 注册完成后调用 `sendContinuous()` 开始数据采集。
+- 与 Android 端 `BlueToothKit.gattCallback.onServicesDiscovered()` 中的特征值匹配逻辑对应。
 <!-- context-seed:end -->
