@@ -4,27 +4,20 @@
 ## 定位
 
 - ID: `ST-ACV`
-- 类型: `struct` (View)
+- 类型: `struct`
 - 领域: apps
 - 来源: `apps/ios/CapnoGraph/AlertConfigView.swift:127`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `AlertConfigView` 是 iOS 端的报警参数设置页面。
-- 通过 `BaseConfigContainerView(configType: ConfigItemTypes.Alert)` 包裹。
-- **两个可配置参数**：
-  - ETCO2 范围：使用 `RangeSlider` 选择上下限。
-  - RR 范围：使用 `RangeSlider` 选择上下限。
-- **更新流程**：
-  1. 点击"更新"按钮，先检查蓝牙连接状态。
-  2. 调用 `checkAlertRangeValid()` 验证范围有效性。
-  3. 调用 `updateAlertRange()` 通过蓝牙同步到设备。
-  4. 显示成功 Toast。
-- 进入页面时从蓝牙管理器读取当前报警范围值。
+- `AlertConfigView` 是 `struct` 类型的代码符号。
+- 它位于 `apps/ios/CapnoGraph/AlertConfigView.swift`，归属领域 `apps`。
+- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
 
-## 调用链
+## 使用建议
 
-- 从 `ConfigView` 导航栏"报警设置"按钮推送进入。
-- 与 Android 端的 `AlertSettingActivity` 对应。
+- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
+- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
+- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
 <!-- context-seed:end -->

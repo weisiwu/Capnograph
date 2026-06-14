@@ -11,14 +11,13 @@
 
 ## 上下文
 
-- `handleCO2Waveform(data: [UInt8])` 是 CO2 波形数据处理函数。
-- 解析蓝牙设备返回的 0xE1 类型波形数据帧。
-- 提取 CO2 浓度值、呼吸率 RR 和 ETCO2 值。
-- 将解析后的数据点追加到 `receivedCO2WavedData` 数组。
-- 通过 `NotificationCenter` 通知 UI 更新波形图。
+- `handleCO2Waveform` 是 `function` 类型的代码符号。
+- 它位于 `apps/ios/CapnoGraph/BluetoothManage.swift`，归属领域 `apps`。
+- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
 
-## 调用链
+## 使用建议
 
-- 由 `receivePeripheralData()` 根据协议类型分发调用。
-- 与 Android 端 `BlueToothKit` 中对应解析逻辑对应。
+- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
+- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
+- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
 <!-- context-seed:end -->

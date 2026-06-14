@@ -4,20 +4,20 @@
 ## 定位
 
 - ID: `ST-RS`
-- 类型: `struct` (View)
+- 类型: `struct`
 - 领域: apps
 - 来源: `apps/ios/CapnoGraph/AlertConfigView.swift:5`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `RangeSlider` 是 iOS 端报警范围设置的双滑块选择器组件。
-- 包含上下两个滑块，分别选择最小值和最大值。
-- 使用 `GeometryReader` 计算滑块位置。
-- `calculateOffsetX` 函数计算滑块偏移量。
+- `RangeSlider` 是 `struct` 类型的代码符号。
+- 它位于 `apps/ios/CapnoGraph/AlertConfigView.swift`，归属领域 `apps`。
+- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
 
-## 调用链
+## 使用建议
 
-- 在 `AlertConfigView` 中用于 ETCO2 和 RR 的报警范围设定。
-- 与 Android 端的 `RangeSelector` 组件对应。
+- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
+- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
+- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
 <!-- context-seed:end -->

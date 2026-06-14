@@ -4,28 +4,20 @@
 ## 定位
 
 - ID: `CL-ACM`
-- 类型: `class` (ObservableObject)
+- 类型: `class`
 - 领域: apps
 - 来源: `apps/ios/CapnoGraph/AppConfigManage.swift:239`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `AppConfigManage` 是 iOS 端的全局应用配置管理类，继承 `ObservableObject`。
-- 通过 `@Published` 属性驱动 UI 更新。
-- **核心状态组**：
-  - **界面覆盖层**：`loadingMessage`, `toastMessage`, `toastType`。
-  - **显示参数**：`CO2Unit`, `CO2Scale`, `WFSpeed`。
-  - **系统设置**：`language`, `firmwareVersion`, `hardwareVersion`, `softwareVersion`, `serialNumber`, `ModuleName`。
-  - **患者信息**：`patientName`, `patientAge`, `patientGender` 等。
-  - **PDF 设置**：`pdfHospitalName`, `pdfReportName`, `isPDF`。
-- 提供 `getTextByKey(key: String) -> String` 实现多语言文本支持。
-- 通过 `@EnvironmentObject` 注入到所有子视图中。
+- `AppConfigManage` 是 `class` 类型的代码符号。
+- 它位于 `apps/ios/CapnoGraph/AppConfigManage.swift`，归属领域 `apps`。
+- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
 
-## 调用链
+## 使用建议
 
-- 在 `CapnoGraphApp` 中通过 `@StateObject` 创建，通过 `.environmentObject()` 注入。
-- 所有 View 通过 `@EnvironmentObject var appConfigManage: AppConfigManage` 访问。
-- `listenToBluetoothManager()` 绑定蓝牙管理器，监听蓝牙状态变化。
-- 与 Android 端的 `AppState` + `AppStateModel` 组合对应。
+- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
+- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
+- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
 <!-- context-seed:end -->

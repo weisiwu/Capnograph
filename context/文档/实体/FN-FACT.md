@@ -1,18 +1,18 @@
 <!-- context-seed:start -->
-# handleSofrWareVersion
+# factory
 
 ## 定位
 
-- ID: `FN-HSWV`
+- ID: `FN-FACT`
 - 类型: `function`
-- 领域: apps
-- 来源: `apps/ios/CapnoGraph/BluetoothManage.swift:1073`
+- 领域: .omp
+- 来源: `.omp/tools/capno-project.js:176`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `handleSofrWareVersion` 是 `function` 类型的代码符号。
-- 它位于 `apps/ios/CapnoGraph/BluetoothManage.swift`，归属领域 `apps`。
+- `factory` 是 `function` 类型的代码符号。
+- 它位于 `.omp/tools/capno-project.js`，归属领域 `.omp`。
 - 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
 
 ## 使用建议

@@ -11,16 +11,13 @@
 
 ## 上下文
 
-- `listenToBluetoothManager(bluetoothManager: BluetoothManager)` 是 iOS 端绑定蓝牙管理器的事件的函数。
-- 使用 `NotificationCenter.default.publisher` 监听 `BluetoothManager` 发出的通知：
-  - 更新 CO2 波形数据（`receivedCO2WavedData`）。
-  - 更新呼吸率 RR 和 ETCO2 值。
-  - 更新设备和模块参数。
-  - 处理连接/断开事件。
-- 所有蓝牙数据更新通过此函数桥接到 AppConfigManage 的 @Published 属性。
+- `listenToBluetoothManager` 是 `function` 类型的代码符号。
+- 它位于 `apps/ios/CapnoGraph/AppConfigManage.swift`，归属领域 `apps`。
+- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
 
-## 调用链
+## 使用建议
 
-- 在 `CapnoGraphApp` 中由 `AppConfigManage` 的实例在初始化时调用。
-- 与 Android 端 `BlueToothKit` 通过 `MutableStateFlow` 和 `AppStateModel` 桥接数据的方式对应。
+- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
+- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
+- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
 <!-- context-seed:end -->

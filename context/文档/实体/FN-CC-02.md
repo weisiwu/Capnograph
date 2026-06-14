@@ -1,17 +1,17 @@
 <!-- context-seed:start -->
-# handleSofrWareVersion
+# calculateCKS
 
 ## 定位
 
-- ID: `FN-HSWV`
+- ID: `FN-CC-02`
 - 类型: `function`
 - 领域: apps
-- 来源: `apps/ios/CapnoGraph/BluetoothManage.swift:1073`
+- 来源: `apps/ios/CapnoGraph/BluetoothManage.swift:527`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `handleSofrWareVersion` 是 `function` 类型的代码符号。
+- `calculateCKS` 是 `function` 类型的代码符号。
 - 它位于 `apps/ios/CapnoGraph/BluetoothManage.swift`，归属领域 `apps`。
 - 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
 

@@ -4,15 +4,20 @@
 ## 定位
 
 - ID: `FN-CMDUS`
-- 类型: `function` (CBCentralManagerDelegate)
+- 类型: `function`
 - 领域: apps
 - 来源: `apps/ios/CapnoGraph/BluetoothManage.swift:1308`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `centralManagerDidUpdateState(_ central: CBCentralManager)` 是实现 `CBCentralManagerDelegate` 协议的中心管理器状态更新回调。
-- 在蓝牙硬件状态变化时（打开/关闭/未授权）被系统调用。
-- 根据 `CBManagerState` 状态自动启动或停止蓝牙扫描。
-- 与 Android 端 `BlueToothKit` 的蓝牙权限检查逻辑对应。
+- `centralManagerDidUpdateState` 是 `function` 类型的代码符号。
+- 它位于 `apps/ios/CapnoGraph/BluetoothManage.swift`，归属领域 `apps`。
+- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
+
+## 使用建议
+
+- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
+- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
+- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
 <!-- context-seed:end -->

@@ -4,16 +4,20 @@
 ## 定位
 
 - ID: `EN-ATE`
-- 类型: `enum` (String)
+- 类型: `enum`
 - 领域: apps
 - 来源: `apps/ios/CapnoGraph/AppConfigManage.swift:133`
 - 实体映射: `context/实体标识映射.md`
 
 ## 上下文
 
-- `AppTextsEnglish` 定义了 iOS 端所有英文界面文本的键值对枚举。
-- 包含约 100 个 case，与 `AppTextsChinese` 的 key 一一对应。
-- 每个 case 的 rawValue 为对应的英文字符串。
-- 通过 `getTextByKey()` 根据当前语言选择中文或英文版本。
-- 与 Android 端 `strings.xml` 资源文件对应。
+- `AppTextsEnglish` 是 `enum` 类型的代码符号。
+- 它位于 `apps/ios/CapnoGraph/AppConfigManage.swift`，归属领域 `apps`。
+- 处理同名功能、调用关系、重构或测试失败时，先打开来源位置确认实现。
+
+## 使用建议
+
+- 当请求命中本 ID、实体名、来源路径或领域时加载本文件。
+- 本文件用于快速定向；实现或修复前仍需打开来源文件验证当前行为。
+- 如果实体移动、重命名或语义变化，同步更新本文件和实体映射。
 <!-- context-seed:end -->

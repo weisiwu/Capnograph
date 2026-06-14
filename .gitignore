@@ -3,6 +3,7 @@
 
 # Local agent runtime state
 .deepseek/
+context-seed-plan.json
 
 # Android / Gradle
 **/.gradle/
