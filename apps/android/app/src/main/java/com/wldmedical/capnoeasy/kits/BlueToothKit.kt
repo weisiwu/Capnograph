@@ -294,7 +294,13 @@ class BlueToothKit @Inject constructor(
         }
 
         // 扫描失败
-        override fun onScanFailed(errorCode: Int) {}
+        override fun onScanFailed(errorCode: Int) {
+            ErrorReporter.report(
+                IllegalStateException("BLE scan failed: $errorCode"),
+                "BluetoothKit.le_scan_failed",
+                mapOf("error_code" to errorCode)
+            )
+        }
     }
 
     private var scanFind: ((BluetoothDevice)-> Unit)? = null
@@ -768,6 +774,7 @@ class BlueToothKit @Inject constructor(
                 // 接收器未注册，忽略此异常
             } catch (e: Exception) {
                 Log.e("wswTest", "取消注册广播失败", e)
+                ErrorReporter.report(e, "BluetoothKit.unregister_discovery_receiver")
             } finally {
                 isReceiverRegistered = false // 无论成功与否都重置标志位
             }
@@ -1341,7 +1348,11 @@ class BlueToothKit @Inject constructor(
                 }
                 result.onFailure {
                     // println("wswTest【波形调试】 解析co2波形数据，发生异常 ${it.message} ")
-                    it.printStackTrace()
+                    ErrorReporter.report(
+                        it,
+                        "BluetoothKit.handle_co2_waveform",
+                        mapOf("frame_size" to firstArray.size)
+                    )
                 }
             }
             SensorCommand.Settings.value -> handleSettings(firstArray)
@@ -1537,12 +1548,14 @@ class BlueToothKit @Inject constructor(
 
                 } catch (e: Exception) {
                     println("wswTEst Failed to parse date: ${e.message}")
+                    ErrorReporter.report(e, "BluetoothKit.parse_production_date")
                 }
             } else {
                 println("No match found")
             }
         } catch (e: Exception) {
             println("Invalid regex: ${e.message}")
+            ErrorReporter.report(e, "BluetoothKit.parse_software_version")
         }
     }
 

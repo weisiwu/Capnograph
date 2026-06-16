@@ -14,7 +14,7 @@
 
 ## 补充职责
 
-Hilt Application、Bugly、数据库、备份 helper、BaseActivity 公共初始化。
+Hilt Application、ErrorReporter/Bugly、数据库、备份 helper、BaseActivity 公共初始化。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ app startup, 应用启动, 初始化
 
 ## 注意事项
 
-Hilt Application、Bugly、数据库、备份 helper、BaseActivity 公共初始化。
+Hilt Application、ErrorReporter/Bugly、数据库、备份 helper、BaseActivity 公共初始化；BaseActivity 会把当前页面和 Activity 写入错误上报上下文。
 
 ## 最小验证方式
 

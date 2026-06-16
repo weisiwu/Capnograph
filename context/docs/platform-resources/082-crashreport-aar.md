@@ -28,11 +28,11 @@ Bugly crashreport
 
 ## 主要调用点
 
-通过 app `fileTree(include=*.aar, dir=libs)` 引入；Application import CrashReport。
+通过 app `fileTree(include=*.aar, dir=libs)` 引入；`ErrorReporter` 封装 CrashReport 初始化、上下文附加和已捕获异常上报。
 
 ## 注意事项
 
-与三方依赖实体 `Bugly CrashReport AAR` 指向同一二进制；当前初始化调用被注释。
+与三方依赖实体 `Bugly CrashReport AAR` 指向同一二进制；Application 启动时通过 `ErrorReporter.initialize` 启用，release 构建关闭 debug。
 
 ## 最小验证方式
 

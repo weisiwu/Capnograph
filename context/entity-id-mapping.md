@@ -106,7 +106,7 @@
 
 | 实体 | ID / 别名 | 领域 | 源文件 | 补充上下文 | 备注 |
 | --- | --- | --- | --- | --- | --- |
-| App bootstrap flow | app startup, 应用启动, 初始化 | 应用入口 | `app/src/main/java/com/wldmedical/capnoeasy/CapnoEasyApplication.kt`, `app/src/main/java/com/wldmedical/capnoeasy/pages/BaseActivity.kt` | `context/docs/app-ui-workflows/024-app-bootstrap-flow.md`; `.cursor/rules/project-memory.mdc` | Hilt Application、Bugly、数据库、备份 helper、BaseActivity 公共初始化。 |
+| App bootstrap flow | app startup, 应用启动, 初始化 | 应用入口 | `app/src/main/java/com/wldmedical/capnoeasy/CapnoEasyApplication.kt`, `app/src/main/java/com/wldmedical/capnoeasy/pages/BaseActivity.kt` | `context/docs/app-ui-workflows/024-app-bootstrap-flow.md`; `.cursor/rules/project-memory.mdc` | Hilt Application、ErrorReporter/Bugly、数据库、备份 helper、BaseActivity 公共初始化。 |
 | Page shell and overlays flow | BaseLayout overlays, 全局弹层, 页面框架 | UI 流程 | `app/src/main/java/com/wldmedical/capnoeasy/pages/BaseActivity.kt`, `app/src/main/java/com/wldmedical/capnoeasy/components/BaseLayout.kt` | `context/docs/app-ui-workflows/025-page-shell-and-overlays-flow.md`; `.cursor/rules/project-memory.mdc` | 所有 Activity 共享顶栏、底栏、Toast、Alert、Confirm、Loading、ActionModal。 |
 | BLE search flow | search devices, 扫描设备, 附近设备 | 蓝牙流程 | `app/src/main/java/com/wldmedical/capnoeasy/pages/SearchActivity.kt`, `app/src/main/java/com/wldmedical/capnoeasy/kits/BlueToothKit.kt` | `context/docs/core-data-protocol/001-ble-search-flow.md`; `.cursor/rules/project-memory.mdc` | 搜索页触发 BLE/经典蓝牙扫描、设备列表更新和连接动作。 |
 | BLE connection bootstrap flow | connect device, GATT, 反劫持, 初始化连接 | 蓝牙流程 | `app/src/main/java/com/wldmedical/capnoeasy/kits/BlueToothKit.kt`, `app/src/main/java/com/wldmedical/capnoeasy/kits/BlueToothTaskQueueKit.kt` | `context/docs/core-data-protocol/002-ble-connection-bootstrap-flow.md`; `.cursor/rules/project-memory.mdc` | 连接设备、发现服务/特征、写入反劫持、订阅通知并发送初始化命令。 |
@@ -252,7 +252,7 @@
 
 | 实体 | ID / 别名 | 领域 | 源文件 | 补充上下文 | 备注 |
 | --- | --- | --- | --- | --- | --- |
-| `CapnoEasyApplication.onCreate` | app init, Application 初始化 | 应用入口 | `app/src/main/java/com/wldmedical/capnoeasy/CapnoEasyApplication.kt` | `context/docs/app-ui-workflows/105-capnoeasyapplication-oncreate.md`; `.cursor/rules/project-memory.mdc` | 初始化 Bugly、数据库、备份 helper 和 Activity 生命周期计数。 |
+| `CapnoEasyApplication.onCreate` | app init, Application 初始化 | 应用入口 | `app/src/main/java/com/wldmedical/capnoeasy/CapnoEasyApplication.kt` | `context/docs/app-ui-workflows/105-capnoeasyapplication-oncreate.md`; `.cursor/rules/project-memory.mdc` | 初始化 ErrorReporter/Bugly、数据库、备份 helper、Activity 生命周期计数和错误上报上下文。 |
 | `CapnoEasyApplication.getActivityCount` | activity count, 活动数量 | 应用入口 | `app/src/main/java/com/wldmedical/capnoeasy/CapnoEasyApplication.kt` | `context/docs/app-ui-workflows/106-capnoeasyapplication-getactivitycount.md`; `.cursor/rules/project-memory.mdc` | BaseActivity 返回拦截判断是否为最后页面。 |
 | `SplashActivity.onCreate` | splash launch, 启动页入口 | 页面函数 | `app/src/main/java/com/wldmedical/capnoeasy/pages/SplashActivity.kt` | `context/docs/app-ui-workflows/107-splashactivity-oncreate.md`; `.cursor/rules/project-memory.mdc` | 设置启动页 Compose 内容并跳转主页。 |
 | `SplashScreen` | splash composable, 启动页组件 | UI 函数 | `app/src/main/java/com/wldmedical/capnoeasy/pages/SplashActivity.kt` | `context/docs/app-ui-workflows/108-splashscreen.md`; `.cursor/rules/project-memory.mdc` | 启动页 Logo 动画和延迟跳转。 |
@@ -478,6 +478,7 @@
 | AndroidPdfViewer | `com.github.barteksc:android-pdf-viewer:3.2.0-beta.1` | 三方依赖 | `app/build.gradle.kts` | `context/docs/platform-resources/062-androidpdfviewer.md` | app 模块声明，排除 `com.android.support`。 |
 | AndroidX Collection | `androidx.collection:collection:1.2.0` | 三方依赖 | `app/build.gradle.kts` | `context/docs/platform-resources/063-androidx-collection.md` | app 模块声明的集合工具依赖。 |
 | Bugly CrashReport AAR | `crashreport-4.1.9.3.aar`, `com.tencent.bugly.crashreport.CrashReport` | 三方依赖 | `app/libs/crashreport-4.1.9.3.aar`, `app/build.gradle.kts`, `app/src/main/java/com/wldmedical/capnoeasy/CapnoEasyApplication.kt` | `context/docs/platform-resources/064-bugly-crashreport-aar.md` | 本地 AAR 崩溃上报。 |
+| ErrorReporter | 错误上报, 非致命异常上报, Bugly wrapper | 错误上报 | `app/src/main/java/com/wldmedical/capnoeasy/kits/ErrorReporter.kt`, `app/src/main/java/com/wldmedical/capnoeasy/CapnoEasyApplication.kt` | `context/docs/platform-resources/096-error-reporter.md` | Bugly CrashReport 的项目内统一封装。 |
 | GPrinter SDK JAR | `SDKLib.jar`, `com.gprinter.*` | 三方依赖 | `hotmeltprint/libs/SDKLib.jar`, `hotmeltprint/build.gradle.kts`, `hotmeltprint/src/main/java/com/wldmedical/hotmeltprint/HotmeltPinter.kt` | `context/docs/platform-resources/065-gprinter-sdk-jar.md` | 热敏打印 SDK，提供 BluetoothPort、EscCommand、PrinterDevices 等。 |
 | JUnit 4 | `junit:junit:4.13.2` | 测试依赖 | `gradle/libs.versions.toml`, `app/build.gradle.kts`, `hotmeltprint/build.gradle.kts` | `context/docs/platform-resources/066-junit-4.md` | JVM 单元测试依赖。 |
 | AndroidX Test JUnit | `androidx.test.ext:junit:1.2.1` | 测试依赖 | `gradle/libs.versions.toml`, `app/build.gradle.kts`, `hotmeltprint/build.gradle.kts` | `context/docs/platform-resources/067-androidx-test-junit.md` | Android instrumentation JUnit 扩展。 |
@@ -500,7 +501,7 @@
 | Device/UI icons | `device_tyoe_mark`, `empty_device_list`, `pull_up`, `m3_*`, `fail_icon`, 设备和通用 UI 图标 | 资源 | `app/src/main/res/drawable/device_tyoe_mark.png`, `app/src/main/res/drawable/empty_device_list.png`, `app/src/main/res/drawable/pull_up.png`, `app/src/main/res/drawable/m3_arrow_forward.png`, `app/src/main/res/drawable/m3_lightbulb.png`, `app/src/main/res/drawable/m3_power_settings.png`, `app/src/main/res/drawable/m3_refresh.png`, `app/src/main/res/drawable/fail_icon.png` | `context/docs/platform-resources/079-device-ui-icons.md` | 通用 UI 图片资源。 |
 | Alert sounds | `low_level_alert`, `middle_level_alert`, 报警音 | 音频 | `app/src/main/res/raw/low_level_alert.wav`, `app/src/main/res/raw/middle_level_alert.wav` | `context/docs/platform-resources/080-alert-sounds.md` | 报警音频资源。 |
 | SimSun font | `SimSun.ttf`, 宋体字体 | 资源 | `app/src/main/assets/fonts/SimSun.ttf` | `context/docs/platform-resources/081-simsun-font.md` | App/报告使用的字体资源。 |
-| Crashreport AAR | Bugly crashreport | 依赖 | `app/libs/crashreport-4.1.9.3.aar` | `context/docs/platform-resources/082-crashreport-aar.md` | 内置崩溃上报 AAR。 |
+| Crashreport AAR | Bugly crashreport | 依赖 | `app/libs/crashreport-4.1.9.3.aar` | `context/docs/platform-resources/082-crashreport-aar.md` | 内置崩溃上报 AAR，由 ErrorReporter 初始化和调用。 |
 | Hotmelt SDK JAR | `SDKLib.jar`, 热敏打印 SDK | 依赖 | `hotmeltprint/libs/SDKLib.jar` | `context/docs/platform-resources/083-hotmelt-sdk-jar.md` | 内置热敏打印 SDK JAR。 |
 
 ## 清单与权限

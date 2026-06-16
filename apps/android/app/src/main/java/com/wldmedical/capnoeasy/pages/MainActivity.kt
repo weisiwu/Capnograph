@@ -19,6 +19,7 @@ import com.wldmedical.capnoeasy.components.EtCo2Table
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.components.ToastType
 import com.wldmedical.capnoeasy.kits.BluetoothType
+import com.wldmedical.capnoeasy.kits.ErrorReporter
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
@@ -61,6 +62,7 @@ class MainActivity : BaseActivity() {
             }
         } catch (e: Exception) {
             println("wswTest 捕获到自动链接BLE配对设备异常: ${e.message}")
+            ErrorReporter.report(e, "MainActivity.auto_connect_saved_ble")
         }
 
         if (!Environment.isExternalStorageManager()) {
@@ -77,6 +79,7 @@ class MainActivity : BaseActivity() {
                     }
                     startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION )
                 } catch (e: Exception) {
+                    ErrorReporter.report(e, "MainActivity.request_app_all_files_access")
                     val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                     startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION )
                 }
@@ -115,7 +118,7 @@ class MainActivity : BaseActivity() {
             printSetting.showTrendingChart?.let { viewModel.updateShowTrendingChart(it) }
         } catch (e: Exception) {
             println("wswTest 从用户偏好里读取默认打印设置异常 : ${e.message}")
-            e.printStackTrace()
+            ErrorReporter.report(e, "MainActivity.load_print_preferences")
         }
 
         try {
@@ -123,6 +126,7 @@ class MainActivity : BaseActivity() {
             blueToothKit.searchDevices(BluetoothType.CLASSIC)
         } catch (e: Exception) {
             println("wswTest 默认扫描，连接周围打印机异常 : ${e.message}")
+            ErrorReporter.report(e, "MainActivity.auto_scan_printer")
         }
     }
 
@@ -205,13 +209,18 @@ class MainActivity : BaseActivity() {
         // 正在记录中，点击为保存动作
         if (isRecording) {
             val remainData = viewModel.totalCO2WavedData.toList()
-            lifecycleScope.launch {
+            lifecycleScope.launch(
+                ErrorReporter.coroutineExceptionHandler(
+                    "MainActivity.stop_record",
+                    mapOf("remaining_points" to remainData.size)
+                )
+            ) {
                 localStorageKit.stopRecord(remainData)
             }
         } else {
             // 点击后创建记录
             startRecordTime = LocalDateTime.now()
-            lifecycleScope.launch {
+            lifecycleScope.launch(ErrorReporter.coroutineExceptionHandler("MainActivity.start_record")) {
                 val patient = Patient(
                     name = viewModel.patientName.value ?: "",
                     gender = viewModel.patientGender.value ?: GENDER.MALE,
@@ -255,7 +264,12 @@ class MainActivity : BaseActivity() {
                 val application = application as CapnoEasyApplication
 
                 // 访问 dbBackupHelperKit 并调用 restoreDatabase
-                application.dbBackupHelperKit.startWork(applicationContext, application.database, true)
+                try {
+                    application.dbBackupHelperKit.startWork(applicationContext, application.database, true)
+                } catch (e: Exception) {
+                    ErrorReporter.report(e, "MainActivity.restore_database_from_permission_result")
+                    throw e
+                }
             } else {
                 // 权限未授予，提示用户或采取其他措施
                 Toast.makeText(this, "未授予存储权限，无法恢复数据库。", Toast.LENGTH_SHORT).show()

@@ -24,7 +24,7 @@ fun saveImageToInternalStorage(context: Context, uri: Uri, fileName: String): Bo
         outputStream.close()
         true
     } catch (e: Exception) {
-        e.printStackTrace()
+        ErrorReporter.report(e, "ImageSelector.save_image_to_internal_storage")
         false
     }
 }
@@ -35,7 +35,7 @@ fun loadImageFromInternalStorage(context: Context, fileName: String): Bitmap? {
         val file = File(directory, fileName)
         BitmapFactory.decodeFile(file.absolutePath)
     } catch (e: Exception) {
-        e.printStackTrace()
+        ErrorReporter.report(e, "ImageSelector.load_image_from_internal_storage")
         null
     }
 }

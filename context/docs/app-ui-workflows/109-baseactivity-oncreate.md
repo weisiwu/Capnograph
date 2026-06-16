@@ -14,7 +14,7 @@
 
 ## 补充职责
 
-初始化 ViewModel、Bluetooth、Print、Storage、语言、版本、竖屏和 BaseLayout。
+初始化 ViewModel、Bluetooth、Print、Storage、语言、版本、竖屏和 BaseLayout；App 版本读取失败会上报为非致命异常。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ base init, 页面基类初始化
 
 ## 注意事项
 
-初始化 ViewModel、Bluetooth、Print、Storage、语言、版本、竖屏和 BaseLayout。
+初始化 ViewModel、Bluetooth、Print、Storage、语言、版本、竖屏和 BaseLayout；App 版本读取失败会上报为非致命异常。
 
 ## 最小验证方式
 

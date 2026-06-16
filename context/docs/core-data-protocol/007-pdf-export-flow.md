@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-`SaveChartToPdfTask` 用 `AsyncTask` + 主线程生成 Canvas 波形 bitmap；PDF 版式参考纸质报告单，标题、页边距、字体、表格列宽、基础信息标签/值列宽、section 高度、15 秒波形尺寸和模板默认水印由 `PdfReportTemplateConfig` 集中管理。默认标题为 `呼气末二氧化碳监测报告单`，内容包含住院号、床位号、科室、姓名、性别、按完整记录时间轴连续切分的 15 秒 CO2 波形、EtCO2/FiCO2/RR 分段统计、按当前 CO2 单位换算的 EtCO2 参考值和签字栏；基础信息标签统一带冒号并右对齐到冒号，值列使用等长下划线，空值只保留下划线便于导出后填写。字体为 `assets/fonts/SimSun.ttf`。正式报告模板默认关闭水印，调试报告模板默认启用水印；`PrintSetting` 可覆盖水印开关、文字和透明度。当前 PDF 不再输出全程摘要、全程 EtCO2 趋势或异常上下文波形，`pdfEventContextSeconds` 不参与导出切段。新记录的波形段和横坐标优先使用 `CO2WavePointData.sampleTimeMillis`，旧记录回退到 `record.startTime + index / POINTS_PER_SECOND`。波形图内显示横纵轴主刻度标签，并按当前 CO2 单位把 EtCO2 正常范围绘制为浅色范围带。分段统计输出均值/最大/最小/段末，当前没有 SpO2/PR 数据模型字段，PDF 不输出血氧和脉率占位。基础信息、每个 15 秒波形段和 footer/signature 通过 section 渲染器检查剩余页面空间，不足时分页；footer/signature 始终在全部内容之后出现在最后一页。
+`SaveChartToPdfTask` 用 `AsyncTask` + 主线程生成 Canvas 波形 bitmap；PDF 版式参考纸质报告单，标题、页边距、字体、表格列宽、基础信息标签/值列宽、section 高度、15 秒波形尺寸和模板默认水印由 `PdfReportTemplateConfig` 集中管理。默认标题为 `呼气末二氧化碳监测报告单`，内容包含住院号、床位号、科室、姓名、性别、按完整记录时间轴连续切分的 15 秒 CO2 波形、EtCO2/FiCO2/RR 分段统计、按当前 CO2 单位换算的 EtCO2 参考值和签字栏；基础信息标签统一带冒号并右对齐到冒号，值列使用等长下划线，空值只保留下划线便于导出后填写。字体为 `assets/fonts/SimSun.ttf`。正式报告模板默认关闭水印，调试报告模板默认启用水印；`PrintSetting` 可覆盖水印开关、文字和透明度。当前 PDF 不再输出全程摘要、全程 EtCO2 趋势或异常上下文波形，`pdfEventContextSeconds` 不参与导出切段。新记录的波形段和横坐标优先使用 `CO2WavePointData.sampleTimeMillis`，旧记录回退到 `record.startTime + index / POINTS_PER_SECOND`。波形图内显示横纵轴主刻度标签，并按当前 CO2 单位把 EtCO2 正常范围绘制为浅色范围带。分段统计输出均值/最大/最小/段末，当前没有 SpO2/PR 数据模型字段，PDF 不输出血氧和脉率占位。基础信息、每个 15 秒波形段和 footer/signature 通过 section 渲染器检查剩余页面空间，不足时分页；footer/signature 始终在全部内容之后出现在最后一页。PDF 生成、保存到 URI、回调和协程加载异常会通过 ErrorReporter 作为非致命异常上报，并只携带数据量/文件存在性等诊断字段。
 
 ## 最小验证方式
 

@@ -6,7 +6,6 @@ import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
 import com.wldmedical.capnoeasy.R
-import java.io.IOException
 
 /**
  * 报警设置，播放报警和终止报警
@@ -64,16 +63,30 @@ class AudioPlayer(private val context: Context) {
                 stopAudio()
                 this.isPlay = false
             }, 14000)
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             stopAudio()
             println("wswTest【报警功能调试】无法播放音频文件: ${e.localizedMessage}")
+            ErrorReporter.report(e, "AlertAudio.play_alert_audio", mapOf("alert_type" to type.name))
         }
     }
     
     fun stopAudio() {
-        mediaPlayer?.stop()
-        mediaPlayer?.release() // 释放资源
+        mediaPlayer?.let { player ->
+            runCatching {
+                if (player.isPlaying) {
+                    player.stop()
+                }
+            }.onFailure {
+                ErrorReporter.report(it, "AlertAudio.stop_audio")
+            }
+            runCatching {
+                player.release() // 释放资源
+            }.onFailure {
+                ErrorReporter.report(it, "AlertAudio.release_audio")
+            }
+        }
         mediaPlayer = null
+        isPlay = false
     }
 }
 

@@ -14,7 +14,7 @@
 
 ## 补充职责
 
-Hilt Application 入口，持有全局 Context、Room AppDatabase、DatabaseBackupHelper，并通过 ActivityLifecycleCallbacks 维护 activityCount。
+Hilt Application 入口，初始化 ErrorReporter/Bugly，持有全局 Context、Room AppDatabase、DatabaseBackupHelper，并通过 ActivityLifecycleCallbacks 维护 activityCount、前后台状态和前台 Activity 上报上下文。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ Application, Hilt app, 应用入口
 
 ## 注意事项
 
-全局 Application 入口。
+全局 Application 入口；数据库初始化失败会上报后继续抛出，备份启动失败作为非致命异常上报。
 
 ## 最小验证方式
 

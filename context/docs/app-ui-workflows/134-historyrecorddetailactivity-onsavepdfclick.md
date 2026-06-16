@@ -14,7 +14,7 @@
 
 ## 补充职责
 
-读取记录所有 CO2 数据、打印偏好和当前 `BlueToothKit.sSerialNumber`，并异步生成 PDF。
+读取记录所有 CO2 数据、打印偏好和当前 `BlueToothKit.sSerialNumber`，并异步生成 PDF；协程异常通过 ErrorReporter 上报。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ save PDF action, 保存 PDF
 
 ## 注意事项
 
-读取记录所有 CO2 数据、打印偏好和当前设备序列号并异步生成 PDF；设备序列号传给 `saveChartToPdfInBackground(deviceSerial=...)`，用于 PDF 基础信息区的设备编号。
+读取记录所有 CO2 数据、打印偏好和当前设备序列号并异步生成 PDF；设备序列号传给 `saveChartToPdfInBackground(deviceSerial=...)`，用于 PDF 基础信息区的设备编号。错误上报 metadata 不直接携带设备序列号或患者字段。
 
 ## 最小验证方式
 

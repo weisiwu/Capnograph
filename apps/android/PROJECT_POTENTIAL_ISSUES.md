@@ -25,9 +25,9 @@
 ## P1：高风险问题
 
 3. Manifest 权限和发布合规风险偏高。
-   - 证据：`app/src/main/AndroidManifest.xml:16-19` 声明 `ACCESS_BACKGROUND_LOCATION`、`MANAGE_EXTERNAL_STORAGE`、旧存储权限；`AndroidManifest.xml:29-30` 启用 `requestLegacyExternalStorage`、`allowBackup=true`；`AndroidManifest.xml:50` 启用 `BUGLY_ENABLE_DEBUG`。
+   - 证据：`app/src/main/AndroidManifest.xml:16-19` 声明 `ACCESS_BACKGROUND_LOCATION`、`MANAGE_EXTERNAL_STORAGE`、旧存储权限；`AndroidManifest.xml:29-30` 启用 `requestLegacyExternalStorage`、`allowBackup=true`；Bugly debug 已改为 Gradle 占位符，release=false、debug=true。
    - 风险：上架审核、Android 11+ 存储策略、隐私说明和生产数据备份都有阻力；`allowBackup=true` 对医疗/患者数据尤其敏感。
-   - 建议：按功能真实需要拆分权限，移除无用权限；若必须保留后台定位或全文件访问，补充产品合规说明、运行时解释和测试矩阵；生产包关闭 Bugly debug，并复核备份策略。
+   - 建议：按功能真实需要拆分权限，移除无用权限；若必须保留后台定位或全文件访问，补充产品合规说明、运行时解释和测试矩阵；继续验证生产包 Bugly debug 关闭，并复核备份策略。
 
 4. 蓝牙权限和生命周期依赖大量 suppress。
    - 证据：`BlueToothKit.kt` 多处 `@SuppressLint("MissingPermission")`，`SearchActivity.kt`、`DeviceList.kt`、`EtCo2LineChart.kt` 也 suppress 蓝牙权限检查；`MainActivity.kt:78/81`、`BlueToothKit.kt:717` 仍使用 `startActivityForResult`。
@@ -102,6 +102,6 @@
 
 1. 先同步 `PdfReportTemplateConfig` 相关 context 文档，消除源码和 context 漂移。
 2. 运行最小验证闭环：`compileDebugKotlin`、unit test、lintDebug、debug 安装和一次 PDF 生成。
-3. 处理 Manifest 权限、Bugly debug、`allowBackup` 和蓝牙权限网关。
+3. 处理 Manifest 权限、验证 Bugly release 配置、`allowBackup` 和蓝牙权限网关。
 4. 补 Room schema v2、迁移测试和 PDF 分段/异常窗口单元测试。
 5. 分阶段拆分 `BlueToothKit`、`PDFKit`、`LocalStorageKit`，每阶段保持可构建和 context 同步。

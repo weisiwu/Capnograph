@@ -171,7 +171,7 @@
 | iTextPDF | `com.itextpdf:itextpdf:5.5.13.4` | `:app`, `:hotmeltprint` | `PDFKit` 生成纸质报告单样式 PDF，按 section 分页、嵌入连续 15 秒波形段 bitmap、通过 page event 绘制可配置水印，并把 footer/signature 放在最后内容之后，打印模块也声明。 | 验证中文字体、表单字段、section 分页、可配置水印、最后页签字栏、手绘波形图片和 SAF 导出；库版本较旧，升级需回归 PDF 格式。 |
 | AndroidPdfViewer | `com.github.barteksc:android-pdf-viewer:3.2.0-beta.1` | `:app` | 依赖已声明并排除 `com.android.support`。 | 当前源码未检出直接调用；如启用 PDF 预览需补 Activity/组件映射。 |
 | AndroidX Collection | `androidx.collection:collection:1.2.0` | `:app` | 依赖已声明。 | 当前源码未检出直接调用；移除前全局检查。 |
-| Bugly CrashReport AAR | `app/libs/crashreport-4.1.9.3.aar`, `com.tencent.bugly.crashreport.CrashReport` | `:app` | Application import CrashReport；Manifest 配置 Bugly app id/version/debug metadata。 | `CrashReport.initCrashReport` 当前被注释；重新启用需网络权限和崩溃上报验证。 |
+| Bugly CrashReport AAR | `app/libs/crashreport-4.1.9.3.aar`, `com.tencent.bugly.crashreport.CrashReport` | `:app` | `ErrorReporter` 在 Application 初始化 Bugly，并为已捕获异常/协程异常提供非致命上报。 | Manifest 通过 Gradle 占位符配置 app id/version/debug；release 关闭 debug，debug 构建打开 debug。 |
 | GPrinter SDK JAR | `hotmeltprint/libs/SDKLib.jar`, `com.gprinter.*` | `:hotmeltprint` | `HotmeltPinter` 使用 `BluetoothPort`, `PortManager`, `EscCommand`, `PrinterDevices` 打印。 | build 文件同时 fileTree 和 `files("libs/SDKLib.jar")` 引入；打印能力需真机和打印机验证。 |
 
 ### 测试依赖

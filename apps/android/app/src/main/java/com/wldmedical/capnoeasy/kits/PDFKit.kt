@@ -198,7 +198,15 @@ class SaveChartToPdfTask(
                 pdfGenerationSuccess = savePDF(filePath)
             } catch (e: Exception) {
                 println("wswTest PDFKit 遇到了错误 ${e.message}")
-                e.printStackTrace()
+                ErrorReporter.report(
+                    e,
+                    "PDFKit.pre_execute_save_pdf",
+                    mapOf(
+                        "data_points" to data.size,
+                        "has_record" to (record != null),
+                        "show_trending_chart" to showTrendingChart
+                    )
+                )
                 pdfGenerationSuccess = false
             } finally {
                 latch.countDown()
@@ -212,7 +220,7 @@ class SaveChartToPdfTask(
         try {
             latch.await() // 等待 Bitmap 初始化完成
         } catch (e: InterruptedException) {
-            e.printStackTrace()
+            ErrorReporter.report(e, "PDFKit.await_pdf_generation")
             return false
         }
         return pdfGenerationSuccess
@@ -220,7 +228,11 @@ class SaveChartToPdfTask(
 
     @Deprecated("Deprecated in Java")
     override fun onPostExecute(result: Boolean) {
-        onComplete(result) // 调用回调函数
+        try {
+            onComplete(result) // 调用回调函数
+        } catch (e: Exception) {
+            ErrorReporter.report(e, "PDFKit.on_complete_callback", mapOf("result" to result))
+        }
     }
 
     private data class ReportSegment(
@@ -921,7 +933,16 @@ class SaveChartToPdfTask(
             }
         } catch (e: Exception) {
             println("wswTest PDFKit savePDF失败 path=$filePath error=${e.message}")
-            e.printStackTrace()
+            ErrorReporter.report(
+                e,
+                "PDFKit.save_pdf",
+                mapOf(
+                    "data_points" to data.size,
+                    "has_record" to (record != null),
+                    "show_trending_chart" to showTrendingChart,
+                    "co2_unit" to co2Unit
+                )
+            )
             if (tempFile.exists()) {
                 tempFile.delete()
             }
@@ -932,7 +953,7 @@ class SaveChartToPdfTask(
                     document.close()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                ErrorReporter.report(e, "PDFKit.close_document")
             }
         }
     }

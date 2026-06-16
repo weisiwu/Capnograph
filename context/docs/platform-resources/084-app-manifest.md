@@ -24,7 +24,7 @@ permissions, activities, 应用清单
 
 ## 关键字段 / 方法
 
-权限含 Bluetooth、Location、Storage、Network；Application 为 `.CapnoEasyApplication`；icon/roundIcon 为 app logo；theme 为 `Theme.Splash`。
+权限含 Bluetooth、Location、Storage、Network；Application 为 `.CapnoEasyApplication`；icon/roundIcon 为 app logo；theme 为 `Theme.Splash`；Bugly metadata 由 Gradle manifestPlaceholders 注入。
 
 ## 主要调用点
 
@@ -32,7 +32,7 @@ permissions, activities, 应用清单
 
 ## 注意事项
 
-Bugly metadata version `v0.1.1.20250327.2101` 与 app `versionName=1.2` 不同。
+Bugly metadata version 使用 `buglyAppVersion` 占位符，与 app `versionName=1.2` 对齐；`buglyEnableDebug` 在 debug 构建为 true、release 构建为 false。
 
 ## 最小验证方式
 

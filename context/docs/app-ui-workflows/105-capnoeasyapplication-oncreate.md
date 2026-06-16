@@ -10,11 +10,11 @@
 - ID / 别名：app init, Application 初始化
 - 源文件：`app/src/main/java/com/wldmedical/capnoeasy/CapnoEasyApplication.kt`
 - 原始补充上下文：`.cursor/rules/project-memory.mdc`
-- 备注：初始化 Bugly、数据库、备份 helper 和 Activity 生命周期计数
+- 备注：初始化 ErrorReporter/Bugly、数据库、备份 helper、Activity 生命周期计数和错误上报上下文
 
 ## 补充职责
 
-初始化 Bugly、数据库、备份 helper 和 Activity 生命周期计数。
+初始化 ErrorReporter/Bugly、数据库、备份 helper、Activity 生命周期计数和错误上报上下文。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ app init, Application 初始化
 
 ## 注意事项
 
-初始化 Bugly、数据库、备份 helper 和 Activity 生命周期计数。
+初始化 ErrorReporter/Bugly、数据库、备份 helper、Activity 生命周期计数和错误上报上下文；数据库初始化异常上报后抛出，备份启动异常按非致命异常上报。
 
 ## 最小验证方式
 

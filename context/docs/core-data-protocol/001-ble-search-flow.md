@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-搜索失败走 `checkBlueToothFail`；经典扫描只自动连接 GP 打印机，不向 `discoveredPeripherals` 列表追加普通设备。
+搜索失败走 `checkBlueToothFail`；BLE `onScanFailed` 会通过 ErrorReporter 上报 errorCode；经典扫描只自动连接 GP 打印机，不向 `discoveredPeripherals` 列表追加普通设备。
 
 ## 最小验证方式
 

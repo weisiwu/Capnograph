@@ -28,11 +28,11 @@
 
 ## 主要调用点
 
-`CapnoEasyApplication.kt` import CrashReport；Manifest 配置 `BUGLY_APPID=06c39f5912`、`BUGLY_APP_VERSION=v0.1.1.20250327.2101`、debug true。
+`ErrorReporter.kt` import CrashReport；`CapnoEasyApplication.onCreate` 调用 `ErrorReporter.initialize`；Manifest 通过 Gradle 占位符配置 `BUGLY_APPID=06c39f5912`、`BUGLY_APP_VERSION=1.2`、debug 随构建类型切换。
 
 ## 注意事项
 
-`CrashReport.initCrashReport(getApplicationContext())` 当前被注释；重新启用需网络权限和崩溃上报验证。
+统一通过 `ErrorReporter` 调用 `CrashReport.initCrashReport`，并用 `postCatchedException` 上报已捕获非致命异常；metadata 避免直接上传患者隐私字段。
 
 ## 最小验证方式
 

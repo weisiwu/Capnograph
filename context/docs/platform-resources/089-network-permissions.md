@@ -28,11 +28,11 @@ INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, 网络权限
 
 ## 主要调用点
 
-Bugly/网络状态能力可能使用；当前 CrashReport 初始化被注释但 metadata 和权限仍在。
+Bugly CrashReport 通过 `ErrorReporter` 启用，崩溃与非致命异常上报需要网络权限；网络状态权限供 SDK 判断上传环境。
 
 ## 注意事项
 
-如果继续不启用 CrashReport，可后续评估网络权限是否仍必要。
+如果未来移除 Bugly 或改为离线上报，可重新评估 `INTERNET`、`ACCESS_NETWORK_STATE`、`ACCESS_WIFI_STATE` 的必要性。
 
 ## 最小验证方式
 

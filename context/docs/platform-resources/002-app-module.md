@@ -24,7 +24,7 @@
 
 ## 关键字段 / 方法
 
-`namespace`/`applicationId` 均为 `com.wldmedical.capnoeasy`；`compileSdk=35`、`minSdk=30`、`targetSdk=35`、`versionCode=3`、`versionName="1.2"`；启用 Compose、Hilt、kapt；Debug 安装启动任务使用同一 applicationId。
+`namespace`/`applicationId` 均为 `com.wldmedical.capnoeasy`；`compileSdk=35`、`minSdk=30`、`targetSdk=35`、`versionCode=3`、`versionName="1.2"`；启用 Compose、Hilt、kapt；Bugly manifestPlaceholders 注入 app id/version/debug；Debug 安装启动任务使用同一 applicationId。
 
 ## 主要调用点
 
@@ -32,7 +32,7 @@
 
 ## 注意事项
 
-release 构建开启 `isMinifyEnabled=true` 和 `isShrinkResources=true`；Manifest 里也写了 `android:versionName="1.2"`，版本变更需双处核对。
+release 构建开启 `isMinifyEnabled=true` 和 `isShrinkResources=true`；Manifest 里也写了 `android:versionName="1.2"`，版本变更需同步 `appVersionName` 和 Manifest 属性。
 
 ## 最小验证方式
 

@@ -14,7 +14,7 @@
 
 ## 补充职责
 
-将 Activity 的 `pageScene` 写入 ViewModel。
+将 Activity 的 `pageScene` 写入 ViewModel，并同步 `page_scene`、`activity` 到 ErrorReporter 上下文。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ page scene update, 页面场景同步
 
 ## 注意事项
 
-将 Activity 的 `pageScene` 写入 ViewModel。
+将 Activity 的 `pageScene` 写入 ViewModel，并同步 `page_scene`、`activity` 到 ErrorReporter 上下文。
 
 ## 最小验证方式
 

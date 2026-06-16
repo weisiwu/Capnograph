@@ -16,6 +16,7 @@ import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.DATABASE_NS
 import com.wldmedical.capnoeasy.USER_PREF_NS
 import com.wldmedical.capnoeasy.kits.AppDatabase
+import com.wldmedical.capnoeasy.kits.ErrorReporter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -77,7 +78,7 @@ class DatabaseBackupHelper(private val context: Context) {
                     restoreDatabase()
                 } catch (e: IOException) {
                     Log.e("DatabaseBackupHelper", "恢复数据过程中遇到问题: ${e.message}")
-                    e.printStackTrace()
+                    ErrorReporter.report(e, "DatabaseBackupHelper.restore_on_start")
                 }
             } else {
                 try {
@@ -102,6 +103,11 @@ class DatabaseBackupHelper(private val context: Context) {
                         return@runBlocking // 退出当前协程
                     }
                     Log.e("DatabaseBackupHelper", "备份数据遇到异常")
+                    ErrorReporter.report(
+                        e,
+                        "DatabaseBackupHelper.backup_on_start",
+                        mapOf("failure_count" to currentCount)
+                    )
                 }
             }
         }
@@ -378,6 +384,7 @@ class DatabaseBackupHelper(private val context: Context) {
 
             } catch (e: IOException) {
                 Log.e("DatabaseBackupHelper", "Error backing up database", e)
+                ErrorReporter.report(e, "DatabaseBackupHelper.backup_database")
             }
         }
     }
@@ -434,6 +441,7 @@ class DatabaseBackupHelper(private val context: Context) {
                     Log.d("DatabaseRestore", "wswTest 数据库恢复成功!")
                 } catch (e: Exception) {
                     Log.e("DatabaseRestore", "wswTest 恢复数据库时出错: ${e.message}")
+                    ErrorReporter.report(e, "DatabaseBackupHelper.copy_backup_to_database")
                 }
             }
 
@@ -450,6 +458,7 @@ class DatabaseBackupHelper(private val context: Context) {
             println("DatabaseBackupHelper[restoreDatabase] 恢复数据库完成")
         } catch (e: Exception) {
             Log.e("DatabaseBackupHelper", "Error restoring database", e)
+            ErrorReporter.report(e, "DatabaseBackupHelper.restore_database")
         }
     }
 }

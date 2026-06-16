@@ -55,6 +55,11 @@ class BluetoothTaskQueue {
                     taskQueue.poll() // 任务执行成功，从队列中移除
                 } catch (e: Exception) {
                     println("wsw 任务执行失败：${e.message}")
+                    ErrorReporter.report(
+                        e,
+                        "BluetoothTaskQueue.execute_task",
+                        mapOf("queue_size" to taskQueue.size)
+                    )
                     // 失败计数器（这里简化为3次）
                     var retryCount = 0
                     while (retryCount < 3) {
@@ -65,6 +70,11 @@ class BluetoothTaskQueue {
                             break // 退出重试循环
                         } catch (e: Exception) {
                             println("wswTest 任务重试失败${retryCount}：${e.message}")
+                            ErrorReporter.report(
+                                e,
+                                "BluetoothTaskQueue.retry_task",
+                                mapOf("retry_count" to retryCount, "queue_size" to taskQueue.size)
+                            )
                         }
                     }
                     if (retryCount == 3) {
@@ -97,6 +107,11 @@ class BluetoothTaskQueue {
                         taskQueue.poll() // 任务执行成功，从队列中移除
                     } catch (e: Exception) {
                         println("wsw 任务执行失败：${e.message}")
+                        ErrorReporter.report(
+                            e,
+                            "BluetoothTaskQueue.execute_all_task",
+                            mapOf("queue_size" to taskQueue.size)
+                        )
                         // 失败计数器（这里简化为3次）
                         var retryCount = 0
                         while (retryCount < 3) {
@@ -107,6 +122,11 @@ class BluetoothTaskQueue {
                                 break // 退出重试循环
                             } catch (e: Exception) {
                                 println("wswTest 任务重试失败${retryCount}：${e.message}")
+                                ErrorReporter.report(
+                                    e,
+                                    "BluetoothTaskQueue.retry_all_task",
+                                    mapOf("retry_count" to retryCount, "queue_size" to taskQueue.size)
+                                )
                             }
                         }
                         if (retryCount == 3) {

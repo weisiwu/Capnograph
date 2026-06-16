@@ -34,6 +34,7 @@ import com.wldmedical.capnoeasy.components.Toast
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.kits.BlueToothKitManager
+import com.wldmedical.capnoeasy.kits.ErrorReporter
 import com.wldmedical.capnoeasy.kits.LocalStorageKit
 import com.wldmedical.capnoeasy.kits.LocalStorageKitManager
 import com.wldmedical.capnoeasy.kits.PrintProtocalKitManager
@@ -181,6 +182,8 @@ open class BaseActivity : ComponentActivity() {
 
     open fun updatePageScene() {
         this.viewModel.updateCurrentPage(this.pageScene)
+        ErrorReporter.setContext("page_scene", this.pageScene.name)
+        ErrorReporter.setContext("activity", this.javaClass.simpleName)
     }
 
     private fun onScanFind(device: BluetoothDevice) {
@@ -303,6 +306,7 @@ open class BaseActivity : ComponentActivity() {
             viewModel.updateAppVersion(packageInfo.versionName.toString())
         } catch (e: PackageManager.NameNotFoundException) {
             Log.e("MainActivity", "找不到包名：$packageName", e)
+            ErrorReporter.report(e, "BaseActivity.load_app_version")
         }
 
         // 禁用横屏，设置为竖屏模式

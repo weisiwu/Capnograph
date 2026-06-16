@@ -33,7 +33,7 @@ MediaPlayer 包装类。
 
 ## 注意事项
 
-`stopAudio` 不重置 `isPlay`；14 秒延迟回调会重置。
+`stopAudio` 会安全停止并释放 MediaPlayer，同时重置 `isPlay=false`；播放、停止或释放异常会通过 ErrorReporter 上报。
 
 ## 最小验证方式
 

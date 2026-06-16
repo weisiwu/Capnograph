@@ -16,7 +16,7 @@
 
 ## 补充职责
 
-工具/服务层，集中 BLE、协议、Room/SharedPreferences、PDF、报警音、图片选择、数据库备份和打印协议能力。
+工具/服务层，集中 BLE、协议、Room/SharedPreferences、PDF、报警音、图片选择、数据库备份、打印协议和错误上报能力。
 
 ## 关键 ID / 别名
 
@@ -24,7 +24,7 @@ service kits, 工具/服务层
 
 ## 关键字段 / 方法
 
-关键实体/文件：AlertAudioKit, BlueToothKit, BlueToothTaskQueueKit, BluetoothDemoData, CapnoEasyProtocalKit, DatabaseBackupHelperKit, ImageSelectorKit, LocalStorageKit, PDFKit, PrintProtocalKit。
+关键实体/文件：AlertAudioKit, BlueToothKit, BlueToothTaskQueueKit, BluetoothDemoData, CapnoEasyProtocalKit, DatabaseBackupHelperKit, ErrorReporter, ImageSelectorKit, LocalStorageKit, PDFKit, PrintProtocalKit。
 
 ## 主要调用点
 

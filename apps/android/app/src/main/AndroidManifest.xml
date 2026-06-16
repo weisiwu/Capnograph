@@ -40,15 +40,15 @@
         <!-- 配置APP ID -->
         <meta-data
             android:name="BUGLY_APPID"
-            android:value="06c39f5912" />
+            android:value="${buglyAppId}" />
         <!-- 配置APP版本号 -->
         <meta-data
             android:name="BUGLY_APP_VERSION"
-            android:value="v0.1.1.20250327.2101" />
+            android:value="${buglyAppVersion}" />
         <!-- 配置Bugly调试模式（true或者false）-->
         <meta-data
             android:name="BUGLY_ENABLE_DEBUG"
-            android:value="true" />
+            android:value="${buglyEnableDebug}" />
         <activity
             android:name=".pages.SplashActivity"
             android:exported="true"

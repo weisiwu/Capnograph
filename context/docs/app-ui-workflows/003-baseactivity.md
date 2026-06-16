@@ -14,7 +14,7 @@
 
 ## 补充职责
 
-所有业务页面基类，初始化 AppStateModel、BlueToothKit、HotmeltPinter、LocalStorageKit、语言和版本，并统一承载 BaseLayout 与全局弹层。
+所有业务页面基类，初始化 AppStateModel、BlueToothKit、HotmeltPinter、LocalStorageKit、语言和版本，并统一承载 BaseLayout 与全局弹层；页面场景和 Activity 名称会写入 ErrorReporter 上下文。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ base page, 页面基类
 
 ## 注意事项
 
-Compose 初始化、权限和共享 Manager 初始化。
+Compose 初始化、权限、共享 Manager 初始化和页面错误上报上下文同步。
 
 ## 最小验证方式
 

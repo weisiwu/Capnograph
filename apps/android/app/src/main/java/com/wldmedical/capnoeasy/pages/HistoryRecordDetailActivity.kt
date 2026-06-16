@@ -37,6 +37,7 @@ import com.wldmedical.capnoeasy.components.RangeSelector
 import com.wldmedical.capnoeasy.components.RangeType
 import com.wldmedical.capnoeasy.components.ToastData
 import com.wldmedical.capnoeasy.kits.CO2Data
+import com.wldmedical.capnoeasy.kits.ErrorReporter
 import com.wldmedical.capnoeasy.kits.Record
 import com.wldmedical.capnoeasy.kits.decompressToCO2WavePointData
 import com.wldmedical.capnoeasy.kits.filterData
@@ -107,7 +108,14 @@ class HistoryRecordDetailActivity : BaseActivity() {
             inputStream = FileInputStream(File(sourceFilePath))
             inputStream.copyTo(outputStream!!)
         } catch (e: Exception) {
-            e.printStackTrace()
+            ErrorReporter.report(
+                e,
+                "HistoryRecordDetailActivity.save_pdf_to_uri",
+                mapOf(
+                    "source_exists" to File(sourceFilePath).exists(),
+                    "source_size" to File(sourceFilePath).takeIf { it.exists() }?.length()
+                )
+            )
         } finally {
             outputStream?.close()
             inputStream?.close()
@@ -136,7 +144,12 @@ class HistoryRecordDetailActivity : BaseActivity() {
         }
         val outputPath = File(cacheDir, "${saveFileName.ifEmpty { record.patientIndex }}.pdf").absolutePath
         exportPdfFilePath = outputPath
-        lifecycleScope.launch {
+        lifecycleScope.launch(
+            ErrorReporter.coroutineExceptionHandler(
+                "HistoryRecordDetailActivity.save_pdf",
+                mapOf("has_record" to true)
+            )
+        ) {
             val allCo2Data = loadAllCo2Data(record.id)
             if (allCo2Data.isEmpty()) {
                 viewModel.updateToastData(
@@ -190,7 +203,12 @@ class HistoryRecordDetailActivity : BaseActivity() {
             )
             return
         }
-        lifecycleScope.launch {
+        lifecycleScope.launch(
+            ErrorReporter.coroutineExceptionHandler(
+                "HistoryRecordDetailActivity.print_ticket",
+                mapOf("has_record_id" to true)
+            )
+        ) {
             val allCo2Data = loadAllCo2Data(recordId)
             if (allCo2Data.isEmpty()) {
                 viewModel.updateToastData(
@@ -262,7 +280,12 @@ class HistoryRecordDetailActivity : BaseActivity() {
         // 初始化时触发(recordId变化，视为打开新的记录页)
         LaunchedEffect(recordId) {
             println("wswTest 记录id 开始初始化 ${recordId}")
-            lifecycleScope.launch {
+            lifecycleScope.launch(
+                ErrorReporter.coroutineExceptionHandler(
+                    "HistoryRecordDetailActivity.load_record_summary",
+                    mapOf("has_record_id" to true)
+                )
+            ) {
                 val result = withContext(Dispatchers.IO) {
                     val record = localStorageKit.database.recordDao().queryRecordById(recordId)
                     if (record == null) return@withContext null
@@ -306,7 +329,15 @@ class HistoryRecordDetailActivity : BaseActivity() {
         // 滑动修改进度值时触发，根据新进度，计算展示用的数据
         LaunchedEffect(startValue.value) {
             println("wswTest 记录id ${recordId} 进度发生变化===> ${startValue.value}")
-            lifecycleScope.launch {
+            lifecycleScope.launch(
+                ErrorReporter.coroutineExceptionHandler(
+                    "HistoryRecordDetailActivity.load_record_window",
+                    mapOf(
+                        "has_record_id" to true,
+                        "start_value" to startValue.value
+                    )
+                )
+            ) {
                 val result = withContext(Dispatchers.IO) {
                     val record = localStorageKit.database.recordDao().queryRecordById(recordId)
                     if (record == null) return@withContext null

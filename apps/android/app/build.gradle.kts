@@ -8,6 +8,8 @@ plugins {
 
 val vicoVersion = "2.0.1"
 val debugApplicationId = "com.wldmedical.capnoeasy"
+val appVersionName = "1.2"
+val buglyAppId = "06c39f5912"
 
 android {
     namespace = "com.wldmedical.capnoeasy"
@@ -18,13 +20,21 @@ android {
         minSdk = 30
         targetSdk = 35
         versionCode = 3
-        versionName = "1.2"
+        versionName = appVersionName
+        manifestPlaceholders["buglyAppId"] = buglyAppId
+        manifestPlaceholders["buglyAppVersion"] = appVersionName
+        manifestPlaceholders["buglyEnableDebug"] = "false"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        debug {
+            manifestPlaceholders["buglyEnableDebug"] = "true"
+        }
+
         release {
+            manifestPlaceholders["buglyEnableDebug"] = "false"
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

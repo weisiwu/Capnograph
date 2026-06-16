@@ -33,7 +33,7 @@ PDF 生成与波形过滤工具；PDF 导出使用 `PdfReportTemplateConfig` 管
 
 ## 注意事项
 
-`baseFont` 在文件加载时创建，依赖 SimSun 字体资产。PDF 波形 bitmap 由 Android Canvas 手绘，不再使用 MPAndroidChart 的默认图表样式；`mmHg` 纵轴标 0/30/60/90 主刻度，非 `mmHg` 单位按当前量程标 0、1/3、2/3、最大值。报告正文标题默认是 `呼气末二氧化碳监测报告单`，由 `PdfReportTemplateConfig.title` 管理，不读取打印设置里的 `reportName`；科室来自 `PrintSetting.pdfDepart`，基础信息缺值时不写 `未填写`，只保留对应下划线，字段按两列自动补齐当前行空白。水印由 `PrintSetting` 优先控制，缺省时回退到正式/调试模板默认值；启用水印时通过 `PdfPageEventHelper` 在每页底层重复绘制，文字和透明度可配置。长记录报告不再筛选异常片段，`addWaveformSections` 按完整记录时间轴连续切分，每段固定 15 秒；`PrintSetting.pdfEventContextSeconds` 当前不参与 PDF 导出。EtCO2 参考范围以 `32-42mmHg` 为基准配置，`kPa` 与 `%` 导出时转换到对应单位，未知单位不输出参考行或图内范围带。每段波形指标行显示均值/最大/最小/段末，避免只依赖瞬时末值；当前没有 SpO2/PR 数据模型字段，PDF 不输出血氧和脉率占位。Footer/signature 总是在所有内容后渲染，并在空间不足时换到最后新页。调版优先改 `PdfReportTemplateConfig` 默认值。
+`baseFont` 在文件加载时创建，依赖 SimSun 字体资产。PDF 波形 bitmap 由 Android Canvas 手绘，不再使用 MPAndroidChart 的默认图表样式；`mmHg` 纵轴标 0/30/60/90 主刻度，非 `mmHg` 单位按当前量程标 0、1/3、2/3、最大值。报告正文标题默认是 `呼气末二氧化碳监测报告单`，由 `PdfReportTemplateConfig.title` 管理，不读取打印设置里的 `reportName`；科室来自 `PrintSetting.pdfDepart`，基础信息缺值时不写 `未填写`，只保留对应下划线，字段按两列自动补齐当前行空白。水印由 `PrintSetting` 优先控制，缺省时回退到正式/调试模板默认值；启用水印时通过 `PdfPageEventHelper` 在每页底层重复绘制，文字和透明度可配置。长记录报告不再筛选异常片段，`addWaveformSections` 按完整记录时间轴连续切分，每段固定 15 秒；`PrintSetting.pdfEventContextSeconds` 当前不参与 PDF 导出。EtCO2 参考范围以 `32-42mmHg` 为基准配置，`kPa` 与 `%` 导出时转换到对应单位，未知单位不输出参考行或图内范围带。每段波形指标行显示均值/最大/最小/段末，避免只依赖瞬时末值；当前没有 SpO2/PR 数据模型字段，PDF 不输出血氧和脉率占位。Footer/signature 总是在所有内容后渲染，并在空间不足时换到最后新页。PDF 生成、等待、保存、关闭文档和回调异常会通过 ErrorReporter 上报。调版优先改 `PdfReportTemplateConfig` 默认值。
 
 ## 最小验证方式
 

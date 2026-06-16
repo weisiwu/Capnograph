@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-`AsyncTask` 已过时但当前代码仍使用；失败时回调 false。PDF 内容按基础信息、15 秒波形段、页脚/签字这些 section 渲染，section 渲染前通过 `PdfWriter.getVerticalPosition(true)` 估算剩余空间，不足则 `document.newPage()`。启用水印时设置 `WatermarkPageEvent`，在每页结束时向 `directContentUnder` 重复绘制文字水印。
+`AsyncTask` 已过时但当前代码仍使用；失败时回调 false。PDF 内容按基础信息、15 秒波形段、页脚/签字这些 section 渲染，section 渲染前通过 `PdfWriter.getVerticalPosition(true)` 估算剩余空间，不足则 `document.newPage()`。启用水印时设置 `WatermarkPageEvent`，在每页结束时向 `directContentUnder` 重复绘制文字水印。生成、等待、关闭文档和回调异常会通过 ErrorReporter 上报。
 
 ## 最小验证方式
 

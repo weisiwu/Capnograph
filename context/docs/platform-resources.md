@@ -37,7 +37,7 @@
 - app Manifest 声明蓝牙、定位、存储和网络权限；SplashActivity 是 launcher，其他 Activity exported=false。
 - `values/strings.xml` 是默认中文资源，`values-en/strings.xml` 是英文资源，`locales_config.xml` 声明 `en` 和 `zh`。
 - `hotmeltprint/src/main/res/drawable/logo.png` 是热敏打印模块随库合入 app 的 logo 资源，文件扩展名和真实格式都必须为 PNG，否则 release 资源合并会失败。
-- Bugly AAR 和 GPrinter SDK JAR 是本地二进制依赖；CrashReport 初始化当前在 Application 中注释。
+- Bugly AAR 和 GPrinter SDK JAR 是本地二进制依赖；CrashReport 通过 `ErrorReporter` 在 Application 中初始化，release 关闭 debug，debug 构建打开 debug。
 
 ## 实体文档索引
 
@@ -135,6 +135,7 @@
 | 089 | Network permissions | 清单 | `context/docs/platform-resources/089-network-permissions.md` | 网络权限声明 |
 | 090 | Gradle wrapper | 构建 | `context/docs/platform-resources/090-gradle-wrapper.md` | 本地构建/测试入口 |
 | 095 | app debug install and launch task | 构建 | `context/docs/platform-resources/095-app-debug-install-and-launch.md` | Debug 安装后自动启动；签名冲突时可先卸载再安装 |
+| 096 | ErrorReporter | 错误上报 | `context/docs/platform-resources/096-error-reporter.md` | Bugly CrashReport 的项目内统一封装 |
 | 091 | app unit test | 测试 | `context/docs/platform-resources/091-app-unit-test.md` | app JVM 测试占位文件 |
 | 092 | app instrumented test | 测试 | `context/docs/platform-resources/092-app-instrumented-test.md` | app Android 测试占位文件 |
 | 093 | hotmeltprint unit test | 测试 | `context/docs/platform-resources/093-hotmeltprint-unit-test.md` | hotmeltprint JVM 测试占位文件 |
@@ -142,7 +143,7 @@
 
 ## 最小验证策略
 
-- 文档或映射变更：检查 `context/entity-id-mapping.md` 是否指向单实体文件，并确认 `context/docs/platform-resources/` 下有 96 个 Markdown 文件。
+- 文档或映射变更：检查 `context/entity-id-mapping.md` 是否指向单实体文件，并确认 `context/docs/platform-resources/` 下有 97 个 Markdown 文件。
 - 资源 key 变更：运行 `./gradlew :app:assembleDebug`，并用 `rg "R\.(string|drawable|raw|xml)\.<key>" app/src/main/java` 核对调用点。
 - Android 图片资源格式变更：运行 `file <path>` 或 `sips -g format <path>` 确认扩展名与真实格式一致，并运行 `./gradlew :app:assembleDebug :app:assembleRelease` 覆盖 debug 与 release 资源编译。
 - Manifest/权限变更：运行 `./gradlew :app:processDebugMainManifest` 或 `./gradlew :app:assembleDebug`，并在 Android 12+ 设备验证蓝牙运行时权限。

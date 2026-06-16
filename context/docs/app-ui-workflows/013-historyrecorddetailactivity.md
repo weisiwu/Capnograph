@@ -14,7 +14,7 @@
 
 ## 补充职责
 
-历史详情页，根据 recordId 加载 Record 和 CO2Data chunk，渲染趋势图/波形图，并提供 PDF 导出或热敏打印。
+历史详情页，根据 recordId 加载 Record 和 CO2Data chunk，渲染趋势图/波形图，并提供 PDF 导出或热敏打印；记录加载、PDF 导出、PDF 拷贝和热敏打印协程异常会通过 ErrorReporter 上报。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ HISTORY_DETAIL_PAGE, 记录详情, PDF导出, 打印详情
 
 ## 注意事项
 
-记录详情、图表预览、PDF 导出和打印。
+记录详情、图表预览、PDF 导出和打印；错误上报 metadata 只记录是否有 recordId、数据量或文件状态，不直接上传患者字段。
 
 ## 最小验证方式
 

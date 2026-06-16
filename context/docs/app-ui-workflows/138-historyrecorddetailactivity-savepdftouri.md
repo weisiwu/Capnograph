@@ -14,7 +14,7 @@
 
 ## 补充职责
 
-将 cache 中的 PDF 拷贝到用户选择的 Uri。
+将 cache 中的 PDF 拷贝到用户选择的 Uri；拷贝异常通过 ErrorReporter 上报 source 文件存在性和大小。
 
 ## 关键 ID / 别名
 
@@ -31,7 +31,7 @@ copy PDF to Uri, 保存 PDF 到 Uri
 
 ## 注意事项
 
-将 cache 中的 PDF 拷贝到用户选择的 Uri。
+将 cache 中的 PDF 拷贝到用户选择的 Uri；拷贝异常通过 ErrorReporter 上报 source 文件存在性和大小。
 
 ## 最小验证方式
 
