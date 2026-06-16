@@ -15,7 +15,7 @@
 
 ## 补充职责
 
-构建 PDF 的连续波形 section。函数调用 `buildWaveformSegments` 按完整记录时间轴把 CO2 数据切成固定 15 秒窗口，最后添加段标题、测量时间、手绘 CO2 波形图和段统计。
+构建 PDF 的连续波形 section。函数调用 `buildWaveformSegments` 按完整记录时间轴把 CO2 数据切成固定 15 秒窗口，最后添加测量时间、手绘 CO2 波形图和段统计，不再显示“波形 1/波形 2”这类段标题。
 
 ## 关键 ID / 别名
 

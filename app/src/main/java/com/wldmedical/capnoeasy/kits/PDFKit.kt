@@ -225,7 +225,6 @@ class SaveChartToPdfTask(
 
     private data class ReportSegment(
         val points: List<CO2WavePointData>,
-        val sequenceNumber: Int,
         val startIndex: Int,
         val startMillis: Long? = null,
         val endMillis: Long? = null,
@@ -462,7 +461,6 @@ class SaveChartToPdfTask(
             segments.add(
                 ReportSegment(
                     points = segmentPoints.toList(),
-                    sequenceNumber = segments.size + 1,
                     startIndex = segmentStartIndex,
                     startMillis = displayTimelineMillis(segmentStartMillis),
                     endMillis = displayTimelineMillis(segmentEndMillis),
@@ -492,8 +490,7 @@ class SaveChartToPdfTask(
         table.spacingBefore = if (index == 0) 0f else templateConfig.waveformHeaderSpacingBefore
 
         val phrase = Phrase()
-        phrase.add(Chunk("波形 ${segment.sequenceNumber}", reportHeaderFont))
-        phrase.add(Chunk("\n测量时间：  ${formatMeasurementRange(segment)}", reportHeaderFont))
+        phrase.add(Chunk("测量时间：  ${formatMeasurementRange(segment)}", reportHeaderFont))
 
         val cell = PdfPCell(phrase)
         cell.border = Rectangle.NO_BORDER
