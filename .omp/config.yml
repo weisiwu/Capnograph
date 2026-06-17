@@ -1,13 +1,14 @@
 # Project-local Oh My Pi settings for CapnoGraph.
 # Keep this file free of credentials and machine-specific paths.
 enabledModels:
-  - openai-codex/gpt-5.3-codex
-  - openai-codex/gpt-5.3-codex-spark
+  - deepseek/deepseek-v4-pro
+  - deepseek/deepseek-v4-flash
+  - openai-codex/gpt-5.5
 modelRoles:
-  default: openai-codex/gpt-5.3-codex
-  slow: openai-codex/gpt-5.3-codex
-  plan: openai-codex/gpt-5.3-codex
-  smol: openai-codex/gpt-5.3-codex-spark
+  default: deepseek/deepseek-v4-pro
+  slow: openai-codex/gpt-5.5
+  plan: openai-codex/gpt-5.5
+  smol: deepseek/deepseek-v4-flash
 skills:
   customDirectories:
     - .omp/skills

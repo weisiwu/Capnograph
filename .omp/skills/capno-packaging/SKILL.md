@@ -25,7 +25,8 @@ scripts/package.sh --target ios --variant debug
 scripts/package.sh --target ios --variant release --export-options-plist ExportOptions.plist
 ```
 
-Use `capno_package` when available. Its default mode previews the exact command; execution requires `run: true`.
+Use `capno_package` for direct command previews/execution.
+Use `capno_packflow` for a full packaging workflow with artifact collection and optional Feishu webhook notification.
 
 ## Android Packaging
 
@@ -41,6 +42,7 @@ Use `capno_package` when available. Its default mode previews the exact command;
 - Release builds default to archive for `generic/platform=iOS`.
 - Default DerivedData path is `apps/ios/build/DerivedData`.
 - Exporting an IPA requires `--export-options-plist`.
+- `capno_packflow` can call `capno_feishu_send`-style webhook payloads for post-build delivery to a Feishu机器人.
 
 ## Common Pitfalls
 

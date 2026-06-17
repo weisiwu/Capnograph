@@ -43,12 +43,79 @@ docker compose run --rm android-builder scripts/package.sh --target android --va
 docker compose run --rm android-builder scripts/package.sh --target android --variant release -- --no-daemon
 ```
 
+`capno_packflow` is the OMP entrypoint for automated packaging:
+
+```text
+target=android
+variant=release
+capno_packflow params: {"target":"android","variant":"release","run":true,"useDocker":true,"notifyOnSuccess":true}
+```
+
+It returns build output plus collected APK/AAB artifacts and can optionally push a text notification to a Feishu robot webhook.
+
+For local OMP → Feishu bot linkage, expose:
+
+- Skill name: `capno-packflow`
+- Tool name: `capno_packflow`
+- Tool name: `capno_feishu_send` (optional follow-up)
+
+Recommended robot call:
+
+1. Run package + collect artifacts:
+   - `target=android`
+   - `variant=release`
+   - `run=true`
+   - `useDocker=true`
+   - `notifyOnSuccess=true`
+   - `notifyWebhookUrl` from env `FEISHU_WEBHOOK_URL`
+2. If you also want a custom follow-up message, call `capno_feishu_send` with:
+   - `title`: build tag
+   - `message`: extra description
+   - `artifactPaths`: returned `artifacts[].relativePath` list
+
+Example OMP tool-call payload in your bot backend:
+
+```json
+{
+  "tool": "capno_packflow",
+  "parameters": {
+    "target": "android",
+    "variant": "release",
+    "run": true,
+    "useDocker": true,
+    "extraArgs": ["--no-daemon"],
+    "notifyOnSuccess": true,
+    "notifyWebhookUrl": "https://open.feishu.cn/open-apis/bot/v2/hook/..."
+  }
+}
+```
+
+On success, the tool returns `details.artifacts`:
+
+```json
+{"relativePath":"apps/android/app/build/outputs/apk/release/app-release.apk","size":12345678}
+```
+
+If your bot needs a separate text message layer, call:
+
+```json
+{
+  "tool": "capno_feishu_send",
+  "parameters": {
+    "title": "CapnoGraph Android 打包完成",
+    "message": "release 打包完成，请查看产物：",
+    "artifactPaths": ["apps/android/app/build/outputs/apk/release/app-release.apk"],
+    "webhookUrl": "https://open.feishu.cn/open-apis/bot/v2/hook/..."
+  }
+}
+```
+
 ## Oh My Pi
 
 Project-local Oh My Pi configuration lives under `.omp/`.
 
-- Skills: `capno-context`, `capno-android`, `capno-ios-parity`, `capno-packaging`.
-- Tools: `capno_context_lookup` for entity/context lookup and `capno_package` for packaging command previews or execution.
+- Skills: `capno-context`, `capno-android`, `capno-ios-parity`, `capno-packaging`, `capno-packflow`.
+- Tools: `capno_context_lookup` for entity/context lookup; `capno_package` for packaging command previews/execution; `capno_packflow` for build workflow + artifact collection + Feishu webhook notification; `capno_feishu_send` for manual Feishu message sending.
 - `.omp/config.yml` also exposes the repository-level `skills/context-aware-dev` skill through `skills.customDirectories`.
 
 Start `omp` from the repository root, or use `omp --cwd ~/Desktop/work/WLD/Capnograph`.

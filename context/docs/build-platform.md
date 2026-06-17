@@ -18,6 +18,8 @@
 | `docker/android-builder/README.md` | Android 打包镜像使用说明。 |
 | `app/build.gradle.kts` | 主 Android 应用模块构建配置。 |
 | `hotmeltprint/build.gradle.kts` | 热敏打印 Android Library 模块构建配置。 |
+| `.omp/tools/capno-packflow.js` | OMP 打包流水线工具（本地/ Docker 编译、产物扫描、飞书通知）。 |
+| `.omp/skills/capno-packflow/SKILL.md` | PackFlow 使用说明（工具与参数）。 |
 
 ## 构建工具链 ID
 
