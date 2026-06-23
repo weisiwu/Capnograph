@@ -57,9 +57,9 @@ Use branch `monorepo_v1` for the current monorepo branch when starting a build f
 
 Current Android Packflow status:
 
-- `Android Debug APK` is the fast APK path. With the Packflow workspace and Gradle cache warm, build `6bb1f453-02ab-4b2f-8599-0c6565924701` completed in `29.043s` and collected `apps/android/app/build/outputs/apk/debug/app-debug.apk`. The AI-callable OMP agent build `f74cdf65-b3c6-4ad0-9ed4-2903f8ebe144` later completed in `25.090s`, collected the same debug APK path, and sent a successful Feishu notification to `CapnoGraph OMP Bot`.
-- Large APKs should not be uploaded to Feishu as file messages. The current debug APK is about `105690613` bytes, above Feishu IM file upload limits, so `capno_packflow_agent` includes a Packflow artifact download link (`/api/artifacts/<artifactId>/download`) in the Feishu text notification instead.
-- Build `df3a3a14-61db-48ba-811e-c87383e3566a` completed in `26.362s`, collected artifact `59d86d7d-a5c5-44b6-8a35-92e9991e80d3`, and was manually notified to Feishu with the Packflow download link after a local monitoring harness issue.
+- `Android Debug APK` is the fast APK path. With the Packflow workspace and Gradle cache warm, build `6bb1f453-02ab-4b2f-8599-0c6565924701` completed in `29.043s` and collected `apps/android/app/build/outputs/apk/debug/app-debug.apk`. New Android APK outputs are renamed after Gradle finishes to `app-<variant>-v<version>-<yyyyMMdd-HHmmss>.apk`, for example `app-debug-v1.2-20260624-153012.apk`.
+- Large APKs should not be uploaded to Feishu as file messages. The current debug APK is about `105690613` bytes, above Feishu IM file upload limits, so `capno_packflow_agent` includes a public Packflow artifact download link (`/api/public/artifacts/<artifactId>/download?token=<token>`) in the Feishu text notification instead.
+- Build `df3a3a14-61db-48ba-811e-c87383e3566a` completed in `26.362s`, collected artifact `59d86d7d-a5c5-44b6-8a35-92e9991e80d3`, and was manually notified to Feishu after a local monitoring harness issue. New Feishu notifications use public token download links.
 - `Android Release APK` is not yet reliable. It reached `:app:minifyReleaseWithR8` and then failed with `Gradle build daemon disappeared unexpectedly` after `1011.402s`.
 - Keep the debug config's install command empty; running `docker compose version` before every build pushed a warm debug run to `60.412s`.
 
@@ -85,13 +85,14 @@ Example agent payload:
     "waitForCompletion": true,
     "timeoutSeconds": 180,
     "notifyFeishu": true,
-    "includeArtifactDownloadLinks": true
+    "includeArtifactDownloadLinks": true,
+    "packflowPublicBaseUrl": "https://packflow.baoganai.com"
   }
 }
 ```
 
 Webhook configuration is environment-driven. Prefer `CAPNOGRAPH_OMP_BOT_WEBHOOK_URL`; `FEISHU_WEBHOOK_URL` and `FEISHU_WEBHOOK` are also supported. If the robot uses signed webhook mode, set `CAPNOGRAPH_OMP_BOT_WEBHOOK_SECRET` or `FEISHU_WEBHOOK_SECRET`. Do not commit webhook URLs or secrets.
-Set `PACKFLOW_PUBLIC_BASE_URL` when Feishu recipients need a public artifact URL instead of the default local `http://localhost:3001` Packflow link.
+Set `CAPNOGRAPH_PACKFLOW_PUBLIC_BASE_URL` or `PACKFLOW_PUBLIC_BASE_URL` to a public Packflow origin before sending Feishu notifications. On this machine the tool can also discover `https://packflow.baoganai.com` from `~/.cloudflared/packflow-baoganai.yml`. Large artifacts require a public base URL; the tool fails instead of sending a `localhost` download link. If Packflow sets `PACKFLOW_PUBLIC_DOWNLOAD_SECRET`, pass the same value as `CAPNOGRAPH_PACKFLOW_PUBLIC_DOWNLOAD_SECRET` or `PACKFLOW_PUBLIC_DOWNLOAD_SECRET`; otherwise the public download token falls back to the artifact SHA-256.
 
 `capno_packflow` remains available as the direct local OMP packaging runner:
 
@@ -183,7 +184,7 @@ If you also want a custom follow-up message, call `capno_feishu_send` with:
 On success, `capno_packflow_agent` returns `details.build`, `details.artifacts`, and `details.notification`:
 
 ```json
-{"file_name":"apps/android/app/build/outputs/apk/debug/app-debug.apk","size_bytes":105690613}
+{"file_name":"apps/android/app/build/outputs/apk/debug/app-debug-v1.2-20260624-153012.apk","size_bytes":105690613}
 ```
 
 If your bot needs a separate text message layer, call:
@@ -194,7 +195,7 @@ If your bot needs a separate text message layer, call:
   "parameters": {
     "title": "CapnoGraph Android 打包完成",
     "message": "debug APK 打包完成，请查看 Packflow 产物：",
-    "artifactPaths": ["apps/android/app/build/outputs/apk/debug/app-debug.apk"]
+    "artifactPaths": ["apps/android/app/build/outputs/apk/debug/app-debug-v1.2-20260624-153012.apk"]
   }
 }
 ```

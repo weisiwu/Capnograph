@@ -134,8 +134,48 @@ build_android() {
       ;;
   esac
 
+  local output_dir="$repo_root/apps/android/app/build/outputs/apk/$variant"
+  mkdir -p "$output_dir"
+  rm -f "$output_dir"/*.apk
+
   cd "$repo_root/apps/android"
   ./gradlew ":app:$task" "${extra_args[@]}"
+  rename_android_outputs "$output_dir"
+}
+
+android_version_name() {
+  local build_file="$repo_root/apps/android/app/build.gradle.kts"
+  local version
+  version="$(awk -F'"' '/^[[:space:]]*val[[:space:]]+appVersionName[[:space:]]*=/ { print $2; exit }' "$build_file")"
+  if [[ -n "$version" ]]; then
+    printf '%s' "$version"
+    return
+  fi
+
+  printf 'unknown'
+}
+
+rename_android_outputs() {
+  local output_dir="$1"
+  local version timestamp apk base target
+  version="$(android_version_name)"
+  timestamp="${PACKFLOW_ARTIFACT_TIMESTAMP:-$(TZ="${PACKFLOW_ARTIFACT_TZ:-Asia/Shanghai}" date +%Y%m%d-%H%M%S)}"
+
+  shopt -s nullglob
+  local apks=("$output_dir"/*.apk)
+  shopt -u nullglob
+
+  if [[ ${#apks[@]} -eq 0 ]]; then
+    echo "No Android APK artifacts found in: $output_dir" >&2
+    return
+  fi
+
+  for apk in "${apks[@]}"; do
+    base="${apk%.apk}"
+    target="${base}-v${version}-${timestamp}.apk"
+    mv -f "$apk" "$target"
+    echo "Android artifact renamed: ${target#$repo_root/}"
+  done
 }
 
 build_ios() {

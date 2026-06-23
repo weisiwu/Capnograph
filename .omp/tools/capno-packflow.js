@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
 const DEFAULT_MAX_ARTIFACTS = 20;
@@ -8,8 +9,10 @@ const DEFAULT_PACKFLOW_DB_PATH = "/Users/weisiwu_clawbot_mac/Desktop/work/github
 const DEFAULT_PACKFLOW_PROJECT_NAME = "CapnoGraph";
 const DEFAULT_PACKFLOW_ANDROID_CONFIG_NAME = "Android Debug APK";
 const DEFAULT_PACKFLOW_BRANCH = "monorepo_v1";
+const DEFAULT_PACKFLOW_CLOUDFLARED_CONFIG = path.join(os.homedir(), ".cloudflared", "packflow-baoganai.yml");
 const FEISHU_FILE_UPLOAD_LIMIT_BYTES = 30 * 1024 * 1024;
 const BUILD_ID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+const LOCAL_PACKFLOW_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1"]);
 
 function resolveWebhook(baseUrl, secret) {
   if (!baseUrl) {
@@ -182,12 +185,93 @@ function normalizeBaseUrl(value) {
   return (value || DEFAULT_PACKFLOW_BASE_URL).replace(/\/+$/, "");
 }
 
+function isLocalBaseUrl(value) {
+  try {
+    const hostname = new URL(value).hostname;
+    return LOCAL_PACKFLOW_HOSTS.has(hostname);
+  } catch (_err) {
+    return true;
+  }
+}
+
+function unquoteScalar(value) {
+  return String(value || "").replace(/^['"]|['"]$/g, "");
+}
+
+function discoverPackflowPublicBaseUrl(params) {
+  const baseUrl = normalizeBaseUrl(params.packflowBaseUrl);
+  if (!isLocalBaseUrl(baseUrl)) {
+    return null;
+  }
+
+  const configPath =
+    params.packflowCloudflaredConfigPath ||
+    firstEnv(["CAPNOGRAPH_PACKFLOW_CLOUDFLARED_CONFIG", "PACKFLOW_CLOUDFLARED_CONFIG"]) ||
+    DEFAULT_PACKFLOW_CLOUDFLARED_CONFIG;
+
+  if (!configPath || !fs.existsSync(configPath)) {
+    return null;
+  }
+
+  try {
+    const text = fs.readFileSync(configPath, "utf8");
+    let currentHostname = null;
+    for (const rawLine of text.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      const hostnameMatch = line.match(/^(?:-\s*)?hostname:\s*([^\s#]+)/);
+      if (hostnameMatch) {
+        currentHostname = unquoteScalar(hostnameMatch[1]).replace(/^https?:\/\//, "");
+        continue;
+      }
+
+      const serviceMatch = line.match(/^(?:-\s*)?service:\s*([^\s#]+)/);
+      if (!serviceMatch || !currentHostname) {
+        continue;
+      }
+
+      const serviceUrl = normalizeBaseUrl(unquoteScalar(serviceMatch[1]));
+      if (serviceUrl === baseUrl) {
+        return `https://${currentHostname}`;
+      }
+    }
+  } catch (_err) {
+    return null;
+  }
+
+  return null;
+}
+
 function resolvePackflowPublicBaseUrl(params) {
-  return normalizeBaseUrl(
-    params.packflowPublicBaseUrl ||
-      process.env.PACKFLOW_PUBLIC_BASE_URL ||
-      params.packflowBaseUrl,
-  );
+  const configured = firstEnv(["CAPNOGRAPH_PACKFLOW_PUBLIC_BASE_URL", "PACKFLOW_PUBLIC_BASE_URL"]);
+  if (params.packflowPublicBaseUrl || configured) {
+    return normalizeBaseUrl(params.packflowPublicBaseUrl || configured);
+  }
+
+  const discovered = discoverPackflowPublicBaseUrl(params);
+  if (discovered) {
+    return normalizeBaseUrl(discovered);
+  }
+
+  const baseUrl = normalizeBaseUrl(params.packflowBaseUrl);
+  return isLocalBaseUrl(baseUrl) ? null : baseUrl;
+}
+
+function makePublicArtifactToken(artifact, params) {
+  if (!artifact || !artifact.id || !artifact.sha256) {
+    return null;
+  }
+
+  const secret =
+    params.packflowPublicDownloadSecret ||
+    firstEnv(["CAPNOGRAPH_PACKFLOW_PUBLIC_DOWNLOAD_SECRET", "PACKFLOW_PUBLIC_DOWNLOAD_SECRET"]);
+  if (!secret) {
+    return artifact.sha256;
+  }
+
+  return crypto
+    .createHmac("sha256", secret)
+    .update(`${artifact.id}:${artifact.sha256}`)
+    .digest("hex");
 }
 
 function makeArtifactDownloadUrl(artifact, params) {
@@ -195,7 +279,36 @@ function makeArtifactDownloadUrl(artifact, params) {
     return null;
   }
 
-  return `${resolvePackflowPublicBaseUrl(params)}/api/artifacts/${encodeURIComponent(artifact.id)}/download`;
+  const publicBaseUrl = resolvePackflowPublicBaseUrl(params);
+  if (!publicBaseUrl) {
+    return null;
+  }
+
+  const token = makePublicArtifactToken(artifact, params);
+  const suffix = token ? `?token=${encodeURIComponent(token)}` : "";
+  return `${publicBaseUrl}/api/public/artifacts/${encodeURIComponent(artifact.id)}/download${suffix}`;
+}
+
+function publicLinkMissingReason(params) {
+  return [
+    "缺少 Packflow 公网地址，已阻止发送 localhost 下载链接。",
+    "请设置 CAPNOGRAPH_PACKFLOW_PUBLIC_BASE_URL 或 PACKFLOW_PUBLIC_BASE_URL。",
+    `当前 packflowBaseUrl=${params.packflowBaseUrl || DEFAULT_PACKFLOW_BASE_URL}`,
+  ].join(" ");
+}
+
+function artifactsMissingRequiredPublicLinks(artifacts) {
+  return (artifacts || []).filter(
+    (artifact) => artifact.directFeishuFileUploadSupported === false && !artifact.downloadUrl,
+  );
+}
+
+function makeMissingPublicLinkError(params, artifacts) {
+  const names = artifacts
+    .map((artifact) => artifact.file_name || artifact.id)
+    .filter(Boolean)
+    .join(", ");
+  return `${publicLinkMissingReason(params)} 大文件产物无法上传飞书，且没有公网下载链接：${names || "unknown artifact"}`;
 }
 
 function annotateArtifactDelivery(artifacts, params) {
@@ -203,12 +316,16 @@ function annotateArtifactDelivery(artifacts, params) {
     return artifacts || [];
   }
 
-  return (artifacts || []).map((artifact) => ({
-    ...artifact,
-    downloadUrl: makeArtifactDownloadUrl(artifact, params),
-    directFeishuFileUploadSupported:
-      Number.isFinite(artifact.size_bytes) && artifact.size_bytes <= FEISHU_FILE_UPLOAD_LIMIT_BYTES,
-  }));
+  return (artifacts || []).map((artifact) => {
+    const downloadUrl = makeArtifactDownloadUrl(artifact, params);
+    return {
+      ...artifact,
+      downloadUrl,
+      downloadUrlMissingReason: downloadUrl ? null : publicLinkMissingReason(params),
+      directFeishuFileUploadSupported:
+        Number.isFinite(artifact.size_bytes) && artifact.size_bytes <= FEISHU_FILE_UPLOAD_LIMIT_BYTES,
+    };
+  });
 }
 
 function sqlString(value) {
@@ -438,9 +555,15 @@ function makePackflowAgentText({ build, artifacts, project, links, note }) {
       }
       if (artifact.downloadUrl) {
         lines.push(`    download: ${artifact.downloadUrl}`);
+      } else if (artifact.downloadUrlMissingReason) {
+        lines.push(`    download: ${artifact.downloadUrlMissingReason}`);
       }
       if (artifact.directFeishuFileUploadSupported === false) {
-        lines.push("    delivery: 文件超过飞书文件上传上限，已改为发送 Packflow 下载链接");
+        lines.push(
+          artifact.downloadUrl
+            ? "    delivery: 文件超过飞书文件上传上限，已改为发送 Packflow 公网下载链接"
+            : "    delivery: 文件超过飞书文件上传上限，且缺少 Packflow 公网下载链接",
+        );
       }
     }
   } else {
@@ -478,6 +601,13 @@ async function runPackflowAgent(pi, params, onUpdate, root, signal) {
     artifacts = completed.artifacts;
   }
   const artifactsForMessage = annotateArtifactDelivery(artifacts, params);
+  const missingRequiredPublicLinks =
+    params.requirePublicArtifactLinks !== false && params.notifyFeishu
+      ? artifactsMissingRequiredPublicLinks(artifactsForMessage)
+      : [];
+  if (missingRequiredPublicLinks.length > 0) {
+    throw new Error(makeMissingPublicLinkError(params, missingRequiredPublicLinks));
+  }
 
   const shouldNotify =
     params.notifyFeishu &&
@@ -934,7 +1064,9 @@ function factory(pi) {
         configName: z.string().optional().default(DEFAULT_PACKFLOW_ANDROID_CONFIG_NAME).describe("Packflow config name, default is the fast Android Debug APK path."),
         branch: z.string().optional().default(DEFAULT_PACKFLOW_BRANCH).describe("Git branch to build."),
         packflowBaseUrl: z.string().optional().default(DEFAULT_PACKFLOW_BASE_URL).describe("Packflow backend base URL."),
-        packflowPublicBaseUrl: z.string().optional().describe("Public Packflow base URL used in Feishu artifact download links. Env PACKFLOW_PUBLIC_BASE_URL is also supported."),
+        packflowPublicBaseUrl: z.string().optional().describe("Public Packflow base URL used in Feishu artifact download links. Env CAPNOGRAPH_PACKFLOW_PUBLIC_BASE_URL or PACKFLOW_PUBLIC_BASE_URL is also supported."),
+        packflowPublicDownloadSecret: z.string().optional().describe("Optional public artifact download HMAC secret. Env CAPNOGRAPH_PACKFLOW_PUBLIC_DOWNLOAD_SECRET or PACKFLOW_PUBLIC_DOWNLOAD_SECRET is also supported."),
+        packflowCloudflaredConfigPath: z.string().optional().describe("Optional cloudflared config path for discovering a public Packflow hostname. Env CAPNOGRAPH_PACKFLOW_CLOUDFLARED_CONFIG or PACKFLOW_CLOUDFLARED_CONFIG is also supported."),
         packflowDbPath: z.string().optional().default(DEFAULT_PACKFLOW_DB_PATH).describe("Local Packflow SQLite DB path used for status polling."),
         packflowToken: z.string().optional().describe("Optional Packflow agent bearer token. Env PACKFLOW_AGENT_TOKEN is also supported."),
         packflowUsername: z.string().optional().describe("Fallback web login username when no agent token is configured."),
@@ -944,6 +1076,7 @@ function factory(pi) {
         pollIntervalSeconds: z.number().optional().default(3).describe("Polling interval in seconds."),
         notifyFeishu: z.boolean().optional().default(false).describe("Send a text notification to CapnoGraph OMP Bot via Feishu webhook."),
         includeArtifactDownloadLinks: z.boolean().optional().default(true).describe("Include Packflow artifact download links in returned output and Feishu notifications."),
+        requirePublicArtifactLinks: z.boolean().optional().default(true).describe("When notifying Feishu, fail instead of sending a local-only artifact link for large artifacts."),
         feishuWebhookUrl: z.string().optional().describe("Feishu incoming webhook URL. Env CAPNOGRAPH_OMP_BOT_WEBHOOK_URL, FEISHU_WEBHOOK_URL, or FEISHU_WEBHOOK is also supported."),
         feishuWebhookSecret: z.string().optional().describe("Optional Feishu webhook secret. Env CAPNOGRAPH_OMP_BOT_WEBHOOK_SECRET or FEISHU_WEBHOOK_SECRET is also supported."),
         notifyOnFailure: z.boolean().optional().default(true).describe("When notifyFeishu is true, also send failed/canceled build notifications."),
@@ -986,7 +1119,9 @@ function factory(pi) {
         configName: z.string().optional().default(DEFAULT_PACKFLOW_ANDROID_CONFIG_NAME).describe("Packflow config name for build commands."),
         branch: z.string().optional().default(DEFAULT_PACKFLOW_BRANCH).describe("Git branch to build."),
         packflowBaseUrl: z.string().optional().default(DEFAULT_PACKFLOW_BASE_URL).describe("Packflow backend base URL."),
-        packflowPublicBaseUrl: z.string().optional().describe("Public Packflow base URL used in Feishu artifact download links. Env PACKFLOW_PUBLIC_BASE_URL is also supported."),
+        packflowPublicBaseUrl: z.string().optional().describe("Public Packflow base URL used in Feishu artifact download links. Env CAPNOGRAPH_PACKFLOW_PUBLIC_BASE_URL or PACKFLOW_PUBLIC_BASE_URL is also supported."),
+        packflowPublicDownloadSecret: z.string().optional().describe("Optional public artifact download HMAC secret. Env CAPNOGRAPH_PACKFLOW_PUBLIC_DOWNLOAD_SECRET or PACKFLOW_PUBLIC_DOWNLOAD_SECRET is also supported."),
+        packflowCloudflaredConfigPath: z.string().optional().describe("Optional cloudflared config path for discovering a public Packflow hostname. Env CAPNOGRAPH_PACKFLOW_CLOUDFLARED_CONFIG or PACKFLOW_CLOUDFLARED_CONFIG is also supported."),
         packflowDbPath: z.string().optional().default(DEFAULT_PACKFLOW_DB_PATH).describe("Local Packflow SQLite DB path."),
         packflowToken: z.string().optional().describe("Optional Packflow agent bearer token. Env PACKFLOW_AGENT_TOKEN is also supported."),
         packflowUsername: z.string().optional().describe("Fallback web login username when no agent token is configured."),
@@ -996,6 +1131,7 @@ function factory(pi) {
         pollIntervalSeconds: z.number().optional().default(3).describe("Polling interval in seconds."),
         notifyFeishu: z.boolean().optional().default(true).describe("Send build result to CapnoGraph OMP Bot for build commands."),
         includeArtifactDownloadLinks: z.boolean().optional().default(true).describe("Include Packflow artifact download links in returned output and Feishu notifications."),
+        requirePublicArtifactLinks: z.boolean().optional().default(true).describe("When notifying Feishu, fail instead of sending a local-only artifact link for large artifacts."),
         feishuWebhookUrl: z.string().optional().describe("Feishu incoming webhook URL. Env CAPNOGRAPH_OMP_BOT_WEBHOOK_URL, FEISHU_WEBHOOK_URL, or FEISHU_WEBHOOK is also supported."),
         feishuWebhookSecret: z.string().optional().describe("Optional Feishu webhook secret."),
         limit: z.number().optional().default(10).describe("Maximum rows for history commands."),
@@ -1043,6 +1179,8 @@ function factory(pi) {
             branch: params.branch || DEFAULT_PACKFLOW_BRANCH,
             packflowBaseUrl: params.packflowBaseUrl,
             packflowPublicBaseUrl: params.packflowPublicBaseUrl,
+            packflowPublicDownloadSecret: params.packflowPublicDownloadSecret,
+            packflowCloudflaredConfigPath: params.packflowCloudflaredConfigPath,
             packflowDbPath: params.packflowDbPath,
             packflowToken: params.packflowToken,
             packflowUsername: params.packflowUsername,
@@ -1052,6 +1190,7 @@ function factory(pi) {
             pollIntervalSeconds: params.pollIntervalSeconds || 3,
             notifyFeishu: params.notifyFeishu !== false,
             includeArtifactDownloadLinks: params.includeArtifactDownloadLinks !== false,
+            requirePublicArtifactLinks: params.requirePublicArtifactLinks !== false,
             feishuWebhookUrl: params.feishuWebhookUrl,
             feishuWebhookSecret: params.feishuWebhookSecret,
             notifyOnFailure: true,

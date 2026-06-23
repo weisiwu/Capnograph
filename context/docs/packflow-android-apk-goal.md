@@ -13,10 +13,10 @@
 - 验证 build：`df3a3a14-61db-48ba-811e-c87383e3566a`
 - Packflow 总耗时：`26.362s`
 - Gradle 日志耗时：`23s`
-- 产物：`apps/android/app/build/outputs/apk/debug/app-debug.apk`
+- 产物命名：`apps/android/app/build/outputs/apk/debug/app-debug-v<version>-<yyyyMMdd-HHmmss>.apk`
 - 产物大小：`105690613` bytes
 - SHA-256：`15ab3ba39dff9b66aca24a40150e4a731eb8e67fab69bd41b6cb31b8dbedf730`
-- AI/飞书链路：Packflow 已产出 debug APK；因 APK 体积超过飞书文件上传限制，飞书消息改为发送 Packflow 下载链接，webhook 返回 `StatusCode=0` / `success`
+- AI/飞书链路：Packflow 已产出 debug APK；因 APK 体积超过飞书文件上传限制，飞书消息改为发送 Packflow 公开 token 下载链接，webhook 返回 `StatusCode=0` / `success`
 
 `Android Debug APK` 的 install command 必须保持为空。此前保留 `docker compose version` 作为 install command 时，warm debug 构建为 `60.412s`，刚好超过 60 秒。
 
@@ -31,7 +31,7 @@
 | `6bb1f453-02ab-4b2f-8599-0c6565924701` | Android Debug APK | success | `29.043s` | 1 | 移除 install command 后，warm debug APK 达成 60 秒内目标。 |
 | `bf882c32-67bb-4d7e-abcb-f08e974ea33f` | Android Debug APK | success | `26.096s` | 1 | `capno_packflow_agent` 测试 harness 成功触发 Packflow 并收集产物。 |
 | `f74cdf65-b3c6-4ad0-9ed4-2903f8ebe144` | Android Debug APK | success | `25.090s` | 1 | `capno_packflow_agent` 端到端成功；飞书 `CapnoGraph OMP Bot` 通知返回 success。 |
-| `df3a3a14-61db-48ba-811e-c87383e3566a` | Android Debug APK | success | `26.362s` | 1 | 2026-06-24 复验成功；产物 `59d86d7d-a5c5-44b6-8a35-92e9991e80d3`，大小 `105690613` bytes，SHA-256 `15ab3ba39dff9b66aca24a40150e4a731eb8e67fab69bd41b6cb31b8dbedf730`，飞书补发文本通知成功并包含 Packflow 下载链接。 |
+| `df3a3a14-61db-48ba-811e-c87383e3566a` | Android Debug APK | success | `26.362s` | 1 | 2026-06-24 复验成功；产物 `59d86d7d-a5c5-44b6-8a35-92e9991e80d3`，大小 `105690613` bytes，SHA-256 `15ab3ba39dff9b66aca24a40150e4a731eb8e67fab69bd41b6cb31b8dbedf730`，飞书补发文本通知成功；后续通知已改为公开 token 下载链接。 |
 
 ## 当前问题
 
@@ -46,6 +46,7 @@
 - 已应用：新增 `Android Debug APK` Packflow 配置，作为 60 秒内快速 APK 验证路径。
 - 已应用：清空 `Android Debug APK` 的 install command，避免每次重复执行 Docker Compose 版本检查。
 - 已应用：`capno_packflow_agent` 在返回结果和飞书通知中加入 Packflow 产物下载链接，Android APK 大文件不再尝试作为飞书文件上传。
+- 已应用：Android APK 在 `scripts/package.sh` 构建成功后重命名为 `app-<variant>-v<version>-<yyyyMMdd-HHmmss>.apk`，Packflow 的 `*.apk` 产物规则会收集带版本和时间的文件名。
 - 可选：如果必须让 release APK 可用，优先把 release 目标拆成 `fastRelease` 或关闭 fast 包的 R8/shrink；生产 release 仍保留 R8。
 - 可选：构建 host-native Packflow 配置，直接在 macOS/arm64 上运行 `apps/android/gradlew :app:assembleDebug`，减少 amd64 Docker 仿真开销。
 - 可选：制作 arm64 Android builder 镜像或 multi-arch builder，替代当前 `linux/amd64` 镜像。
@@ -64,13 +65,14 @@
   "projectName": "CapnoGraph",
   "configName": "Android Debug APK",
   "branch": "monorepo_v1",
-  "includeArtifactDownloadLinks": true
+  "includeArtifactDownloadLinks": true,
+  "packflowPublicBaseUrl": "https://packflow.baoganai.com"
 }
 ```
 
 如需飞书通知，设置环境变量 `CAPNOGRAPH_OMP_BOT_WEBHOOK_URL`（兼容 `FEISHU_WEBHOOK_URL` / `FEISHU_WEBHOOK`）并传 `notifyFeishu=true`。签名模式使用 `CAPNOGRAPH_OMP_BOT_WEBHOOK_SECRET` 或 `FEISHU_WEBHOOK_SECRET`，不要把 webhook 或 secret 写进仓库。
 
-当前 debug APK 大约 `105690613` bytes，超过飞书文件上传限制；不要让机器人尝试上传 APK 文件本体。`capno_packflow_agent` 默认把 Packflow 产物下载链接 `/api/artifacts/<artifactId>/download` 写入飞书文本通知。若收件人不在 Packflow 同机环境，需设置 `PACKFLOW_PUBLIC_BASE_URL` 指向可访问的 Packflow 公网地址。
+当前 debug APK 大约 `105690613` bytes，超过飞书文件上传限制；不要让机器人尝试上传 APK 文件本体。`capno_packflow_agent` 默认把 Packflow 公开 token 下载链接 `/api/public/artifacts/<artifactId>/download?token=<token>` 写入飞书文本通知。若收件人不在 Packflow 同机环境，必须设置 `CAPNOGRAPH_PACKFLOW_PUBLIC_BASE_URL` 或 `PACKFLOW_PUBLIC_BASE_URL` 指向可访问的 Packflow 公网地址；本机可从 `~/.cloudflared/packflow-baoganai.yml` 自动发现 `https://packflow.baoganai.com`；未配置且无法发现时工具会失败而不是发送 `localhost` 链接。
 
 ## 复验命令
 
