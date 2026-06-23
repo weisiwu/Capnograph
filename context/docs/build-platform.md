@@ -18,8 +18,9 @@
 | `docker/android-builder/README.md` | Android 打包镜像使用说明。 |
 | `app/build.gradle.kts` | 主 Android 应用模块构建配置。 |
 | `hotmeltprint/build.gradle.kts` | 热敏打印 Android Library 模块构建配置。 |
-| `.omp/tools/capno-packflow.js` | OMP 打包流水线工具（本地/ Docker 编译、产物扫描、飞书通知）。 |
+| `.omp/tools/capno-packflow.js` | OMP 打包流水线工具（飞书口令路由、Packflow agent、历史查询、本地/ Docker 编译、产物扫描、飞书通知）。 |
 | `.omp/skills/capno-packflow/SKILL.md` | PackFlow 使用说明（工具与参数）。 |
+| Local Packflow backend | 本机 `http://localhost:3001` 的 Packflow 项目配置，登记 CapnoGraph Android/iOS release 构建。 |
 
 ## 构建工具链 ID
 
@@ -27,6 +28,7 @@
 | --- | --- | --- | --- | --- |
 | Gradle wrapper | `./gradlew`, `gradle-8.10.2-all` | 8.10.2 | 根工程 | wrapper URL 为 `https://repo.huaweicloud.com/gradle/gradle-8.10.2-all.zip`。 |
 | Android builder Docker image | CABI, `android-builder`, `wei123098/capnograph-android-builder:android-35-agp-8.8.0` | android-35 / build-tools 35.0.0 / JDK 17 | 根工程 `compose.yaml` | 用于在 Docker/CI 中运行 `scripts/package.sh --target android`，避免依赖本机 Android SDK。 |
+| Packflow backend configs | `CapnoGraph`, `Android Release APK`, `Android Debug APK`, `iOS Release Archive` | 本机 Packflow 后台 + OMP `capno_packflow_bot_command` / `capno_packflow_agent` / `capno_packflow_query` | 外部 Packflow runtime | `Android Debug APK` 是当前 60 秒内 APK 路径；2026-06-24 复验 build `df3a3a14-61db-48ba-811e-c87383e3566a` 用时 `26.362s`，产物 `105690613` bytes，飞书改发 Packflow 下载链接后成功通知 `CapnoGraph OMP Bot`；飞书文本口令已映射到打包/状态/历史/详情/配置/帮助；release 仍在 R8 阶段失败。 |
 | Gradle Kotlin DSL | `.gradle.kts` | n/a | 根工程、`:app`、`:hotmeltprint` | 构建脚本均使用 Kotlin DSL。 |
 | Version catalog | `gradle/libs.versions.toml`, `libs.*` | n/a | 根工程、模块 | 插件和多数依赖的集中别名与版本来源。 |
 | Android Gradle Plugin | `com.android.application`, `com.android.library`, `agp` | 8.8.0 | `:app`、`:hotmeltprint` | 插件别名定义在版本目录。 |
@@ -191,5 +193,6 @@
 - `foundation-layout-android` 在 app 依赖中重复声明 4 次，`mpandroidchart` 在 hotmeltprint 依赖中重复声明 3 次，`SDKLib.jar` 可能被 fileTree 和显式 files 重复引入。
 - `.cursor/rules/project-memory.mdc` 中 app 最低 SDK 33 与构建文件不一致；当前事实是 app `minSdk=30`，hotmeltprint `minSdk=24`。
 - AGP 8 已移除项目属性 `android.enableR8`；release 压缩由 `app/build.gradle.kts` 的 `isMinifyEnabled=true` 控制。
+- Packflow 后台已登记 `CapnoGraph` 项目的 `Android Release APK`、`Android Debug APK` 与 `iOS Release Archive` 配置；当前 60 秒内 APK 目标通过 `Android Debug APK` 达成，并已通过 OMP `capno_packflow_bot_command` / `capno_packflow_agent` / `capno_packflow_query` 接入 AI/飞书机器人 `CapnoGraph OMP Bot` 的口令打包和历史查询；Android debug APK 约 `105690613` bytes，飞书通知采用 Packflow 下载链接而不是文件上传；release 仍需修复 R8/minify 失败和耗时问题。
 - 依赖坐标变更后，最低验证是 `./gradlew :app:assembleDebug :hotmeltprint:assembleDebug`；涉及注解处理还应执行 `./gradlew :app:kaptDebugKotlin`。
 - 资源或 Manifest 变更后的上下文见 `context/docs/platform-resources.md`。

@@ -14,6 +14,7 @@
 | `compose.yaml` | Android Docker 打包镜像依赖入口。 |
 | `docker/android-builder/Dockerfile` | Android 打包镜像构建定义。 |
 | `docker/android-builder/README.md` | Android 打包镜像使用说明。 |
+| Local Packflow backend | 本机 Packflow 后台项目配置，登记 CapnoGraph Android/iOS release 构建。 |
 | `app/build.gradle.kts` | 主应用模块 ID、SDK、版本、资源打包和依赖入口。 |
 | `hotmeltprint/build.gradle.kts` | 热敏打印库模块 ID、SDK、依赖入口。 |
 | `app/src/main/AndroidManifest.xml` | app 权限、硬件特性、Application、Activity、Bugly metadata。 |
@@ -33,6 +34,7 @@
 - hotmeltprint namespace 为 `com.wldmedical.hotmeltprint`，`compileSdk=35`、`minSdk=24`。
 - Gradle wrapper 使用华为云 `gradle-8.10.2-all.zip`；构建脚本均为 Kotlin DSL；机器相关 JDK 路径不写入项目级 `gradle.properties`，按 `JDK_SETUP.md` 写入用户级 Gradle 配置。
 - Android Docker 打包依赖通过 CABI 固定为 `wei123098/capnograph-android-builder:android-35-agp-8.8.0`，根目录 `compose.yaml` 提供 `android-builder` 服务。
+- 本机 Packflow 后台登记项目 `CapnoGraph`，配置 `Android Debug APK` 是当前 60 秒内 APK 快速路径，OMP `capno_packflow_bot_command` / `capno_packflow_agent` / `capno_packflow_query` 已将该能力改造成 AI/飞书机器人可调用入口，并支持口令打包、状态、历史、详情、配置查询；debug APK 约 `105690613` bytes，飞书交付走 Packflow 下载链接而不是文件上传；配置 `Android Release APK` 仍在 R8/minify 阶段失败，配置 `iOS Release Archive` 通过 `scripts/package.sh` 产出 xcarchive；当前分支触发构建需显式传 `monorepo_v1`。
 - `app/build.gradle.kts` 提供 `:app:installDebugAndLaunch` 和 `:app:reinstallDebugAndLaunch`，可在安装 Debug 包后通过 launcher intent 自动打开应用。
 - app Manifest 声明蓝牙、定位、存储和网络权限；SplashActivity 是 launcher，其他 Activity exported=false。
 - `values/strings.xml` 是默认中文资源，`values-en/strings.xml` 是英文资源，`locales_config.xml` 声明 `en` 和 `zh`。
@@ -59,6 +61,7 @@
 | 014 | `com.wldmedical.hotmeltprint` package | 模块 | `context/docs/platform-resources/014-com-wldmedical-hotmeltprint-package.md` | GPrinter SDK 的项目内封装 |
 | 015 | Gradle wrapper | 构建平台 | `context/docs/platform-resources/015-gradle-wrapper.md` | 本地构建和测试入口；wrapper 使用华为云 Gradle 8.10.2 all 包 |
 | CABI | Android builder Docker image | 构建平台 | `context/docs/platform-resources/CABI.md` | Android 打包镜像依赖和 Docker Compose 入口 |
+| PACKFLOW | Packflow backend configs | 构建平台 | `context/docs/platform-resources/PACKFLOW.md` | 本机 Packflow 后台 CapnoGraph Android debug/release 与 iOS release 构建配置；`capno_packflow_bot_command` / `capno_packflow_agent` / `capno_packflow_query` 接入 AI/飞书机器人，debug APK 大包通过 Packflow 下载链接交付 |
 | 016 | Gradle Kotlin DSL | 构建平台 | `context/docs/platform-resources/016-gradle-kotlin-dsl.md` | 根工程和模块构建脚本均使用 Kotlin DSL |
 | 017 | Gradle version catalog | 构建平台 | `context/docs/platform-resources/017-gradle-version-catalog.md` | 插件和多数依赖的集中别名与版本来源 |
 | 018 | Maven repositories | 构建平台 | `context/docs/platform-resources/018-maven-repositories.md` | 插件和依赖仓库配置 |
@@ -143,7 +146,7 @@
 
 ## 最小验证策略
 
-- 文档或映射变更：检查 `context/entity-id-mapping.md` 是否指向单实体文件，并确认 `context/docs/platform-resources/` 下有 97 个 Markdown 文件。
+- 文档或映射变更：检查 `context/entity-id-mapping.md` 是否指向单实体文件，并确认 `context/docs/platform-resources/` 下有 98 个 Markdown 文件。
 - 资源 key 变更：运行 `./gradlew :app:assembleDebug`，并用 `rg "R\.(string|drawable|raw|xml)\.<key>" app/src/main/java` 核对调用点。
 - Android 图片资源格式变更：运行 `file <path>` 或 `sips -g format <path>` 确认扩展名与真实格式一致，并运行 `./gradlew :app:assembleDebug :app:assembleRelease` 覆盖 debug 与 release 资源编译。
 - Manifest/权限变更：运行 `./gradlew :app:processDebugMainManifest` 或 `./gradlew :app:assembleDebug`，并在 Android 12+ 设备验证蓝牙运行时权限。

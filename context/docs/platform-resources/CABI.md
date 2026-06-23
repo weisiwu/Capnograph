@@ -40,6 +40,20 @@ docker compose run --rm android-builder scripts/package.sh --target android --va
 
 Release 构建将 `--variant debug` 改为 `--variant release`。
 
+Packflow 后台的 `Android Release APK` 配置复用同一入口：
+
+```bash
+docker compose run --rm android-builder scripts/package.sh --target android --variant release -- --no-daemon
+```
+
+Packflow 后台的 `Android Debug APK` 配置使用同一镜像的 debug 入口：
+
+```bash
+docker compose run --rm android-builder scripts/package.sh --target android --variant debug -- --no-daemon
+```
+
+warm workspace/cache 下，`Android Debug APK` build `6bb1f453-02ab-4b2f-8599-0c6565924701` 用时 `29.043s` 并产出 `app-debug.apk`；通过 OMP `capno_packflow_agent` 触发的 build `f74cdf65-b3c6-4ad0-9ed4-2903f8ebe144` 用时 `25.090s`，并已通知飞书 `CapnoGraph OMP Bot`。release 入口仍会进入 R8/minify，当前未达成稳定产物。
+
 ## 注意事项
 
 镜像只提供 Android 打包环境，不复制项目源码；源码通过运行时 volume 挂载。镜像当前为 `linux/amd64`，Apple Silicon 本机运行时会走 Docker 的 amd64 仿真。生产 release 签名仍需在 Android Gradle 配置中补环境变量驱动的签名配置。
@@ -53,4 +67,5 @@ Release 构建将 `--variant debug` 改为 `--variant release`。
 ## 同步要求
 
 - 如果镜像名、tag、Compose 服务名、挂载路径或打包入口发生变化，同步更新本文档、`context/entity-id-mapping.md`、根 `README.md` 和 `docker/android-builder/README.md`。
+- 如果 Packflow 后台 Android 配置的构建命令或产物路径变化，同步更新 `context/docs/platform-resources/PACKFLOW.md` 和 `README.md`。
 - 如果 Dockerfile 的 SDK / JDK / build-tools 版本变化，同步更新镜像 tag 和依赖说明。

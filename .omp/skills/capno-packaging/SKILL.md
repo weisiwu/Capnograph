@@ -26,7 +26,10 @@ scripts/package.sh --target ios --variant release --export-options-plist ExportO
 ```
 
 Use `capno_package` for direct command previews/execution.
-Use `capno_packflow` for a full packaging workflow with artifact collection and optional Feishu webhook notification.
+Use `capno_packflow_bot_command` when the input is raw Feishu robot text such as `打包`, `打包状态`, or `打包历史`.
+Use `capno_packflow_agent` for Packflow-backed AI/robot builds with artifact collection and optional CapnoGraph OMP Bot notification.
+Use `capno_packflow_query` for Packflow project config, latest build, history, and detail queries.
+Use `capno_packflow` for a direct local packaging workflow with artifact collection and optional Feishu webhook notification.
 
 ## Android Packaging
 
@@ -42,7 +45,7 @@ Use `capno_packflow` for a full packaging workflow with artifact collection and 
 - Release builds default to archive for `generic/platform=iOS`.
 - Default DerivedData path is `apps/ios/build/DerivedData`.
 - Exporting an IPA requires `--export-options-plist`.
-- `capno_packflow` can call `capno_feishu_send`-style webhook payloads for post-build delivery to a Feishu机器人.
+- `capno_packflow_bot_command` maps Feishu text commands to Packflow build/query actions. `capno_packflow_agent` can notify `CapnoGraph OMP Bot` after Packflow completes. `capno_packflow_query` reads local Packflow SQLite history. `capno_packflow` can call `capno_feishu_send`-style webhook payloads for direct local builds.
 
 ## Common Pitfalls
 
