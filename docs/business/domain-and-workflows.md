@@ -1,11 +1,11 @@
 ---
-title: CapnoEasy 业务领域与端到端流程
+title: CapnoEasy 应用业务与端到端流程
 category: documentation
 tags:
   - area/medical-device
   - area/capnography
   - area/product
-summary: 说明 CapnoEasy 服务谁、监测数据如何形成记录与输出，以及业务流程中的关键门槛。
+summary: 围绕 CapnoEasy 应用说明服务对象、监测数据如何形成记录与输出，以及业务流程中的关键门槛。
 created: 2026-07-19
 updated: 2026-07-19
 owner: 产品、业务、研发与质量负责人
@@ -18,7 +18,7 @@ hide:
   - navigation
 ---
 
-# CapnoEasy 业务领域与端到端流程
+# CapnoEasy 应用业务与端到端流程
 
 <div class="doc-status" markdown>
 <span>人工维护</span><span>最近复核：2026-07-19</span><span>基线：edfd024</span>
@@ -27,7 +27,7 @@ hide:
 --8<-- "docs_snippets/source-baseline.md"
 
 !!! abstract "本页回答"
-    CapnoEasy 服务谁、设备数据如何走到监测记录与报告、关键业务动作有哪些门槛。对象字段、不变量和风险表已拆到[数据对象与业务风险](data-and-risks.md)。
+    CapnoEasy 应用服务谁、设备数据如何走到监测记录与报告、关键业务动作有哪些门槛。行业概念与典型场景见[二氧化碳描记行业与业务背景](industry-background.md)，对象字段、不变量和风险表见[数据对象与业务风险](data-and-risks.md)。
 
 !!! danger "发布前先看"
     当前有两项 P0 待确认：EtCO₂/RR 报警区间条件疑似反向，以及停止记录时未见 `Record.endTime` 更新。关闭条件见[审核总览](../review/review-guide.md#baseline-findings)。

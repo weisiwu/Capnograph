@@ -76,36 +76,36 @@ extra_css:
 
 extra_javascript:
   - assets/javascripts/diagram-tools.js
+  - assets/javascripts/nav-accordion.js
 
 nav:
   - 首页: index.md
   - 图解导览: guide/visual-overview.md
   - 业务知识:
-      - 领域与端到端流程: business/domain-and-workflows.md
-      - 数据对象与业务风险: business/data-and-risks.md
+      - 行业与业务背景:
+          - 二氧化碳描记行业基础: business/industry-background.md
+      - CapnoEasy 应用业务:
+          - 应用业务与端到端流程: business/domain-and-workflows.md
+          - 数据对象与业务风险: business/data-and-risks.md
   - 技术架构:
       - 架构总览与数据契约: architecture/technical-architecture.md
       - BLE 与运行时链路: architecture/runtime-and-ble.md
       - 持久化、迁移与输出: architecture/data-and-delivery.md
-  - 审核知识:
-      - 审核总览与发布门禁: review/review-guide.md
-      - 领域审核清单: review/domain-checklists.md
-      - 故障路径与恢复: review/failure-paths.md
-      - 患者数据生命周期: review/patient-data-lifecycle.md
-      - 测试与发布证据: review/release-evidence.md
-  - 维护指南:
-      - 文档生成与维护: contributing.md
-  - GitNexus 自动文档:
-      - 代码库总览: generated/gitnexus/overview.md
-      - Root: generated/gitnexus/root.md
-      - apps: generated/gitnexus/apps.md
-      - Android: generated/gitnexus/apps-android.md
-      - iOS: generated/gitnexus/apps-ios.md
-      - context: generated/gitnexus/context.md
-      - context — docs: generated/gitnexus/context-docs.md
-      - context — context: generated/gitnexus/context-context.md
-      - docker: generated/gitnexus/docker.md
-      - scripts: generated/gitnexus/scripts.md
-      - skills: generated/gitnexus/skills.md
+  - 代码模块参考:
+      - 仓库全景:
+          - 代码库总览: generated/gitnexus/overview.md
+          - 仓库结构与工具链: generated/gitnexus/root.md
+      - 移动应用:
+          - 双平台应用总览: generated/gitnexus/apps.md
+          - Android 应用: generated/gitnexus/apps-android.md
+          - iOS 应用: generated/gitnexus/apps-ios.md
+      - 构建与交付:
+          - 统一构建与打包: generated/gitnexus/scripts.md
+          - Android 容器化构建: generated/gitnexus/docker.md
+      - 项目知识与 AI:
+          - 上下文体系总览: generated/gitnexus/context-context.md
+          - 应用实体补充文档: generated/gitnexus/context-docs.md
+          - Context Seed 实体知识: generated/gitnexus/context.md
+          - AI 开发工作流: generated/gitnexus/skills.md
 
-copyright: 内容以当前源码、配置和测试为准；AI 生成页面必须经过人工审核。
+copyright: 应用行为以当前源码、配置和测试为准；行业内容以页面所列权威来源为准；AI 生成页面必须经过人工审核。

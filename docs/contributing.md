@@ -4,7 +4,7 @@ category: documentation
 tags:
   - area/knowledge-management
   - area/devops
-summary: Material for MkDocs 构建、GitNexus 自动文档同步和人工内容保护规则。
+summary: Material for MkDocs 构建、代码模块参考同步和人工内容保护规则。
 created: 2026-07-19
 updated: 2026-07-19
 owner: 文档维护者与各知识域负责人
@@ -122,7 +122,7 @@ flowchart LR
 </figure>
 ````
 
-## 刷新 GitNexus 自动文档
+## 刷新代码模块参考（GitNexus）
 
 ```bash
 # 1. 更新代码知识图谱

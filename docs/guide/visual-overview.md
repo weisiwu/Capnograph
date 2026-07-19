@@ -146,7 +146,7 @@ sequenceDiagram
 <div markdown>
 <span>产品、临床业务、交付</span>
 
-从[业务领域与端到端流程](../business/domain-and-workflows.md)继续，理解术语、参与者、报警责任链和数据不变量。
+先从[行业与业务背景](../business/industry-background.md)理解二氧化碳描记、典型场景和技术路线，再进入[应用业务与端到端流程](../business/domain-and-workflows.md)查看 CapnoEasy 的参与者、报警责任链和数据不变量。
 </div>
 <div markdown>
 <span>Android、iOS、架构</span>

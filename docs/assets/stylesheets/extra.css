@@ -59,6 +59,92 @@
   overflow-wrap: anywhere;
 }
 
+.wiki-nav-accordion__group > .md-nav__link {
+  margin: 0.18rem 0;
+  padding: 0.42rem 0.55rem;
+  border: 1px solid var(--wiki-border);
+  border-left: 0.18rem solid var(--md-primary-fg-color);
+  border-radius: 0.42rem;
+  color: color-mix(in srgb, var(--md-default-fg-color) 88%, var(--md-primary-fg-color) 12%);
+  background: var(--wiki-surface);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.wiki-nav-accordion__group.md-nav__item--section {
+  margin: 0.3rem 0;
+}
+
+.wiki-nav-accordion__group--collapsible.md-nav__item--section > .md-nav__link:not(.md-nav__container) {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.wiki-nav-accordion__group--collapsible.md-nav__item--section > .md-nav__link .md-nav__icon {
+  display: block;
+}
+
+.wiki-nav-accordion__group--collapsible.md-nav__item--section > .md-nav {
+  display: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.wiki-nav-accordion__group--collapsible.md-nav__item--section > .md-nav__toggle:checked ~ .md-nav,
+.wiki-nav-accordion__group--static.md-nav__item--section > .md-nav {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+}
+
+.wiki-nav-accordion__group--static.md-nav__item--section > .md-nav__link .md-nav__icon {
+  display: none;
+}
+
+.wiki-nav-accordion__group.md-nav__item--section > .md-nav {
+  margin-inline-start: 0;
+}
+
+.wiki-nav-accordion__group > .md-nav > .md-nav__list {
+  margin: 0.12rem 0 0.25rem 0.5rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--wiki-border-strong);
+}
+
+.wiki-nav-accordion__group > .md-nav > .md-nav__list > .md-nav__item > .md-nav__link {
+  margin: 0.06rem 0;
+  padding: 0.28rem 0.42rem;
+  border-radius: 0.3rem;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.wiki-nav-accordion__group > .md-nav > .md-nav__list > .md-nav__item > .md-nav__link:hover,
+.wiki-nav-accordion__group > .md-nav > .md-nav__list > .md-nav__item > .md-nav__link--active {
+  color: var(--md-primary-fg-color);
+  background: color-mix(in srgb, var(--md-default-bg-color) 82%, var(--md-primary-fg-color) 18%);
+}
+
+.wiki-nav-accordion__group > .md-nav__link:hover {
+  color: var(--md-primary-fg-color);
+  background: var(--wiki-surface);
+}
+
+.wiki-nav-accordion__group > .md-nav__toggle:checked ~ .md-nav__link {
+  border-color: var(--wiki-border-strong);
+  color: var(--md-primary-fg-color);
+  background: var(--wiki-surface-strong);
+}
+
+.wiki-nav-accordion__group > .md-nav__link:focus-visible {
+  outline: 0.14rem solid var(--md-accent-fg-color);
+  outline-offset: 0.08rem;
+}
+
 .mermaid {
   text-align: center;
 }
@@ -481,6 +567,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .wiki-nav-accordion__group > .md-nav__link,
   .md-typeset .wiki-card,
   .md-typeset .wiki-diagram .mermaid {
     transition: none;

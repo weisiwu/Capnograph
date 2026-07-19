@@ -9,3 +9,13 @@ EtCO2 1500 nz
 FiCO2 1500 nz
 chunk 1500 nz
 GitNexus 1500 nz
+二氧化碳描记 2000 nz
+行业背景 1800 n
+capnography 1800 nz
+capnometry 1600 nz
+主流二氧化碳 1500 nz
+旁流二氧化碳 1500 nz
+mainstream 1400 nz
+sidestream 1400 nz
+机械通气 1400 n
+代码模块参考 1400 n
