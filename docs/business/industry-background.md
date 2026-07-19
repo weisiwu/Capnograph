@@ -14,8 +14,6 @@ external_evidence_reviewed: 2026-07-19
 metadata_status: curated
 search:
   boost: 1.6
-hide:
-  - navigation
 ---
 
 # 二氧化碳描记行业与业务背景

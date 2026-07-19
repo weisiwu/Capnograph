@@ -91,6 +91,14 @@ nav:
       - 架构总览与数据契约: architecture/technical-architecture.md
       - BLE 与运行时链路: architecture/runtime-and-ble.md
       - 持久化、迁移与输出: architecture/data-and-delivery.md
+  - 审核知识:
+      - 审核总览与发布门禁: review/review-guide.md
+      - 领域审核清单: review/domain-checklists.md
+      - 故障路径与恢复: review/failure-paths.md
+      - 患者数据生命周期: review/patient-data-lifecycle.md
+      - 测试与发布证据: review/release-evidence.md
+  - 维护指南:
+      - 文档生成与维护: contributing.md
   - 代码模块参考:
       - 仓库全景:
           - 代码库总览: generated/gitnexus/overview.md

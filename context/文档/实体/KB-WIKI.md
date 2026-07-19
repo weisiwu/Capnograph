@@ -19,6 +19,7 @@ updated: 2026-07-19
 - `docs/guide/`：五分钟图解导览；
 - `docs/business/industry-background.md`：二氧化碳描记行业背景、核心参数、典型场景、主流/旁流技术和标准监管边界；
 - `docs/business/domain-and-workflows.md`、`data-and-risks.md`：围绕 CapnoEasy 应用的参与者、端到端流程、数据对象与风险；
+- 业务知识三页统一显示左侧全局业务结构，右侧保留当前页章节目录，读者可在知识域与当前主题两个粒度间导航；
 - `docs/architecture/`：架构总览、BLE 运行时、持久化与输出；
 - `docs/review/`：发布门禁、领域清单、故障路径、患者数据生命周期和发布证据；
 - `docs/generated/gitnexus/`：导航分类名为“代码模块参考”，11 个 GitNexus 自动页面按“仓库全景 → 移动应用 → 构建与交付 → 项目知识与 AI”组织，同级且至少有两个子项的分组通过 `nav-accordion.js` 互斥展开；单子项分组始终显示、不启用手风琴。页面由 `scripts/sync_gitnexus_wiki.py` 覆盖同步。

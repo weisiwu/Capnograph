@@ -14,8 +14,6 @@ source_commit: edfd024010878ede15ae0d16c58308adc8eebef7
 metadata_status: curated
 search:
   boost: 1.4
-hide:
-  - navigation
 ---
 
 # CapnoEasy 应用业务与端到端流程
