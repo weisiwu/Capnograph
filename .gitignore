@@ -5,6 +5,17 @@
 .deepseek/
 context-seed-plan.json
 
+# Local code intelligence artifacts
+.gitnexus/
+graphify-out/
+
+# Generated documentation site
+site/
+.venv-docs/
+.cache/
+**/__pycache__/
+*.py[cod]
+
 # Android / Gradle
 **/.gradle/
 **/.kotlin/
