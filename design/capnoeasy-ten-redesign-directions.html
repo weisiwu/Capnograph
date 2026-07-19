@@ -1,0 +1,225 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CapnoEasy 十套重设计方向</title>
+<style>
+:root{--mono:'SF Mono',ui-monospace,monospace;--y:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;--r:6px;--R:14px;--L:22px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--y);background:#f1f5f9;color:#1e293b;line-height:1.45}
+header{padding:28px 20px 16px;text-align:center;background:#fff;border-bottom:1px solid #e2e8f0}
+header h1{font-size:clamp(18px,4vw,26px);font-weight:700;letter-spacing:-.01em;color:#0f172a}
+header p{font-size:12px;color:#64748b;margin-top:2px;font-family:var(--mono)}
+#idx{display:flex;flex-wrap:wrap;gap:4px;padding:10px 16px;background:#fff;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:100;justify-content:center}
+#idx a{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 10px;border-radius:16px;text-decoration:none;font-size:12px;font-weight:600;color:#475569;border:1px solid #e2e8f0;transition:.15s}
+#idx a:hover,#idx a:focus-visible{background:#2563eb;color:#fff;border-color:#2563eb;outline:none}
+.direction{padding:36px 16px 40px;border-bottom:1px solid #e2e8f0}
+.direction:last-child{border-bottom:none}
+.dh{font-size:20px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px}
+.dm{font-size:12px;margin-bottom:22px;font-family:var(--mono);color:var(--m,#64748b);line-height:1.6}
+.phones{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start}
+.phone{width:390px;height:844px;border-radius:32px;background:#1c1c1e;padding:14px 10px;box-shadow:0 8px 32px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.1);position:relative;flex-shrink:0}
+.scr{width:100%;height:100%;border-radius:22px;overflow:hidden;display:grid;background:var(--b,#fff);color:var(--f,#1e293b);font-size:12px;position:relative}
+.st{grid-area:st;display:flex;align-items:center;justify-content:space-between;padding:10px 14px 2px;font-size:10px;font-weight:500;color:var(--m,#64748b);letter-spacing:.02em}
+.st .bt{color:var(--a,#2563eb)}
+.pt{grid-area:pt;display:flex;align-items:center;gap:8px;padding:4px 14px 8px;border-bottom:1px solid var(--o,#e2e8f0)}
+.pt strong{font-size:15px;font-weight:600;color:var(--f,#1e293b)}
+.pt span{font-size:10px;color:var(--m,#64748b);font-family:var(--mono)}
+.ab{grid-area:ab;display:none;padding:8px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;align-items:center;gap:6px;background:#c62828;color:#fff}
+.ab .ab-btns{display:flex;gap:4px;margin-left:auto}
+.ab .ab-btns button{background:none;border:1px solid rgba(255,255,255,.5);color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;cursor:pointer;font-family:var(--y)}
+.is-alarm .ab{display:flex;animation:flash .8s infinite}
+@keyframes flash{0%,100%{background:#c62828}50%{background:#b71c1c}}
+.vt{grid-area:vt;display:flex;gap:4px;padding:6px 10px;flex-wrap:wrap}
+.vi{flex:1;min-width:52px;padding:8px 4px;border-radius:var(--r);background:var(--s,#fff);border:1px solid var(--o,#e2e8f0);text-align:center}
+.vi .vl{font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--m,#64748b);margin-bottom:1px}
+.vi .vv{font-size:18px;font-weight:700;font-family:var(--mono);color:var(--f,#1e293b);letter-spacing:-.02em}
+.vi .vu{font-size:9px;color:var(--m,#64748b)}
+.wv{grid-area:wv;margin:0 10px;padding:10px;border-radius:var(--R);background:var(--w,#f8fafc);border:1px solid var(--o,#e2e8f0);min-height:120px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.wv svg{position:absolute;left:10px;top:20px;width:calc(100% - 20px);height:calc(100% - 30px)}
+.wv .wl{position:absolute;top:6px;left:10px;font-size:9px;color:var(--m,#94a3b8);font-family:var(--mono);letter-spacing:.03em;opacity:.7}
+.ac{grid-area:ac;display:flex;gap:6px;padding:6px 10px;flex-wrap:wrap}
+.ac button{flex:1;min-width:48px;padding:8px 10px;border-radius:var(--r);border:1px solid var(--o,#e2e8f0);background:var(--s,#fff);color:var(--f,#1e293b);font-size:11px;font-weight:600;cursor:pointer;transition:.15s;font-family:var(--y)}
+.ac button:hover,.ac button.pr{background:var(--a,#2563eb);color:#fff;border-color:var(--a,#2563eb)}
+.bn{grid-area:bn;display:flex;border-top:1px solid var(--o,#e2e8f0);background:var(--s,#fff)}
+.bn a{flex:1;display:flex;align-items:center;justify-content:center;padding:12px 2px 16px;text-decoration:none;font-size:10px;font-weight:600;color:var(--m,#64748b);transition:.15s}
+.bn a.acv{color:var(--a,#2563eb)}
+.nt{grid-area:nt;padding:6px 12px;font-size:10px;color:var(--m,#64748b);font-family:var(--mono);border-top:1px dashed var(--o,#e2e8f0);line-height:1.4}
+.rec{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:600;color:#ef4444;letter-spacing:.03em;text-transform:uppercase}
+.rec::before{content:'';width:6px;height:6px;border-radius:50%;background:#ef4444;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+.is-alarm .scr{box-shadow:inset 0 0 0 3px #c62828}
+.is-alarm .wv{border-color:#ef9a9a}
+.is-alarm .vi{border-color:#ef9a9a}
+
+/* Themes */
+.th-a{--b:#f8fafc;--s:#fff;--f:#1e293b;--m:#64748b;--a:#2563eb;--o:#e2e8f0;--w:#eff6ff;--c:#3b82f6}
+.th-b{--b:#0f172a;--s:#1e293b;--f:#e2e8f0;--m:#94a3b8;--a:#06b6d4;--o:#334155;--w:#05100a;--c:#10b981}.th-b .phone{background:#0a0f18}
+.th-c{--b:#fefefe;--s:#fff;--f:#1a1a1a;--m:#6b6b6b;--a:#d32f2f;--o:#e0e0e0;--w:#fff5f5;--c:#1976d2}
+.th-d{--b:#080808;--s:#141414;--f:#d4d4d4;--m:#666;--a:#22d3ee;--o:#262626;--w:#000;--c:#22d3ee}.th-d .phone{background:#050505}
+.th-e{--b:#fafafa;--s:#fff;--f:#171717;--m:#525252;--a:#0891b2;--o:#d4d4d4;--w:#f0f9ff;--c:#0e7490}
+.th-f{--b:#fafaf5;--s:#fffef9;--f:#292524;--m:#78716c;--a:#ea580c;--o:#e7e5e4;--w:#fff7ed;--c:#f97316}
+.th-g{--b:#f5fdf7;--s:#fff;--f:#14532d;--m:#4d7c5f;--a:#16a34a;--o:#dcfce7;--w:#f0fdf4;--c:#22c55e}
+.th-h{--b:#fff;--s:#fff;--f:#000;--m:#333;--a:#0052cc;--o:#000;--w:#f0f4ff;--c:#0047ab}
+.th-i{--b:#f7f2fa;--s:#fff;--f:#1d1b20;--m:#605d62;--a:#6750a4;--o:#cac4d0;--w:#f4f0ff;--c:#aa9bff}
+.th-j{--b:#fefdf9;--s:#fffef7;--f:#1c1917;--m:#5c5c5c;--a:#b45309;--o:#d6d3d1;--w:#fffbeb;--c:#d97706}
+
+/* Per-theme overrides */
+.th-b .vi .vv{font-size:22px}.th-b .wv{min-height:200px;border-color:#1e4630}
+.th-c .ab{min-height:34px}.th-c .is-alarm .ab{display:flex}
+.th-d .wv{min-height:280px;border-radius:0;margin:0}.th-d .wv .wl{color:#22d3ee;opacity:.9}.th-d .st{font-size:9px}.th-d .vt{flex-wrap:nowrap;gap:2px;padding:4px}.th-d .vi{min-width:0;padding:4px 1px;border:0;background:transparent}.th-d .vi .vv{font-size:14px}
+.th-e .dm{font-family:var(--mono)}.th-e .vt{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:4px}.th-e .vi{min-width:0;padding:5px 2px}.th-e .vi .vv{font-size:15px}.th-e .nt{border-top-style:solid;border-color:var(--o)}
+.th-f .bn a{padding:14px 2px 20px;font-size:11px}.th-f .ac button{padding:11px;font-size:12px;border-radius:10px;min-height:40px}
+.th-g .vi{border-radius:12px;background:#f0fdf4}.th-g .wv{border-radius:16px}.th-g .nt{font-size:11px;color:#14532d;border-top-color:#dcfce7}
+.th-h .scr{font-size:15px}.th-h .st{font-size:13px;padding:12px 18px 4px}.th-h .pt strong{font-size:20px}.th-h .pt span{font-size:12px}.th-h .vi .vl{font-size:12px}.th-h .vi .vv{font-size:26px}.th-h .vi .vu{font-size:11px}.th-h .wv{min-height:160px;border-width:2px}.th-h .ac button{font-size:14px;padding:12px;min-height:46px;border-width:2px}.th-h .bn a{font-size:12px;padding:14px 2px 20px}.th-h .ab{font-size:14px;padding:10px 18px}
+.th-i .vi{border-radius:16px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08)}.th-i .wv{border-radius:16px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.06)}.th-i .ac button{border-radius:20px;border:none;box-shadow:0 1px 2px rgba(0,0,0,.06)}.th-i .bn{box-shadow:0 -1px 4px rgba(0,0,0,.05)}.th-i .pt{border-bottom:none}
+.th-j .nt{font-size:11px;padding:8px 12px;background:#fffef0;border:1px solid #fde68a;border-radius:3px;border-top-style:solid;font-family:var(--y)}.th-j .vi{border-radius:2px}.th-j .ac button{border-radius:2px}.th-j .pt{border-bottom:2px solid #d6d3d1}
+
+/* Fixed clinical hierarchy: flexible height belongs to the evidence area, not status rows. */
+.th-a .phone:not(.is-alarm) .scr{grid-template-rows:34px 54px 80px minmax(160px,1fr) 58px 52px}
+.th-a .phone.is-alarm .scr{grid-template-rows:46px 34px 54px 80px minmax(140px,1fr) 58px 52px}
+.th-b .phone:not(.is-alarm) .scr{grid-template-rows:50px minmax(120px,1fr) minmax(120px,1fr) 88px 80px}
+.th-b .phone.is-alarm .scr{grid-template-rows:46px 50px minmax(110px,1fr) minmax(110px,1fr) 88px 80px}
+.th-c .phone:not(.is-alarm) .scr{grid-template-rows:0 48px minmax(180px,1fr) 88px 80px}
+.th-c .phone.is-alarm .scr{grid-template-rows:46px 48px minmax(160px,1fr) 88px 80px}
+.th-d .phone:not(.is-alarm) .scr{grid-template-rows:34px repeat(3,minmax(90px,1fr)) 100px 80px}
+.th-d .phone.is-alarm .scr{grid-template-rows:46px 34px repeat(3,minmax(80px,1fr)) 100px 80px}
+.th-e .phone:not(.is-alarm) .scr{grid-template-rows:44px 190px minmax(160px,1fr) 70px}
+.th-e .phone.is-alarm .scr{grid-template-rows:46px 44px 190px minmax(140px,1fr) 70px}
+.th-f .phone:not(.is-alarm) .scr{grid-template-rows:54px 100px minmax(160px,1fr) 138px 72px}
+.th-f .phone.is-alarm .scr{grid-template-rows:46px 54px 100px minmax(140px,1fr) 138px 72px}
+.th-g .phone:not(.is-alarm) .scr{grid-template-rows:34px 54px 62px minmax(150px,1fr) 88px 80px}
+.th-g .phone.is-alarm .scr{grid-template-rows:46px 34px 54px 62px minmax(130px,1fr) 88px 80px}
+.th-h .phone:not(.is-alarm) .scr{grid-template-rows:40px 0 66px 108px minmax(150px,1fr) 154px 72px}
+.th-h .phone.is-alarm .scr{grid-template-rows:40px 50px 66px 108px minmax(130px,1fr) 154px 72px}
+.th-i .phone:not(.is-alarm) .scr{grid-template-rows:52px 104px minmax(160px,1fr) 96px 70px}
+.th-i .phone.is-alarm .scr{grid-template-rows:46px 52px 104px minmax(140px,1fr) 96px 70px}
+.th-j .phone:not(.is-alarm) .scr{grid-template-rows:52px 78px minmax(180px,1fr) 86px}
+.th-j .phone.is-alarm .scr{grid-template-rows:46px 52px 78px minmax(160px,1fr) 86px}
+
+@media(max-width:860px){
+  .phones{flex-direction:column;align-items:center;gap:20px}
+  .direction{padding:24px 10px 32px}
+}
+@media(max-width:430px){
+  .phone{width:calc(100vw - 28px);height:calc((100vw - 28px) * 844 / 390);border-radius:24px;padding:10px 6px}
+  .scr{border-radius:16px}
+  .dh{font-size:17px}
+  header{padding:18px 10px 12px}
+  #idx{padding:6px 8px;gap:3px}
+  #idx a{min-width:26px;height:28px;padding:0 7px;font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){.is-alarm .ab{animation:none}.rec::before{animation:none}*{transition-duration:0s!important}}
+@media print{.phone{box-shadow:none;break-inside:avoid}.direction{border-bottom:1px dashed #ccc;padding:16px 0}body{background:#fff}#idx{display:none}}
+</style>
+</head>
+<body>
+<header data-od-id="header"><h1>CapnoEasy 十套重设计方向</h1><p>OpenDesign · 2026-07-19</p></header>
+<nav id="idx" data-od-id="direction-index"></nav>
+<main id="dirs" data-od-id="directions-main"></main>
+<script>
+const W=function(n,h){
+  const w=260/n,b=h||90,p=[],s=(i,x)=>((i*w)+x).toFixed(1);
+  for(let i=0;i<n;i++){
+    p.push(`M${s(i,0)},${b} L${s(i,6)},${b} Q${s(i,10)},${b} ${s(i,12)},${b-40} Q${s(i,14)},${b-70} ${s(i,17)},${b-78} L${s(i,42)},${b-82} Q${s(i,54)},${b-84} ${s(i,57)},${b-78} Q${s(i,60)},${b-20} ${s(i,62)},${b} L${s(i+.96,0)},${b}`);
+  }
+  return p.join(' ');
+};
+const waveSVG=(w,h,c)=>
+  `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:100%"><defs><linearGradient id="g${c}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--c,var(--a))" stop-opacity=".3"/><stop offset="100%" stop-color="var(--c,var(--a))" stop-opacity=".05"/></linearGradient></defs><path d="${W(4,90)}" fill="url(#g${c})" stroke="var(--c,var(--a))" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="${W(4,90)}" fill="none" stroke="var(--c,var(--a))" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+const directions=[
+  {id:'a',t:'A · 浅色临床原生',m:'场景 住院监护病房 / 导航 顶部患者栏→中部波形→底部操作 / 密度 中等，三段式信息层级 / tokens 蓝白临床中性色，仅报警用红 / 取舍 患者信息折叠为一行，优先保证波形可见面积',cls:'th-a',areas:`"st st" "pt pt" "vt vt" "wv wv" "ac ac" "bn bn"`,cols:'1fr 1fr'},
+  {id:'b',t:'B · 深色ICU监护',m:'场景 夜间ICU低照度环境 / 导航 患者信息与状态栏同行，波形独占中区 / 密度 低密度，大号数值，减少视觉噪音 / tokens 深海军蓝底+青绿波形，琥珀色仅用于异常高亮 / 取舍 隐藏底部导航文字标签，以图标为主；暗色减少屏幕光污染',cls:'th-b',areas:`"st pt" "wv wv" "wv wv" "vt vt" "ac bn"`,cols:'1fr 1fr'},
+  {id:'c',t:'C · 告警优先安全栏',m:'场景 高依赖病房，告警响应速度优先 / 导航 顶部红色告警轨→患者行→波形→生命体征 / 密度 中高，告警区常驻可见，确认/静音/原因一键可达 / tokens 白底红黑双色系统，仅高危用#c62828 / 取舍 安全轨固定占据顶部36px，牺牲波形高度换取告警零延迟可视',cls:'th-c',areas:`"ab ab" "st pt" "wv wv" "vt vt" "ac bn"`,cols:'1fr 1fr'},
+  {id:'d',t:'D · 波形主视觉',m:'场景 呼吸科专家波形分析 / 导航 最小化状态栏，波形占据70%屏幕，参数在底部 / 密度 极低，一次只看一个波形和4个关键数值 / tokens 黑色画布+青色波形，信息最低限度呈现 / 取舍 隐藏患者信息到仅显示姓名缩写，操作入口收起到更多菜单；波形侧滑可切换趋势',cls:'th-d',areas:`"st st" "wv wv" "wv wv" "wv wv" "pt vt" "ac bn"`,cols:'1fr 1fr'},
+  {id:'e',t:'E · 密集临床台账',m:'场景 电子病历整合视图，医生站快速扫读 / 导航 三列网格：患者+体征+事件轴并排 / 密度 极高，等宽字体，信息密度对标纸质台账 / tokens 灰白底+青蓝强调，单色编码避免视觉干扰 / 取舍 波形缩小至紧凑一行，右侧事件轴列出时间戳与操作记录',cls:'th-e',areas:`"st st st" "pt vt nt" "wv wv wv" "ac ac bn"`,cols:'1fr 1fr 1fr'},
+  {id:'f',t:'F · 单手急救操作',m:'场景 急救/转运中单手拇指操作 / 导航 关键操作聚集底部拇指热区，波形与体征在上方 / 密度 中低，触控目标≥44px，操作间距充足 / tokens 暖灰底+橙色行动色，按钮高对比易定位 / 取舍 顶部信息精简，底部导航和操作按钮放大；一键记录为最主要动作',cls:'th-f',areas:`"st pt" "vt vt" "wv wv" "ac ac" "bn bn"`,cols:'1fr 1fr'},
+  {id:'g',t:'G · 居家呼吸管理',m:'场景 慢阻肺患者居家每日监测 / 导航 数据可靠性说明→波形→体征→操作 / 密度 低，以解释性文字减轻患者焦虑 / tokens 浅绿底+自然绿强调，传递安全感和可信任感 / 取舍 增加"数据质量说明"区域解释蓝牙连接状态和波形可靠性，操作按钮使用友好圆角',cls:'th-g',areas:`"st st" "pt pt" "nt nt" "wv wv" "vt vt" "ac bn"`,cols:'1fr 1fr'},
+  {id:'h',t:'H · 无障碍大字版',m:'场景 视障医护或老年患者使用 / 导航 单列纵向，所有文字≥14px，控件≥48px / 密度 极低，每屏最多5个元素 / tokens 纯黑白+粗蓝强调，颜色+形状+文字三重编码 / 取舍 每个数值同时用颜色（蓝=正常/红=异常）、形状（圆=正常/三角=异常）、文字标注；波形高度加大至180px',cls:'th-h',areas:`"st" "ab" "pt" "vt" "wv" "ac" "bn"`,cols:'1fr'},
+  {id:'i',t:'I · Material模块化',m:'场景 Android端标准Material Design 3规范 / 导航 底部导航栏+顶部患者模块，中间体征卡片可长按重排 / 密度 中等，模块化卡片带轻微阴影区分层级 / tokens M3浅紫+靛蓝，遵循Material You动态配色逻辑 / 取舍 每个功能封装为独立卡片，支持模块重排（示意）；底部导航含标签文字',cls:'th-i',areas:`"st pt" "vt vt" "wv wv" "ac ac" "bn bn"`,cols:'1fr 1fr'},
+  {id:'j',t:'J · 证据与报告控制台',m:'场景 质控审查/病例讨论/PDF报告同屏对比 / 导航 事件摘要→波形+体征并排→操作 / 密度 高，左侧事件文本+右侧数据图表 / tokens 米白纸色+棕褐强调，模拟纸质报告质感 / 取舍 顶部常驻事件摘要区，波形与体征左右并排，一键导出PDF与打印在同一操作区',cls:'th-j',areas:`"st pt" "nt nt" "wv vt" "ac bn"`,cols:'1fr 1fr'}
+];
+
+const NAV_ITEMS=[{l:'首页',a:1},{l:'监测',a:0},{l:'病例'},{l:'设置'}];
+const ACTIONS=[{l:'记录',p:1},{l:'校零'},{l:'趋势'},{l:'设置'}];
+const VITALS_N=[{l:'ETCO₂',v:'36',u:'mmHg'},{l:'RR',v:'18',u:'bpm'},{l:'SpO₂',v:'98',u:'%'},{l:'HR',v:'72',u:'bpm'}];
+const VITALS_A=[{l:'ETCO₂',v:'52',u:'mmHg',h:1},{l:'RR',v:'26',u:'bpm',h:1},{l:'SpO₂',v:'94',u:'%'},{l:'HR',v:'88',u:'bpm',h:1}];
+
+function phone(d,alarm){
+  const sc=document.createElement('div');sc.className='scr';
+  const colCount=(d.cols||'1fr 1fr').trim().split(/\s+/).length;
+  const alarmRow='"'+Array(colCount).fill('ab').join(' ')+'" ';
+  sc.style.gridTemplateAreas=alarm&&!d.areas.includes('"ab')?alarmRow+d.areas:d.areas;
+  sc.style.gridTemplateColumns=d.cols||'1fr 1fr';
+  if(alarm)sc.closest('.phone')?.classList.add('is-alarm');
+  const st=document.createElement('div');st.className='st';
+  st.innerHTML='<span>09:41</span><span class="bt">设备 已连接</span><span>电量 85%</span>';
+  sc.appendChild(st);
+  if(alarm||d.id==='c'||d.id==='h'){
+    const ab=document.createElement('div');ab.className='ab';
+    ab.innerHTML='<span>高危 · ETCO₂ 过高 · 52 mmHg</span><span class="ab-btns"><button>确认</button><button>静音</button><button>查看原因</button></span>';
+    sc.appendChild(ab);
+  }
+  const pt=document.createElement('div');pt.className='pt';
+  pt.innerHTML='<strong>王晴</strong><span>女 · 32岁</span><span>门诊 · 观察位2</span><span>2026-07-19</span>';
+  sc.appendChild(pt);
+  const vt=document.createElement('div');vt.className='vt';
+  const vd=alarm?VITALS_A:VITALS_N;
+  vd.forEach(v=>{
+    const vi=document.createElement('div');vi.className='vi';
+    if(v.h)vi.style.borderColor='#ef9a9a';
+    vi.innerHTML=`<div class="vl">${v.l}</div><div class="vv"${v.h?' style="color:#c62828"':''}>${v.v}</div><div class="vu">${v.u}</div>`;
+    vt.appendChild(vi);
+  });
+  sc.appendChild(vt);
+  const wv=document.createElement('div');wv.className='wv';
+  wv.innerHTML='<span class="wl">ETCO₂ 波形</span>'+waveSVG(270,100,d.id)+(alarm?'<span style="position:absolute;top:6px;right:10px;font-size:9px;color:#c62828;font-family:var(--mono)" class="rec">记录中</span>':'');
+  sc.appendChild(wv);
+  const ac=document.createElement('div');ac.className='ac';
+  ACTIONS.forEach(a=>{
+    const btn=document.createElement('button');
+    btn.textContent=a.l;if(a.p)btn.className='pr';
+    if(alarm&&a.l==='记录'){btn.textContent='停止';btn.className='pr';btn.style.background='#c62828';btn.style.borderColor='#c62828'}
+    ac.appendChild(btn);
+  });
+  sc.appendChild(ac);
+  const bn=document.createElement('div');bn.className='bn';
+  NAV_ITEMS.forEach(n=>{
+    const a=document.createElement('a');a.href='#';
+    a.textContent=n.l;if(n.a)a.className='acv';
+    bn.appendChild(a);
+  });
+  sc.appendChild(bn);
+  if(d.id==='e'||d.id==='g'||d.id==='j'){
+    const nt=document.createElement('div');nt.className='nt';
+    if(d.id==='e')nt.textContent='09:41 连接设备 · 09:40 校零完成 · 09:35 病例打开';
+    else if(d.id==='g')nt.textContent='蓝牙信号强 · 波形质量良好 · 数据可靠';
+    else nt.textContent='本次监测共记录 3 次事件 · 最近报警：ETCO₂ 52 mmHg · 09:41';
+    sc.appendChild(nt);
+  }
+  return sc;
+}
+
+function render(){
+  const m=document.getElementById('dirs'),idx=document.getElementById('idx');
+  m.innerHTML='';idx.innerHTML='';
+  directions.forEach(d=>{
+    const a=document.createElement('a');a.href='#'+d.id;a.textContent=d.id.toUpperCase();idx.appendChild(a);
+    const sec=document.createElement('section');sec.className='direction '+d.cls;sec.id=d.id;
+    sec.innerHTML=`<h2 class="dh">${d.t}</h2><p class="dm">${d.m}</p>`;
+    const phones=document.createElement('div');phones.className='phones';
+    const p1=document.createElement('div');p1.className='phone';p1.appendChild(phone(d,false));
+    const p2=document.createElement('div');p2.className='phone is-alarm';p2.appendChild(phone(d,true));
+    phones.appendChild(p1);phones.appendChild(p2);
+    sec.appendChild(phones);
+    m.appendChild(sec);
+  });
+}
+render();
+</script>
+</body>
+</html>
