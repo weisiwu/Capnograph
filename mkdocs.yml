@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: CapnoEasy 项目知识库
-site_description: CapnoEasy 的业务、架构、审核和代码知识文档
+site_description: CapnoEasy 的业务、架构和代码知识文档
 site_author: CapnoEasy Team
 docs_dir: docs
 site_dir: site
@@ -88,17 +88,9 @@ nav:
           - 应用业务与端到端流程: business/domain-and-workflows.md
           - 数据对象与业务风险: business/data-and-risks.md
   - 技术架构:
-      - 架构总览与数据契约: architecture/technical-architecture.md
-      - BLE 与运行时链路: architecture/runtime-and-ble.md
-      - 持久化、迁移与输出: architecture/data-and-delivery.md
-  - 审核知识:
-      - 审核总览与发布门禁: review/review-guide.md
-      - 领域审核清单: review/domain-checklists.md
-      - 故障路径与恢复: review/failure-paths.md
-      - 患者数据生命周期: review/patient-data-lifecycle.md
-      - 测试与发布证据: review/release-evidence.md
-  - 维护指南:
-      - 文档生成与维护: contributing.md
+      - 平台架构:
+          - Android 架构: architecture/android-architecture.md
+          - iOS 架构: architecture/ios-architecture.md
   - 代码模块参考:
       - 仓库全景:
           - 代码库总览: generated/gitnexus/overview.md

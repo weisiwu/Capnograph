@@ -28,7 +28,7 @@ search:
     CapnoEasy 应用服务谁、设备数据如何走到监测记录与报告、关键业务动作有哪些门槛。行业概念与典型场景见[二氧化碳描记行业与业务背景](industry-background.md)，对象字段、不变量和风险表见[数据对象与业务风险](data-and-risks.md)。
 
 !!! danger "发布前先看"
-    当前有两项 P0 待确认：EtCO₂/RR 报警区间条件疑似反向，以及停止记录时未见 `Record.endTime` 更新。关闭条件见[审核总览](../review/review-guide.md#baseline-findings)。
+    当前有两项高优先级待确认：EtCO₂/RR 报警区间条件疑似反向，以及停止记录时未见 `Record.endTime` 更新。影响、对象约束与决策入口见[数据对象与业务风险](data-and-risks.md)。
 
 ## 产品定位与边界
 
@@ -84,7 +84,7 @@ flowchart LR
 - Android 启动时恢复语言、显示、报警和打印偏好，并尝试连接已保存的 BLE 设备；
 - 用户可从设备列表主动扫描和连接；
 - 连接后发现服务、订阅通知，并串行读取或设置单位、量程、报警范围、无呼吸时间和补偿参数；
-- 权限拒绝、超时、断连与重连必须回到可解释状态，详见[故障路径](../review/failure-paths.md)。
+- 权限拒绝、超时、断连与重连必须回到可解释状态，并分别验证提示、重试、状态清理和恢复后的数据连续性。
 
 ## 2. 实时监测与报警
 
@@ -122,12 +122,12 @@ flowchart LR
 <div markdown>
 <span>研发</span>
 
-阅读[架构总览与数据契约](../architecture/technical-architecture.md)，评估跨平台传播范围。
+分别阅读 [Android 架构](../architecture/android-architecture.md) 和 [iOS 架构](../architecture/ios-architecture.md)，先按改动所在端评估执行链路，再核对共享的协议与业务语义。
 </div>
 <div markdown>
-<span>测试与发布</span>
+<span>测试与交付</span>
 
-阅读[领域审核清单](../review/domain-checklists.md)和[测试与发布证据](../review/release-evidence.md)。
+从[数据对象与业务风险](data-and-risks.md)提取边界条件、平台差异和患者数据约束，再为对应流程准备回放、迁移和输出一致性证据。
 </div>
 </div>
 

@@ -71,10 +71,11 @@ graph TB
 
 ### 专题知识
 
-- **[专题知识手册](../../index.md)**：按产品、研发、测试和审核角色组织的阅读入口
+- **[专题知识手册](../../index.md)**：按产品、业务和研发任务组织的阅读入口
 - **[业务领域与端到端流程](../../business/domain-and-workflows.md)**：业务术语、参与者、监测/记录/报告流程和数据不变量
-- **[技术框架与数据契约](../../architecture/technical-architecture.md)**：双平台技术栈、BLE 数据链路、持久化契约和跨平台一致性
-- **[审核与评审指南](../../review/review-guide.md)**：风险分级、合并/发布检查清单及当前待关闭项
+- **[Android 架构](../../architecture/android-architecture.md)**：Activity/Compose、全局状态、BLE Kit、Room 与输出链路
+- **[iOS 架构](../../architecture/ios-architecture.md)**：SwiftUI、EnvironmentObject、CoreBluetooth、内存历史与 PDF 链路
+- **[数据对象与业务风险](../../business/data-and-risks.md)**：对象不变量、患者数据边界和当前待确认项
 
 ## 关键工作流
 
@@ -123,7 +124,7 @@ docker run --rm -v $(pwd):/workspace capnograph-builder \
 
 ## 下一步
 
-- 先阅读 [专题知识手册](../../index.md)，按角色进入业务、技术或审核知识
+- 先阅读 [专题知识手册](../../index.md)，按角色进入业务、技术或代码模块
 - 阅读 [apps](apps.md) 了解各平台应用的详细架构
 - 查看 [scripts](scripts.md) 获取完整的打包参数说明
 - 参考 [skills](skills.md) 了解 AI 辅助开发的最佳实践

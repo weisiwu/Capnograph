@@ -166,8 +166,8 @@ FDA 公开资料中，气相二氧化碳分析仪使用 21 CFR 868.1400 / 产品
 
 - [CapnoEasy 应用业务与端到端流程](domain-and-workflows.md)
 - [CapnoEasy 数据对象与业务风险](data-and-risks.md)
-- [技术架构与数据契约](../architecture/technical-architecture.md)
-- [审核总览与发布门禁](../review/review-guide.md)
+- [Android 架构](../architecture/android-architecture.md)
+- [iOS 架构](../architecture/ios-architecture.md)
 
 ## 参考来源与复核说明
 

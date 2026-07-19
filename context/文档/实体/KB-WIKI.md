@@ -12,17 +12,17 @@ updated: 2026-07-19
 
 ## 定位
 
-`KB-WIKI` 是受 Git 管理的 CapnoEasy 正式知识站。它用 Material for MkDocs 汇总行业背景、应用业务、技术架构、审核知识与代码模块参考；当前源码、配置、迁移和测试是应用行为的第一证据源，行业知识另以权威指南、标准和监管资料核验。
+`KB-WIKI` 是受 Git 管理的 CapnoEasy 正式知识站。它用 Material for MkDocs 汇总行业背景、应用业务、技术架构与代码模块参考；当前源码、配置、迁移和测试是应用行为的第一证据源，行业知识另以权威指南、标准和监管资料核验。
 
 ## 结构
 
 - `docs/guide/`：五分钟图解导览；
 - `docs/business/industry-background.md`：二氧化碳描记行业背景、核心参数、典型场景、主流/旁流技术和标准监管边界；
 - `docs/business/domain-and-workflows.md`、`data-and-risks.md`：围绕 CapnoEasy 应用的参与者、端到端流程、数据对象与风险；
-- 业务知识三页统一显示左侧全局业务结构，右侧保留当前页章节目录，读者可在知识域与当前主题两个粒度间导航；
-- `docs/architecture/`：架构总览、BLE 运行时、持久化与输出；
-- `docs/review/`：发布门禁、领域清单、故障路径、患者数据生命周期和发布证据；
-- `docs/generated/gitnexus/`：导航分类名为“代码模块参考”，11 个 GitNexus 自动页面按“仓库全景 → 移动应用 → 构建与交付 → 项目知识与 AI”组织，同级且至少有两个子项的分组通过 `nav-accordion.js` 互斥展开；单子项分组始终显示、不启用手风琴。页面由 `scripts/sync_gitnexus_wiki.py` 覆盖同步。
+- 有实际子页面的业务、架构与代码参考栏目统一显示左侧整体结构，右侧显示当前页章节目录；三类栏目共用 `nav-accordion.js`，多子项大项互斥折叠，单子项大项常驻。首页和图解导览是单页入口，不生成空侧栏；
+- `docs/architecture/android-architecture.md`：以 Android 源码为准记录 Activity/Compose、全局状态、BLE Kit、Room 和输出链路；
+- `docs/architecture/ios-architecture.md`：以 iOS 源码为准记录 SwiftUI、EnvironmentObject、CoreBluetooth、内存历史和 PDF 链路；
+- `docs/generated/gitnexus/`：导航分类名为“代码模块参考”，11 个 GitNexus 自动页面按“仓库全景 → 移动应用 → 构建与交付 → 项目知识与 AI”组织，页面由 `scripts/sync_gitnexus_wiki.py` 覆盖同步。
 
 ## 维护门禁
 

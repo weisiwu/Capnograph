@@ -35,9 +35,13 @@ TITLES = {
 CURATED_LINKS = {
     "knowledge.md": "../../index.md",
     "business-domain.md": "../../business/domain-and-workflows.md",
-    "technical-architecture.md": "../../architecture/technical-architecture.md",
-    "review-guide.md": "../../review/review-guide.md",
 }
+PLATFORM_ARCHITECTURE_LINKS = "\n".join(
+    [
+        "- **[Android 架构](../../architecture/android-architecture.md)**：Activity/Compose、全局状态、BLE Kit、Room 与输出链路",
+        "- **[iOS 架构](../../architecture/ios-architecture.md)**：SwiftUI、EnvironmentObject、CoreBluetooth、内存历史与 PDF 链路",
+    ]
+)
 
 
 def strip_frontmatter(content: str) -> str:
@@ -55,6 +59,21 @@ def render_page(source: Path, metadata: dict[str, object]) -> str:
     generated_at = str(metadata.get("generatedAt", "unknown"))
     body = strip_frontmatter(source.read_text(encoding="utf-8")).lstrip()
     body = re.sub(r"\A# [^\r\n]+\r?\n+\s*(?=# )", "", body, count=1)
+    body = re.sub(
+        r"(?m)^- \*\*\[[^\]]+\]\(technical-architecture\.md\)\*\*[^\r\n]*$",
+        PLATFORM_ARCHITECTURE_LINKS,
+        body,
+    )
+    body = re.sub(
+        r"(?m)^- \*\*\[审核与评审指南\]\(review-guide\.md\)\*\*[^\r\n]*$",
+        "- **[数据对象与业务风险](../../business/data-and-risks.md)**：对象不变量、患者数据边界和当前待确认项",
+        body,
+    )
+    body = body.replace(
+        "按产品、研发、测试和审核角色组织的阅读入口",
+        "按产品、业务和研发任务组织的阅读入口",
+    )
+    body = body.replace("按角色进入业务、技术或审核知识", "按角色进入业务、技术或代码模块")
     for old_target, new_target in CURATED_LINKS.items():
         body = body.replace(f"]({old_target})", f"]({new_target})")
     body = "\n".join(line.rstrip() for line in body.splitlines())
