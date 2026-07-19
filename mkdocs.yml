@@ -1,0 +1,111 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+site_name: CapnoEasy 项目知识库
+site_description: CapnoEasy 的业务、架构、审核和代码知识文档
+site_author: CapnoEasy Team
+docs_dir: docs
+site_dir: site
+use_directory_urls: false
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: 切换到深色模式
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: 切换到浅色模式
+
+plugins:
+  - search:
+      lang:
+        - zh
+        - en
+      jieba_dict_user: docs_search_terms.txt
+  - privacy
+  - offline
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: .
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+extra_css:
+  - assets/stylesheets/extra.css
+
+extra_javascript:
+  - assets/javascripts/diagram-tools.js
+
+nav:
+  - 首页: index.md
+  - 图解导览: guide/visual-overview.md
+  - 业务知识:
+      - 领域与端到端流程: business/domain-and-workflows.md
+      - 数据对象与业务风险: business/data-and-risks.md
+  - 技术架构:
+      - 架构总览与数据契约: architecture/technical-architecture.md
+      - BLE 与运行时链路: architecture/runtime-and-ble.md
+      - 持久化、迁移与输出: architecture/data-and-delivery.md
+  - 审核知识:
+      - 审核总览与发布门禁: review/review-guide.md
+      - 领域审核清单: review/domain-checklists.md
+      - 故障路径与恢复: review/failure-paths.md
+      - 患者数据生命周期: review/patient-data-lifecycle.md
+      - 测试与发布证据: review/release-evidence.md
+  - 维护指南:
+      - 文档生成与维护: contributing.md
+  - GitNexus 自动文档:
+      - 代码库总览: generated/gitnexus/overview.md
+      - Root: generated/gitnexus/root.md
+      - apps: generated/gitnexus/apps.md
+      - Android: generated/gitnexus/apps-android.md
+      - iOS: generated/gitnexus/apps-ios.md
+      - context: generated/gitnexus/context.md
+      - context — docs: generated/gitnexus/context-docs.md
+      - context — context: generated/gitnexus/context-context.md
+      - docker: generated/gitnexus/docker.md
+      - scripts: generated/gitnexus/scripts.md
+      - skills: generated/gitnexus/skills.md
+
+copyright: 内容以当前源码、配置和测试为准；AI 生成页面必须经过人工审核。

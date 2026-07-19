@@ -16,10 +16,63 @@ This branch consolidates the platform-specific CapnoGraph codebases into a singl
 │   └── ios/            # iOS Xcode project
 ├── .omp/               # Oh My Pi project skills, tools, and prompt additions
 ├── context/            # AI-readable project context
+├── docs/               # Tracked business, architecture, review, and generated docs
+├── mkdocs.yml          # Material for MkDocs site configuration
 ├── scripts/
 │   └── package.sh      # Target-based packaging wrapper
 └── skills/             # AI workflow instructions
 ```
+
+## Project Knowledge Site
+
+The tracked project knowledge site uses Material for MkDocs. Human-reviewed business, architecture, and review knowledge lives outside the generated subtree, while GitNexus module pages are synchronized into `docs/generated/gitnexus/`.
+
+```bash
+python3 -m venv .venv-docs
+.venv-docs/bin/python -m pip install -r requirements-docs.txt
+
+# Live preview at http://127.0.0.1:8000
+.venv-docs/bin/mkdocs serve
+
+# Strict static build; output is site/index.html
+.venv-docs/bin/mkdocs build --strict
+```
+
+After refreshing the local GitNexus Wiki, synchronize only its generated pages into the tracked documentation tree:
+
+```bash
+python3 scripts/sync_gitnexus_wiki.py
+python3 scripts/sync_gitnexus_wiki.py --check
+```
+
+Do not manually edit `docs/generated/gitnexus/`; the synchronization script can overwrite it. Human-owned content lives in `docs/business/`, `docs/architecture/`, and `docs/review/`. See `docs/contributing.md` for the evidence and maintenance rules.
+
+## Local Code-Intelligence Wiki And Graphs
+
+The current branch has local code-intelligence artifacts for repository exploration:
+
+- GitNexus source Wiki: `.gitnexus/wiki/index.html` (Chinese, generated from the GitNexus graph; local and replaceable).
+- GitNexus index: `.gitnexus/`.
+- Graphify index: `graphify-out/graph.json`.
+- Graphify tree viewer: `graphify-out/GRAPH_TREE.html`.
+
+Regenerate them after relevant project changes. For branch-only GitNexus/Wiki output, run the GitNexus commands from a clean detached worktree at the target commit; `gitnexus analyze` indexes the working tree, including untracked files that are not ignored.
+
+```bash
+gitnexus analyze --no-stats
+gitnexus wiki --provider custom --model deepseek-chat --base-url https://api.deepseek.com/v1 --api-key "$DEEPSEEK_API_KEY" --lang chinese
+
+graphify_source=$(mktemp -d /tmp/capnograph-graphify.XXXXXX)
+git ls-files -z | rsync -a --from0 --files-from=- ./ "$graphify_source"/
+graphify update "$graphify_source" --no-cluster
+mkdir -p graphify-out
+cp "$graphify_source/graphify-out/graph.json" graphify-out/graph.json
+graphify tree --graph graphify-out/graph.json --output graphify-out/GRAPH_TREE.html --root . --label CapnoGraph
+```
+
+Graphify is generated from a tracked-file snapshot because a direct scan of this working tree can include local Gradle caches and build outputs.
+
+These code-intelligence artifacts are intentionally local and ignored by Git. The durable MkDocs sources under `docs/` are tracked separately. GitNexus also writes its managed agent guidance to `AGENTS.md`, `CLAUDE.md`, and `.claude/skills/gitnexus/`.
 
 ## Packaging
 
