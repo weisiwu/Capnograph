@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CapnoEasy / CapnoGraph 三套全新 App 设计方向</title>
+  <style>
+    :root {
+      --page-bg: #eef2f3;
+      --ink: #17242c;
+      --muted: #62727b;
+      --line: rgba(23, 36, 44, .13);
+      --panel: rgba(255, 255, 255, .82);
+      --shadow: 0 22px 54px rgba(16, 27, 35, .15);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, #f9fbfb 0, #eef3f3 540px),
+        var(--page-bg);
+    }
+
+    button { font: inherit; }
+
+    .page-head {
+      max-width: 1560px;
+      margin: 0 auto;
+      padding: 34px 28px 18px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      color: #48616d;
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 34px;
+      height: 2px;
+      background: #2f7582;
+    }
+
+    h1 {
+      max-width: 1100px;
+      margin: 0;
+      font-size: clamp(30px, 4vw, 50px);
+      line-height: 1.06;
+      letter-spacing: 0;
+    }
+
+    .intro {
+      max-width: 1050px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.72;
+    }
+
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .summary span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 12px;
+      background: var(--panel);
+      color: #435760;
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .version {
+      max-width: 1560px;
+      margin: 0 auto 42px;
+      padding: 0 28px;
+    }
+
+    .version-head {
+      display: grid;
+      grid-template-columns: 1fr minmax(420px, 620px);
+      gap: 22px;
+      align-items: end;
+      padding: 28px 0 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .version-title {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .version-title small {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 520;
+      line-height: 1.5;
+    }
+
+    .tokens {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .tokens span {
+      min-height: 50px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: var(--panel);
+      color: #4e626c;
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 760;
+    }
+
+    .phone-strip {
+      display: grid;
+      grid-template-columns: repeat(16, 390px);
+      gap: 18px;
+      overflow-x: auto;
+      padding: 4px 0 18px;
+      scroll-snap-type: x proximity;
+    }
+
+    .phone {
+      position: relative;
+      width: 390px;
+      height: 844px;
+      overflow: hidden;
+      border: 10px solid var(--bezel);
+      border-radius: 34px;
+      background: var(--screen);
+      box-shadow: var(--shadow);
+      scroll-snap-align: start;
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      z-index: 20;
+      top: 8px;
+      left: 50%;
+      width: 96px;
+      height: 24px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: var(--bezel);
+      opacity: .94;
+    }
+
+    .screen {
+      min-height: 100%;
+      padding: 26px 16px 14px;
+      background: var(--screen);
+      color: var(--text);
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 22px;
+      margin-bottom: 10px;
+      color: var(--mutedPhone);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .icons {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .signal {
+      width: 18px;
+      height: 11px;
+      background:
+        linear-gradient(90deg, currentColor 0 3px, transparent 3px 5px, currentColor 5px 8px, transparent 8px 10px, currentColor 10px 14px, transparent 14px);
+      opacity: .76;
+    }
+
+    .battery {
+      position: relative;
+      width: 24px;
+      height: 11px;
+      border: 1.5px solid currentColor;
+      border-radius: 3px;
+    }
+
+    .battery::before {
+      content: "";
+      position: absolute;
+      top: 3px;
+      right: -4px;
+      width: 2px;
+      height: 5px;
+      border-radius: 0 2px 2px 0;
+      background: currentColor;
+    }
+
+    .page-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 26px;
+      margin-bottom: 8px;
+      color: var(--mutedPhone);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .page-label b {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 20px;
+      border-radius: 6px;
+      background: var(--surface2);
+      color: var(--accent);
+      font-size: 10px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .topbar h2 {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      margin-top: 4px;
+      color: var(--mutedPhone);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .icon-btn {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--stroke);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 900;
+    }
+
+    .panel,
+    .metric,
+    .row,
+    .paper,
+    .tile,
+    .field,
+    .alert-card {
+      border: 1px solid var(--stroke);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .panel { padding: 12px; }
+
+    .compact {
+      padding: 10px;
+    }
+
+    .wave-panel {
+      min-height: var(--waveH, 194px);
+      padding: 12px;
+      overflow: hidden;
+      border: 1px solid var(--stroke);
+      border-radius: 8px;
+      background: var(--chartBg);
+    }
+
+    .chart-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--mutedPhone);
+      font-size: 11px;
+      font-weight: 820;
+    }
+
+    .chart-head b {
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    svg.chart {
+      display: block;
+      width: 100%;
+      height: var(--chartH, 144px);
+    }
+
+    .grid-line { stroke: var(--grid); stroke-width: 1; }
+
+    .wave-line {
+      fill: none;
+      stroke: var(--wave);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .trend-fill {
+      fill: color-mix(in srgb, var(--wave) 14%, transparent);
+      stroke: none;
+    }
+
+    .axis {
+      fill: var(--mutedPhone);
+      font-size: 9px;
+      font-weight: 850;
+    }
+
+    .alarm-band {
+      fill: color-mix(in srgb, var(--danger) 15%, transparent);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .metric {
+      min-height: 82px;
+      padding: 10px;
+    }
+
+    .metric small {
+      display: block;
+      color: var(--mutedPhone);
+      font-size: 10px;
+      font-weight: 820;
+    }
+
+    .metric b {
+      display: block;
+      margin-top: 6px;
+      color: var(--metric);
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 6px;
+      color: var(--mutedPhone);
+      font-size: 10px;
+      line-height: 1.25;
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 54px;
+      padding: 10px;
+    }
+
+    .row h3 {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .row p {
+      margin: 4px 0 0;
+      color: var(--mutedPhone);
+      font-size: 10px;
+      line-height: 1.3;
+    }
+
+    .row > b {
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    .ico {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--surface2);
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 950;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .field {
+      min-height: 60px;
+      padding: 10px;
+    }
+
+    .field small {
+      display: block;
+      color: var(--mutedPhone);
+      font-size: 10px;
+      font-weight: 820;
+    }
+
+    .field b {
+      display: block;
+      margin-top: 7px;
+      font-size: 14px;
+      line-height: 1.1;
+    }
+
+    .summary-line {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .summary-line span {
+      display: grid;
+      place-items: center;
+      min-height: 31px;
+      border-radius: 7px;
+      background: var(--surface2);
+      color: var(--metric);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      min-height: 36px;
+      margin-bottom: 8px;
+      padding: 4px;
+      border: 1px solid var(--stroke);
+      border-radius: 8px;
+      background: var(--surface2);
+    }
+
+    .seg span {
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      color: var(--mutedPhone);
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .seg .active {
+      background: var(--surface);
+      color: var(--accent);
+      box-shadow: 0 4px 12px rgba(14, 35, 45, .08);
+    }
+
+    .primary,
+    .ghost {
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      font-weight: 900;
+    }
+
+    .primary {
+      min-height: 48px;
+      background: var(--accent);
+      color: var(--accentText);
+      box-shadow: 0 12px 25px color-mix(in srgb, var(--accent) 23%, transparent);
+    }
+
+    .ghost {
+      min-height: 46px;
+      border: 1px solid var(--stroke);
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .bottom-nav {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-top: 10px;
+      border-top: 1px solid var(--stroke);
+      padding-top: 8px;
+    }
+
+    .bottom-nav span {
+      display: grid;
+      place-items: center;
+      min-height: 42px;
+      color: var(--mutedPhone);
+      font-size: 10px;
+      font-weight: 850;
+    }
+
+    .bottom-nav .on { color: var(--accent); }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .alert-card {
+      padding: 12px;
+      border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+      background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+    }
+
+    .alert-card strong {
+      display: block;
+      color: var(--danger);
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .alert-card p {
+      margin: 7px 0 0;
+      color: var(--mutedPhone);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .paper {
+      min-height: 502px;
+      padding: 14px;
+      background: var(--paper);
+      color: #17262d;
+      box-shadow: 0 14px 32px rgba(0, 0, 0, .08);
+    }
+
+    .paper h3 {
+      margin: 0;
+      padding-bottom: 9px;
+      border-bottom: 2px solid currentColor;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .paper-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin: 10px 0;
+    }
+
+    .paper-field {
+      min-height: 36px;
+      border-bottom: 1px solid rgba(23, 38, 45, .22);
+      font-size: 10px;
+      line-height: 1.3;
+    }
+
+    .paper-field b {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+    }
+
+    .thermal {
+      max-width: 254px;
+      margin: 0 auto;
+      min-height: 536px;
+      padding: 14px 12px;
+      border-radius: 4px;
+      background: #fffdf7;
+      color: #1b2327;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .12);
+    }
+
+    .thermal h3 {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .thermal .dash {
+      margin: 8px 0;
+      border-top: 1px dashed #555;
+    }
+
+    .range {
+      height: 7px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--danger) 0 18%, var(--accent) 18% 74%, #e8aa2f 74% 100%);
+    }
+
+    .tile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .tile {
+      min-height: 68px;
+      padding: 10px;
+    }
+
+    .tile small {
+      display: block;
+      color: var(--mutedPhone);
+      font-size: 10px;
+      font-weight: 820;
+    }
+
+    .tile b {
+      display: block;
+      margin-top: 7px;
+      color: var(--metric);
+      font-size: 18px;
+      line-height: 1.05;
+    }
+
+    .variant-native {
+      --bezel: #101820;
+      --screen: #f5f7fa;
+      --text: #14212a;
+      --mutedPhone: #687882;
+      --surface: #ffffff;
+      --surface2: #edf1f5;
+      --stroke: rgba(31, 46, 57, .13);
+      --accent: #1976d2;
+      --accentText: #ffffff;
+      --metric: #125c9e;
+      --danger: #d8463c;
+      --wave: #1976d2;
+      --grid: rgba(31, 46, 57, .13);
+      --chartBg: #ffffff;
+      --paper: #ffffff;
+    }
+
+    .variant-material {
+      --bezel: #17212a;
+      --screen: #f7faf8;
+      --text: #172521;
+      --mutedPhone: #65766f;
+      --surface: #ffffff;
+      --surface2: #e9f2ed;
+      --stroke: rgba(31, 64, 50, .14);
+      --accent: #26735d;
+      --accentText: #ffffff;
+      --metric: #1f6c57;
+      --danger: #c24c43;
+      --wave: #26735d;
+      --grid: rgba(31, 64, 50, .13);
+      --chartBg: #ffffff;
+      --paper: #fffefa;
+    }
+
+    .variant-console {
+      --bezel: #050b0d;
+      --screen: #0e171a;
+      --text: #e7f2ed;
+      --mutedPhone: #90a7a0;
+      --surface: #142125;
+      --surface2: #1b2c31;
+      --stroke: rgba(169, 210, 199, .17);
+      --accent: #63d7b2;
+      --accentText: #061713;
+      --metric: #77e7c3;
+      --danger: #ff6b61;
+      --wave: #72e1bd;
+      --grid: rgba(169, 210, 199, .16);
+      --chartBg: #101b1f;
+      --paper: #f5faf6;
+    }
+
+    .variant-native .topbar h2 { font-size: 24px; }
+    .variant-material .topbar { align-items: center; }
+    .variant-material .page-label b { border-radius: 999px; }
+    .variant-console .topbar h2 { font-size: 18px; text-transform: uppercase; }
+    .variant-console .phone { border-radius: 24px; }
+    .variant-console .phone::before { width: 78px; height: 16px; top: 10px; }
+    .variant-console .metrics { grid-template-columns: 1.1fr .9fr .9fr; }
+    .variant-console .metric b { font-size: 30px; }
+    .variant-console .bottom-nav {
+      border: 1px solid var(--stroke);
+      border-radius: 8px;
+      padding: 4px;
+      background: var(--surface);
+    }
+
+    @media (max-width: 900px) {
+      .page-head, .version { padding-left: 16px; padding-right: 16px; }
+      .version-head { grid-template-columns: 1fr; }
+      .tokens { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="page-head">
+    <div class="eyebrow">OpenDesign redesign board · CapnoEasy / CapnoGraph</div>
+    <h1>三套全新 App 设计方向：回到规范与产品架构</h1>
+    <p class="intro">本稿基于 CapnoEasy 设计规范与 UI Kit 方向重新出发。三套方案分别借鉴 Apple/HIG + NHS、Material 3 + Ant Design Mobile、FDA/IEC 人因安全 + Carbon Data Visualization，重点比较信息架构、组件语言、页面密度和医疗可信度，而不是只换颜色。</p>
+    <div class="summary">
+      <span>3 套方向 · 48 张手机页面</span>
+      <span>每套覆盖正式 App 16 个页面</span>
+      <span>监测 / 蓝牙 / 患者 / 历史 / 报告 / 设置</span>
+      <span>CO2 波形、ETCO2/RR、报警区间、PDF 与热敏打印</span>
+    </div>
+  </header>
+
+  <main id="board"></main>
+
+  <script>
+    const pages = [
+      "实时监测首页", "记录中监测", "高优报警详情", "设备搜索",
+      "设备详情/连接", "校零/模块准备", "患者信息录入", "记录结束保存",
+      "历史记录列表", "历史详情趋势", "CO2 波形分页", "PDF 报告预览",
+      "热敏打印预览", "报警参数", "显示参数", "模块/系统/打印"
+    ];
+
+    const variants = [
+      {
+        id: "native",
+        cls: "variant-native",
+        name: "A. iOS Clinical Native",
+        subtitle: "参考 Apple HIG 与 NHS。轻量、克制、接近 iOS 原生医疗工具，强调清晰层级、表单可信度和安全确认。",
+        tokens: ["导航：iOS 式顶部标题 + 稳定底栏", "页面密度：中低，优先可读性和低误触", "适合：iPhone 原生、报告与患者信息占比较高"],
+        patient: ["王晴", "女", "32岁", "ID 0618", "门诊", "观察位 2"],
+        device: "CapnoEasy-BLE",
+        et: "36",
+        rr: "18"
+      },
+      {
+        id: "material",
+        cls: "variant-material",
+        name: "B. Material Medical Operations",
+        subtitle: "参考 Material 3 与 Ant Design Mobile。跨平台、组件化、业务效率高，适合设备连接、历史、参数和报告模块长期扩展。",
+        tokens: ["导航：业务型底栏 + 分段筛选 + 状态卡", "页面密度：中等，组件复用与工程落地优先", "适合：Android / iOS / H5 多端统一"],
+        patient: ["陈宁", "女", "41岁", "ID 240705", "内镜中心", "复苏 5"],
+        device: "CAPNO-M3-18",
+        et: "39",
+        rr: "16"
+      },
+      {
+        id: "console",
+        cls: "variant-console",
+        name: "C. Monitoring & Report Console",
+        subtitle: "参考医疗器械人因安全与 Carbon 数据可视化。强调波形、趋势、报警区间、证据链和参数安全，更像专业监测控制台。",
+        tokens: ["导航：监测控制台 + 状态托盘", "页面密度：高，突出数据证据和报警处理", "适合：专业监测、复盘、质控和报告审核"],
+        patient: ["赵航", "男", "58岁", "ID 880126", "麻醉科", "PACU 03"],
+        device: "CAPNO-QC-12",
+        et: "42",
+        rr: "14"
+      }
+    ];
+
+    function status() {
+      return `<div class="status"><span>09:41</span><span class="icons"><i class="signal"></i><span>5G</span><i class="battery"></i></span></div>`;
+    }
+
+    function label(i, title) {
+      return `<div class="page-label"><b>${String(i + 1).padStart(2, "0")}</b><span>${title}</span></div>`;
+    }
+
+    function topbar(title, sub = "CapnoGraph") {
+      return `<div class="topbar"><div><h2>${title}</h2><div class="sub">${sub}</div></div><button class="icon-btn">···</button></div>`;
+    }
+
+    function wave(kind = 0) {
+      const paths = [
+        "M12 104 C30 104 31 42 49 42 C66 42 66 104 84 104 C102 104 103 42 120 42 C138 42 138 104 156 104 C174 104 174 42 192 42 C210 42 210 104 228 104 C246 104 246 42 264 42 C282 42 282 104 300 104",
+        "M12 112 C28 112 31 56 48 56 C64 56 68 100 82 100 C98 100 100 47 116 47 C134 47 139 116 158 116 C176 116 178 61 194 61 C212 61 215 101 232 101 C250 101 250 49 268 49 C286 49 288 112 306 112",
+        "M12 96 C28 96 33 64 48 64 C62 64 68 96 82 96 C99 96 102 42 118 42 C136 42 139 112 156 112 C174 112 178 72 194 72 C211 72 216 99 232 99 C249 99 253 55 268 55 C288 55 292 105 306 105"
+      ];
+      return `<svg class="chart" viewBox="0 0 318 150" aria-label="CO2 波形">
+        <rect class="alarm-band" x="202" y="21" width="62" height="112" rx="6"></rect>
+        <line class="grid-line" x1="8" y1="24" x2="310" y2="24"></line>
+        <line class="grid-line" x1="8" y1="64" x2="310" y2="64"></line>
+        <line class="grid-line" x1="8" y1="104" x2="310" y2="104"></line>
+        <line class="grid-line" x1="8" y1="136" x2="310" y2="136"></line>
+        <text class="axis" x="8" y="18">60</text><text class="axis" x="8" y="58">40</text><text class="axis" x="8" y="98">20</text><text class="axis" x="8" y="132">0</text>
+        <path class="wave-line" d="${paths[kind % paths.length]}"></path>
+      </svg>`;
+    }
+
+    function trend(kind = 0) {
+      const line = kind === 2
+        ? "M12 82 C50 60 70 66 102 44 S164 38 194 58 S236 80 306 34"
+        : "M12 92 C46 70 68 82 94 62 S146 36 178 56 S226 104 252 66 S286 48 306 54";
+      return `<svg class="chart" viewBox="0 0 318 116" aria-label="趋势图">
+        <rect class="alarm-band" x="206" y="15" width="58" height="82" rx="7"></rect>
+        <line class="grid-line" x1="8" y1="20" x2="310" y2="20"></line>
+        <line class="grid-line" x1="8" y1="56" x2="310" y2="56"></line>
+        <line class="grid-line" x1="8" y1="92" x2="310" y2="92"></line>
+        <path class="trend-fill" d="${line} L306 108 L12 108 Z"></path>
+        <path class="wave-line" d="${line}"></path>
+      </svg>`;
+    }
+
+    function metrics(v) {
+      return `<div class="metrics">
+        <div class="metric"><small>ETCO2</small><b>${v.et}</b><span>mmHg · 35-45</span></div>
+        <div class="metric"><small>RR</small><b>${v.rr}</b><span>bpm · 12-20</span></div>
+        <div class="metric"><small>记录</small><b>08:26</b><span>波形有效 96%</span></div>
+      </div>`;
+    }
+
+    function bottom(active) {
+      const items = ["附近设备", "主页", "历史", "设置"];
+      return `<nav class="bottom-nav">${items.map(item => `<span class="${active === item ? "on" : ""}">${item}</span>`).join("")}</nav>`;
+    }
+
+    function workbar(v, state) {
+      return `<div class="panel compact" style="margin-bottom:8px">
+        <div class="chart-head"><b>${v.device}</b><span>${state}</span></div>
+        <div class="summary-line"><span>ETCO2 ${v.et}</span><span>RR ${v.rr}</span><span>波形 96%</span></div>
+      </div>`;
+    }
+
+    function form(v) {
+      const labels = ["姓名", "性别", "年龄", "ID", "科室", "床号"];
+      return `<div class="form-grid">${labels.map((label, i) => `<div class="field"><small>${label}</small><b>${v.patient[i]}</b></div>`).join("")}</div>`;
+    }
+
+    function row(icon, title, note, right = "›") {
+      return `<div class="row"><span class="ico">${icon}</span><div><h3>${title}</h3><p>${note}</p></div><b>${right}</b></div>`;
+    }
+
+    function paper(v, kind = 0) {
+      const labels = ["姓名", "性别", "年龄", "ID号", "科室", "床号"];
+      return `<div class="paper"><h3>呼末二氧化碳监测报告</h3>
+        <div class="paper-grid">${labels.map((label, i) => `<div class="paper-field">${label}<b>${v.patient[i]}</b></div>`).join("")}</div>
+        <div class="paper-grid"><div class="paper-field">ETCO2 均值<b>${v.et} mmHg</b></div><div class="paper-field">RR 均值<b>${v.rr} bpm</b></div><div class="paper-field">记录时长<b>16 分钟</b></div></div>
+        <div class="wave-panel" style="--waveH:132px;--chartH:96px">${trend(kind)}</div>
+        <div class="wave-panel" style="--waveH:150px;--chartH:112px;margin-top:8px">${wave(kind + 1)}</div>
+      </div>`;
+    }
+
+    function thermal(v) {
+      return `<div class="thermal"><h3>CapnoGraph</h3><div class="dash"></div>
+        姓名 ${v.patient[0]}<br>性别 ${v.patient[1]}  年龄 ${v.patient[2]}<br>ID ${v.patient[3]}<br>科室 ${v.patient[4]}<br>床号 ${v.patient[5]}
+        <div class="dash"></div>ETCO2 AVG ${v.et} mmHg<br>RR AVG ${v.rr} bpm<br>报警 ETCO2 下限 1 次<br>接头污染 0 次
+        <div class="dash"></div><svg class="chart" viewBox="0 0 220 110"><line class="grid-line" x1="5" y1="30" x2="215" y2="30"></line><line class="grid-line" x1="5" y1="70" x2="215" y2="70"></line><path class="wave-line" d="M8 78 C22 78 25 36 39 36 C52 36 55 78 68 78 C82 78 86 38 99 38 C114 38 116 78 130 78 C144 78 146 35 160 35 C174 35 178 78 192 78 C206 78 208 48 216 48"></path></svg>
+        <div class="dash"></div>PDF 已生成  热敏打印待确认</div>`;
+    }
+
+    function settings(v, i, flavor) {
+      const heads = {
+        13: ["报警参数", "ETCO2 35-45 · RR 12-20 · 窒息 20s"],
+        14: ["显示参数", "CO2 单位、量程、波形速度"],
+        15: ["模块 / 系统 / 打印", "模块参数、屏幕常亮、PDF 与热敏打印"]
+      };
+      const [title, sub] = heads[i] || ["设置", "参数配置"];
+      const extra = flavor === "console"
+        ? row("审", "修改审计", "阈值、单位、打印模板均写入记录", "查看")
+        : row("隐", "本地隐私", "患者 ID 与床号仅用于本机报告", "本机");
+      return `${topbar(title, sub)}
+        <div class="list">
+          ${row("!", "ETCO2 报警范围", "下限 35 mmHg · 上限 45 mmHg", "编辑")}
+          ${row("R", "RR 报警范围", "下限 12 bpm · 上限 20 bpm", "编辑")}
+          ${row("CO2", "显示单位 / 量程", "mmHg · 0-60 · 速度 6.25mm/s", "编辑")}
+          ${row("M", "模块参数", "大气压 101.3 kPa · O2 补偿 21%", "编辑")}
+          ${row("P", "打印设置", "医院名称 · 水印 12% · 正式报告", "编辑")}
+          ${extra}
+        </div>
+        <div class="panel" style="margin-top:8px"><div class="chart-head"><b>参数安全区间</b><span>异常高亮</span></div><div class="range"></div></div>
+        ${bottom("设置")}`;
+    }
+
+    function nativeContent(v, i) {
+      const title = pages[i];
+      if ([0, 1].includes(i)) return `${topbar("CapnoGraph", `${v.device} · ${i === 1 ? "记录中 08:26" : "已连接"}`)}${workbar(v, i === 1 ? "记录中" : "待记录")}<div class="wave-panel" style="--waveH:${i === 1 ? 230 : 196}px;--chartH:${i === 1 ? 176 : 144}px">${wave(i)}</div>${metrics(v)}<button class="primary" style="margin-top:10px">${i === 1 ? "结束记录" : "开始记录"}</button>${bottom("主页")}`;
+      if (i === 2) return `${topbar("报警详情", "ETCO2 低于阈值")}${workbar(v, "需确认")}<div class="alert-card"><strong>ETCO2 低于 35 mmHg</strong><p>连续 22 秒低值。请复核通气状态、采样管和接头。</p></div><div class="wave-panel" style="margin-top:8px;--waveH:194px;--chartH:142px">${wave(1)}</div>${row("记", "处理记录", "声音与震动已触发，等待确认", "确认")}${bottom("主页")}`;
+      if ([3, 4, 5].includes(i)) return `${topbar(title, "蓝牙连接与模块准备")}<div class="list">${row("BT", v.device, "BLE · 信号强 · 电量 82%", i === 3 ? "连接" : "已连")}${row("C", "CapnoEasy-Classic", "经典蓝牙 · 最近连接 08:12", "连接")}${i === 5 ? row("0", "校零", "大气压 101.3 kPa · O2 补偿 21%", "开始") : row("管", "采样管 / 接头", "接头有效 · 污染风险低", "正常")}${row("安", "安全检查", "模块状态正常，报告模板可用", "通过")}</div><button class="primary" style="margin-top:10px">${i === 5 ? "完成准备" : "连接设备"}</button>${bottom("附近设备")}`;
+      if (i === 6) return `${topbar("患者信息", "用于本次记录和报告归档")}${form(v)}${row("隐", "隐私说明", "ID 号、床号仅用于本地报告", "查看")}<button class="primary" style="margin-top:10px">保存</button>${bottom("主页")}`;
+      if (i === 7) return `${topbar("保存记录", "16 分钟 · 1 个报警事件")}${metrics(v)}${row("✓", "记录已保存", "波形有效率 96% · 已归档到历史", "详情")}${row("PDF", "报告预览", "PDF 与热敏打印均可用", "预览")}${bottom("历史")}`;
+      if ([8, 9, 10].includes(i)) return `${topbar(title, "历史记录与趋势")}${seg("全部", "今日", "已导出")}${row("王", "王晴", "32岁 · 女 · 09:12-09:28", "打开")}${row("陈", "陈宁", "41岁 · 女 · 08:20-08:32", "打开")}<div class="wave-panel" style="margin-top:8px;--waveH:178px;--chartH:132px">${i === 10 ? wave(2) : trend(0)}</div>${bottom("历史")}`;
+      if ([11, 12].includes(i)) return `${topbar(title, "报告预览与交付")}${i === 11 ? paper(v, 0) : thermal(v)}<div class="action-row"><button class="primary">导出PDF</button><button class="ghost">热敏打印</button></div>${bottom("历史")}`;
+      return settings(v, i, "native");
+    }
+
+    function materialContent(v, i) {
+      const title = pages[i];
+      if ([0, 1].includes(i)) return `${topbar("监测工作台", `${v.device} · ${i === 1 ? "自动保存中" : "准备就绪"}`)}<div class="tile-grid"><div class="tile"><small>ETCO2</small><b>${v.et} mmHg</b></div><div class="tile"><small>RR</small><b>${v.rr} bpm</b></div></div><div class="wave-panel" style="margin-top:8px;--waveH:${i === 1 ? 232 : 198}px;--chartH:${i === 1 ? 180 : 146}px">${wave(i + 1)}</div>${row("质", "波形质量", "有效率 96% · 平台期完整", "查看")}<button class="primary" style="margin-top:10px">${i === 1 ? "结束并保存" : "开始记录"}</button>${bottom("主页")}`;
+      if (i === 2) return `${topbar("高优报警", "事件、原因与操作建议")}${seg("当前", "趋势", "记录")}<div class="alert-card"><strong>ETCO2 下限报警</strong><p>持续 22 秒。优先检查采样管、接头密封和患者通气状态。</p></div>${row("A", "报警事件", "09:18:24 · ETCO2 低于 35 mmHg", "处理")}<div class="wave-panel" style="margin-top:8px;--waveH:186px;--chartH:136px">${wave(2)}</div>${bottom("主页")}`;
+      if ([3, 4, 5].includes(i)) return `${topbar(title, "设备运营状态")}<div class="panel compact"><div class="chart-head"><b>${v.device}</b><span>推荐连接</span></div><div class="summary-line"><span>BLE</span><span>82%</span><span>-48dBm</span></div></div><div class="list">${row("1", v.device, "BLE · 信号强 · 固件 1.8.2", i === 4 ? "已连" : "连接")}${row("2", "CapnoEasy-Classic", "经典蓝牙 · 最近连接 08:12", "连接")}${i === 5 ? row("0", "校零", "预计 8 秒 · 保持采样管通空气", "开始") : row("管", "接头检测", "接头有效 · 污染风险低", "通过")}</div><button class="primary" style="margin-top:10px">${i === 5 ? "完成模块准备" : "连接并检查"}</button>${bottom("附近设备")}`;
+      if (i === 6) return `${topbar("患者信息", "快速录入 / 扫码 / 最近患者")}${seg("手动", "扫码", "最近")}${form(v)}<button class="primary" style="margin-top:10px">保存患者</button>${bottom("主页")}`;
+      if (i === 7) return `${topbar("记录结束", "自动生成报告草稿")}${metrics(v)}${row("✓", "病例记录", "已保存 · 波形有效率 97%", "打开")}${row("签", "操作备注", "复苏观察，无需补充", "编辑")}${row("报", "报告交付", "PDF / 热敏打印 / 分享", "选择")}${bottom("历史")}`;
+      if ([8, 9, 10].includes(i)) return `${topbar(title, "记录、趋势与导出状态")}${seg("全部", "待导出", "已导出")}${row("王", "王晴", "09:12-09:28 · PDF 已导出", "打开")}${row("陈", "陈宁", "08:20-08:32 · 待导出", "打开")}${row("赵", "赵航", "昨日 15:02-15:24 · 已打印", "打开")}<div class="wave-panel" style="margin-top:8px;--waveH:160px;--chartH:116px">${i === 10 ? wave(0) : trend(1)}</div>${bottom("历史")}`;
+      if ([11, 12].includes(i)) return `${topbar(title, "报告组件化交付")}${i === 11 ? paper(v, 1) : thermal(v)}<div class="action-row"><button class="primary">导出PDF</button><button class="ghost">热敏打印</button></div>${bottom("历史")}`;
+      return settings(v, i, "material");
+    }
+
+    function consoleContent(v, i) {
+      const title = pages[i];
+      if ([0, 1].includes(i)) return `${topbar(i === 1 ? "RECORDING" : "LIVE MONITOR", `${v.device} · ${i === 1 ? "T+08:26" : "STANDBY"}`)}<div class="wave-panel" style="--waveH:${i === 1 ? 282 : 236}px;--chartH:${i === 1 ? 226 : 182}px">${wave(i)}</div>${metrics(v)}${row("EV", "事件", "报警 1 · 接头污染 0 · 数据完整", "日志")}<button class="primary" style="margin-top:10px">${i === 1 ? "STOP / SAVE" : "START RECORD"}</button>${bottom("主页")}`;
+      if (i === 2) return `${topbar("ALARM REVIEW", "ETCO2 LOW · HIGH PRIORITY")}<div class="alert-card"><strong>ETCO2 < 35 mmHg · 22s</strong><p>确认前保持声音与震动。检查通气、采样管、接头密封和模块状态。</p></div><div class="wave-panel" style="margin-top:8px;--waveH:236px;--chartH:184px">${wave(1)}</div>${row("ACK", "确认与处理", "处理动作将写入报告事件链", "确认")}${bottom("主页")}`;
+      if ([3, 4, 5].includes(i)) return `${topbar(title.toUpperCase(), "DEVICE / MODULE / ZERO")}<div class="tile-grid"><div class="tile"><small>DEVICE</small><b>${v.device}</b></div><div class="tile"><small>POWER</small><b>64%</b></div><div class="tile"><small>PRESSURE</small><b>101.3</b></div><div class="tile"><small>LINE</small><b>PASS</b></div></div><div class="list" style="margin-top:8px">${row("BT", "BLE 通道", "信号 -48dBm · 自动重连开启", "在线")}${i === 5 ? row("ZERO", "校零记录", "今日 09:02 · 预计 8 秒", "开始") : row("TUBE", "采样管检测", "接头有效 · 污染风险低", "通过")}</div>${bottom("附近设备")}`;
+      if (i === 6) return `${topbar("PATIENT INDEX", "报告归档字段")}${form(v)}${row("LOCK", "本地隐私", "ID 与床号不会进入外部服务", "本机")}${bottom("主页")}`;
+      if (i === 7) return `${topbar("SAVE & EVIDENCE", "自动归档 · 事件链完整")}${metrics(v)}${row("OK", "记录完整度", "96 / 100 · 平台期识别完整", "查看")}${row("PDF", "报告证据", "趋势、波形、事件已入报告", "预览")}${bottom("历史")}`;
+      if ([8, 9, 10].includes(i)) return `${topbar(title.toUpperCase(), "HISTORY / TREND / EVENTS")}${seg("全部", "异常", "已导出")}${row("赵", "赵航", "58岁 · 09:12-09:28 · 96分", "打开")}${row("陈", "陈宁", "41岁 · 08:20-08:32 · 91分", "打开")}<div class="wave-panel" style="margin-top:8px;--waveH:198px;--chartH:150px">${i === 10 ? wave(2) : trend(2)}</div>${bottom("历史")}`;
+      if ([11, 12].includes(i)) return `${topbar(title.toUpperCase(), "REPORT / PRINT")} ${i === 11 ? paper(v, 2) : thermal(v)}<div class="action-row"><button class="primary">批准导出</button><button class="ghost">打印</button></div>${bottom("历史")}`;
+      return settings(v, i, "console");
+    }
+
+    function seg(...items) {
+      return `<div class="seg">${items.map((item, i) => `<span class="${i === 0 ? "active" : ""}">${item}</span>`).join("")}</div>`;
+    }
+
+    function content(v, i) {
+      if (v.id === "native") return nativeContent(v, i);
+      if (v.id === "material") return materialContent(v, i);
+      return consoleContent(v, i);
+    }
+
+    function screen(v, i) {
+      return `<article class="phone ${v.cls}"><div class="screen">${status()}${label(i, pages[i])}${content(v, i)}</div></article>`;
+    }
+
+    const board = document.getElementById("board");
+    board.innerHTML = variants.map(v => `
+      <section class="version">
+        <div class="version-head">
+          <h2 class="version-title">${v.name}<small>${v.subtitle}</small></h2>
+          <div class="tokens">${v.tokens.map(t => `<span>${t}</span>`).join("")}</div>
+        </div>
+        <div class="phone-strip">${pages.map((_, i) => screen(v, i)).join("")}</div>
+      </section>
+    `).join("");
+  </script>
+</body>
+</html>
