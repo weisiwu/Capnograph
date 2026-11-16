@@ -1,0 +1,42 @@
+name: CapnoEasy Android diagnostics APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: |
+            apps/android/**/*.gradle.kts
+            apps/android/gradle/libs.versions.toml
+            apps/android/gradle/wrapper/gradle-wrapper.properties
+      - name: Prepare Android SDK
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Build diagnostic APK
+        working-directory: apps/android
+        run: bash ./gradlew --no-daemon :app:assembleDebug -PcapnoSlsWebTracking=true
+      - name: Verify APK signature and prepare artifact
+        run: |
+          apk=apps/android/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify "$apk"
+          cp "$apk" "CapnoEasy-android-diagnostics-${GITHUB_SHA:0:8}.apk"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: capnoeasy-android-diagnostics
+          path: CapnoEasy-android-diagnostics-*.apk
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
