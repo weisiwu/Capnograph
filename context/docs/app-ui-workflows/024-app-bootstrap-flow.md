@@ -31,7 +31,7 @@ app startup, 应用启动, 初始化
 
 ## 注意事项
 
-Hilt Application、ErrorReporter/Bugly、数据库、备份 helper、BaseActivity 公共初始化；BaseActivity 会把当前页面和 Activity 写入错误上报上下文。
+启动时依次初始化 Hilt Application、错误上报和数据库，再从闪屏进入主页。Logcat 的 `ErrorReporter` 标签记录 Android API 级别、启动阶段和各阶段累计耗时。Bugly 的 `startup_stage` 保留最近一个检查点，BaseActivity 继续附加当前页面和 Activity。
 
 ## 最小验证方式
 

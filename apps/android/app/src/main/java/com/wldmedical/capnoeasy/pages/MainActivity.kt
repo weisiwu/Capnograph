@@ -1,10 +1,11 @@
 package com.wldmedical.capnoeasy.pages
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.SystemClock
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import com.wldmedical.capnoeasy.kits.ErrorReporter
 import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
+import io.github.weisiwu.slstracker.SlsLogTracker.Level
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
@@ -50,8 +52,10 @@ class MainActivity : BaseActivity() {
         return true
     }
     override fun onCreate(savedInstanceState: Bundle?) {
+        val startedAt = SystemClock.elapsedRealtime()
+        ErrorReporter.startupCheckpoint("MainActivity.on_create", startedAt)
         super.onCreate(savedInstanceState)
-        val context = this
+        ErrorReporter.startupCheckpoint("MainActivity.base_initialized", startedAt)
 
         try {
             val deviceAddress = blueToothKit.getSavedBLEDeviceAddress(this)
@@ -65,25 +69,9 @@ class MainActivity : BaseActivity() {
             ErrorReporter.report(e, "MainActivity.auto_connect_saved_ble")
         }
 
-        if (!Environment.isExternalStorageManager()) {
-            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-            startActivity(intent)
-        }
-
-        // 请求文件管理权限，以便对数据库文件进行备份
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()) {
-                try {
-                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                        data = Uri.parse("package:${context.packageName}")
-                    }
-                    startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION )
-                } catch (e: Exception) {
-                    ErrorReporter.report(e, "MainActivity.request_app_all_files_access")
-                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                    startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION )
-                }
-            }
+        if (savedInstanceState == null && !Environment.isExternalStorageManager()) {
+            ErrorReporter.startupCheckpoint("MainActivity.request_storage_access", startedAt)
+            requestBackupStorageAccess()
         }
 
         try {
@@ -127,6 +115,32 @@ class MainActivity : BaseActivity() {
         } catch (e: Exception) {
             println("wswTest 默认扫描，连接周围打印机异常 : ${e.message}")
             ErrorReporter.report(e, "MainActivity.auto_scan_printer")
+        }
+
+        ErrorReporter.startupCheckpoint("MainActivity.initialized", startedAt)
+    }
+
+    private fun requestBackupStorageAccess() {
+        val appSettings = Intent(
+            Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+            Uri.parse("package:$packageName")
+        )
+        try {
+            startActivityForResult(appSettings, REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+            return
+        } catch (e: ActivityNotFoundException) {
+            ErrorReporter.report(e, "MainActivity.request_app_all_files_access")
+        } catch (e: SecurityException) {
+            ErrorReporter.report(e, "MainActivity.request_app_all_files_access")
+        }
+
+        val allFilesSettings = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+        try {
+            startActivityForResult(allFilesSettings, REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+        } catch (e: ActivityNotFoundException) {
+            ErrorReporter.report(e, "MainActivity.request_all_files_access")
+        } catch (e: SecurityException) {
+            ErrorReporter.report(e, "MainActivity.request_all_files_access")
         }
     }
 
@@ -258,20 +272,23 @@ class MainActivity : BaseActivity() {
     }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION ) {
+        if (requestCode == REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION) {
+            val startedAt = SystemClock.elapsedRealtime()
             if (Environment.isExternalStorageManager()) {
+                ErrorReporter.startupCheckpoint("MainActivity.database_restore_start", startedAt)
                 // 权限已授予，执行数据库恢复操作
                 val application = application as CapnoEasyApplication
 
                 // 访问 dbBackupHelperKit 并调用 restoreDatabase
                 try {
                     application.dbBackupHelperKit.startWork(applicationContext, application.database, true)
+                    ErrorReporter.startupCheckpoint("MainActivity.database_restore_complete", startedAt)
                 } catch (e: Exception) {
                     ErrorReporter.report(e, "MainActivity.restore_database_from_permission_result")
                     throw e
                 }
             } else {
-                // 权限未授予，提示用户或采取其他措施
+                ErrorReporter.startupCheckpoint("MainActivity.storage_access_denied", startedAt, Level.WARN)
                 Toast.makeText(this, "未授予存储权限，无法恢复数据库。", Toast.LENGTH_SHORT).show()
             }
         }

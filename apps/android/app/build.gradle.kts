@@ -9,6 +9,9 @@ plugins {
 val vicoVersion = "2.0.1"
 val debugApplicationId = "com.wldmedical.capnoeasy"
 val appVersionName = "1.2"
+val capnoSlsWebTracking = providers.gradleProperty("capnoSlsWebTracking")
+    .map(String::toBooleanStrict).orElse(false)
+val capnoSlsRelayUrl = providers.gradleProperty("capnoSlsRelayUrl").orElse("")
 val buglyAppId = "06c39f5912"
 
 android {
@@ -21,6 +24,9 @@ android {
         targetSdk = 35
         versionCode = 3
         versionName = appVersionName
+        buildConfigField("boolean", "CAPNO_SLS_WEB_TRACKING", capnoSlsWebTracking.get().toString())
+        val slsRelayUrl = capnoSlsRelayUrl.get().replace("\\", "\\\\").replace("\"", "\\\"")
+        buildConfigField("String", "CAPNO_SLS_RELAY_URL", "\"$slsRelayUrl\"")
         manifestPlaceholders["buglyAppId"] = buglyAppId
         manifestPlaceholders["buglyAppVersion"] = appVersionName
         manifestPlaceholders["buglyEnableDebug"] = "false"
@@ -55,6 +61,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     // https://github.com/bcgit/bc-java/issues/1685

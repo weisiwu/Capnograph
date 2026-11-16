@@ -232,6 +232,16 @@ iOS:
 - Deployment target: iOS `17.0`.
 - Signing uses team `WMK2N92G85` for device/archive builds. Local signing assets remain machine-specific unless intentionally committed.
 
+## Android diagnostics in Alibaba Cloud SLS
+
+CapnoEasy uses the Android/JVM entry point from [aliyun-sls-tracker-sdk](https://github.com/weisiwu/aliyun-sls-tracker-sdk). The application carries an identical source copy so a clean checkout can build independently. Refresh the copy from the SDK's `android/src/main/java/io/github/weisiwu/slstracker/SlsLogTracker.java` when updating the protocol.
+
+The application writes under `capnoeasy-android`. Diagnostics include startup checkpoints, storage authorization, BLE connection and discovery, and exceptions handled by `ErrorReporter`. The SLS payload contains the stage, severity and Android API level, with elapsed time, exception class or status code where relevant.
+
+Build with `-PcapnoSlsWebTracking=true` to enable debug uploads to `app-tracking / app-events`. The live `SlsReadbackTest` takes an instrumentation argument named `slsRunId`. Query `channel:"capnoeasy-android" AND event_name:"sls_smoke_<runId>"` in the Hangzhou Logstore to inspect all four levels.
+
+For a release build, set `-PcapnoSlsRelayUrl=https://<your-relay>/...` to an HTTPS service that accepts the PutWebtracking request body and forwards it to SLS with server-side authorization. A configured release build sends INFO, WARN and ERROR. DEBUG is available in the opted-in debug build.
+
 ## Development Notes
 
 Keep platform-local tooling inside each app directory. Repository-level automation should call into `apps/android` or `apps/ios` through explicit parameters so later platform branches can be added without changing the root workflow.

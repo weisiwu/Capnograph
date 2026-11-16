@@ -4,8 +4,10 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.SystemClock
 import android.util.Log
 import com.tencent.bugly.crashreport.CrashReport
+import io.github.weisiwu.slstracker.SlsLogTracker.Level
 import kotlinx.coroutines.CoroutineExceptionHandler
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -55,8 +57,28 @@ object ErrorReporter {
             setContext("app_channel", if (debug) "debug" else "release")
             setContext("android_sdk", Build.VERSION.SDK_INT.toString())
         }.onFailure {
-            Log.e(TAG, "Failed to initialize crash reporter", it)
+            report(it, "Application.crash_reporter_init_failed")
         }
+    }
+
+    fun startupCheckpoint(stage: String, startedAt: Long, level: Level = Level.INFO) {
+        val elapsedMs = SystemClock.elapsedRealtime() - startedAt
+        val message = "Startup [$stage] elapsedMs=$elapsedMs sdk=${Build.VERSION.SDK_INT}"
+        if (level == Level.WARN) Log.w(TAG, message) else Log.i(TAG, message)
+        CapnoCloudLog.publish(level, stage, elapsedMs = elapsedMs)
+        setContext("startup_stage", stage)
+    }
+
+    fun diagnostic(level: Level, stage: String, statusCode: Int? = null) {
+        val priority = when (level) {
+            Level.DEBUG -> Log.DEBUG
+            Level.INFO -> Log.INFO
+            Level.WARN -> Log.WARN
+            Level.ERROR -> Log.ERROR
+        }
+        Log.println(priority, TAG, "[$stage]" + (statusCode?.let { " status=$it" } ?: ""))
+        if (level >= Level.WARN && isThrottled(stage, DEFAULT_REPORT_THROTTLE_MS)) return
+        CapnoCloudLog.publish(level, stage, statusCode = statusCode)
     }
 
     fun setContext(key: String, value: Any?) {
@@ -101,6 +123,7 @@ object ErrorReporter {
             return
         }
 
+        CapnoCloudLog.publish(Level.ERROR, stage, exceptionType = throwable.javaClass.simpleName)
         val context = appContext ?: return
         if (!initialized.get()) {
             return

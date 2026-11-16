@@ -3,6 +3,7 @@ package com.wldmedical.capnoeasy.pages
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wldmedical.capnoeasy.R
+import com.wldmedical.capnoeasy.kits.ErrorReporter
 import kotlinx.coroutines.delay
 
 /***
@@ -33,10 +35,13 @@ import kotlinx.coroutines.delay
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        val startedAt = SystemClock.elapsedRealtime()
+        ErrorReporter.startupCheckpoint("SplashActivity.on_create", startedAt)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             SplashScreen(onNavigateToMain = {
+                ErrorReporter.startupCheckpoint("SplashActivity.open_main", startedAt)
                 startActivity(Intent(this@SplashActivity, MainActivity::class.java))
                 finish()
             })

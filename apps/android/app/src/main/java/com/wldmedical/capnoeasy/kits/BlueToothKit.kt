@@ -27,6 +27,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import io.github.weisiwu.slstracker.SlsLogTracker.Level
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
@@ -312,13 +313,18 @@ class BlueToothKit @Inject constructor(
         // 设备是否成功链接
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            println("wswTest 设备新装填 $newState")
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                ErrorReporter.diagnostic(Level.WARN, "BluetoothKit.gatt_connection_failed", status)
+            }
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
-                    gatt.discoverServices()
+                    ErrorReporter.diagnostic(Level.INFO, "BluetoothKit.gatt_connected")
+                    if (!gatt.discoverServices()) {
+                        ErrorReporter.diagnostic(Level.WARN, "BluetoothKit.gatt_discovery_not_started")
+                    }
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
-                    println("wswTest 设备断开链接")
+                    ErrorReporter.diagnostic(Level.INFO, "BluetoothKit.gatt_disconnected")
                     // 设备已断开连接
                     connectedCapnoEasy.value = null
                     taskQueue.executeAllTasks()
@@ -333,7 +339,11 @@ class BlueToothKit @Inject constructor(
         // 发现设备服务，集中处理service和characteristic
         @SuppressLint("MissingPermission")
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                ErrorReporter.diagnostic(Level.WARN, "BluetoothKit.gatt_discovery_failed", status)
+            }
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                ErrorReporter.diagnostic(Level.INFO, "BluetoothKit.gatt_services_discovered")
                 // 设备成功连接，开始注册服务、特征值
                 connectedCapnoEasyGATT.value = gatt
 
