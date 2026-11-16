@@ -186,4 +186,5 @@
     <string name="actionbar_setting">Setting</string>
     <!-- 趋势图 -->
     <string name="chart_trending">TrendChart</string>
+    <string name="main_record_write_failed">Could not write recording data. Try again.</string>
 </resources>

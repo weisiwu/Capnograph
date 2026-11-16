@@ -240,6 +240,8 @@ The application writes under `capnoeasy-android`. Diagnostics include startup ch
 
 Build with `-PcapnoSlsWebTracking=true` to enable debug uploads to `app-tracking / app-events`. The live `SlsReadbackTest` takes an instrumentation argument named `slsRunId`. Query `channel:"capnoeasy-android" AND event_name:"sls_smoke_<runId>"` in the Hangzhou Logstore to inspect all four levels.
 
+Run `DiagnosticFaultInjectionTest` to exercise recording writes, backup and restore, GATT status handling, and alert playback. Pass a unique `slsRunId` to search for the `sls_fault_<runId>_start` and `sls_fault_<runId>_end` markers. Query the actual event names between their `client_time_ms` values.
+
 For a release build, set `-PcapnoSlsRelayUrl=https://<your-relay>/...` to an HTTPS service that accepts the PutWebtracking request body and forwards it to SLS with server-side authorization. A configured release build sends INFO, WARN and ERROR. DEBUG is available in the opted-in debug build.
 
 ## Development Notes

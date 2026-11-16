@@ -47,7 +47,10 @@ internal object CapnoCloudLog {
         stage: String,
         elapsedMs: Long? = null,
         exceptionType: String? = null,
-        statusCode: Int? = null
+        statusCode: Int? = null,
+        pointCount: Int? = null,
+        failureCount: Int? = null,
+        detailCode: Int? = null
     ): Future<String?>? {
         if ((!BuildConfig.DEBUG && level == Level.DEBUG) || !stagePattern.matches(stage)) return null
         val client = tracker ?: return null
@@ -57,6 +60,9 @@ internal object CapnoCloudLog {
             elapsedMs?.let { put("elapsed_ms", it) }
             exceptionType?.let { put("exception_type", it) }
             statusCode?.let { put("status_code", it) }
+            pointCount?.let { put("point_count", it) }
+            failureCount?.let { put("failure_count", it) }
+            detailCode?.let { put("detail_code", it) }
         }
 
         return try {

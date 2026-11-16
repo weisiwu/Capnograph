@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-`saveRecord` 创建记录；实时 CO2Data chunk 写入不在 `saveRecord`，而在 `EtCo2LineChart`。
+`saveRecord` 创建记录。`EtCo2LineChart` 调用 `LocalStorageKit.saveWaveformChunk` 保存完整分段，停止录制后由 `stopRecord` 写入尾段。这两个入口共用 Room 事务，并在写入成功后清理对应缓冲。
 
 ## 最小验证方式
 

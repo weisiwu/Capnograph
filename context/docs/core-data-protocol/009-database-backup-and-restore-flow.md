@@ -33,7 +33,7 @@ App 启动、首次安装或手动恢复时备份/恢复 DB、WAL、SHM 文件�
 
 ## 注意事项
 
-备份路径为 Downloads/`CapnoEasyApplicationDatabaseBackup`；连续失败 3 次停止尝试。启动备份/恢复、复制备份和恢复数据库异常会通过 ErrorReporter 上报为非致命异常。
+备份路径为 Downloads/`CapnoEasyApplicationDatabaseBackup`。MediaStore 的空条目、空写入流与其他异常均计入失败，连续失败 3 次后暂停自动备份。恢复先在独立目录检查候选库，必要时迁移，确认可用后才原子替换现有主库。
 
 ## 最小验证方式
 

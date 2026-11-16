@@ -69,16 +69,18 @@ object ErrorReporter {
         setContext("startup_stage", stage)
     }
 
-    fun diagnostic(level: Level, stage: String, statusCode: Int? = null) {
+    fun diagnostic(level: Level, stage: String, statusCode: Int? = null, detailCode: Int? = null) {
         val priority = when (level) {
             Level.DEBUG -> Log.DEBUG
             Level.INFO -> Log.INFO
             Level.WARN -> Log.WARN
             Level.ERROR -> Log.ERROR
         }
-        Log.println(priority, TAG, "[$stage]" + (statusCode?.let { " status=$it" } ?: ""))
+        val status = statusCode?.let { " status=$it" }.orEmpty()
+        val detail = detailCode?.let { " detail=$it" }.orEmpty()
+        Log.println(priority, TAG, "[$stage]$status$detail")
         if (level >= Level.WARN && isThrottled(stage, DEFAULT_REPORT_THROTTLE_MS)) return
-        CapnoCloudLog.publish(level, stage, statusCode = statusCode)
+        CapnoCloudLog.publish(level, stage, statusCode = statusCode, detailCode = detailCode)
     }
 
     fun setContext(key: String, value: Any?) {
@@ -123,7 +125,13 @@ object ErrorReporter {
             return
         }
 
-        CapnoCloudLog.publish(Level.ERROR, stage, exceptionType = throwable.javaClass.simpleName)
+        CapnoCloudLog.publish(
+            Level.ERROR,
+            stage,
+            exceptionType = throwable.javaClass.simpleName,
+            pointCount = metadata["point_count"] as? Int,
+            failureCount = metadata["failure_count"] as? Int
+        )
         val context = appContext ?: return
         if (!initialized.get()) {
             return

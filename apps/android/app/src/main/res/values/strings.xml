@@ -185,4 +185,5 @@
     <string name="actionbar_setting">设置</string>
     <!-- 趋势图 -->
     <string name="chart_trending">趋势图</string>
+    <string name="main_record_write_failed">录制数据写入失败，请重试</string>
 </resources>

@@ -19,6 +19,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import androidx.room.withTransaction
 import com.github.mikephil.charting.charts.LineChart
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -30,11 +31,15 @@ import com.wldmedical.capnoeasy.USER_PREF_NS
 import com.wldmedical.capnoeasy.models.CO2WavePointData
 import com.wldmedical.hotmeltprint.PrintSetting
 import dagger.hilt.android.qualifiers.ActivityContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.File
+import java.io.IOException
 import java.time.LocalDateTime
 import javax.inject.Inject
 import java.io.Serializable
@@ -50,6 +55,40 @@ import java.util.zip.GZIPOutputStream
 // TODO: 临时测试
 val maxRecordDataChunkSize = 100
 val trendStep = 100
+
+private class WaveformWriteRejectedException : IOException("Room did not insert a waveform segment")
+
+internal suspend fun saveWaveformSegment(
+    recordId: UUID,
+    points: List<CO2WavePointData>,
+    isTail: Boolean,
+    database: AppDatabase,
+    insert: CO2DataDao.(CO2Data) -> Long = CO2DataDao::insertCO2Data
+): Boolean {
+    val stage = if (isTail) "LocalStorageKit.save_waveform_tail" else "LocalStorageKit.save_waveform_chunk"
+    return try {
+        database.withTransaction {
+            val dao = database.co2DataDao()
+            val firstIndex = dao.getCO2DataByRecordId(recordId).size
+            points.chunked(maxRecordDataChunkSize).forEachIndexed { offset, chunk ->
+                val trend = chunk.indices.step(trendStep).joinToString("") { "_${chunk[it].ETCO2}" }
+                val segment = CO2Data(
+                    recordId = recordId,
+                    chunkIndex = firstIndex + offset,
+                    trendData = trend,
+                    data = chunk.compress()
+                )
+                if (dao.insert(segment) == -1L) throw WaveformWriteRejectedException()
+            }
+        }
+        true
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        ErrorReporter.report(e, stage, mapOf("point_count" to points.size))
+        false
+    }
+}
 
 // 对List<Record>进行扩展
 // 将CO2WavePointData类型数据转换为原始二进制数组
@@ -276,19 +315,18 @@ abstract class AppDatabase : RoomDatabase() {
                 if (instance != null && instance.isOpen) {
                     instance
                 } else {
-                    val newInstance = Room.databaseBuilder(
-                        context.applicationContext,
-                        AppDatabase::class.java,
-                        DATABASE_NS
-                    )
-                    .addMigrations(MIGRATION_1_2)
-                    .build()
+                    val newInstance = buildDatabase(context, DATABASE_NS)
                     INSTANCE = newInstance
                     newInstance
                 }
             }
         }
         
+        internal fun buildDatabase(context: Context, name: String): AppDatabase =
+            Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, name)
+                .addMigrations(MIGRATION_1_2)
+                .build()
+
         // 清除数据库实例（用于恢复数据库时）
         fun clearInstance() {
             synchronized(this) {
@@ -306,7 +344,7 @@ abstract class AppDatabase : RoomDatabase() {
  */
 class LocalStorageKit @Inject constructor(
     @ActivityContext private val activity: Context,
-    application: CapnoEasyApplication
+    private val application: CapnoEasyApplication
 ) {
     // 打印设置相关key
     private val KEY_HOSPITAL_NAME = "hospital_name"
@@ -337,7 +375,8 @@ class LocalStorageKit @Inject constructor(
 
     val state = mutableStateOf(GROUP_BY.ALL)
 
-    val database = application.database
+    val database: AppDatabase get() = application.database
+    private val waveformWriteMutex = Mutex()
 
     /***
      * 保存病人
@@ -402,34 +441,31 @@ class LocalStorageKit @Inject constructor(
         }
     }
 
-    /**
-     * 停止记录
-     * 1、清空当前 currentRecordId
-     */
-    suspend fun stopRecord(
-        remainData: List<CO2WavePointData> = listOf()
-    ) {
-        // 停止记录时，将不足一个chunk的数据，单独保存起来，避免丢失数据
-        withContext(Dispatchers.IO) {
-            currentRecordId?.let { it ->
-                if (remainData.isNotEmpty()) {
-                    val chunkIndex = database.co2DataDao().getCO2DataByRecordId(it).size.coerceAtLeast(0)
-                    var trendData = ""
-                    for (i in remainData.indices step trendStep) {
-                        trendData += "_${remainData[i].ETCO2}"
-                    }
-                    val remainCo2Data = CO2Data(
-                        recordId = it,
-                        chunkIndex = chunkIndex,
-                        trendData = trendData,
-                        data = remainData.compress()
-                    )
-                    database.co2DataDao().insertCO2Data(remainCo2Data)
-                }
-            }
-        }
-        currentRecordId = null
+    suspend fun saveWaveformChunk(
+        pendingPoints: () -> List<CO2WavePointData>,
+        onSaved: () -> Unit
+    ): Boolean = waveformWriteMutex.withLock {
+        val recordId = currentRecordId ?: return@withLock true
+        val points = pendingPoints()
+        if (points.size < maxRecordDataChunkSize) return@withLock true
+        val saved = saveWaveformSegment(
+            recordId, points.take(maxRecordDataChunkSize), isTail = false,
+            database = database
+        )
+        if (saved) onSaved()
+        saved
     }
+
+    suspend fun stopRecord(pendingPoints: () -> List<CO2WavePointData>): Boolean =
+        waveformWriteMutex.withLock {
+            val recordId = currentRecordId ?: return@withLock true
+            val points = pendingPoints()
+            val saved = points.isEmpty() || saveWaveformSegment(
+                recordId, points, isTail = true, database = database
+            )
+            if (saved) currentRecordId = null
+            saved
+        }
 
     /***
      * 保存病人ETCO2记录
@@ -470,9 +506,6 @@ class LocalStorageKit @Inject constructor(
                 patientIndex = patientIndex,
                 pdfFilePath = pdfFilePath,
             )
-            // 记录当前正在操作的记录id
-            currentRecordId = record.id
-
             if (pdfFilePath != null && lineChart != null && context != null) {
                 saveChartToPdfInBackground(
                     lineChart = lineChart,
@@ -491,6 +524,7 @@ class LocalStorageKit @Inject constructor(
             }
 
             database.recordDao().insertRecord(record)
+            currentRecordId = record.id
             records.add(record)
         }
     }

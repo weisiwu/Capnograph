@@ -96,6 +96,8 @@ enum class BluetoothType {
 // 接收到的数据
 data class DataPoint(val index: Int, val value: Float)
 
+private const val GATT_DEVICE_NOT_CONNECTED = 4
+
 const val CHECK_SUCCESS = 0
 const val NOT_SUPPORT_BLUETOOTH = 1
 const val REQUEST_ENABLE_BT = 2
@@ -245,12 +247,14 @@ class BlueToothKit @Inject constructor(
         data: ByteArray,
         type: Int
     ): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            gatt.writeCharacteristic(characteristic, data, type)
-        } else {
-            characteristic.writeType = type
-            characteristic.value = data
-            if (gatt.writeCharacteristic(characteristic)) BluetoothGatt.GATT_SUCCESS else BluetoothGatt.GATT_FAILURE
+        return observeGattWriteStart {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                gatt.writeCharacteristic(characteristic, data, type)
+            } else {
+                characteristic.writeType = type
+                characteristic.value = data
+                if (gatt.writeCharacteristic(characteristic)) BluetoothGatt.GATT_SUCCESS else BluetoothGatt.GATT_FAILURE
+            }
         }
     }
 
@@ -267,7 +271,7 @@ class BlueToothKit @Inject constructor(
             return
         }
         val result = writeCharacteristicCompat(targetGatt, targetCharacteristic, targetData, type)
-        if (result == 4) {
+        if (result == GATT_DEVICE_NOT_CONNECTED) {
             connectedCapnoEasy.value = null
             taskQueue.executeAllTasks()
         }
@@ -384,26 +388,31 @@ class BlueToothKit @Inject constructor(
                     }
                 }
             
-                // 有需要订阅的服务，寻找服务的特征值
-                var filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEAntihijackCha.value }
-                // 反劫持
-                if (filterList.isNotEmpty()) {
-                    antiHijackCharacteristic.add(filterList[0])
-                    writeCharacteristicCompat(currentGatt!!, filterList[0], antiHijackData, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+                val handshake = catchCharacteristic.find { it.uuid == BLECharacteristicUUID.BLEAntihijackCha.value }
+                handshake?.let {
+                    antiHijackCharacteristic.add(it)
+                    try {
+                        writeCharacteristicCompat(gatt, it, antiHijackData, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+                    } catch (_: Exception) {
+                        // writeCharacteristicCompat already reports the failure.
+                    }
                 }
 
-                filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEAntihijackChaNofi.value }
-                // 监听反劫持广播
-                if (filterList.isNotEmpty()) {
-                    antiHijackNotifyCharacteristic.add(filterList[0])
-                    currentGatt!!.setCharacteristicNotification(filterList[0], true)
+                val handshakeNotify = catchCharacteristic.find {
+                    it.uuid == BLECharacteristicUUID.BLEAntihijackChaNofi.value
+                }
+                handshakeNotify?.let {
+                    if (enableGattNotification(GattNotification.HANDSHAKE) { gatt.setCharacteristicNotification(it, true) }) {
+                        antiHijackNotifyCharacteristic.add(it)
+                    }
                 }
 
-                filterList  = catchCharacteristic.filter { it -> it.uuid == BLECharacteristicUUID.BLEReceiveDataCha.value }
-                // 接受数据
-                if (filterList.isNotEmpty()) {
-                    receiveDataCharacteristic.add(filterList[0])
-                    currentGatt!!.setCharacteristicNotification(filterList[0], true)
+                val receiveData = currentReceiveDataCharacteristic
+                checkGattDataCharacteristics(receiveData, currentSendDataCharacteristic)
+                if (receiveData != null && enableGattNotification(GattNotification.WAVEFORM) {
+                        gatt.setCharacteristicNotification(receiveData, true)
+                    }) {
+                    receiveDataCharacteristic.add(receiveData)
                 }
 
                 // 所有初始化完成，执行后续操作
@@ -442,10 +451,7 @@ class BlueToothKit @Inject constructor(
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
-            println("wswTEst 是否成功了 ${status}")
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                taskQueue.executeTask()
-            }
+            if (gattWriteCompleted(status)) taskQueue.executeTask()
         }
     }
 
@@ -1030,8 +1036,11 @@ class BlueToothKit @Inject constructor(
             return
         }
         appendCKS()
-        writeDataToDevice()
-        resetSendData()
+        try {
+            writeDataToDevice()
+        } finally {
+            resetSendData()
+        }
     }
 
     /** 发送关机指令 */

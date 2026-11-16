@@ -1,465 +1,251 @@
+package com.wldmedical.capnoeasy.kits
+
 import android.annotation.SuppressLint
-import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.SharedPreferences
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.room.Room
 import com.wldmedical.capnoeasy.CapnoEasyApplication
 import com.wldmedical.capnoeasy.DATABASE_NS
 import com.wldmedical.capnoeasy.USER_PREF_NS
-import com.wldmedical.capnoeasy.kits.AppDatabase
-import com.wldmedical.capnoeasy.kits.ErrorReporter
+import io.github.weisiwu.slstracker.SlsLogTracker.Level
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
+import java.io.OutputStream
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption.ATOMIC_MOVE
+import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
-const val IS_FIRST_LAUNCH = "is_wld_medical_app_first_install"
-const val DATA_LATEST_VERSION = "last_data_version"
-const val BACKUP_FAILURE_COUNT = "backup_failure_count"
+private const val IS_FIRST_LAUNCH = "is_wld_medical_app_first_install"
+internal const val BACKUP_FAILURE_COUNT = "backup_failure_count"
+private const val MAX_BACKUP_FAILURES = 3
 
-/**
- * 数据库备份
- * 在页面初始化时，判断用户设备下是否有备份文件
- * 如有，则通过文件进行恢复
- * 如无，则将当前数据库导出为备份文件
- */
 class DatabaseBackupHelper(private val context: Context) {
+    private val backupDirectory = "${Environment.DIRECTORY_DOWNLOADS}/CapnoEasyApplicationDatabaseBackup/"
+    private val prefs: SharedPreferences = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
 
-    private val databaseName = DATABASE_NS
-    // 备份目录名称
-    private val backupDirectoryName = "CapnoEasyApplicationDatabaseBackup"
-    // 数据版本，用来判断是否需要备份
-    private var lastDataVersion: Int = -1
-    private lateinit var roomDatabase: AppDatabase
-    private val STORAGE_PERMISSION_CODE = 101
-    val prefs: SharedPreferences = context.getSharedPreferences(USER_PREF_NS, Context.MODE_PRIVATE)
+    fun startWork(database: AppDatabase, isRestore: Boolean = false): Boolean {
+        val firstLaunch = prefs.getBoolean(IS_FIRST_LAUNCH, true)
+        val live = context.getDatabasePath(DATABASE_NS)
+        if (firstLaunch || isRestore) {
+            prefs.edit().putBoolean(IS_FIRST_LAUNCH, false).apply()
+            val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val backup = File(File(downloads, "CapnoEasyApplicationDatabaseBackup"), DATABASE_NS)
+            return runBlocking(Dispatchers.IO) {
+                var databaseReleased = false
+                try {
+                    restoreFromBackup(live, backup, expected = isRestore && live.exists()) {
+                        databaseReleased = true
+                        closeDatabase(database)
+                    }
+                } finally {
+                    if (databaseReleased) refreshDatabase()
+                }
+            }
+        }
 
-    // 恢复进程开始工作,按照如下流程
-    // 1、判断是否为首次安装
-    // 2、如是，则判断是否有历史数据库文件，如有，开始恢复进程
-    // 3、非首次安装，判断本地数据和历史数据是否相同，并开始备份
-    @RequiresApi(Build.VERSION_CODES.Q)
-    fun startWork(
-        context: Context,
-        database: AppDatabase,
-        isRestore: Boolean = false
-    ) {
-        val isFirstLaunch = prefs.getBoolean(IS_FIRST_LAUNCH, true)
-        lastDataVersion = prefs.getInt(DATA_LATEST_VERSION, -1)
-        roomDatabase = database
-
-        // 1. 检查是否已连续失败三次，直接返回
-        val failureCount = prefs.getInt(BACKUP_FAILURE_COUNT, 0)
-        if (failureCount >= 3) {
-            Log.d("DatabaseBackupHelper", "已连续三次备份失败，停止本次尝试")
+        if (!live.exists()) return false
+        if (prefs.getInt(BACKUP_FAILURE_COUNT, 0) >= MAX_BACKUP_FAILURES) {
+            ErrorReporter.diagnostic(Level.WARN, "DatabaseBackupHelper.backup_suspended", MAX_BACKUP_FAILURES)
             Toast.makeText(context, "自动备份失败，请稍后再试", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
-
-        runBlocking {
-            println("DatabaseBackupHelper 是否首次安装: ${isFirstLaunch} ")
-            // 首次安装，修改标志为false，然后退出
-            if (isFirstLaunch || isRestore) {
-                prefs.edit().putBoolean(IS_FIRST_LAUNCH, false).apply()
-                // 无论是否存在数据库文件，都尝试恢复
+        return runBlocking(Dispatchers.IO) {
+            runAutomaticBackup {
+                val wasOpen = database.isOpen
                 try {
-                    restoreDatabase()
-                } catch (e: IOException) {
-                    Log.e("DatabaseBackupHelper", "恢复数据过程中遇到问题: ${e.message}")
-                    ErrorReporter.report(e, "DatabaseBackupHelper.restore_on_start")
-                }
-            } else {
-                try {
-                    val databaseFile = context.getDatabasePath(databaseName)
-                    println("DatabaseBackupHelper 开始备份数据")
-                    // 如果没有历史数据库文件，则退出
-                    if (!databaseFile.exists()) {
-                        println("DatabaseBackupHelper 备份失败，没有找到数据库文件")
-                        Log.d("DatabaseBackupHelper", "Database file does not exist.")
-                    } else {
-                        // 开始备份
-                        backupDatabase(databaseFile)
-                        // 成功后重置失败次数
-                        prefs.edit().putInt(BACKUP_FAILURE_COUNT, 0).apply()
-                    }
-                } catch (e: IOException) {
-                    // 处理备份失败
-                    val currentCount = prefs.getInt(BACKUP_FAILURE_COUNT, 0) + 1
-                    prefs.edit().putInt(BACKUP_FAILURE_COUNT, currentCount).apply()
-                    if (currentCount >= 3) {
-                        Log.d("DatabaseBackupHelper", "连续三次备份失败，停止本次尝试")
-                        return@runBlocking // 退出当前协程
-                    }
-                    Log.e("DatabaseBackupHelper", "备份数据遇到异常")
-                    ErrorReporter.report(
-                        e,
-                        "DatabaseBackupHelper.backup_on_start",
-                        mapOf("failure_count" to currentCount)
-                    )
+                    if (wasOpen) closeDatabase(database)
+                    backupDatabase(live)
+                } finally {
+                    if (wasOpen) refreshDatabase()
                 }
             }
         }
     }
 
-    // 备份DB数据文件
-    @RequiresApi(Build.VERSION_CODES.Q)
-    fun backupDBFile(
-        contentResolver: ContentResolver,
-        databaseFile: File
-    ) {
-        println("DatabaseBackupHelper[backupDBFile] 开始备份DB")
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, databaseName)
-            put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
-            put(
-                MediaStore.MediaColumns.RELATIVE_PATH,
-                Environment.DIRECTORY_DOWNLOADS + File.separator + backupDirectoryName
-            )
-        }
-
-        val _uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        // 查询是否有应用的数据存储文件
-        val projection = arrayOf(MediaStore.MediaColumns._ID)
-        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ?"
-        val selectionArgs = arrayOf(databaseName)
-        val query = contentResolver.query(
-            _uri,
-            projection,
-            selection,
-            selectionArgs,
-            null
-        )
-
-        // 查询DB文件是否存在
-        var existingDBFileUri: Uri? = null
-        query?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
-                val id = cursor.getLong(idIndex)
-                existingDBFileUri = _uri.buildUpon()
-                    .appendPath(id.toString())
-                    .build()
-            }
-        }
-
-        // 开始备份DB数据文件
-        if (existingDBFileUri == null) {
-            val uri: Uri? = contentResolver.insert(_uri, contentValues)
-
-            // 先判断是否可以在Download中进行保存，不可以直接退出
-            if (uri == null) {
-                return
-            }
-
-            println("DatabaseBackupHelper[backupDBFile] 开始新建DB文件")
-            // 开始复制数据库
-            contentResolver.openOutputStream(uri)?.use { outputStream ->
-                FileInputStream(databaseFile).use { inputStream ->
-                    inputStream.copyTo(outputStream)
-                }
-            }
-
-            println("DatabaseBackupHelper[backupDBFile] 备份完成-新建立数据库DB文件")
-            Log.d("DatabaseBackupHelper", "Database backed up successfully.")
-        } else {
-            // 如果文件已经存在，则更新
-            contentResolver.update(existingDBFileUri!!, contentValues, null, null)
-
-            println("DatabaseBackupHelper[backupDBFile] 开始复制DB文件")
-            // 使用 "wt" 模式打开输出流
-            contentResolver.openOutputStream(existingDBFileUri!!, "wt")?.use { outputStream ->
-                // 将数据复制到输出流
-                FileInputStream(databaseFile).use { inputStream ->
-                    inputStream.copyTo(outputStream)
-                }
-            }
-
-            println("DatabaseBackupHelper[backupDBFile] 备份完成-更新数据库DB文件")
-            Log.d("DatabaseBackupHelper", "Database backed up successfully.")
-        }
-    }
-
-    // 备份预写日志文件
-    @RequiresApi(Build.VERSION_CODES.Q)
-    fun backupWALFile(
-        contentResolver: ContentResolver,
-        databaseFile: File
-    ) {
-        val walFileName = "$databaseName-wal"
-        val walFile = File(databaseFile.parent, walFileName)
-
-        if (!walFile.exists()) {
-            println("DatabaseBackupHelper[backupWALFile] WAL file does not exist.")
-            return
-        }
-
-        println("DatabaseBackupHelper[backupWALFile] 开始备份WAL")
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, walFileName)
-            put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
-            put(
-                MediaStore.MediaColumns.RELATIVE_PATH,
-                Environment.DIRECTORY_DOWNLOADS + File.separator + backupDirectoryName
-            )
-        }
-
-        // 是否存在WAL文件
-        val _uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        val projection = arrayOf(MediaStore.MediaColumns._ID)
-        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ?"
-        val selectionArgs = arrayOf(walFileName)
-        val query = contentResolver.query(
-            _uri,
-            projection,
-            selection,
-            selectionArgs,
-            null
-        )
-
-        // 查询预写日志文件是否存在
-        var existingWALFileUri: Uri? = null
-        query?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
-                val id = cursor.getLong(idIndex)
-                existingWALFileUri = _uri.buildUpon()
-                    .appendPath(id.toString())
-                    .build()
-            }
-        }
-
-        // 开始备份预写日志文件
-        if (existingWALFileUri == null) {
-            val uri: Uri? = contentResolver.insert(_uri, contentValues)
-
-            if (uri == null) {
-                return
-            }
-
-            println("DatabaseBackupHelper[backupWALFile] 开始新建文件")
-            // 复制预写日志文件
-            contentResolver.openOutputStream(uri)?.use { outputStream ->
-                FileInputStream(walFile).use { inputStream ->
-                    inputStream.copyTo(outputStream)
-                }
-            }
-
-            println("DatabaseBackupHelper[backupWALFile] 备份完成-新建文件")
-            Log.d("DatabaseBackupHelper", "Database backed up successfully.")
-        } else {
-            // 复制预写日志文件
-            contentResolver.update(existingWALFileUri!!, contentValues, null, null)
-
-            println("DatabaseBackupHelper[backupWALFile] 开始复制文件")
-            contentResolver.openOutputStream(existingWALFileUri!!, "wt")?.use { outputStream ->
-                FileInputStream(walFile).use { inputStream ->
-                    inputStream.copyTo(outputStream)
-                }
-            }
-
-            println("DatabaseBackupHelper[backupWALFile] 备份完成-更新文件")
-            Log.d("DatabaseBackupHelper", "Database backed up successfully.")
-        }
-    }
-
-    // 备份共享内存索引文件
-    @RequiresApi(Build.VERSION_CODES.Q)
-    fun backupSHMFile(
-        contentResolver: ContentResolver,
-        databaseFile: File
-    ) {
-        val shmFileName = "$databaseName-shm"
-        val shmFile = File(databaseFile.parent, shmFileName)
-
-        if (!shmFile.exists()) {
-            println("DatabaseBackupHelper[backupSHMFile] SHM file does not exist.")
-            return
-        }
-
-        println("DatabaseBackupHelper[backupSHMFile] 开始备份SHM")
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, shmFileName)
-            put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
-            put(
-                MediaStore.MediaColumns.RELATIVE_PATH,
-                Environment.DIRECTORY_DOWNLOADS + File.separator + backupDirectoryName
-            )
-        }
-
-        // 是否存在SHM文件
-        val _uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        val projection = arrayOf(MediaStore.MediaColumns._ID)
-        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ?"
-        val selectionArgs = arrayOf(shmFileName)
-        val query = contentResolver.query(
-            _uri,
-            projection,
-            selection,
-            selectionArgs,
-            null
-        )
-
-        // 查询共享内存索引文件是否存在
-        var existingSHMFileUri: Uri? = null
-        query?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
-                val id = cursor.getLong(idIndex)
-                existingSHMFileUri = _uri.buildUpon()
-                    .appendPath(id.toString())
-                    .build()
-            }
-        }
-
-        // 开始备份共享内存索引文件
-        if (existingSHMFileUri == null) {
-            val uri: Uri? = contentResolver.insert(_uri, contentValues)
-
-            if (uri == null) {
-                return
-            }
-
-            println("DatabaseBackupHelper[backupSHMFile] 开始新建文件")
-            // 复制共享内存索引文件
-            contentResolver.openOutputStream(uri)?.use { outputStream ->
-                FileInputStream(shmFile).use { inputStream ->
-                    inputStream.copyTo(outputStream)
-                }
-            }
-
-            println("DatabaseBackupHelper[backupSHMFile] 备份完成-新建文件")
-            Log.d("DatabaseBackupHelper", "Database backed up successfully.")
-        } else {
-            // 复制共享内存索引文件
-            contentResolver.update(existingSHMFileUri!!, contentValues, null, null)
-
-            println("DatabaseBackupHelper[backupSHMFile] 开始复制文件")
-            contentResolver.openOutputStream(existingSHMFileUri!!, "wt")?.use { outputStream ->
-                FileInputStream(shmFile).use { inputStream ->
-                    inputStream.copyTo(outputStream)
-                }
-            }
-
-            println("DatabaseBackupHelper[backupSHMFile] 备份完成-更新文件")
-            Log.d("DatabaseBackupHelper", "Database backed up successfully.")
-        }
-    }
-
-    /**
-     * 备份数据文件
-     * 1、DB数据文件
-     * 2、共享内存索引文件
-     * 3、预写日志文件
-     */
-    @RequiresApi(Build.VERSION_CODES.Q)
-    suspend fun backupDatabase(databaseFile: File) {
-        withContext(Dispatchers.IO) {
-            try {
-                // 关闭数据库为后续操作做准备
-                roomDatabase.close()
-
-                // TODO:(wsw) 先将数据放到download目录下，迁移路径的事情后续说
-                val contentResolver: ContentResolver = context.contentResolver
-
-                // 备份DB文件
-                backupDBFile(contentResolver, databaseFile)
-
-                // 备份预写日志文件
-                backupWALFile(contentResolver, databaseFile)
-
-                // 备份共享内存索引文件
-                backupSHMFile(contentResolver, databaseFile)
-
-            } catch (e: IOException) {
-                Log.e("DatabaseBackupHelper", "Error backing up database", e)
-                ErrorReporter.report(e, "DatabaseBackupHelper.backup_database")
-            }
-        }
-    }
-
-    // 从共享存储恢复数据库
-    @RequiresApi(Build.VERSION_CODES.Q)
-    fun restoreDatabase() {
-        try {
-            println("DatabaseBackupHelper[restoreDatabase] 开始恢复数据库")
-
-            // 1. 获取数据库文件、WAL 文件和 SHM 文件的 File 对象
-            val databaseFile = context.getDatabasePath(databaseName)
-            val walFile = File(databaseFile.parent, "$databaseName-wal")
-            val shmFile = File(databaseFile.parent, "$databaseName-shm")
-
-            // 2. 清除数据库单例并关闭当前数据库连接
-            AppDatabase.clearInstance()
-            roomDatabase.close()
-
-            // 3. 删除当前数据库文件、WAL 文件和 SHM 文件（如果存在）
-            if (databaseFile.exists()) {
-                databaseFile.delete()
-            }
-            if (walFile.exists()) {
-                walFile.delete()
-            }
-            if (shmFile.exists()) {
-                shmFile.delete()
-            }
-            println("DatabaseBackupHelper[restoreDatabase] 删除已有的当前数据库文件，从历史数据中恢复")
-
-            val backupFile = File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                "$backupDirectoryName/$DATABASE_NS"
-            )
-            if (backupFile.exists()) {
-                // 获取应用数据库目录
-                val dbPath = context.getDatabasePath(DATABASE_NS).absolutePath
-                val dbFile = File(dbPath)
-                try {
-                    // 创建目标数据库文件
-                    dbFile.parentFile?.mkdirs() // 确保目录存在
-                    if (dbFile.exists()) {
-                        dbFile.delete() // 如果数据库已经存在，先删除
-                    }
-                    // 复制备份文件到数据库文件
-                    backupFile.copyTo(dbFile, overwrite = true)
-
-                    val walFile = File(backupFile.absolutePath + "-wal")
-                    val shmFile = File(backupFile.absolutePath + "-shm")
-                    walFile.copyTo(File(dbPath + "-wal"), overwrite = true)
-                    shmFile.copyTo(File(dbPath + "-shm"), overwrite = true)
-
-                    Log.d("DatabaseRestore", "wswTest 数据库恢复成功!")
-                } catch (e: Exception) {
-                    Log.e("DatabaseRestore", "wswTest 恢复数据库时出错: ${e.message}")
-                    ErrorReporter.report(e, "DatabaseBackupHelper.copy_backup_to_database")
-                }
-            }
-
-            // 9. 重新打开数据库连接
-            roomDatabase = AppDatabase.getDatabase(context)
-            
-            // 10. 更新 Application 中的数据库引用
-            if (context is CapnoEasyApplication) {
-                context.database = roomDatabase
-            } else if (context.applicationContext is CapnoEasyApplication) {
-                (context.applicationContext as CapnoEasyApplication).database = roomDatabase
-            }
-
-            println("DatabaseBackupHelper[restoreDatabase] 恢复数据库完成")
+    internal fun runAutomaticBackup(backup: () -> Unit): Boolean {
+        return try {
+            backup()
+            prefs.edit().putInt(BACKUP_FAILURE_COUNT, 0).apply()
+            true
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Log.e("DatabaseBackupHelper", "Error restoring database", e)
-            ErrorReporter.report(e, "DatabaseBackupHelper.restore_database")
+            val failureCount = prefs.getInt(BACKUP_FAILURE_COUNT, 0) + 1
+            prefs.edit().putInt(BACKUP_FAILURE_COUNT, failureCount).apply()
+            val metadata = mapOf("failure_count" to failureCount)
+            val stage = when (e) {
+                is BackupEntryUnavailableException -> "DatabaseBackupHelper.backup_entry_unavailable"
+                is BackupStreamUnavailableException -> "DatabaseBackupHelper.backup_stream_unavailable"
+                else -> "DatabaseBackupHelper.backup_database"
+            }
+            ErrorReporter.report(e, stage, metadata)
+            if (failureCount == MAX_BACKUP_FAILURES) {
+                ErrorReporter.report(e, "DatabaseBackupHelper.backup_on_start", metadata)
+            }
+            false
         }
+    }
+
+    private fun backupDatabase(databaseFile: File) {
+        val resolver = context.contentResolver
+        val collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val files = listOf(databaseFile, File("${databaseFile.path}-wal"), File("${databaseFile.path}-shm"))
+        for (source in files) {
+            val existing = resolver.query(
+                collection,
+                arrayOf(MediaStore.MediaColumns._ID),
+                "${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND ${MediaStore.MediaColumns.RELATIVE_PATH} = ?",
+                arrayOf(source.name, backupDirectory),
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) ContentUris.withAppendedId(collection, cursor.getLong(0)) else null
+            }
+            if (source != databaseFile && !source.exists()) {
+                if (existing != null && resolver.delete(existing, null, null) == 0) {
+                    throw IOException("Could not remove stale backup sidecar")
+                }
+                continue
+            }
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, source.name)
+                put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, backupDirectory)
+                if (existing == null) put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            val destination = existing ?: resolver.insert(collection, values)
+            try {
+                writeBackupContents(source, destination) { uri -> resolver.openOutputStream(uri, "wt") }
+                if (existing == null && destination != null) {
+                    values.clear()
+                    values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                    if (resolver.update(destination, values, null, null) == 0) {
+                        throw IOException("Could not publish backup file")
+                    }
+                }
+            } catch (e: Exception) {
+                if (existing == null && destination != null) {
+                    try {
+                        resolver.delete(destination, null, null)
+                    } catch (cleanupError: Exception) {
+                        e.addSuppressed(cleanupError)
+                    }
+                }
+                throw e
+            }
+        }
+    }
+
+    internal fun restoreFromBackup(
+        live: File,
+        backup: File,
+        expected: Boolean,
+        beforeReplace: () -> Unit
+    ): Boolean {
+        if (!backup.isFile) {
+            if (expected) ErrorReporter.diagnostic(Level.WARN, "DatabaseBackupHelper.restore_backup_missing")
+            return false
+        }
+
+        var staging: File? = null
+        var stage = "DatabaseBackupHelper.copy_backup_to_database"
+        return try {
+            val parent = checkNotNull(live.parentFile)
+            Files.createDirectories(parent.toPath())
+            val directory = Files.createTempDirectory(parent.toPath(), "capno-restore-").toFile()
+            staging = directory
+            val candidate = File(directory, live.name)
+            backup.copyTo(candidate)
+            val backupWal = File("${backup.path}-wal")
+            if (backupWal.isFile) backupWal.copyTo(File("${candidate.path}-wal"))
+            validateCandidate(candidate)
+
+            stage = "DatabaseBackupHelper.restore_database"
+            beforeReplace()
+            // Replacing the main file while SQLite can still replay a journal from the old
+            // database would mix two databases. A failed precondition leaves the live files intact.
+            for (suffix in listOf("-wal", "-shm", "-journal")) {
+                if (File("${live.path}$suffix").exists()) throw IOException("Live database sidecar still exists")
+            }
+            Files.move(candidate.toPath(), live.toPath(), ATOMIC_MOVE, REPLACE_EXISTING)
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            ErrorReporter.report(e, stage)
+            false
+        } finally {
+            staging?.deleteRecursively()
+        }
+    }
+
+    private fun validateCandidate(candidate: File) {
+        if (candidate.length() == 0L) throw IOException("Backup database is empty")
+        // The framework's default corruption handler can delete a malformed file and
+        // Room can then create an empty database at that path. Reject it before Room opens it.
+        SQLiteDatabase.openDatabase(
+            candidate.absolutePath,
+            null,
+            SQLiteDatabase.OPEN_READONLY
+        ) { }.use { sqlite ->
+            sqlite.rawQuery("PRAGMA quick_check", null).use { result ->
+                if (!result.moveToFirst() || result.getString(0) != "ok") {
+                    throw IOException("Backup database failed integrity check")
+                }
+            }
+            val tables = if (sqlite.version == 1) listOf("patients", "records")
+            else listOf("patients", "records", "co2_data")
+            val placeholders = tables.joinToString(",") { "?" }
+            sqlite.rawQuery(
+                "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name IN ($placeholders)",
+                tables.toTypedArray()
+            ).use { result ->
+                if (!result.moveToFirst() || result.getInt(0) != tables.size) {
+                    throw IOException("Backup database is missing CapnoEasy tables")
+                }
+            }
+        }
+        val database = AppDatabase.buildDatabase(context, candidate.absolutePath)
+        try {
+            val sqlite = database.openHelper.writableDatabase
+            sqlite.query("PRAGMA wal_checkpoint(TRUNCATE)").use { result ->
+                if (!result.moveToFirst() || result.getInt(0) != 0) {
+                    throw IOException("Backup database checkpoint failed")
+                }
+            }
+        } finally {
+            database.close()
+        }
+    }
+
+    private fun closeDatabase(database: AppDatabase) {
+        database.close()
+        AppDatabase.clearInstance()
+    }
+
+    private fun refreshDatabase() {
+        (context.applicationContext as? CapnoEasyApplication)?.let { app ->
+            app.database = AppDatabase.getDatabase(context)
+        }
+    }
+}
+
+private class BackupEntryUnavailableException : IOException("MediaStore did not create a backup entry")
+private class BackupStreamUnavailableException : IOException("MediaStore did not open the backup stream")
+
+internal fun writeBackupContents(source: File, destination: Uri?, openOutput: (Uri) -> OutputStream?) {
+    if (destination == null) throw BackupEntryUnavailableException()
+    source.inputStream().use { input ->
+        val output = openOutput(destination) ?: throw BackupStreamUnavailableException()
+        output.use { input.copyTo(it) }
     }
 }
 
@@ -467,15 +253,7 @@ object DatabaseBackupHelperManager {
     @SuppressLint("StaticFieldLeak")
     lateinit var dbBackupHelperKit: DatabaseBackupHelper
 
-    fun initialize(
-        application: CapnoEasyApplication,
-    ) {
-        if (::dbBackupHelperKit.isInitialized) {
-            return
-        }
-
-        dbBackupHelperKit = DatabaseBackupHelper(
-            context = application,
-        )
+    fun initialize(application: CapnoEasyApplication) {
+        if (!::dbBackupHelperKit.isInitialized) dbBackupHelperKit = DatabaseBackupHelper(application)
     }
 }

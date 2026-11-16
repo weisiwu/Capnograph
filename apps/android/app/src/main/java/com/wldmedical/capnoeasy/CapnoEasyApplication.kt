@@ -1,6 +1,5 @@
 package com.wldmedical.capnoeasy
 
-import DatabaseBackupHelper
 import android.app.Activity
 import android.app.Application
 import android.content.Context
@@ -9,6 +8,8 @@ import android.os.Bundle
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import com.wldmedical.capnoeasy.kits.AppDatabase
+import com.wldmedical.capnoeasy.kits.DatabaseBackupHelper
+import com.wldmedical.capnoeasy.kits.DatabaseBackupHelperManager
 import com.wldmedical.capnoeasy.kits.ErrorReporter
 import dagger.hilt.android.HiltAndroidApp
 
@@ -57,8 +58,9 @@ class CapnoEasyApplication : Application() {
             DatabaseBackupHelperManager.initialize(this)
             dbBackupHelperKit = DatabaseBackupHelperManager.dbBackupHelperKit
             ErrorReporter.startupCheckpoint("Application.database_backup_start", startedAt)
-            dbBackupHelperKit.startWork(applicationContext, database)
-            ErrorReporter.startupCheckpoint("Application.database_backup_complete", startedAt)
+            if (dbBackupHelperKit.startWork(database)) {
+                ErrorReporter.startupCheckpoint("Application.database_backup_complete", startedAt)
+            }
         } catch (e: Exception) {
             ErrorReporter.report(e, "Application.database_backup_start")
         }

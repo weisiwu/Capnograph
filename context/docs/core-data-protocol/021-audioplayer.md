@@ -33,7 +33,7 @@ MediaPlayer 包装类。
 
 ## 注意事项
 
-`stopAudio` 会安全停止并释放 MediaPlayer，同时重置 `isPlay=false`；播放、停止或释放异常会通过 ErrorReporter 上报。
+`stopAudio` 停止并释放当前 MediaPlayer，同时取消它的定时任务。播放器创建返回空以及异步播放错误均记录独立的 SLS 错误。
 
 ## 最小验证方式
 

@@ -25,6 +25,7 @@ import com.wldmedical.capnoeasy.kits.Patient
 import com.wldmedical.capnoeasy.ui.theme.CapnoEasyTheme
 import com.wldmedical.hotmeltprint.PrintSetting
 import io.github.weisiwu.slstracker.SlsLogTracker.Level
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
@@ -38,6 +39,8 @@ class MainActivity : BaseActivity() {
     private  var startRecordTime: LocalDateTime? = null
 
     private  var endRecordTime: LocalDateTime? = null
+
+    private var recordingChangeInProgress = false
 
     private  val REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION = 1001
 
@@ -161,6 +164,7 @@ class MainActivity : BaseActivity() {
     }
 
     override fun onNavBarRightClick() {
+        if (recordingChangeInProgress) return
         val isRecording = viewModel.isRecording.value
         val context = this
 
@@ -220,56 +224,73 @@ class MainActivity : BaseActivity() {
             bedNumber = viewModel.patientBedNumber.value,
         )
 
-        // 正在记录中，点击为保存动作
-        if (isRecording) {
-            val remainData = viewModel.totalCO2WavedData.toList()
-            lifecycleScope.launch(
-                ErrorReporter.coroutineExceptionHandler(
-                    "MainActivity.stop_record",
-                    mapOf("remaining_points" to remainData.size)
+        recordingChangeInProgress = true
+        lifecycleScope.launch {
+            try {
+                if (isRecording) {
+                    viewModel.updateIsRecording(false)
+                    if (!localStorageKit.stopRecord { viewModel.totalCO2WavedDataFlow.value }) {
+                        viewModel.updateIsRecording(true)
+                        showRecordingFailure()
+                        return@launch
+                    }
+                    viewModel.updateTotalCO2WavedData()
+                } else {
+                    startRecordTime = LocalDateTime.now()
+                    val patient = Patient(
+                        name = viewModel.patientName.value ?: "",
+                        gender = viewModel.patientGender.value ?: GENDER.MALE,
+                        age = viewModel.patientAge.value ?: 0
+                    )
+                    localStorageKit.savePatient(patient)
+                    // 这里只创建记录，数据在ETCO2LineChart组件里，通过监听蓝牙传回的数据流，来动态存储到数据库
+                    localStorageKit.saveRecord(
+                        context = context,
+                        patient = patient,
+                        recordName = "${viewModel.pdfHospitalName.value}_${viewModel.pdfReportName.value}",
+                        lineChart = viewModel.lineChart,
+                        startTime = startRecordTime ?: LocalDateTime.now(),
+                        endTime = endRecordTime ?: LocalDateTime.now(),
+                        maxETCO2 = viewModel.CO2Scale.value.value,
+                        showTrendingChart = viewModel.showTrendingChart.value,
+                        currentETCO2 = blueToothKit.currentETCO2.value,
+                        currentRR = blueToothKit.currentRespiratoryRate.value,
+                    )
+                    viewModel.updateIsRecording(true)
+                }
+                viewModel.updateToastData(
+                    ToastData(
+                        text = getStringAcitivity(if (isRecording) R.string.main_stop_record else R.string.main_start_record),
+                        duration = 600,
+                        showMask = false,
+                        type = ToastType.SUCCESS,
+                        callback = { showAlert() },
+                    )
                 )
-            ) {
-                localStorageKit.stopRecord(remainData)
-            }
-        } else {
-            // 点击后创建记录
-            startRecordTime = LocalDateTime.now()
-            lifecycleScope.launch(ErrorReporter.coroutineExceptionHandler("MainActivity.start_record")) {
-                val patient = Patient(
-                    name = viewModel.patientName.value ?: "",
-                    gender = viewModel.patientGender.value ?: GENDER.MALE,
-                    age = viewModel.patientAge.value ?: 0
-                )
-                localStorageKit.savePatient(patient)
-                // 这里只创建记录，数据在ETCO2LineChart组件里，通过监听蓝牙传回的数据流，来动态存储到数据库
-                localStorageKit.saveRecord(
-                    context = context,
-                    patient = patient,
-                    recordName = "${viewModel.pdfHospitalName.value}_${viewModel.pdfReportName.value}",
-                    lineChart = viewModel.lineChart,
-                    startTime = startRecordTime ?: LocalDateTime.now(),
-                    endTime = endRecordTime ?: LocalDateTime.now(),
-                    maxETCO2 = viewModel.CO2Scale.value.value,
-                    showTrendingChart = viewModel.showTrendingChart.value,
-                    currentETCO2 = blueToothKit.currentETCO2.value,
-                    currentRR = blueToothKit.currentRespiratoryRate.value,
-                )
+            } catch (e: CancellationException) {
+                if (isRecording && localStorageKit.currentRecordId != null) viewModel.updateIsRecording(true)
+                throw e
+            } catch (e: Exception) {
+                if (isRecording && localStorageKit.currentRecordId != null) viewModel.updateIsRecording(true)
+                ErrorReporter.report(e, if (isRecording) "MainActivity.stop_record" else "MainActivity.start_record")
+                showRecordingFailure()
+            } finally {
+                recordingChangeInProgress = false
             }
         }
+    }
 
+    private fun showRecordingFailure() {
         viewModel.updateToastData(
             ToastData(
-                text = if (isRecording) getStringAcitivity(R.string.main_stop_record) else getStringAcitivity(R.string.main_start_record),
-                duration = 600,
+                text = getStringAcitivity(R.string.main_record_write_failed),
+                duration = 2000,
                 showMask = false,
-                type = ToastType.SUCCESS,
-                callback = {
-                    viewModel.updateIsRecording(!isRecording)
-                    showAlert()
-                },
+                type = ToastType.FAIL
             )
         )
     }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_MANAGE_ALL_FILES_ACCESS_PERMISSION) {
@@ -281,8 +302,9 @@ class MainActivity : BaseActivity() {
 
                 // 访问 dbBackupHelperKit 并调用 restoreDatabase
                 try {
-                    application.dbBackupHelperKit.startWork(applicationContext, application.database, true)
-                    ErrorReporter.startupCheckpoint("MainActivity.database_restore_complete", startedAt)
+                    if (application.dbBackupHelperKit.startWork(application.database, isRestore = true)) {
+                        ErrorReporter.startupCheckpoint("MainActivity.database_restore_complete", startedAt)
+                    }
                 } catch (e: Exception) {
                     ErrorReporter.report(e, "MainActivity.restore_database_from_permission_result")
                     throw e

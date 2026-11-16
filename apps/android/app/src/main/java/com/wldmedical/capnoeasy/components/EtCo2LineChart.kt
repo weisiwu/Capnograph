@@ -2,6 +2,7 @@ package com.wldmedical.capnoeasy.components
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.SystemClock
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.compose.foundation.background
@@ -39,18 +40,13 @@ import com.wldmedical.capnoeasy.R
 import com.wldmedical.capnoeasy.getString
 import com.wldmedical.capnoeasy.kits.BlueToothKit
 import com.wldmedical.capnoeasy.kits.BlueToothKitManager.blueToothKit
-import com.wldmedical.capnoeasy.kits.CO2Data
 import com.wldmedical.capnoeasy.kits.LocalStorageKit
 import com.wldmedical.capnoeasy.kits.LocalStorageKitManager.localStorageKit
-import com.wldmedical.capnoeasy.kits.compress
 import com.wldmedical.capnoeasy.kits.maxRecordDataChunkSize
 import com.wldmedical.capnoeasy.kits.maxXPoints
-import com.wldmedical.capnoeasy.kits.trendStep
 import com.wldmedical.capnoeasy.models.AppState
 import com.wldmedical.capnoeasy.models.AppStateModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.withContext
 
 /**
  * App底部导航条
@@ -91,48 +87,18 @@ fun EtCo2LineChart(
         }
     }
 
-    // 页面初始化的时候，添加对viewModel中全部数据的监听
-    LaunchedEffect(viewModel.totalCO2WavedDataFlow) {
-        // 如果数据已经足够一个chunk size，则将数据读出来，并存放到数据库中
-        // totalCO2WavedData和totalCO2WavedDataFlow数据是相同的
-        viewModel.totalCO2WavedDataFlow.collect { co2WavePointDataList ->
-            if (co2WavePointDataList.size < maxRecordDataChunkSize) {
+    LaunchedEffect(viewModel.totalCO2WavedDataFlow, localStorageKit) {
+        var nextWriteAt = 0L
+        viewModel.totalCO2WavedDataFlow.collect { points ->
+            if (points.size < maxRecordDataChunkSize || SystemClock.elapsedRealtime() < nextWriteAt) {
                 return@collect
             }
-            // 对取出的数据存入数据库
-            val currentlRecordId = localStorageKit.currentRecordId
-            println("wswTEst 获取到的记录id $currentlRecordId")
-            // 有数据id的时候才会存储到数据库中
-            currentlRecordId?.let { id ->
-                withContext(Dispatchers.IO) {
-                    // 如果当前没有寄存在recordId下的chunk数据，那么chunkIndex从0开始
-                    val chunkIndex = localStorageKit.database.co2DataDao().getCO2DataByRecordId(id).size.coerceAtLeast(0)
-                    val unCompressData = co2WavePointDataList.take(maxRecordDataChunkSize)
-                    var trendData = ""
-                    for (i in unCompressData.indices step trendStep) {
-                        trendData += "_${unCompressData[i].ETCO2}"
-                    }
-                    // 从头部开始取出 10000 条数据，不改变 totalCO2WavedDataFlow 本身的内容
-                    val co2DataChunk = CO2Data(
-                        recordId = id,
-                        chunkIndex = chunkIndex,
-                        data = unCompressData.compress(),
-                        trendData = trendData
-                    )
-                    val rowId = localStorageKit.database.co2DataDao().insertCO2Data(co2DataChunk)
-                    println("wswTest chunk插入完成，序号为 $rowId __ ${chunkIndex}")
-                    // 如果插入后没有返回数据行号,则插入失败，行号是一个Long类型
-                    if (rowId != -1L) {
-                        // 对列表数据的修改需要在主线程
-                        withContext(Dispatchers.Main) {
-                            // 从 totalCO2WavedDataFlow 删除取出的数据
-                            // 不直接改变 StateFlow，而是通过修改 appState.totalCO2WavedData
-                            viewModel.delSavedCO2WavedDataChunk()
-                            println("wswTest 执行删除已经插入数据库的chunk")
-                        }
-                    }
-                }
-            }
+            val saved = localStorageKit.saveWaveformChunk(
+                pendingPoints = { viewModel.totalCO2WavedDataFlow.value },
+                onSaved = viewModel::delSavedCO2WavedDataChunk
+            )
+            // Keep uncommitted points and let subsequent samples retry after a short delay.
+            if (!saved) nextWriteAt = SystemClock.elapsedRealtime() + 2_000
         }
     }
 

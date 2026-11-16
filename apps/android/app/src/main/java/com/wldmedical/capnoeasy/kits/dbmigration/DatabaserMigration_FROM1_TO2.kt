@@ -28,8 +28,12 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
 
         // 步骤 4: 创建新的 co2_data 表
         database.execSQL("""
-            CREATE TABLE IF NOT EXISTS `co2_data` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `recordId` TEXT NOT NULL, `chunkIndex` INTEGER NOT NULL, `trendData` TEXT NOT NULL, `data` BLOB NOT NULL, FOREIGN KEY(`recordId`) REFERENCES `records`(`id`) ON DELETE CASCADE, UNIQUE(`recordId`, `chunkIndex`))
+            CREATE TABLE IF NOT EXISTS `co2_data` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `recordId` TEXT NOT NULL, `chunkIndex` INTEGER NOT NULL, `trendData` TEXT NOT NULL, `data` BLOB NOT NULL, FOREIGN KEY(`recordId`) REFERENCES `records`(`id`) ON DELETE CASCADE)
         """)
+
+        database.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS index_co2_data_recordId_chunkIndex ON co2_data (recordId, chunkIndex)"
+        )
 
         // 步骤 5: 迁移 CO2WavePointData 到 co2_data 表
         // 注意：这部分需要读取旧表的数据，进行反序列化和序列化，因此需要在代码中完成
