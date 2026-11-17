@@ -53,12 +53,15 @@ enum class BLEServersUUID(val value: UUID) {
     ),
 }
 
-val sortedBLEServersUUID = listOf(
-    BLEServersUUID.BLEAntihijackSer.value,
-    BLEServersUUID.BLEReceiveDataSer.value,
-    BLEServersUUID.BLESendDataSer.value,
-    BLEServersUUID.BLEModuleParamsSer.value,
-)
+// Build these lists after UUID enum initialization, which calls the converter in this file.
+val sortedBLEServersUUID by lazy {
+    listOf(
+        BLEServersUUID.BLEAntihijackSer.value,
+        BLEServersUUID.BLEReceiveDataSer.value,
+        BLEServersUUID.BLESendDataSer.value,
+        BLEServersUUID.BLEModuleParamsSer.value,
+    )
+}
 
 /**
  * 蓝牙特征UUID
@@ -96,12 +99,14 @@ enum class BLECharacteristicUUID(val value: UUID) {
     ),
 };
 
-val sortedBLECharacteristicUUID = listOf(
-    BLECharacteristicUUID.BLEAntihijackCha.value,
-    BLECharacteristicUUID.BLEAntihijackChaNofi.value,
-    BLECharacteristicUUID.BLEReceiveDataCha.value,
-    BLECharacteristicUUID.BLESendDataCha.value,
-)
+val sortedBLECharacteristicUUID by lazy {
+    listOf(
+        BLECharacteristicUUID.BLEAntihijackCha.value,
+        BLECharacteristicUUID.BLEAntihijackChaNofi.value,
+        BLECharacteristicUUID.BLEReceiveDataCha.value,
+        BLECharacteristicUUID.BLESendDataCha.value,
+    )
+}
 
 /**
  * 校零状态 - 走80H结果获取
