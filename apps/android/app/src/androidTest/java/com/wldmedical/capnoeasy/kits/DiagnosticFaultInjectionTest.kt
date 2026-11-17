@@ -1,6 +1,7 @@
 package com.wldmedical.capnoeasy.kits
 
 import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
 import android.content.ContextWrapper
 import android.database.sqlite.SQLiteDatabase
@@ -160,7 +161,16 @@ class DiagnosticFaultInjectionTest {
         assertFalse(enableGattNotification(GattNotification.HANDSHAKE) {
             throw SecurityException("Injected notification permission failure")
         })
-        checkGattDataCharacteristics(receive = null, send = null)
+        assertFalse(checkGattDataCharacteristics(receive = null, send = null))
+        val receive = BluetoothGattCharacteristic(
+            BLECharacteristicUUID.BLEReceiveDataCha.value, BluetoothGattCharacteristic.PROPERTY_NOTIFY, 0
+        )
+        val send = BluetoothGattCharacteristic(
+            BLECharacteristicUUID.BLESendDataCha.value, BluetoothGattCharacteristic.PROPERTY_WRITE, 0
+        )
+        assertFalse(checkGattDataCharacteristics(receive, send = null))
+        assertFalse(checkGattDataCharacteristics(receive = null, send = send))
+        assertTrue(checkGattDataCharacteristics(receive, send))
     }
 
     private fun audioFaults() {

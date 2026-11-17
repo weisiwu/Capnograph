@@ -41,11 +41,12 @@ internal fun enableGattNotification(notification: GattNotification, subscribe: (
 internal fun checkGattDataCharacteristics(
     receive: BluetoothGattCharacteristic?,
     send: BluetoothGattCharacteristic?
-) {
+): Boolean {
     if (receive == null) {
         ErrorReporter.diagnostic(Level.ERROR, "BluetoothKit.gatt_receive_characteristic_missing")
     }
     if (send == null) {
         ErrorReporter.diagnostic(Level.ERROR, "BluetoothKit.gatt_send_characteristic_missing")
     }
+    return receive != null && send != null
 }

@@ -56,6 +56,7 @@ import java.text.SimpleDateFormat
 import java.util.WeakHashMap
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -237,7 +238,9 @@ class BlueToothKit @Inject constructor(
 
     public val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.adapter
 
-    private val bluetoothLeScanner: BluetoothLeScanner? = bluetoothAdapter?.bluetoothLeScanner
+    private val bluetoothLeScanner: BluetoothLeScanner?
+        get() = bluetoothAdapter?.bluetoothLeScanner
+    private val firstWaveformPending = AtomicBoolean(false)
 
     @Suppress("DEPRECATION")
     @SuppressLint("MissingPermission")
@@ -300,11 +303,8 @@ class BlueToothKit @Inject constructor(
 
         // 扫描失败
         override fun onScanFailed(errorCode: Int) {
-            ErrorReporter.report(
-                IllegalStateException("BLE scan failed: $errorCode"),
-                "BluetoothKit.le_scan_failed",
-                mapOf("error_code" to errorCode)
-            )
+            isBLEScanning = false
+            ErrorReporter.diagnostic(Level.ERROR, "BluetoothKit.le_scan_failed", errorCode)
         }
     }
 
@@ -317,6 +317,10 @@ class BlueToothKit @Inject constructor(
         // 设备是否成功链接
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+            if (gatt.device != connectedCapnoEasy.value) {
+                gatt.close()
+                return
+            }
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 ErrorReporter.diagnostic(Level.WARN, "BluetoothKit.gatt_connection_failed", status)
             }
@@ -325,12 +329,16 @@ class BlueToothKit @Inject constructor(
                     ErrorReporter.diagnostic(Level.INFO, "BluetoothKit.gatt_connected")
                     if (!gatt.discoverServices()) {
                         ErrorReporter.diagnostic(Level.WARN, "BluetoothKit.gatt_discovery_not_started")
+                        rejectGatt(gatt)
                     }
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     ErrorReporter.diagnostic(Level.INFO, "BluetoothKit.gatt_disconnected")
                     // 设备已断开连接
+                    firstWaveformPending.set(false)
                     connectedCapnoEasy.value = null
+                    if (connectedCapnoEasyGATT.value === gatt) connectedCapnoEasyGATT.value = null
+                    gatt.close()
                     taskQueue.executeAllTasks()
                 }
                 else -> {
@@ -343,15 +351,33 @@ class BlueToothKit @Inject constructor(
         // 发现设备服务，集中处理service和characteristic
         @SuppressLint("MissingPermission")
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+            if (gatt.device != connectedCapnoEasy.value) {
+                gatt.close()
+                return
+            }
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 ErrorReporter.diagnostic(Level.WARN, "BluetoothKit.gatt_discovery_failed", status)
+                rejectGatt(gatt)
+                return
             }
-            if (status == BluetoothGatt.GATT_SUCCESS) {
+            run {
                 ErrorReporter.diagnostic(Level.INFO, "BluetoothKit.gatt_services_discovered")
-                // 设备成功连接，开始注册服务、特征值
-                connectedCapnoEasyGATT.value = gatt
 
                 val services = gatt.services
+                val receiveService = gatt.getService(BLEServersUUID.BLEReceiveDataSer.value)
+                val sendService = gatt.getService(BLEServersUUID.BLESendDataSer.value)
+                val receiveData = receiveService?.getCharacteristic(BLECharacteristicUUID.BLEReceiveDataCha.value)
+                val sendData = sendService?.getCharacteristic(BLECharacteristicUUID.BLESendDataCha.value)
+                ErrorReporter.diagnostic(Level.INFO, "BluetoothKit.gatt_service_count", detailCode = services.size)
+                if (receiveService == null) ErrorReporter.diagnostic(Level.WARN, "BluetoothKit.gatt_receive_service_missing")
+                if (sendService == null) ErrorReporter.diagnostic(Level.WARN, "BluetoothKit.gatt_send_service_missing")
+                if (!checkGattDataCharacteristics(receiveData, sendData)) {
+                    rejectGatt(gatt)
+                    return
+                }
+
+                firstWaveformPending.set(true)
+                catchCharacteristic.clear()
                 val sortedServices = mutableListOf<BluetoothGattService>()
 
                 // 根据 Service 的 UUID 进行排序
@@ -407,13 +433,15 @@ class BlueToothKit @Inject constructor(
                     }
                 }
 
-                val receiveData = currentReceiveDataCharacteristic
-                checkGattDataCharacteristics(receiveData, currentSendDataCharacteristic)
-                if (receiveData != null && enableGattNotification(GattNotification.WAVEFORM) {
+                if (receiveData == null || !enableGattNotification(GattNotification.WAVEFORM) {
                         gatt.setCharacteristicNotification(receiveData, true)
                     }) {
-                    receiveDataCharacteristic.add(receiveData)
+                    rejectGatt(gatt)
+                    return
                 }
+                receiveDataCharacteristic.add(receiveData)
+                connectedCapnoEasyGATT.value = gatt
+                ErrorReporter.diagnostic(Level.INFO, "BluetoothKit.gatt_data_ready")
 
                 // 所有初始化完成，执行后续操作
                 sendContinuous()
@@ -430,7 +458,12 @@ class BlueToothKit @Inject constructor(
             characteristic: BluetoothGattCharacteristic?
         ) {
             // 收到通知数据
-            if (characteristic?.uuid == BLECharacteristicUUID.BLEReceiveDataCha.value) {
+            if (gatt != null && gatt === currentGatt && characteristic?.uuid == BLECharacteristicUUID.BLEReceiveDataCha.value) {
+                if (firstWaveformPending.compareAndSet(true, false)) {
+                    ErrorReporter.diagnostic(
+                        Level.INFO, "BluetoothKit.gatt_first_waveform_notification", detailCode = characteristic.value.size
+                    )
+                }
                 // println("wswTest【波形调试】 onCharacteristicChanged 收到BLE数据，长度=${characteristic.value.size}")
                 receivedArray.addAll(characteristic.value.toList())
 
@@ -453,6 +486,15 @@ class BlueToothKit @Inject constructor(
         ) {
             if (gattWriteCompleted(status)) taskQueue.executeTask()
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun rejectGatt(gatt: BluetoothGatt) {
+        firstWaveformPending.set(false)
+        if (connectedCapnoEasyGATT.value === gatt) connectedCapnoEasyGATT.value = null
+        connectedCapnoEasy.value = null
+        catchCharacteristic.clear()
+        gatt.close()
     }
 
     // 经典蓝牙-扫描回调
@@ -749,8 +791,15 @@ class BlueToothKit @Inject constructor(
     private fun scanBleDevices() {
         if (isBLEScanning) { return }
 
+        val scanner = bluetoothLeScanner
+        if (scanner == null) {
+            ErrorReporter.diagnostic(Level.WARN, "BluetoothKit.le_scanner_unavailable")
+            return
+        }
+        discoveredPeripherals.clear()
         isBLEScanning = true
-        bluetoothLeScanner?.startScan(leScanCallback)
+        scanner.startScan(leScanCallback)
+        ErrorReporter.diagnostic(Level.INFO, "BluetoothKit.le_scan_started")
     }
 
     // 停止扫描低功耗蓝牙设备
@@ -760,6 +809,7 @@ class BlueToothKit @Inject constructor(
 
         isBLEScanning = false
         bluetoothLeScanner?.stopScan(leScanCallback)
+        ErrorReporter.diagnostic(Level.INFO, "BluetoothKit.le_scan_finished", detailCode = discoveredPeripherals.size)
     }
 
     // 扫描经典蓝牙
@@ -810,7 +860,9 @@ class BlueToothKit @Inject constructor(
     ) {
         this.scanFind = scanFind
         // 检查蓝牙状态是否正确
-        if (checkBluetoothStatus() != CHECK_SUCCESS) {
+        val status = checkBluetoothStatus()
+        if (status != CHECK_SUCCESS) {
+            ErrorReporter.diagnostic(Level.WARN, "BluetoothKit.scan_prerequisite_missing", status)
             checkBlueToothFail?.invoke()
             return
         }
@@ -841,8 +893,11 @@ class BlueToothKit @Inject constructor(
 
     // 链接低功耗蓝牙
     @SuppressLint("MissingPermission")
-    private fun connectBleDevice(device: BluetoothDevice) {
-        device.connectGatt(activity, false, gattCallback)
+    private fun connectBleDevice(device: BluetoothDevice): Boolean {
+        ErrorReporter.diagnostic(Level.INFO, "BluetoothKit.gatt_connect_started", detailCode = device.type)
+        val gatt = device.connectGatt(activity, false, gattCallback)
+        if (gatt == null) ErrorReporter.diagnostic(Level.WARN, "BluetoothKit.gatt_connect_not_started")
+        return gatt != null
     }
 
     // 保存已经配对的设备
@@ -1274,8 +1329,13 @@ class BlueToothKit @Inject constructor(
         // 链接后，需要将设备存到不同的属性中
         // 这里做了兼容：我的一加手机会把BLE设备偶尔识别为未知类型
         if (device.type == DEVICE_TYPE_LE || device.type == DEVICE_TYPE_UNKNOWN) {
-            connectBleDevice(device)
             connectedCapnoEasy.value = device
+            try {
+                if (!connectBleDevice(device)) connectedCapnoEasy.value = null
+            } catch (error: SecurityException) {
+                connectedCapnoEasy.value = null
+                ErrorReporter.report(error, "BluetoothKit.gatt_connect_permission_denied")
+            }
         } else if (device.type == DEVICE_TYPE_CLASSIC) {
             connectClassicDevice(device)
             connectedCapnoEasy.value = device
