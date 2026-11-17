@@ -238,11 +238,15 @@ CapnoEasy uses the Android/JVM entry point from [aliyun-sls-tracker-sdk](https:/
 
 The application writes under `capnoeasy-android`. Diagnostics include startup checkpoints, storage authorization, BLE connection and discovery, and exceptions handled by `ErrorReporter`. The SLS payload contains the stage, severity and Android API level, with elapsed time, exception class or status code where relevant.
 
+For BLE readback, follow scan and connection attempts through `gatt_services_discovered`, `gatt_data_ready`, and `gatt_first_waveform_notification`. Service and characteristic checks identify where the device profile is incomplete. An incomplete profile or a rejected waveform notification registration ends the attempt before the application saves the pairing.
+
 Build with `-PcapnoSlsWebTracking=true` to enable debug uploads to `app-tracking / app-events`. The live `SlsReadbackTest` takes an instrumentation argument named `slsRunId`. Query `channel:"capnoeasy-android" AND event_name:"sls_smoke_<runId>"` in the Hangzhou Logstore to inspect all four levels.
 
 Run `DiagnosticFaultInjectionTest` to exercise recording writes, backup and restore, GATT status handling, and alert playback. Pass a unique `slsRunId` to search for the `sls_fault_<runId>_start` and `sls_fault_<runId>_end` markers. Query the actual event names between their `client_time_ms` values.
 
 For a release build, set `-PcapnoSlsRelayUrl=https://<your-relay>/...` to an HTTPS service that accepts the PutWebtracking request body and forwards it to SLS with server-side authorization. A configured release build sends INFO, WARN and ERROR. DEBUG is available in the opted-in debug build.
+
+The Packflow Android diagnostics configuration dispatches `packflow-android-apk.yml` and imports the signed debug APK from the `packflow-android-diagnostics-latest` prerelease. Each APK has a metadata file with its commit, workflow run ID and attempt so Packflow can select the package for that build.
 
 ## Development Notes
 

@@ -4,7 +4,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: capnoeasy-android-diagnostics-release
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: packflow-android-diagnostics-latest
 
 jobs:
   build:
@@ -34,11 +41,21 @@ jobs:
         run: |
           apk=apps/android/app/build/outputs/apk/debug/app-debug.apk
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify "$apk"
-          cp "$apk" "CapnoEasy-android-diagnostics-${GITHUB_SHA:0:8}.apk"
-      - uses: actions/upload-artifact@v7
-        with:
-          name: capnoeasy-android-diagnostics
-          path: CapnoEasy-android-diagnostics-*.apk
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 14
+          version="v$(date -u +%Y%m%d).${GITHUB_RUN_NUMBER}-${GITHUB_SHA:0:7}"
+          stem="CapnoEasy-android-diagnostics-${version}-r${GITHUB_RUN_ID}-a${GITHUB_RUN_ATTEMPT}"
+          mkdir -p release_artifacts
+          cp "$apk" "release_artifacts/$stem.apk"
+          jq -n --arg version "$version" --arg commit "$GITHUB_SHA" \
+            --arg run "$GITHUB_RUN_ID" --arg attempt "$GITHUB_RUN_ATTEMPT" \
+            '{version: $version, commit: $commit, run: $run, run_attempt: $attempt}' \
+            > "release_artifacts/$stem.metadata.json"
+      - name: Publish APK and build identity to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "CapnoEasy Android diagnostics" --notes "Diagnostic APKs archived by Packflow." \
+              --prerelease --latest=false
+          fi
+          gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" release_artifacts/*
